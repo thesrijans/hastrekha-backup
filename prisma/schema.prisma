@@ -1,0 +1,253 @@
+// HastRekha — Prisma schema v0
+// DB changes policy: raw SQL in Neon SQL Editor → `npx prisma db pull` → `npx prisma generate`. Never `migrate dev`.
+// Money-path tables (Order, Payment, Entitlement) mirror Physenta's proven shape — keep them boring.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/* ------------------------------------ Auth ------------------------------------ */
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  googleSub     String?   @unique
+  passwordHash  String?
+  role          UserRole  @default(USER)
+  locale        String    @default("hi-en") // "hi-en" | "en"
+  persona       String    @default("hastrekha") // "hastrekha" | "global"
+  birthDate     DateTime? @db.Date
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  consents     Consent[]
+  readings     Reading[]
+  orders       Order[]
+  entitlements Entitlement[]
+  feedback     RuleFeedback[]
+  sessions     Session[]
+
+  @@index([createdAt])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/* ------------------------------- Consent (DPDP) ------------------------------- */
+
+enum ConsentKind {
+  TERMS
+  PRIVACY
+  PALM_PROCESSING // on-device processing of palm images; only feature scores leave the device
+  MARKETING
+}
+
+model Consent {
+  id        String      @id @default(cuid())
+  userId    String
+  kind      ConsentKind
+  version   String
+  grantedAt DateTime    @default(now())
+  revokedAt DateTime?
+  ip        String?
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, version])
+}
+
+/* ---------------------------------- Readings ---------------------------------- */
+
+enum ReadingTier {
+  FREE
+  PREMIUM
+  DEEP
+}
+
+enum ReadingSource {
+  DOB_ONLY
+  MANUAL_FORM
+  CAMERA_SCAN
+}
+
+model Reading {
+  id             String        @id @default(cuid())
+  userId         String?       // null = guest free reading
+  guestKey       String?       // hashed cookie for guests → merge-on-signup
+  tier           ReadingTier
+  source         ReadingSource
+  kbVersion      String
+  /** sanitised feature bag exactly as evaluated (no images, ever) */
+  features       Json
+  question       String?
+  confidence     Float
+  coverageRatio  Float
+  birthWindows   String[]
+  narration      Json          // { one_liner, sections[], engine, model }
+  narrationEngine String       // "llm" | "template"
+  createdAt      DateTime      @default(now())
+
+  user     User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rules    ReadingRule[]
+  feedback RuleFeedback[]
+
+  @@index([userId, createdAt])
+  @@index([guestKey])
+}
+
+/** One row per fired rule — this is what makes the KB learnable. */
+model ReadingRule {
+  id              String  @id @default(cuid())
+  readingId       String
+  ruleId          String  // PALM-MJUP-002
+  category        String
+  polarity        String
+  effectiveWeight Float
+  reasons         String[]
+  shownToUser     Boolean @default(true) // false when locked behind tier
+  reading         Reading @relation(fields: [readingId], references: [id], onDelete: Cascade)
+
+  @@index([readingId])
+  @@index([ruleId])
+}
+
+enum FeedbackVerdict {
+  ACCURATE
+  PARTLY
+  WRONG
+}
+
+/** Per-rule thumbs from the user → aggregated nightly into RuleStat. */
+model RuleFeedback {
+  id        String          @id @default(cuid())
+  readingId String
+  userId    String?
+  ruleId    String
+  verdict   FeedbackVerdict
+  note      String?
+  createdAt DateTime        @default(now())
+  reading   Reading         @relation(fields: [readingId], references: [id], onDelete: Cascade)
+  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([readingId, ruleId])
+  @@index([ruleId])
+}
+
+/** Nightly aggregate; engine multiplies rule.weight by calibration once sample ≥ MIN_SAMPLE. */
+model RuleStat {
+  ruleId       String   @id
+  accurate     Int      @default(0)
+  partly       Int      @default(0)
+  wrong        Int      @default(0)
+  fired        Int      @default(0)
+  calibration  Float    @default(1.0) // 0.6–1.3 clamp applied in cron
+  updatedAt    DateTime @updatedAt
+}
+
+/* --------------------------------- Money path --------------------------------- */
+
+enum ProductSku {
+  PREMIUM_READING   // one full reading
+  DEEP_READING      // reading + question + remedies
+  SCAN_PACK_3
+  SCAN_PACK_10
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  sku             ProductSku
+  amountPaise     Int         // always integer paise
+  listPricePaise  Int         // strikethrough anchor shown in UI
+  couponCode      String?
+  currency        String      @default("INR")
+  status          OrderStatus @default(CREATED)
+  razorpayOrderId String?     @unique
+  appEnv          String      // "dev" | "live" — forensic guard, never mix
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  payments Payment[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+/** Append-only. One row per webhook event; idempotent on razorpayPaymentId + event. */
+model Payment {
+  id                String   @id @default(cuid())
+  orderId           String
+  razorpayPaymentId String
+  event             String   // payment.captured | payment.failed | refund.processed
+  amountPaise       Int
+  signatureValid    Boolean
+  rawPayload        Json
+  receivedAt        DateTime @default(now())
+  order             Order    @relation(fields: [orderId], references: [id])
+
+  @@unique([razorpayPaymentId, event])
+  @@index([orderId])
+}
+
+enum EntitlementKind {
+  PREMIUM_READING
+  DEEP_READING
+  SCAN_CREDIT
+}
+
+/** What a paid order unlocked. Consumed atomically when a reading is generated. */
+model Entitlement {
+  id         String          @id @default(cuid())
+  userId     String
+  orderId    String?
+  kind       EntitlementKind
+  quantity   Int             @default(1)
+  consumed   Int             @default(0)
+  expiresAt  DateTime?
+  grantedBy  String?         // admin id for manual grants
+  createdAt  DateTime        @default(now())
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+}
+
+/* ---------------------------------- Ops ---------------------------------- */
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  target    String?
+  meta      Json?
+  appEnv    String
+  createdAt DateTime @default(now())
+
+  @@index([action, createdAt])
+}

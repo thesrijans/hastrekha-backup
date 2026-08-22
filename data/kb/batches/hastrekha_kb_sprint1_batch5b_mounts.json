@@ -1,0 +1,4809 @@
+{
+  "meta": {
+    "kb_name": "HastRekha AI — Rules Knowledge Base",
+    "kb_version": "0.1.0-sprint1-batch5b",
+    "schema_version": "1.0",
+    "extraction_date": "2026-08-20",
+    "primary_source": {
+      "title": "Palmistry for All",
+      "author": "Cheiro (William John Warner)",
+      "year": 1916,
+      "publisher": "G.P. Putnam's Sons",
+      "copyright_status": "public domain",
+      "hosted_at": "https://chestofbooks.com/new-age/palmistry/All/index.html",
+      "fetched_from": [
+        "https://chestofbooks.com/new-age/palmistry/All/Part-II-Cheirognomy-Or-The-Science-Of-Interpreting-The-Shape-Of-Hands-Chapter.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-V-The-Mounts-Of-The-Hand-And-Their-Meaning.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-VI-The-Mount-Of-Mars.html",
+        "https://chestofbooks.com/new-age/palmistry/All/The-Mount-Of-Mars-Continued.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-VII-The-Mount-Of-Jupiter-And-Its-Meaning.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-VIII-The-Mount-Of-Saturn-And-Its-Meaning.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-IX-The-Mount-Of-The-Sun-And-Its-Meaning.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-X-The-Mount-Of-Mercury-And-Its-Meaning.html",
+        "https://chestofbooks.com/new-age/palmistry/All/The-Mount-Of-Mercury-And-Its-Meaning-Continued.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XI-The-Mount-Of-The-Moon-And-Its-Meaning.html",
+        "https://chestofbooks.com/new-age/palmistry/All/The-Mount-Of-The-Moon-And-Its-Meaning-Continued.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XII-The-Mount-Of-Venus-And-Its-Meaning.html",
+        "https://chestofbooks.com/new-age/palmistry/All/The-Mount-Of-Venus-And-Its-Negative-Meaning.html"
+      ]
+    },
+    "batch_scope": "Part II Ch.I (Cheirognomy intro) + Ch.V-XII (Mounts of the Hand: general, Mars, Jupiter, Saturn, Sun, Mercury, Moon, Venus incl. Positive/Negative birth-date variants). FINAL Cheiro batch — completes 'Palmistry for All'.",
+    "rule_id_prefixes": {
+      "new_in_this_batch": [
+        "PALM-MNTG",
+        "PALM-MMAR",
+        "PALM-MJUP",
+        "PALM-MSAT",
+        "PALM-MSUN",
+        "PALM-MMER",
+        "PALM-MMOO",
+        "PALM-MVEN"
+      ],
+      "existing_prefixes_reserved_do_not_reuse": [
+        "HEAD",
+        "LIFE",
+        "MARS",
+        "FATE",
+        "SUN",
+        "MARR",
+        "HEART",
+        "CHILD",
+        "SIGN",
+        "TIME",
+        "HLTH",
+        "GIRD",
+        "INTU",
+        "MYST",
+        "TRVL",
+        "MARK",
+        "LINQ",
+        "TRI",
+        "HTYPE",
+        "THUMB",
+        "FINGR",
+        "NAIL"
+      ]
+    },
+    "rule_count": 124,
+    "by_section": {
+      "MNTG": 7,
+      "MMAR": 18,
+      "MJUP": 14,
+      "MSAT": 15,
+      "MSUN": 14,
+      "MMER": 17,
+      "MMOO": 20,
+      "MVEN": 19
+    },
+    "conditions_semantics": {
+      "combine": "AND across the conditions array",
+      "ops_used": {
+        "gte": ">= numeric",
+        "lte": "<= numeric",
+        "eq": "equality (booleans, enums; for user.birth_window evaluate as set-membership, see mount_birth_windows.resolution_policy)",
+        "in": "value is a list; true if feature value is in list"
+      },
+      "mount_scale": "mounts.* are 0-1 prominence: <=0.3 flat/absent, ~0.5 normal, >=0.7 well-developed, >=0.85 large/excessive",
+      "positive_dob_rules": "encoded as mount >= 0.5 AND user.birth_window (DOB drives the reading unless the mount is flat); engine MAY relax to DOB-only with weight x0.7 if mount data is missing",
+      "negative_dob_rules": "DOB-only (feature user.birth_window), per Cheiro: negative = mental variant, mount often not prominent",
+      "requires_field": "left empty in this batch; all combinations encoded directly in conditions"
+    },
+    "safety_exclusion_policy": {
+      "never_encoded": [
+        "death",
+        "lifespan",
+        "suicide",
+        "insanity",
+        "criminality (thief/dishonest-person labels)",
+        "addiction predictions",
+        "named-disease diagnostics"
+      ],
+      "softening_convention": "softened rules carry safety_class 'sensitive', tag 'softened', and a loc note 'softened per safety policy'",
+      "script_policy": "interpretation_hi_en is Hinglish in Roman script only; Devanagari range U+0900-U+097F must not appear anywhere in the file",
+      "excluded_in_this_batch": [
+        {
+          "loc": "Part II Ch.V",
+          "excluded_claim": "'Southern and more emotional races' vs 'Northern countries' — racial generalisation about Mount prominence",
+          "action": "excluded (race-neutral emotion/prominence link retained only)",
+          "replacement_rule_ids": [
+            "PALM-MNTG-003",
+            "PALM-MNTG-004"
+          ]
+        },
+        {
+          "loc": "Part II Ch.V",
+          "excluded_claim": "Mount + birth-date tables will 'especially as regards health and disease' tell many things — DOB-based disease diagnostics framing",
+          "action": "excluded (DOB method retained as personality overlay only; no health diagnostics)",
+          "replacement_rule_ids": [
+            "PALM-MNTG-006"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VI",
+          "excluded_claim": "fevers, blood diseases, fits, epilepsy, severe headaches, water on the brain, teeth trouble; old-age apoplexy, vertigo, softening of the brain (esp. frayed/chained Head Line)",
+          "action": "excluded (named-disease diagnostics)",
+          "replacement_rule_ids": [
+            "PALM-MMAR-009"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VI",
+          "excluded_claim": "'very much inclined' to wines, spirits and stimulants",
+          "action": "excluded (addiction prediction); generic rest/temper advice retained",
+          "replacement_rule_ids": [
+            "PALM-MMAR-009"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VI",
+          "excluded_claim": "'unhappy in their love affairs or domestic life'; 'rarely meet women who understand them'; opposition from wives/children",
+          "action": "softened, gender-neutral (domestic friction reframed as manageable pattern)",
+          "replacement_rule_ids": [
+            "PALM-MMAR-006"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VI (cont.)",
+          "excluded_claim": "'employ cunning and craft'; 'stop at nothing'; 'most treacherous and deadly enemies'; 'poison ... one of the chief weapons'",
+          "action": "excluded (criminality/violence); only 'adaptable to company' caution retained",
+          "replacement_rule_ids": [
+            "PALM-MMAR-015"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VI (cont.)",
+          "excluded_claim": "'no type can be more vicious or harmful, even to wounding themselves and bringing about their own destruction'",
+          "action": "softened (scorpion/eagle reframed as daily choice; self-destruction wording removed)",
+          "replacement_rule_ids": [
+            "PALM-MMAR-017"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VI (cont.)",
+          "excluded_claim": "'control their sex nature'; 'kept aloof from all perverse persons and evil books'",
+          "action": "excluded (moralising, non-actionable); 'good companions' advice retained",
+          "replacement_rule_ids": [
+            "PALM-MMAR-015"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VI (cont.)",
+          "excluded_claim": "weakness or illness in the sex organs, kidneys, bladder; stomach and digestive disorders in advanced years",
+          "action": "excluded (organ-specific diagnostics); diet-moderation advice retained",
+          "replacement_rule_ids": [
+            "PALM-MMAR-018"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VII",
+          "excluded_claim": "Jupiter Positive health: rheumatism, acid complaints, inflammation of tongue and throat, boils, carbuncles, eczema, skin troubles",
+          "action": "excluded (named-disease diagnostics); no replacement rule",
+          "replacement_rule_ids": []
+        },
+        {
+          "loc": "Part II Ch.VII",
+          "excluded_claim": "Jupiter Negative health: rheumatism, blood disorders, internal chills, liver, jaundice",
+          "action": "excluded; despondency/insomnia softened into mood + lifestyle nudge with professional-help pointer",
+          "replacement_rule_ids": [
+            "PALM-MJUP-014"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VIII",
+          "excluded_claim": "'instrument or mouthpiece of Destiny, often hurling thousands to destruction'; 'plunge the knife into the heart of their dearest'",
+          "action": "excluded (violence)",
+          "replacement_rule_ids": [
+            "PALM-MSAT-008"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VIII",
+          "excluded_claim": "'despondent and gloomy'; 'fanatical in any Church they may adopt'",
+          "action": "softened (loneliness/responsibility reframed; belief extremes reframed to doubt practice)",
+          "replacement_rule_ids": [
+            "PALM-MSAT-005",
+            "PALM-MSAT-007"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VIII",
+          "excluded_claim": "Saturn Positive health: rheumatism, gout, swellings of feet and legs, liver and kidneys, ruptures, disease of the teeth and ears",
+          "action": "excluded (named-disease diagnostics); protective limb-care nudge retained",
+          "replacement_rule_ids": [
+            "PALM-MSAT-009"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VIII",
+          "excluded_claim": "'will stop at nothing to avenge an injury'",
+          "action": "softened (grudge/forgiveness framing)",
+          "replacement_rule_ids": [
+            "PALM-MSAT-012"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VIII",
+          "excluded_claim": "'control ... over the insane'; 'fated to be brought into contact with such cases'",
+          "action": "softened ('insane' removed; reframed to calming presence + caregiving careers)",
+          "replacement_rule_ids": [
+            "PALM-MSAT-014"
+          ]
+        },
+        {
+          "loc": "Part II Ch.VIII",
+          "excluded_claim": "Saturn Negative health: 'ordinary remedies seem to fail entirely'; delicate teeth; accidents to feet, ankles, limbs",
+          "action": "excluded/softened (remedies-fail claim dropped; stress-digestion + resilience retained)",
+          "replacement_rule_ids": [
+            "PALM-MSAT-015"
+          ]
+        },
+        {
+          "loc": "Part II Ch.IX",
+          "excluded_claim": "'fall victims to gloom and melancholy, and many commit suicide'",
+          "action": "EXCLUDED (suicide); later-life disillusionment reframed as trust-vetting advice",
+          "replacement_rule_ids": [
+            "PALM-MSUN-007"
+          ]
+        },
+        {
+          "loc": "Part II Ch.IX",
+          "excluded_claim": "'would sooner die than ask favours'",
+          "action": "softened (help-seeking reframe)",
+          "replacement_rule_ids": [
+            "PALM-MSUN-008"
+          ]
+        },
+        {
+          "loc": "Part II Ch.IX",
+          "excluded_claim": "'denounce their own children should they find them falling into evil ways'",
+          "action": "softened (frankness + delivery advice)",
+          "replacement_rule_ids": [
+            "PALM-MSUN-005"
+          ]
+        },
+        {
+          "loc": "Part II Ch.IX",
+          "excluded_claim": "Sun Positive health: pains, palpitations, heart trouble, head, ears, inflammation of eyes, kidneys, swellings of feet",
+          "action": "excluded (named-disease diagnostics); no replacement rule",
+          "replacement_rule_ids": []
+        },
+        {
+          "loc": "Part II Ch.IX",
+          "excluded_claim": "'seldom if ever commit suicide; on the contrary, they can endure any kind of martyrdom'",
+          "action": "suicide comparison EXCLUDED; resilience/duty framing retained",
+          "replacement_rule_ids": [
+            "PALM-MSUN-013"
+          ]
+        },
+        {
+          "loc": "Part II Ch.IX",
+          "excluded_claim": "'often end their days in the most unusual or unheard-of places'",
+          "action": "excluded (end-of-life prediction); second-act planning advice retained",
+          "replacement_rule_ids": [
+            "PALM-MSUN-012"
+          ]
+        },
+        {
+          "loc": "Part II Ch.IX",
+          "excluded_claim": "Sun Negative health: stomach and internal organs, loss of natural heat, liver and kidney complaints, accidents to bones",
+          "action": "excluded (named-disease diagnostics); sunlight/dry-climate safeguard retained",
+          "replacement_rule_ids": [
+            "PALM-MSUN-014"
+          ]
+        },
+        {
+          "loc": "Part II Ch.X",
+          "excluded_claim": "'trickiness in business, and everything that is unreliable in character'",
+          "action": "softened (focus + integrity caution; no character label)",
+          "replacement_rule_ids": [
+            "PALM-MMER-003"
+          ]
+        },
+        {
+          "loc": "Part II Ch.X",
+          "excluded_claim": "'believe that they are the most truthful persons in the World ... the same story may have a totally different colouring'",
+          "action": "softened (mood-coloured memory framing, not dishonesty)",
+          "replacement_rule_ids": [
+            "PALM-MMER-010"
+          ]
+        },
+        {
+          "loc": "Part II Ch.X",
+          "excluded_claim": "Mercury Positive health: catalepsy, paralysis, afflictions of the tongue, stammering, throat and bronchial tubes, nose and eyes",
+          "action": "excluded (named-disease diagnostics); nervous-system stress hygiene retained",
+          "replacement_rule_ids": [
+            "PALM-MMER-011"
+          ]
+        },
+        {
+          "loc": "Part II Ch.X (cont.)",
+          "excluded_claim": "'Women born in this period ... either extremely virtuous or the direct opposite ... think of themselves first'",
+          "action": "EXCLUDED (gendered moral judgement)",
+          "replacement_rule_ids": [
+            "PALM-MMER-013"
+          ]
+        },
+        {
+          "loc": "Part II Ch.X (cont.)",
+          "excluded_claim": "'often abandon their husbands or their children just because they think they ought to do so'",
+          "action": "EXCLUDED (harmful relational prediction)",
+          "replacement_rule_ids": []
+        },
+        {
+          "loc": "Part II Ch.X (cont.)",
+          "excluded_claim": "'the evil side of the nature will in the end predominate' (weak Head Line)",
+          "action": "softened (consistency/structure framing)",
+          "replacement_rule_ids": [
+            "PALM-MMER-015"
+          ]
+        },
+        {
+          "loc": "Part II Ch.X (cont.)",
+          "excluded_claim": "'ruined by taking drugs and medicines'; 'willing prey of quack doctors'",
+          "action": "softened (over-medication/health-anxiety caution; explicitly not framed as addiction)",
+          "replacement_rule_ids": [
+            "PALM-MMER-016"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XI",
+          "excluded_claim": "'inclined to speculate or gamble even with their chances'",
+          "action": "softened (risk-capping advice; no addiction framing)",
+          "replacement_rule_ids": [
+            "PALM-MMOO-004"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XI",
+          "excluded_claim": "'before they voyage over the last river of all'",
+          "action": "excluded (death metaphor)",
+          "replacement_rule_ids": [
+            "PALM-MMOO-006"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XI",
+          "excluded_claim": "Moon Positive health: water on the brain, gastric and dysentery attacks, inflammation of lungs and chest, pleurisy, dropsy",
+          "action": "excluded (named-disease diagnostics); no replacement rule",
+          "replacement_rule_ids": []
+        },
+        {
+          "loc": "Part II Ch.XI (cont.)",
+          "excluded_claim": "Moon Negative health: nervous breakdowns, palpitation, weakness of the heart, paralysis, acidity, rheumatism, liver, gout",
+          "action": "excluded (named-disease diagnostics); worry/overwork burnout nudge retained",
+          "replacement_rule_ids": [
+            "PALM-MMOO-020"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XI (cont.)",
+          "excluded_claim": "'seldom get through life without sooner or later experiencing grave danger of drowning'",
+          "action": "EXCLUDED (death/danger prediction)",
+          "replacement_rule_ids": []
+        },
+        {
+          "loc": "Part II Ch.XI (cont.)",
+          "excluded_claim": "work recognised only after they 'have left this world of mistrust and ingratitude'",
+          "action": "softened (recognition comes late; legacy framing)",
+          "replacement_rule_ids": [
+            "PALM-MMOO-016"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XI (cont.)",
+          "excluded_claim": "'danger of becoming too fanatical'",
+          "action": "softened (belief + understanding practice)",
+          "replacement_rule_ids": [
+            "PALM-MMOO-019"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XII",
+          "excluded_claim": "large Mount shows 'passion and larger sensuality'",
+          "action": "softened (intensity + boundaries framing)",
+          "replacement_rule_ids": [
+            "PALM-MVEN-003"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XII",
+          "excluded_claim": "'if found together with vicious or abnormal signs in the hand, it increases those tendencies'",
+          "action": "softened (amplifier framing, no moral label)",
+          "replacement_rule_ids": [
+            "PALM-MVEN-006"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XII",
+          "excluded_claim": "'too unyielding and tyrannical'; 'stiff-necked'",
+          "action": "softened (reliability reframe)",
+          "replacement_rule_ids": [
+            "PALM-MVEN-007"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XII",
+          "excluded_claim": "'become morbid and depressed' in gloomy conditions",
+          "action": "softened (environment-sensitivity + curation advice)",
+          "replacement_rule_ids": [
+            "PALM-MVEN-011"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XII",
+          "excluded_claim": "'their first attempt [at marriage] is usually a mistake'; 'lead unconventional lives'",
+          "action": "softened (advice framing: take time before commitment)",
+          "replacement_rule_ids": [
+            "PALM-MVEN-012"
+          ]
+        },
+        {
+          "loc": "Part II Ch.XII",
+          "excluded_claim": "Venus Positive health: short/round nails -> throat and nose; pains in head and ears, swellings in the neck, tumours, appendicitis, intestinal troubles",
+          "action": "excluded (named-disease diagnostics); no replacement rule",
+          "replacement_rule_ids": []
+        },
+        {
+          "loc": "Part II Ch.XII (neg.)",
+          "excluded_claim": "Venus Negative health: depression of spirits, melancholia, severe headaches, pains in back/loins/kidneys, internal ailments, 'often undergo severe operations'",
+          "action": "excluded/softened (energy + mood self-care with professional-help pointer; no named conditions or surgery prediction)",
+          "replacement_rule_ids": [
+            "PALM-MVEN-019"
+          ]
+        }
+      ]
+    },
+    "feature_vocabulary_additions": {
+      "mounts.overall_prominence": {
+        "type": "float 0-1",
+        "desc": "aggregate prominence of all mounts; flat palm -> low"
+      },
+      "mounts.mars_inner": {
+        "type": "float 0-1",
+        "desc": "Cheiro's FIRST Mount of Mars: under the commencement of the Life Line, thumb side; physical courage (Positive). Often called 'Lower Mars' in modern texts.",
+        "aliases": [
+          "mounts.mars_first",
+          "mounts.mars_physical"
+        ]
+      },
+      "mounts.mars_outer": {
+        "type": "float 0-1",
+        "desc": "Cheiro's SECOND Mount of Mars: between Heart and Head lines on the percussion side; mental courage (Negative). Often called 'Upper Mars' in modern texts.",
+        "aliases": [
+          "mounts.mars_second",
+          "mounts.mars_mental"
+        ]
+      },
+      "mounts.jupiter": {
+        "type": "float 0-1",
+        "desc": "Mount under index finger"
+      },
+      "mounts.saturn": {
+        "type": "float 0-1",
+        "desc": "Mount under middle finger"
+      },
+      "mounts.sun": {
+        "type": "float 0-1",
+        "desc": "Mount under ring finger (Apollo)"
+      },
+      "mounts.mercury": {
+        "type": "float 0-1",
+        "desc": "Mount under little finger"
+      },
+      "mounts.moon": {
+        "type": "float 0-1",
+        "desc": "Mount of Luna, base of palm on percussion side under end of Head Line"
+      },
+      "mounts.venus": {
+        "type": "float 0-1",
+        "desc": "Ball of thumb inside the Life Line"
+      },
+      "user.birth_window": {
+        "type": "enum window_id",
+        "desc": "resolved from DOB via meta.mount_birth_windows; a DOB can match several windows (core or minor)",
+        "values": [
+          "MARS_POS",
+          "MARS_NEG",
+          "JUP_POS",
+          "JUP_NEG",
+          "SAT_POS",
+          "SAT_NEG",
+          "SUN_POS",
+          "SUN_NEG",
+          "MER_POS",
+          "MER_NEG",
+          "MOON_POS",
+          "MOON_NEG",
+          "VEN_POS",
+          "VEN_NEG"
+        ]
+      },
+      "user.birth_date_available": {
+        "type": "bool",
+        "desc": "DOB supplied by user"
+      },
+      "lines.head.quality": {
+        "type": "float 0-1",
+        "desc": "composite Head Line quality (length, clarity, unbroken, not chained/frayed). RECONCILE: if batch 1 (HEAD prefix) used a different key, alias it to this."
+      },
+      "hand.overall_quality": {
+        "type": "float 0-1",
+        "desc": "'good well-marked hand' composite (clear major lines, firm palm, good thumb). RECONCILE with HTYPE/THUMB batches if an equivalent exists."
+      },
+      "hand.shape_type_available": {
+        "type": "bool",
+        "desc": "hand type classification available (HTYPE batch)"
+      },
+      "reading.hand_shape_available": {
+        "type": "bool",
+        "desc": "cheirognomy features present in this reading"
+      },
+      "reading.lines_available": {
+        "type": "bool",
+        "desc": "line features present in this reading"
+      },
+      "reading.mounts_available": {
+        "type": "bool",
+        "desc": "mount features present in this reading"
+      },
+      "context.moon_phase": {
+        "type": "enum",
+        "values": [
+          "new",
+          "waxing_crescent",
+          "first_quarter",
+          "waxing_gibbous",
+          "full",
+          "waning_gibbous",
+          "last_quarter",
+          "waning_crescent"
+        ],
+        "desc": "current lunar phase at reading time (for timing rules)"
+      }
+    },
+    "mount_birth_windows": {
+      "date_format": "MM-DD",
+      "minor_weight_multiplier": 0.5,
+      "resolution_policy": "Resolve DOB to the set of window_ids whose core OR minor range contains it (minor hits apply minor_weight_multiplier). user.birth_window 'eq' X is TRUE if X is in that set. When several NEGATIVE windows match the same DOB (see overlaps), prefer the window whose mount_feature is most prominent on the hand; if mounts are unavailable, apply x0.8 to each matching window's rules.",
+      "windows": [
+        {
+          "window_id": "MARS_POS",
+          "mount": "mars",
+          "variant": "positive",
+          "aspect": "physical",
+          "mount_feature": "mounts.mars_inner",
+          "core": {
+            "start": "03-21",
+            "end": "04-21"
+          },
+          "minor": {
+            "start": "04-22",
+            "end": "04-28"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.VI"
+        },
+        {
+          "window_id": "MARS_NEG",
+          "mount": "mars",
+          "variant": "negative",
+          "aspect": "mental",
+          "mount_feature": "mounts.mars_outer",
+          "core": {
+            "start": "10-21",
+            "end": "11-21"
+          },
+          "minor": {
+            "start": "11-22",
+            "end": "11-28"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.VI (cont.)"
+        },
+        {
+          "window_id": "JUP_POS",
+          "mount": "jupiter",
+          "variant": "positive",
+          "aspect": "physical",
+          "mount_feature": "mounts.jupiter",
+          "core": {
+            "start": "11-21",
+            "end": "12-20"
+          },
+          "minor": {
+            "start": "12-21",
+            "end": "12-28"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.VII"
+        },
+        {
+          "window_id": "JUP_NEG",
+          "mount": "jupiter",
+          "variant": "negative",
+          "aspect": "mental",
+          "mount_feature": "mounts.jupiter",
+          "core": {
+            "start": "02-19",
+            "end": "03-20"
+          },
+          "minor": {
+            "start": "03-21",
+            "end": "03-28"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.VII"
+        },
+        {
+          "window_id": "SAT_POS",
+          "mount": "saturn",
+          "variant": "positive",
+          "aspect": "physical",
+          "mount_feature": "mounts.saturn",
+          "core": {
+            "start": "12-21",
+            "end": "01-20"
+          },
+          "minor": {
+            "start": "01-21",
+            "end": "01-27"
+          },
+          "wraps_year": true,
+          "source_loc": "Part II Ch.VIII ('subsequent seven days')"
+        },
+        {
+          "window_id": "SAT_NEG",
+          "mount": "saturn",
+          "variant": "negative",
+          "aspect": "mental",
+          "mount_feature": "mounts.saturn",
+          "core": {
+            "start": "01-21",
+            "end": "02-18"
+          },
+          "minor": {
+            "start": "02-19",
+            "end": "02-25"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.VIII ('seven days following')"
+        },
+        {
+          "window_id": "SUN_POS",
+          "mount": "sun",
+          "variant": "positive",
+          "aspect": "physical",
+          "mount_feature": "mounts.sun",
+          "core": {
+            "start": "07-21",
+            "end": "08-20"
+          },
+          "minor": {
+            "start": "08-21",
+            "end": "08-28"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.IX ('generally until the 28th')"
+        },
+        {
+          "window_id": "SUN_NEG",
+          "mount": "sun",
+          "variant": "negative",
+          "aspect": "mental",
+          "mount_feature": "mounts.sun",
+          "core": {
+            "start": "01-21",
+            "end": "02-18"
+          },
+          "minor": {
+            "start": "02-19",
+            "end": "02-25"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.IX ('seven days following')"
+        },
+        {
+          "window_id": "MER_POS",
+          "mount": "mercury",
+          "variant": "positive",
+          "aspect": "physical",
+          "mount_feature": "mounts.mercury",
+          "core": {
+            "start": "05-21",
+            "end": "06-20"
+          },
+          "minor": {
+            "start": "06-21",
+            "end": "06-27"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.X ('until the 27th', last seven days dying out)"
+        },
+        {
+          "window_id": "MER_NEG",
+          "mount": "mercury",
+          "variant": "negative",
+          "aspect": "mental",
+          "mount_feature": "mounts.mercury",
+          "core": {
+            "start": "08-21",
+            "end": "09-20"
+          },
+          "minor": {
+            "start": "09-21",
+            "end": "09-27"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.X (cont.)"
+        },
+        {
+          "window_id": "MOON_POS",
+          "mount": "moon",
+          "variant": "positive",
+          "aspect": "physical",
+          "mount_feature": "mounts.moon",
+          "core": {
+            "start": "06-21",
+            "end": "07-20"
+          },
+          "minor": {
+            "start": "07-21",
+            "end": "07-27"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.XI"
+        },
+        {
+          "window_id": "MOON_NEG",
+          "mount": "moon",
+          "variant": "negative",
+          "aspect": "mental",
+          "mount_feature": "mounts.moon",
+          "core": {
+            "start": "01-21",
+            "end": "02-20"
+          },
+          "minor": {
+            "start": "02-21",
+            "end": "02-27"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.XI (cont.) ('in a minor degree until about February 27th')"
+        },
+        {
+          "window_id": "VEN_POS",
+          "mount": "venus",
+          "variant": "positive",
+          "aspect": "physical",
+          "mount_feature": "mounts.venus",
+          "core": {
+            "start": "04-20",
+            "end": "05-20"
+          },
+          "minor": {
+            "start": "05-21",
+            "end": "05-27"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.XII"
+        },
+        {
+          "window_id": "VEN_NEG",
+          "mount": "venus",
+          "variant": "negative",
+          "aspect": "mental",
+          "mount_feature": "mounts.venus",
+          "core": {
+            "start": "09-21",
+            "end": "10-20"
+          },
+          "minor": {
+            "start": "10-21",
+            "end": "10-27"
+          },
+          "wraps_year": false,
+          "source_loc": "Part II Ch.XII (neg.)"
+        }
+      ],
+      "overlaps": [
+        {
+          "dates": "01-21 to 02-18 (+fade)",
+          "windows": [
+            "SAT_NEG",
+            "SUN_NEG",
+            "MOON_NEG"
+          ],
+          "note": "Cheiro assigns the same Aquarius span to three Negative mounts; this is in the source, not an extraction error"
+        },
+        {
+          "dates": "11-21",
+          "windows": [
+            "MARS_NEG",
+            "JUP_POS"
+          ],
+          "note": "shared boundary day"
+        },
+        {
+          "dates": "minor/fade ranges",
+          "windows": [
+            "all"
+          ],
+          "note": "each minor range intentionally overlaps the next sign's core ('overlapped by the period following')"
+        },
+        {
+          "dates": "03-21 to 03-28",
+          "windows": [
+            "MARS_POS",
+            "JUP_NEG(minor)"
+          ],
+          "note": "Jupiter Negative fade overlaps Mars Positive core"
+        }
+      ]
+    },
+    "sprint_status": {
+      "cheiro_palmistry_for_all": "100% extracted after this batch (Part I lines/signs/timing in batches 1-5A; Part II shape/fingers/thumb/nails in earlier batch; Part II mounts here)",
+      "cumulative_rule_count_estimate_after_merge": 377,
+      "sprint2_candidate": {
+        "title": "The Laws of Scientific Hand Reading",
+        "author": "William G. Benham",
+        "url": "https://chestofbooks.com/new-age/palmistry/Hand-Reading/index.html"
+      }
+    }
+  },
+  "rules": [
+    {
+      "rule_id": "PALM-MNTG-001",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "reading.hand_shape_available",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "feature": "reading.lines_available",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Sirf rekhaayein mat padho — haath ka shape aur mounts bhi padho. Cheiro kehta hai dono ko milaane wala student 'doubly armed' hota hai, khaaskar character reading mein. Lines batati hain kya ho raha hai, shape aur mounts batate hain kaun kar raha hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.I — Study of the Shape of the Hand (Cheirognomy + Cheiromancy together)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mounts_general",
+        "reading_method",
+        "cheirognomy"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MNTG-002",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "hand.shape_type_available",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mehnat ya exercise se haath mota, chauda ya sakht ho sakta hai — par uska basic type kabhi nahi mitta. Reading mein calluses, size ya rough skin ko type samajhne ki galti mat karo; structure dekho, surface nahi.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.I — hand type is never destroyed by work or exercise",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mounts_general",
+        "reading_method",
+        "cheirognomy"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MNTG-003",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.overall_prominence",
+          "op": "gte",
+          "value": 0.65
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapke mounts saaf ubhre hue hain — Cheiro ke mutabik aise log logic se zyada feelings se chalte hain. Yeh taqat hai: empathy, passion, warmth. Bas bade faisle (paisa, career, rishta) 24 ghante thanda hokar lo.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.V — prominent Mounts: more swayed by feelings and emotions",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mounts_general",
+        "emotional"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MNTG-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.overall_prominence",
+          "op": "lte",
+          "value": 0.3
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Hatheli flat hai, mounts kam ubhre — aap emotions se kam, soch aur routine se zyada chalte ho. Steady, reliable nature. Kabhi-kabhi dil ki sunna bhi practice karo — warna log aapko 'thanda' samajh lete hain jabki aap bas shaant ho.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.V — flat palms and undeveloped Mounts: less swayed by emotion",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mounts_general",
+        "practical"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MNTG-005",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "reading.mounts_available",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Har mount ek planet ki quality carry karta hai: Venus = pyaar aur warmth, Mars = himmat aur jeevan-shakti, Mercury = dimaag aur vyapaar, Moon = kalpana aur badlaav, Sun = chamak aur safalta, Jupiter = ambition aur netritva, Saturn = gambhirta aur ekaant. Jo mount sabse ubhra ho, wahi aapka 'lead planet' hai — wahi se reading shuru karo.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.V — Mounts named after the seven planets and their attributed qualities",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mounts_general",
+        "reading_method",
+        "lookup_table"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MNTG-006",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "user.birth_date_available",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Cheiro ka khaas tareeka: mount ko birth date ke saath padho. Har mount ka ek Positive (physical) aur ek Negative (mental) birth-window hai — DOB batati hai ki us planet ki energy aapke sharir mein zyada hai ya dimaag mein. Note: yeh astrology overlay hai, isliye mount ki actual prominence ko hamesha pehla vote do.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.V — Mounts read as Positive/Negative in conjunction with the date of birth (Zodiac houses)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mounts_general",
+        "reading_method",
+        "dob_rule",
+        "astro_overlay"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MNTG-007",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "reading.mounts_available",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Cheiro khud likhta hai: 'character hi Fate hai, character hi Destiny hai.' Matlab haath jo bhi dikhaye, woh aadaton ka naksha hai — aur aadat badli ja sakti hai. Is reading ko bhavishyavani nahi, mirror ki tarah use karo.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.V — 'character is Fate or Destiny'",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mounts_general",
+        "gold_rule",
+        "shareable",
+        "agency"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-001",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "reading.mounts_available",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mars mount do jagah hota hai: pehla Life line ki shuruaat ke theek neeche, angoothe ki taraf — yeh physical himmat hai; doosra Heart aur Head line ke beech, hatheli ke bahar (percussion) ki taraf — yeh mental himmat hai. Dono ko alag-alag padho, kyunki ek hi insaan mein ek strong aur doosra flat ho sakta hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — two positions of the Mount of Mars (first = physical, second = mental)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "reading_method"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Inner Mars ubhra hua — aap born fighter ho. Control bardasht nahi, har kaam apne tareeke se, aur leadership naturally aati hai. Cheiro kehta hai average dimaag ke saath bhi aise log business ya team ke head ban jaate hain aur badi zimmedaari uthaate hain.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — First Mount of Mars large: born fighters, aspire to lead",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "leadership",
+        "courage",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-003",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Career mein wahan jao jahan aap lead kar sako — apni team, apna venture, ya faisle lene wali seat. Sales, ops, founding, armed forces, sports — jahan pressure aur competition hai wahan aap khilte ho. Kisi ke neeche lambe samay tak order lena aapko ghutan dega.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — heads of business houses or organisations, large responsibilities",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "career",
+        "leadership"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-004",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Zid aur 'mera tareeka hi sahi' aapki sabse badi rukawat hai. Criticism chubhti hai, aur advice tab maangte ho jab bahut der ho chuki hoti hai. Ek rule banao: har bade faisle se pehle ek trusted insaan se 10 minute — sirf sunne ke liye, bahas ke liye nahi.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — obstinacy of purpose, resent criticism, seldom ask advice until too late",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "obstacles",
+        "stubbornness"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Gussa jaldi aata hai, phat-ta hai, aur utni hi jaldi utar jaata hai — phir pachtawa ki yeh kya keh diya. Andar se aap dil ke saaf aur generous ho. Trick: garam hote hi koi message, call ya faisla nahi — 20 minute ka rule. Jo baad mein kehna hai wahi abhi mat kaho.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — hasty explosive temper, quickly over, followed by regret; good-natured and generous",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "temper",
+        "temper_management"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-006",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Ghar mein takraav ka reason aksar 'commander mode' hota hai — aap wahan bhi lead karna chahte ho. Cheiro kehta hai aapko zabardasti nahi, sirf pyaar, patience aur tact se handle kiya ja sakta hai — yeh apne partner ko khul kar batao, aur khud ghar ke darwaze par 'boss' utaar kar aao.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — domestic friction; can only be handled by kindness, patience, tact, affection — softened per safety policy (gender-neutral reframe)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "love",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMAR-007",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.7
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "lte",
+          "value": 0.4
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Inner Mars strong par Head line kamzor — impulsiveness ko brake nahi mil rahi. Cheiro warn karta hai ki aise log bina soche mushkilon mein kood jaate hain aur apni leadership ka mauka gawa dete hain. Aapke liye planning system (pehle likho, phir karo) luxury nahi, zaroorat hai.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — impulsiveness without a good Line of Head: rush into difficulties, muddle opportunities",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "head_line_combo",
+        "impulsiveness"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-008",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.7
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "gte",
+          "value": 0.6
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Inner Mars strong + Head line clear = sanyam wala yoddha. Cheiro ke mutabik aise log life mein kisi bhi unchaai tak ja sakte hain aur doosron ke liye bada kaam karte hain. Aapka asli hathiyaar himmat nahi, self-control hai — usse roz sharpen karo.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — higher Mars type practising self-restraint can rise to almost any height",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "head_line_combo",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-009",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Itni energy wale body ko recovery bhi utni hi chahiye. Cheiro ki seedhi salah: doosron se zyada neend lo, roz khule mein exercise karo, aur gusse ko cool rakhne ki practice ko health plan ka hissa banao. High-octane engine ko regular service chahiye.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — advice: repose, self-control, more sleep, open-air exercise, curb pride and temper — softened per safety policy (named conditions and stimulant-inclination claim excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "vitality",
+        "lifestyle",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMAR-010",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mars_inner",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 March–21 April (House of Mars) aur inner Mars ubhra hua — Cheiro kehta hai yeh combo Mars ki saari qualities ko double karta hai: fighter spirit, leadership, generosity, aur haan, temper bhi. Energy bahut hai; usse ek lakshya do.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI — First Mount of Mars has more importance when born 21 Mar–21 Apr (minor until 28 Apr), House of Mars Positive",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "astro_overlay"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-011",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 Oct–21 Nov (House of Mars Negative) — aapki himmat dimaag mein hai, muthhi mein nahi. Scenes, jhagde, hinsa se door rehte ho, par bahas mein aakhri tak ladte ho. Shaant zid: opinion chhupa kar rakhte ho aur sahi waqt par 'mental blow' dete ho.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI (cont.) — House of Mars Negative/Mental, 21 Oct–21 Nov (minor until 28 Nov): moral courage, dislike of scenes, mental fighters",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "astro_overlay"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-012",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap leader se behtar organiser ho — 'brain behind the army'. Strategy, planning, logistics, finance modelling, operations — ya medicine aur science — jahan jeet dimaag se hoti hai, wahan aap chamakte ho. Front par khade hone ki zaroorat nahi; aap war room ke insaan ho.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI (cont.) — better organisers than leaders; plans, tactics, strategy, supplies, financial schemes; suited to medicine or science",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "career",
+        "strategy"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-013",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap itne versatile ho ki ek career mein fit karna mushkil hai. Cheiro kehta hai aise log jis cheez ki training lete hain woh seldom karte hain, aur vocation 'billi ki nau jaanon' jitni baar badalte hain. Isse failure mat samjho — har switch ko skill-stack mein jodo.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI (cont.) — versatile, difficult to place; seldom carry out what first trained for; change vocation many times",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "career",
+        "versatility"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-014",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_NEG"
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "gte",
+          "value": 0.6
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mars Negative window + clear Head line — Cheiro ke shabdon mein 'mental endeavour ki duniya mein koi cheez nahi jisme aap safal na ho sako'. Field chunne ki tension mat lo; jo bhi chuno, usme top tak ja sakte ho.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI (cont.) — with a good Line of Head, success in any mental endeavour",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "head_line_combo",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-015",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap apne surroundings ke rang mein bahut jaldi rang jaate ho — acchi sangat mein apna best version ban jaate ho, galat sangat mein unse bhi aage nikal jaate ho. Isliye aapki life ka sabse bada decision career nahi, company hai. Circle ko jaan-boojh kar curate karo.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI (cont.) — too adaptable to surroundings and companions — softened per safety policy (cunning/treachery/poison framing excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "company",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMAR-016",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapke paas ek natural magnetism hai — log aapki baat maan lete hain aur samajh nahi paate kyun. Intuition tez, psychology aur occult mein dilchaspi. Cheiro kehta hai higher plane par yeh power doosron ke bhale mein lagti hai — healing, teaching, research. Usi taraf lagao.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI (cont.) — mysterious magnetism, natural hypnotists and thought-readers, leaning to occultism; used for good when highly developed",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "mystic",
+        "intuition"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMAR-017",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Is sign ke do roop hain: bichhu jo apni hi poonch ko dank maarta hai, aur eagle jo aasman tak udta hai. Cheiro kehta hai dono possibility aap mein hai — farak sirf self-discipline aur sangat se aata hai. Har subah choice aapki hai: dank ya udaan.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI (cont.) — scorpion vs eagle symbolism of the dual nature — softened per safety policy (self-destruction framing reframed as daily choice)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "gold_rule",
+        "shareable",
+        "agency",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMAR-018",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MARS_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Jawani mein constitution halka, middle age ke baad vazan badhne ki tendency. Cheiro ki ek hi salah hai: zindagi bhar khaane mein sanyam. Portion size aur late-night khaana — bas in do cheezon ko control karo, aadha kaam ho gaya.",
+      "polarity": "neutral",
+      "weight": 0.45,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VI (cont.) — slight in youth, corpulency after middle life; careful abstemious diet all through life — softened per safety policy (organ-specific claims excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mars",
+        "dob_rule",
+        "vitality",
+        "lifestyle",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MJUP-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Jupiter mount ubhra hua — aap mein lead karne, organise karne aur ek bade, saaf lakshya ko pura karne ki bhookh hai. Ambition aapka engine hai. Uske liye apologise mat karo; bas usse ek worthy goal do.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — Mount of Jupiter large: desire to dominate, rule, lead, organise, carry out a distinct object",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "ambition",
+        "leadership"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "gte",
+          "value": 0.7
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "gte",
+          "value": 0.6
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Jupiter strong + Head line lambi aur saaf — Cheiro kehta hai isse behtar koi mount nahi hai. Aapki success kismat se nahi, character aur purpose ki taqat se aayegi. Ek bada lakshya chuno aur usse chipak jao — baaki sab follow karega.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — large Jupiter with clear long Line of Head: 'no Mount more excellent', success from sheer strength of character and purpose",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "head_line_combo",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-003",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "gte",
+          "value": 0.7
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "lte",
+          "value": 0.4
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Jupiter bada hai par Head line kamzor — ambition ko direction nahi mil rahi, isliye woh pride aur vanity ban jaati hai. Fix simple hai: 'main sahi hoon' bolne se pehle 'kya main sahi hoon?' poochna — roz. Yahi aapka growth hack hai.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — large Jupiter with poor badly-formed Line of Head: pride, excess of vanity, self-opinionated",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "head_line_combo",
+        "pride"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "lte",
+          "value": 0.3
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Jupiter mount flat — lead karne ya haavi hone ki bhookh kam hai. Aap comfortable supporter, specialist ya team-player ho sakte ho — aur yeh poori tarah theek hai. Agar aage badhna hai toh ambition ko chhote, measurable goals se jaan-boojh kar practice karna padega.",
+      "polarity": "neutral",
+      "weight": 0.4,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — inferred inverse of the large-Jupiter reading (Cheiro gives no explicit flat reading in this chapter; derived from Ch.V quality list)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "inferred_inverse"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 Nov–20 Dec aur Jupiter ubhra — fearless, determined ambition. Par aap 'seedha kandhe se maarte ho': ambition itni khuli dikhti hai ki log virodh aur jealousy karne lagte hain. Thodi diplomacy se same goals, aadhe dushman.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — Jupiter Positive 21 Nov–20 Dec (minor until 28 Dec): ambitious, fearless, determined; 'hit too straight from the shoulder'",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "astro_overlay"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-006",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap usool wale insaan ho — bharosa rakho toh nibhaate ho, aur jhooth bardasht nahi karte, chahe dhokhe ko expose karne mein apna hi plan kharaab ho jaaye. Yeh aaj ki duniya mein rare hai; isse apni personal brand banao — log aisi hi cheez par lamba bharosa karte hain.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — honourable, high-principled, truthful; unmask deception even at own cost; respond to trust placed in them",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "integrity",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-007",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Business aur organisation aapka maidan hai — aap head seat tak pahunchte ho, ya government mein zimmedari wali post. Politics nahi — Cheiro kehta hai aap party line ke aage jhuk nahi sakte. Founder, director, commissioner, COO — yeh aapke titles hain.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — enterprise in business and organisation; heads of businesses, responsible government posts; rarely politicians",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "career"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-008",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Career choice mein aap sabse independent ho — family ka peshha ya expectations aap par nahi chalte, isliye early life mein ghar walon ko tension dete ho. Agar raasta baar-baar badal rahe ho toh ghabrao mat: Cheiro kehta hai aise log tab tak badalte hain jab tak asli vocation nahi milti. Bas har switch se kuch seekh kar jao.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — most independent of all types in choosing career; should be allowed to change until true vocation found",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "career",
+        "independence"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-009",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.jupiter",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapki kamzori: har cheez ko extreme par le jaana, poori energy jhonk dena, phir thak kar disha badal dena. Pace control karo — marathon mindset, sprint nahi. Agar Head line seedhi hai toh Cheiro kehta hai koi unchaai aapke liye door nahi; bas wahan tak pahunchne ka stamina bachao.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — inclined to go to extremes, exhaust efforts, then fly off in another direction; with straight Head line no height unreachable",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "obstacles",
+        "pacing"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-010",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 19 Feb–20 March (Jupiter Negative) — aapki ambition dimaag ki hai, material nahi. Knowledge aapko khinchti hai: history, cultures, geography, science, nature. Cheezein aapko natural tareeke se samajh aa jaati hain. Aap lifelong learner ho — isse career asset banao.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — Jupiter Negative/mental 19 Feb–20 Mar (minor until 28 Mar): mental ambition, natural understanding, wide knowledge",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "astro_overlay",
+        "learning"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-011",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Plan aapka, credit kisi aur ka — yeh pattern aapko pehchan mein aayega. Reason: sensitivity, self-confidence ki kami, aur public ke saamne aane se jhijhak. Fix: apna kaam khud present karo, chhote stage se shuru karke — team meeting, phir client, phir bada manch. Credit maangna greed nahi, fairness hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — very sensitive, lacking self-confidence; shrink from the public; others get credit for their plans",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "obstacles",
+        "confidence"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-012",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Is period mein bahut se writers, composers aur artists paida hote hain. Agar creative kaam aapko bulata hai, toh yeh aapka lane ho sakta hai — side project se hi sahi, aaj shuru karo. Aapki knowledge aur sensitivity creative kaam mein asset hai, liability nahi.",
+      "polarity": "positive",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — a great number of literary people, composers and artists born in this period",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "career",
+        "creative"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-013",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_NEG"
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "gte",
+          "value": 0.6
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Jupiter Negative + clear, strong Head line = sensitivity ko will power se jeetne ki capacity. Cheiro kehta hai yahi line tay karti hai ki aapke talents bahar aayenge ya nahi — aur aapke paas hai. Ab bas consistently dikhna shuru karo.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — a strong clear Line of Head gives the will power to overcome natural sensitiveness and carry out ambitions",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "head_line_combo",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MJUP-014",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "JUP_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mood ka neeche jaana, neend ka bigadna, 'sab mujh par hi kyun' wali feeling — yeh aapke patterns ho sakte hain. Cheiro ka prescription: dhoop, khuli hawa, roz movement, aur change of scene ya travel. Climate aap par bahut asar karta hai — seelan bhari, andheri jagah se bacho. Agar low phase lamba chale toh kisi professional se baat karna samajhdaari hai.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VII — despondency, insomnia, feeling of martyrdom; climate has the greatest effect: bright dry atmosphere, air, exercise, change and travel — softened per safety policy (named conditions excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_jupiter",
+        "dob_rule",
+        "vitality",
+        "mood",
+        "lifestyle",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSAT-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Saturn mount ubhra hua — aap akele mein khush rehne wale, samajhdaar, chup-chaap iraade wale insaan ho. Gehri, serious cheezein aapko khinchti hain aur aap destiny par yakeen rakhte ho. Depth aapki taqat hai; bas usse duniya se katne ka bahana mat banao.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — Mount of Saturn: love of solitude, prudence, quiet determination, study of serious things, belief in destiny",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "solitude",
+        "depth"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSAT-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "lte",
+          "value": 0.3
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Saturn mount bilkul flat — aap life ko halke mein lete ho, mazaak-masti aur aaj mein. Yeh charm hai aur log aapke saath khush rehte hain. Bas lambi planning, paise aur gambhir zimmedaariyon ke liye structure jaan-boojh kar banana padega — calendar, budget, ek serious mentor.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — complete absence of the Mount: a more or less frivolous way of looking at life",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "lightness"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSAT-003",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "gte",
+          "value": 0.9
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Saturn bahut zyada ubhra — solitude isolation ban sakti hai aur seriousness bojh. Balance ke liye hafte mein kam se kam do baar logon ke beech jao, aur ek 'halka' shauk rakho — music, khel, comedy, kuch bhi jo hansaye. Gehraai rakho, par surface par saans lene bhi aao.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — exaggerated Mount denotes exaggeration of all Saturn qualities — softened per safety policy (melancholy framing reframed to balance advice)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "excess",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSAT-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 Dec–20 Jan (Saturn Positive) aur Saturn ubhra — lohe ki will power aur independent soch. Kisi ka bandhan bardasht nahi. Yeh aapko bada banata hai, bas 'akele hi sab kar lunga' wale trap se bacho — delegate karna bhi strength hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — Saturn Positive 21 Dec–20 Jan (+7 days fading): strong will force and mentality; independence of thought and action; detest restraint",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "astro_overlay",
+        "willpower"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSAT-005",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap aksar akela mehsoos karte ho, aur jab koi care de bhi toh yakeen nahi hota. Zimmedaariyon ka bojh zyada mehsoos hota hai, phir aap apne shell mein chale jaate ho. Ek cheez yaad rakho: jo log saath hain, unhe andar aane do — madad lena kamzori nahi hai. Ek insaan chuno jisse aap hafte mein ek baar sach bolte ho.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — feel lonely and isolated; scarcely believe affection offered; feel responsibilities too heavily and retire into their shell — softened per safety policy (gloom framing reframed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "loneliness",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSAT-006",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Dikhaave se door, aap andar se gehre devotional ho — chahe mandir jaate ho ya nahi. Bina reward ya pehchaan ki umeed ke logon ka bhala karte ho, khaaskar bade level par. Yeh quiet greatness hai. Bas kabhi-kabhi apni mehnat ka credit lena bhi seekho — woh bhi sewa hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — deeply devotional nature even when not outwardly religious; do good for the masses without expecting recognition or reward",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "service",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSAT-007",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Dharm, mysticism, occult — yeh aapko bahut khinchte hain, par aap extreme par chale jaate ho, aur apne views mein doosron ki dakhal bardasht nahi karte. Ek practice: jis cheez par sabse pakka yakeen hai, usi par mahine mein ek baar imaandaari se doubt karke dekho. Mazboot aastha sawaalon se darti nahi.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — religion, mysticism, occultism appeal strongly but taken to extremes; cannot brook interference in views — softened per safety policy (fanaticism reframed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "belief",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSAT-008",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap deep thinker ho aur buddhimaan logon ki dil se kadar karte ho. Cheiro kehta hai aise log aksar bhaari zimmedaari wali positions par milte hain — jahan akele kathin faisle lene padte hain: judge, surgeon, administrator, founder. Us seat ke liye khud ko taiyaar rakho, aur us bojh ko baantna bhi seekho.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — deep thinkers, admire intellectual people; often hold positions of great responsibility (destiny-instrument/violence passage excluded per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "career",
+        "responsibility"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSAT-009",
+      "domain": "palmistry",
+      "category": "protection",
+      "conditions": [
+        {
+          "feature": "mounts.saturn",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Cheiro Saturn ke logon ko pair, ghutne aur ankles ka khaas dhyan rakhne ko kehta hai. Practical: sahi joote, exercise se pehle warm-up, seedhiyon aur phisalne wali jagah par extra care, aur joint mobility ko daily routine banao. Chhoti saavdhaani, badi bachat.",
+      "polarity": "neutral",
+      "weight": 0.45,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — tendency to accidents to the feet, knees and limbs — softened per safety policy (named diseases excluded; protective nudge only)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "protection",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSAT-010",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 Jan–18 Feb (Saturn Negative) — Saturn ki energy aapke dimaag mein hai. Akelaapan vichaaron ka hai: lagta hai koi aapki soch ko sach mein samajhta nahi. Bahut sensitive ho, jaldi chot lagti hai. Apne jaise 2-3 deep log dhoondo — aapko bheed nahi, samajh chahiye.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — Saturn Negative/mental 21 Jan–18 Feb (+7 days): Saturn qualities felt mentally; lonely in ideas and thoughts; sensitive, easily wounded",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "astro_overlay",
+        "sensitivity"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSAT-011",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap logon ko ek nazar mein padh lete ho — itna saaf ki kabhi-kabhi yahi khushi kam kar deta hai. Dhokha aapke liye sabse bada aparaadh hai, aur jab lagta hai dhokha hua, aapka reaction logon ko chauka deta hai. Is skill ko hiring, negotiation aur partnerships mein lagao — wahan yeh sona hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — read character instinctively, 'see through' people too easily to be happy; bitterly resent being deceived",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "perception"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSAT-012",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Dost bane toh zindagi bhar ke — aap unke liye kuch bhi kar jaoge. Par dhokha mile toh maafi bahut mushkil hai aur grudge saalon chalta hai. Yeh energy saamne wale se zyada aapko jalati hai. 'Let go' ko ek skill ki tarah seekho — maaf karna unke liye nahi, apne liye hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — loyal true friends, any sacrifice for a friend; bitter when deceived — softened per safety policy (revenge framing reframed to forgiveness)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "friendship",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSAT-013",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Samaaj ke liye time aur paisa dete ho — par apne tareeke se, apni shart par. Bheed, theatre, concerts, public meetings pasand hain, phir bhi sach bolo toh andar akelapan rehta hai. Public good mein ek steady, regular role lo — akelepan ka sabse accha ilaaj purpose hai.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — active for the public good, give time and money in their own way; keen interest in public meetings, theatres, concerts; yet feel alone",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "service",
+        "social"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSAT-014",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapki aankhon mein ek shaant control hai — ghabraaye hue, anxious, excitable logon ko aap settle kar dete ho, chahe khud andar se nervous ho. Counselling, healthcare, teaching, crisis management, HR — aise career aapko naturally milte hain. Yeh rare gift hai; iski training lo.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — quiet controlling power with the eyes; greatest control over excitable and nervous people; fated to meet such cases — softened per safety policy ('insane' wording removed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "career",
+        "caregiving",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSAT-015",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SAT_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Stress seedha pet par lagta hai, haath-pair thande rehte hain, aur aap shayad hi kabhi 'full strong' mehsoos karte ho — phir bhi jab duty ya usool daav par hon, aapka will power sabko hairaan kar deta hai. Us reserve tank ko roz bharo: warm khaana, regular neend, aur stress ko pet tak pahunchne se pehle bol dena.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.VIII — nerves of the stomach, poor circulation, cold hands and feet; seldom feel strong yet enormous power of resistance when will is called on — softened per safety policy (named conditions excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_saturn",
+        "dob_rule",
+        "vitality",
+        "resilience",
+        "gold_rule",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSUN-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Sun (Apollo) mount ubhra hua — Cheiro kehta hai yeh hamesha shubh hai. Chamakne ki ichha, public mein pehchaan, aur ek sunny, lucky, forceful personality. Spotlight aapke liye bana hai — usse sharmao mat, bas usse kisi meaningful kaam par focus karo.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — Mount of the Sun large: glory, publicity, desire to shine; 'always considered a good Mount to have large'; bright, sunny, forceful, happy, lucky personality",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "gold_rule",
+        "shareable",
+        "charisma"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSUN-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Sundarta aapki zaroorat hai — ghar, kapde, workspace, sab mein taste dikhta hai; practical career mein bhi aap artistic surroundings bana lete ho. Generous aur thode luxurious ho. Budget mein ek 'beauty line' rakho, par luxury ko lifestyle inflation mat banne do.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — enthusiasm for the beautiful in all things; build beautiful houses, artistic surroundings; expansive, generous, luxurious tastes",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "aesthetics",
+        "generosity"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSUN-003",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "lte",
+          "value": 0.3
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Sun mount flat — spotlight ki bhookh kam hai; aap background mein kaam karna pasand karte ho aur tareef se thoda asahaj ho. Yeh theek hai, par career mein visibility bhi currency hai. Mahine mein ek baar apna kaam kisi ko dikhao — LinkedIn post, demo, ya bas boss ko update.",
+      "polarity": "neutral",
+      "weight": 0.4,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — inferred inverse of the large-Sun reading (Cheiro gives no explicit flat reading in this chapter; derived from Ch.V quality list)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "inferred_inverse"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSUN-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 July–20 Aug (House of the Sun) aur Sun mount ubhra — Cheiro aapko 'heart force of the human race' kehta hai: dil khol kar dene wale, sympathetic, aur itni strong personality ki kisi bhi halat mein bheed se alag dikhte ho. Yeh energy leadership ke liye bani hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — House of the Sun 21 Jul–20 Aug (generally until 28 Aug): 'heart force of the human race'; generous and sympathetic; strong personality stands out anywhere",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "astro_overlay",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSUN-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap brutally frank ho — sach se bhaagne walon ko aap bakshte nahi, chahe apna hi kyun na ho. Standards bahut high hain. Frankness rakho, par delivery mein narmi laao: log sach tab sunte hain jab woh sunne layak tareeke se kaha jaaye. Sach + sammaan = asar.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — no mercy for evaders of the truth; brutal frankness even towards own family — softened per safety policy (denounce-own-children passage reframed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "honesty",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSUN-006",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapka pyaar bhi intense, nafrat bhi — beech ka raasta nahi. Dost par hamla ho, khaaskar peeth peeche, toh aap dhaal ban jaate ho. Intensity aapki khoobsurti hai; bas rishton mein thoda grey zone seekho — har insaan ya toh hero ya villain nahi hota.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — love intensely and hate intensely, no middle path; greatest loyalty if a friend is attacked, especially underhandedly",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "love",
+        "loyalty"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSUN-007",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap khud sachche ho, isliye maan lete ho ki doosre bhi hain — aur dhokha kha jaate ho. Cheiro warn karta hai ki baad ki umar mein yahi dhokhe mann par bhaari pad sakte hain. Bachaav abhi se: logon ko time aur chhote tests se parakho, paise aur partnership mein likhit agreements rakho, aur apni khushi ko sirf doosron ke behaviour par mat tikao. Aapki roshni aapki apni hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — truthful and honest but often terribly deceived; risk of later-life disillusionment — softened per safety policy (suicide/melancholy passage EXCLUDED; reframed as trust-vetting advice)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "trust",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSUN-008",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Pride aapka soft spot hai — madad maangne se behtar aap takleef sehna pasand karte ho, aur pride par chot bahut jaldi lagti hai. Jaldbaazi aur garam mizaaj public life mein dushman banate hain. Yaad rakho: help maangna kamzori nahi, strategy hai — bade log bhi maangte hain.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — extremely proud, will not ask favours; easily wounded through pride; impetuous and hot-tempered, make many enemies — softened per safety policy ('sooner die' phrasing removed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "pride",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSUN-009",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.sun",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Public life — stage, leadership, media, politics, performing arts, brand-building — aapke liye natural fit hai. Bas pehle se jaan lo ki wahan attacks bhi aate hain, kabhi-kabhi bahut unfair. Thick skin banana aapki training ka hissa hai, talent ka nahi.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — usually well fitted for public life, though often bitterly attacked there",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "career",
+        "public_life"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSUN-010",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 Jan–18 Feb (Sun Negative) — aap doosron ke liye fortune bana dete ho aur khud ke liye bahut kam rakhte ho. Manager, advisor, CFO, fund manager roles mein kamaal — par apni fees, equity aur savings pehle tay karo. Generosity ko structure do, warna woh self-neglect ban jaati hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — Sun Negative 21 Jan–18 Feb (+7 days): far more successful managing for others; excellent in business and finance but for others; make fortunes for others and keep a pittance",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "astro_overlay",
+        "wealth",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSUN-011",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap underdog ke saath khade hote ho, aur jo bhi takleef mein hai uske liye actively kaam karte ho. Iska price: taqatwar log aapko napasand karte hain. Yeh badge of honour hai — bas lambi ladai ke liye kuch powerful allies bhi banao.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — active in plans for the relief of distress and the public good; take the part of the 'under dog'; disliked by the richer and more powerful classes",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "service",
+        "justice"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MSUN-012",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Government, public leadership, debate, manch — wahan aapki eloquence khilti hai aur aap logon ki awaaz ban jaate ho. Par Cheiro kehta hai aap 'role of the moment' nibhaate ho, phir shaant zindagi mein chale jaate ho. Isliye spotlight ke baad ka 'second act' pehle se plan karo — paisa, skill, aur ek shaant shauk.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — governmental positions, leaders of party or public opinion; eloquence in debate; love public ceremonies and gatherings; play the role of the moment then retire into private life — softened per safety policy (end-of-days prediction excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "career",
+        "public_life",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSUN-013",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap har mushkil jhel sakte ho — kyunki aapko andar se pata hota hai ki aapne apna farz nibhaaya. Yehi feeling aapko har loss, har attack, har disappointment se upar uthaati hai. Yeh aapka armour hai; isse roz ek accha kaam karke polish karo.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — can endure any martyrdom or suffering, sustained by the feeling of having done their duty — softened per safety policy (suicide comparison EXCLUDED)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "resilience",
+        "gold_rule",
+        "shareable",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MSUN-014",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "SUN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Dhoop aur sookha mausam aapki sabse badi dawa hai — Cheiro ke shabdon mein 'greatest safeguard'. Thand aur seelan se door raho, roz 15-20 minute dhoop lo, haath-pair garm rakho, aur sports mein ghutne aur ankles ko protect karo.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IX — very dry climates and plenty of sunlight 'their greatest safeguard'; poor circulation and loss of natural heat; care of limbs, knees and ankles — softened per safety policy (named conditions excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_sun",
+        "dob_rule",
+        "vitality",
+        "lifestyle",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMER-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mercury mount ubhra hua — tez dimaag, wit, hazir-jawaabi aur eloquence. Science ho ya vyapaar, aap jaldi adapt kar lete ho. Communication aapki superpower hai — sales, teaching, writing, negotiation, kahin bhi lagao.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — Mount of Mercury: quickness of brain, wit, thought, eloquence; adaptability in science and commerce",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "intellect",
+        "communication",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.7
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "gte",
+          "value": 0.6
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mercury strong + Head line lambi aur saaf = mental aptitude ka best combo. Cheiro kehta hai yeh success ka promise badha deta hai — business, science, law, media, tech, kahin bhi. Aapke paas raw speed bhi hai aur steering bhi; ab bas destination chuno.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — with a long well-marked Line of Head, increases all the promise of mental aptitude and success",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "head_line_combo",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-003",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.7
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "lte",
+          "value": 0.4
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mercury bada par Head line kamzor — tez dimaag ko steering nahi mil rahi: bechaini, focus ki kami, aur business mein shortcut lene ka lalach. Do rules apnao: ek waqt mein ek kaam, aur jo deal 'too clever' lage usse chhod do. Cleverness se lamba reputation chalta hai, shortcuts se nahi.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — with weak, badly marked or irregular Head Line: mental excitability, nervousness, lack of concentration, trickiness in business — softened per safety policy (integrity-caution framing; 'unreliable character' label excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "head_line_combo",
+        "focus",
+        "integrity",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMER-004",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.5
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mercury mount kabhi akela mat padho — hamesha Head line ke saath. Cheiro saaf kehta hai: acche haath par Mercury sab accha badhata hai, kamzor haath par sab kamzor. Head line hi tay karti hai ki yeh tez dimaag banega ya bikhrega.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — 'This Mount should always be considered with the kind of Line of Head found on the hand'",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "reading_method",
+        "head_line_combo"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "lte",
+          "value": 0.3
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mercury mount flat — aap hazir-jawaab nahi, soch kar bolne wale ho. Business ya networking mein thoda slow start lag sakta hai. Fix: likh kar bolna practice karo — notes, scripts, emails. Aapki depth tab dikhegi jab delivery thodi smooth ho jaaye.",
+      "polarity": "neutral",
+      "weight": 0.4,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — inferred inverse of the large-Mercury reading (Cheiro gives no explicit flat reading in this chapter; derived from Ch.V quality list)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "inferred_inverse"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-006",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 May–20 June (Gemini, Mercury Positive) aur Mercury ubhra — aap do logon ka package ho: ek side kuch chahti hai, doosri ulta. Intelligence unusual hai, par continuity ki kami plans ko bigaad deti hai. Ek project ko finish line tak le jaana hi aapki asli tapasya hai — shuru karna nahi.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — Mercury Positive 21 May–20 Jun (until 27 Jun, fading): dual nature of the Twins; unusual intelligence; lack of continuity spoils plans",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "astro_overlay",
+        "duality"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-007",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Careers jahan quick wit aur change dono ho: acting, law/advocacy, public speaking, diplomacy, trading, startup aur business innovation, sales. Kahin bhi chamak sakte ho — Cheiro ki shart sirf itni: ek cheez par itni der tiko ki woh pak jaaye.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — clever actors, barristers, public speakers, diplomatists, stock brokers, company promoters, inventors of new business methods; success with will power and continuity",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "career"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-008",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Rishton mein aap garam-thande ek hi saans mein ho sakte ho — aaj intense pyaar, kal distance. Unless match sach mein sahi ho, commitment mein bhi uncertainty rehti hai. Partner ko apne 'moods ka manual' do, aur bade faisle sirf calm phase mein lo — mood mein nahi.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — hot and cold in the same moment; love passionately then dislike; uncertain in marriage unless very happily matched",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "love"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-009",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap chhoti-chhoti kamiyan turant notice karte ho aur sarcasm itni sharp hai ki log hans bhi dete hain aur chot bhi khaate hain. Diplomacy aur baat karna aapko aata hai. Us sharpness ko dushman banane ke bajaye negotiation aur comedy mein lagao — wahan woh paisa hai.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — very critical, notice small faults and mannerisms; sarcasm as cutting as it is clever; excellent in diplomacy, gifted talkers",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "communication"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-010",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapko lagta hai aap sabse sachche ho — aur us pal mein ho bhi — par aapke liye har pal ek alag zindagi hai, isliye hafte baad wahi baat alag rang le leti hai. Commitments, deals aur facts likh kar rakho; yeh aapki credibility ka insurance hai.",
+      "polarity": "negative",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — believe themselves the most truthful, yet the same story takes a different colouring in a day or a week — softened per safety policy (reframed as mood-coloured memory, not dishonesty)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "integrity",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMER-011",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "mounts.mercury",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapka weak spot nervous system hai — chinta seedha pet, neend aur sapno mein dikhti hai. Stress hygiene ko non-negotiable banao: sone se 30 minute pehle screen off, worry ko kagaz par utaarna, aur caffeine dopahar ke baad band. Dimaag tez hai, usse rest bhi utna hi chahiye.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X — everything affecting the nerves: indigestion from nervous worry, insomnia, vivid dreams — softened per safety policy (named conditions excluded)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "vitality",
+        "stress",
+        "lifestyle",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMER-012",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 Aug–20 Sep (Mercury Negative) — aapke paas Mercury ki saari qualities hain plus ek bonus: tikne ki taqat. Chamak thodi kam, par consistency zyada — isliye Cheiro kehta hai aap life se zyada nikaal lete ho. Slow and steady aapka brand hai; usse proudly own karo.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X (cont.) — Mercury Negative 21 Aug–20 Sep (until 27 Sep): all good points of the positive type plus continuity; solid plodding course; make more out of their lives",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "astro_overlay",
+        "consistency",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-013",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap practical ho aur har cheez apne nazariye se reason karte ho — jo aapko sahi laga, wahi sahi. Isliye log aapse unexpected faisle dekhte hain, aur life ke beech mein aapke beliefs bhi palat sakte hain. Bas bade faisle se pehle ek baar 'saamne wale ko kaisa lagega' wala lens zaroor lagao.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X (cont.) — materialistic and practical; reason from their own standpoint outwards; 'if right to them, it is right'; may change religious views mid-life — softened per safety policy (gendered virtue/abandonment passages EXCLUDED)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "practical",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMER-014",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_NEG"
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "gte",
+          "value": 0.6
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mercury Negative + clear seedhi Head line — Cheiro kehta hai mushkil waqt mein aapki best qualities khud aapko bachane aati hain: practicality, consistency, clear thinking. Aap crisis mein bikharte nahi, organise karte ho.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X (cont.) — with a clear and straight Line of Head, their best qualities come to the rescue",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "head_line_combo"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMER-015",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_NEG"
+        },
+        {
+          "feature": "lines.head.quality",
+          "op": "lte",
+          "value": 0.4
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Mercury Negative par Head line kamzor — aapki natural consistency ko support nahi mil rahi, isliye self-reference aur mood-driven faisle haavi ho sakte hain. Structure bahar se lao: accountability partner, likhit goals, weekly review. System aapki will power ka backup hai.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X (cont.) — with weak or poorly marked Head Line the weaker side may predominate — softened per safety policy ('evil side' reframed to consistency/structure)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "head_line_combo",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMER-016",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapki health mind-driven hai: jo soch liya bimaar hoon, ho gaye — aur theek bhi waise hi. Cheiro kehta hai constitution asal mein strong hai; nuksan bas over-medication aur har naye 'miracle cure' se hota hai. Ek trusted doctor rakho, symptom-googling band, har ache ki marketing mat karo, aur Nature ko kaam karne do — fresh air, shaanti, sukoon.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X (cont.) — more open to mental suggestion in health than any class; excellent constitutions except when over-medicated; prey of quack cures; peace of mind, country life, fresh air banish ills — softened per safety policy (not framed as addiction)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "vitality",
+        "health_anxiety",
+        "gold_rule",
+        "shareable",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMER-017",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MER_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Agar ghar ya rishta unhappy hai, toh aapki health wahin se tootna shuru hoti hai — Cheiro saaf kehta hai ki tab koi dawa kaam nahi karti jab tak halaat na badlein. Environment hi aapki medicine hai; pehle surroundings theek karo (ya badlo), phir body khud follow karegi.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.X (cont.) — if badly mated or in unhappy surroundings health breaks; no medicine helps until conditions change — softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_mercury",
+        "dob_rule",
+        "vitality",
+        "environment",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMOO-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Moon (Luna) mount ubhra hua — aapki duniya imagination se chalti hai: romance, kala, kavita, naye sheher, nayi ideas. Dil idealist hai, routine se jaldi bore ho jaate ho. Is kalpana ko daily output do — likho, banao, plan karo — warna woh overthinking mein badal jaati hai.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — Mount of the Moon (Luna): imaginative faculties, emotional artistic temperament, romance, ideality, poetry, change of scenery, travel",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "imagination",
+        "creativity"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-002",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Pyaar mein aap intense romantic ho — par woh romance dimaag aur dil ka hai, sharir ka kam (woh Venus mount ka department hai). Partner ko ideal banane ki aadat se bacho; real insaan se pyaar karo, uski kamiyon samet. Sapna kam, saath zyada.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — intensely romantic but idealistic in desires; not the passionate sensual nature given by Venus",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "love",
+        "romance"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-003",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Invention aur naye ideas aapka maidan hai — business mein bhi aap problems ko inventive tareeke se tackle karte ho. Product, design, research, content, startup — jahan 'naya' chahiye, wahan aap. Originality aapki currency hai; usse protect karo (document karo, date lagao).",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — inventive faculties well developed; succeed in inventions and all new ideas; business people remarkable for originality",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "career",
+        "innovation",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-004",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Speculation ka keeda aap mein hai — stocks, business bets, ya bas 'chance le lete hain'. Yeh kalpana-shakti ka side-effect hai, kharaabi nahi. Rule: risk capital ko total ka ek fixed chhota hissa rakho (jaise 10%), kabhi udhaar ke paise se bet mat lo, aur har bet se pehle 'worst case' likho.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — inclined to speculate or gamble with chances, stocks, business — softened per safety policy (risk-capping advice; no addiction framing)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "wealth",
+        "risk",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMOO-005",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Log kehte hain sapne dekhne wale paisa nahi kamaate — Cheiro ulta kehta hai: kai bade financiers aur organisation heads ke haath mein Luna high tha. 'Imagination, Inspiration ka doosra naam hai.' Bas sapne ko plan mein convert karna seekho — har idea ke saath ek next step.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — imaginative people among the most successful; great financiers with the Mount of Luna highly developed; 'Imagination may be another name for Inspiration'",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "wealth",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-006",
+      "domain": "palmistry",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Travel aur change aapke liye oxygen hai — aap convention se bandhe nahi rehte. Cheiro kehta hai aise log duniya ka bada hissa dekh lete hain. Saal mein ek nayi jagah ka rule rakho, aur career bhi aisa chuno jisme movement ho.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — love what is new; love travel and change; generally see the greater part of this planet",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "travel",
+        "change"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-007",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapki life mein ups-downs doosron se zyada honge — change aapki kismat ka pattern hai, Cheiro khud kehta hai. Par uski sabse acchi baat: aap haar nahi maante, aur zyada der neeche nahi rehte. Imagination hi aapki life-jacket hai — har girawat ke baad naya scene dekh lete ho.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — more ups and downs than almost any other class; rarely give in to the blows of Fate; seldom remain down-hearted for long",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "resilience",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-008",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Artists, musicians, composers, inventors — yeh aapka tribe hai. Saath mein mystic aur occult cheezon ka aakarshan, aur sapne itne saaf ki subah yaad rehte hain. Dream journal rakho — Cheiro ke mutabik aapke best ideas wahin se aate hain.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — inventors, artists, musicians, composers; love of mystic and occult things; dreams and visions tangible and clear",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "career",
+        "creative",
+        "mystic"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-009",
+      "domain": "palmistry",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.6
+        },
+        {
+          "feature": "context.moon_phase",
+          "op": "in",
+          "value": [
+            "waxing_crescent",
+            "first_quarter",
+            "waxing_gibbous",
+            "full",
+            "waning_gibbous"
+          ]
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Cheiro ka tip Moon-dominant logon ke liye: jab chaand aasman mein dikhta ho (waxing se full tak), tab naye plans, launches ya proposals shuru karo — tab aapka magnetism aur energy peak par hoti hai. Science nahi, tradition hai — par ek launch-ritual ki tarah kaam karta hai, aur ritual focus deta hai.",
+      "polarity": "neutral",
+      "weight": 0.45,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — Children of the Moon more magnetic and successful when the Moon appears in the heavens; commence plans when the Moon illuminates the skies",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "timing",
+        "mystic",
+        "astro_overlay",
+        "ritual"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-010",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap logon ki energy bahut jaldi absorb karte ho, isliye sangat chunne mein picky raho. Cheiro ki salah: jaldi shaadi mat karo jab tak poori tarah sure na ho — aap tezi se badalte aur badhte ho, aur early-life logon se 'grow away' karne ki tendency hai. Jo partner aapke saath grow kar sake, wahi aapka.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — extraordinarily sensitive to the magnetism of others; avoid marrying early unless sure of affinity; tendency to 'grow away' from early associates",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "love",
+        "boundaries"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-011",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Business mein aap akele best karte ho. Partnership karni hi ho toh exit clause pehle likho — binding, restricting agreements aapko ghutan denge aur aap bahar nikalne ka raasta dhoondoge. Flexible structure = lambi partnership.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — best 'on their own' in business; partnerships should not be binding or restricting; provision for dissolution when irksome",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "career",
+        "business",
+        "partnership"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-012",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MOON_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 June–20 July (Moon Positive) aur Luna ubhra — double Moon. Imagination aapke har kaam aur har baat mein rang bharti hai; ideas kabhi khatam nahi hote. Is gift ko roz creative output mein lagao — 20 minute likhna, sketch, ya planning — warna woh raat ki overthinking ban jaati hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI — Moon Positive when high/well-developed and when born 21 Jun–20 Jul (until 27 Jul): strong imagination tinges everything",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "dob_rule",
+        "astro_overlay"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-013",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.moon",
+          "op": "lte",
+          "value": 0.3
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Moon mount bilkul flat — aap kalpana se kam, tark se zyada chalte ho. Dreamer nahi, problem-solver. Business organisation, systems, processes aapka strong zone hai. Creativity chahiye toh creative logon ko team mein lo — aap unke ideas ko execute karne wale ho.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI (cont.) — Mount considered negative when very flat: good mental powers, imaginative faculties less in evidence; quiet reasoners",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "practical",
+        "reasoning"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-014",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MOON_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 Jan–20 Feb (Moon Negative) — aap problems ko shaanti se reason karke solve karte ho. Business organisation, government, administration, management — aap department-head material ho aur zimmedaari jaldi sambhal lete ho. Cheiro kehta hai doosron ki bhaari zimmedaari aap par sabse zyada suit karti hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI (cont.) — Moon Negative 21 Jan–20 Feb (minor until ~27 Feb): quiet reasoners; organisation of business, government work; splendid heads of departments; heavy responsibility for others suits them best",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "dob_rule",
+        "astro_overlay",
+        "career",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-015",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MOON_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap high-minded ho — pyaar, farz aur samaaj par pakke vichaar, aur dil se kind. Logon ka bhala karna chahte ho, par 'masses' level par — policy, system, community — ek-ek insaan se zyada. Isliye aapka impact scale par hota hai; chhote gestures ko bhi underrate mat karo.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI (cont.) — high-minded, decided views on love, duty and social life; do good to the masses more than to individuals; extremely kind-hearted",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "dob_rule",
+        "service",
+        "values"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-016",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MOON_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapka kaam accha hota hai par dushman bhi ban jaate hain — khaaskar public ya government positions mein, jahan opposition aapko target karta hai. Recognition der se milti hai. Isliye validation ke liye kaam mat karo, legacy ke liye karo — aur apna record khud document karo, taaki credit sahi jagah pahunche.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI (cont.) — knack of making bitter enemies; bitterly attacked by the opposition press in government positions; work seldom recognised until after they leave — softened per safety policy (after-death framing reframed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "dob_rule",
+        "obstacles",
+        "recognition",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMOO-017",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MOON_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap seedhi, saaf baat karne wale speaker ho — decoration nahi, sach. Aur aap hamesha unpopular cause ya underdog ke saath khade hote ho. Yeh courage hai; bas pick your battles — har ladai aapki nahi hai.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI (cont.) — excellent speakers through 'plain speaking'; espouse the unpopular cause, take the part of the under dog",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "dob_rule",
+        "communication",
+        "justice"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-018",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MOON_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Dosti mein devoted aur loyal — par jinse pyaar karte ho, unki chhoti si baat bhi gehri chot deti hai. Apne close logon ko batao ki aap sensitive ho; unhe guess mat karne do. Aur chot lage toh 24 ghante mein bol do, 24 din baad nahi.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI (cont.) — devoted and loyal friends; extremely sensitive and easily wounded by those they care for",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "dob_rule",
+        "friendship",
+        "sensitivity"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MMOO-019",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MOON_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aastha aapke har kaam mein jhalakti hai — accha hai — par virodh hone par aap zidd aur kattarta ki taraf fisal sakte ho, aur tab aapko manage karna mushkil ho jaata hai. Practice: bahas mein jeetne ke bajaye samajhne ka goal rakho. Sabse mazboot belief woh hai jo sawaal se nahi darta.",
+      "polarity": "negative",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI (cont.) — religious views brought into all they do; danger of becoming too fanatical; obstinate, dogmatic, hard to manage when opposed — softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "dob_rule",
+        "belief",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MMOO-020",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "MOON_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapko bimaar koi virus nahi, aapki chinta aur overwork karte hain. Burnout aapka asli risk hai — rest ko calendar mein daalo, 'no' bolna seekho, aur kaam ko ghar ke bistar tak mat le jao. Cheiro ke mutabik pair aur ankles ko bhi sports aur travel mein dhyan se rakho.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XI (cont.) — worry themselves into bad health; overwork; accidents to feet and ankles — softened per safety policy (named conditions and drowning-danger claim EXCLUDED)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_moon",
+        "dob_rule",
+        "vitality",
+        "burnout",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MVEN-001",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.6
+        },
+        {
+          "feature": "mounts.venus",
+          "op": "lte",
+          "value": 0.85
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Venus mount accha ubhra hua (par bahut zyada nahi) — pyaar aur saath ki chaah, doosron ko khush karne ki ichha, aur har roop mein sundarta ki kadar. Artists, singers, musicians ke haath mein yeh mount hamesha dikhta hai. Aap warm, lovable insaan ho — yeh aapka sabse bada asset hai.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — Mount of Venus well-formed and not too large: desire for love and companionship, desire to please, worship of beauty; artistic emotional temperament; prominent in artists, singers, musicians",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "love",
+        "warmth",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-002",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Venus mount ke neeche haath ki badi khoon ki nali (palmar arch) hoti hai — Cheiro ke mutabik ubhra Venus = accha blood flow, strong circulation, robust health. Aapke paas natural stamina aur warmth hai; isse regular movement aur neend se maintain karo — yeh reserve khatam bhi ho sakta hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — Venus covers the 'Great Palmar Arch'; a large Mount indicates plentiful blood supply, strong active circulation, more robust health",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "vitality",
+        "circulation"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-003",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.85
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Venus bahut ubhra — physical warmth aur passion high hai; aap life ko indriyon se jeete ho: khaana, sparsh, music, pyaar. Yeh intensity khoobsurat hai — bas consent, boundaries aur commitment ke frame mein rakho. Bina frame ke yahi intensity rishton ko jalaati hai, frame ke saath unhe garm rakhti hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — large Mount shows greater passion and sensuality than when flat — softened per safety policy (intensity + boundaries framing)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "love",
+        "intensity",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MVEN-004",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "lte",
+          "value": 0.3
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Venus mount flat — aapka pyaar dimaag aur dil se hai, sharir se kam; physical drive aur energy reserve low rehta hai. Iska matlab thanda nahi — 'mental lover' hai, jo baaton aur samajh se judta hai. Stamina ke liye thoda conscious effort karo: walk, neend, protein, dhoop.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — Mount is Negative when small or flat; flat/flabby Venus linked to lower vitality and less physical passion; affection more mental",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "love",
+        "vitality"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-005",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.6
+        },
+        {
+          "feature": "hand.overall_quality",
+          "op": "gte",
+          "value": 0.6
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Venus well-shaped + baaki haath normal = Cheiro ke shabdon mein 'excellent sign': natural magnetism aur attraction. Aapko try nahi karna padta — log khinche chale aate hain. Is charm ko rishte banane mein lagao, sirf impress karne mein nahi.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — with the rest of the hand normal, a well-shaped Venus is 'an excellent sign': magnetism and attraction of one sex to the other",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "love",
+        "magnetism",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-006",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.7
+        },
+        {
+          "feature": "hand.overall_quality",
+          "op": "lte",
+          "value": 0.4
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Venus ek amplifier hai — haath mein jo bhi tendencies hain, yeh unhe tez karta hai. Agar baaki haath weak signals de raha hai (kamzor Head line, weak thumb, tooti lines), toh impulses ko brake dene wali aadatein pehle banao: routine, sleep, aur ek insaan jo aapko seedha bole.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — found with 'vicious or abnormal signs' elsewhere, Venus increases those tendencies — softened per safety policy (amplifier framing; no moral label)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "reading_method",
+        "amplifier",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MVEN-007",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 20 April–20 May (Venus Positive) aur Venus ubhra — aap mein ek curious dominating power hai; opinions pakke, zid pakki, jhukna mushkil. Strength hai, par 'unyielding' ko 'reliable' banao, 'haavi' nahi. Apni baat manwane ke liye taaqat nahi, warmth use karo — woh aapke paas zyada hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — Venus Positive 20 Apr–20 May (minor until 27 May): curious dominating power over others; dogmatic, unyielding, stiff-necked — softened per safety policy ('tyrannical' reframed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "astro_overlay",
+        "willpower",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MVEN-008",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Pyaar mein aap poori tarah samarpit ho jaate ho — jise chaaha uske liye koi bhi kurbani chhoti hai, chahe baahar ki duniya ke liye aap kitne bhi sakht ho. Yeh rare depth hai. Bas apni identity, dost aur self-respect ko bhi us list mein rakho — poora ghul jaana pyaar nahi, gayab ho jaana hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — when they love, they become devoted; no sacrifice too great for the one who holds their affection",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "love",
+        "devotion"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-009",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap zabardast host ho — khaane ka taste, mehmaan-nawazi, acche kapde, aur kam mein bhi 'rich look' create karna. Log aapko asal se zyada ameer samajhte hain. Hospitality aapka social superpower hai — network isi se banao; bas dikhaave ke liye udhaar mat lo.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — hospitable and generous; wonderful hosts with great taste in food; dress with taste; considered richer than they are, make a good show on little",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "hospitality",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-010",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Pasand-napasand impulsive, zabaan seedhi, gussa tez — aur garam hone par yaad nahi rehta ki kya keh diya. Phir gehra pachtawa. Pattern wahi puraana: garam mein bolna band, thande mein baat karo. Aur jise chot pahunchai, usse jaldi sorry — aapke liye yeh aasaan hai kyunki dil saaf hai.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — impulsive in likes and dislikes; too frank and outspoken; quick temper with no restraint when roused; quickly over and most regretful",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "temper",
+        "temper_management"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-011",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap par surroundings ka asar bahut gehra hai — gloomy, uncongenial jagah mein aap andar se neeche ho jaate ho. Ghar aur workspace ko roshni, rang, paudhe aur saaf-safaai se curate karo; yeh aapke mood ka infrastructure hai, luxury nahi. Toxic mahaul se nikalna aapke liye self-care hai.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — most easily influenced by surroundings; become low in gloomy and uncongenial conditions — softened per safety policy ('morbid and depressed' reframed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "environment",
+        "mood",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MVEN-012",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Cheiro Venus Positive logon ko jaldi shaadi se mana karta hai — pehla bada rishta aksar galti nikalta hai, aur independent nature galat match mein phans kar apne raaste dhoondh leti hai. Yeh bhavishyavani nahi, salah hai: commit karne se pehle waqt lo, aur 'pyaar' aur 'compatibility' dono check karo.",
+      "polarity": "negative",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — should not marry early; first attempt usually a mistake; independent character leads to unconventional lives if mismatched — softened per safety policy (advice framing, not prediction)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "love",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-MVEN-013",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.5
+        },
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_POS"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Jab affection jaag jaaye, jealousy bhi jaag jaati hai — khaaskar jab ghar ki shaanti ko koi chhede. Jealousy ko alarm samjho, hathiyaar nahi: usse 'baat karne' ka trigger banao, 'control karne' ka nahi. Partner ko insecurity batana, accusation se behtar hai.",
+      "polarity": "negative",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII — inclined to be very jealous when affections are roused, especially if the peace of the home is disturbed",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "love",
+        "jealousy"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-014",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Born 21 Sep–20 Oct (Venus Negative) — aapka pyaar utna hi intense hai, bas mental aur spiritual zyada, physical kam. Aapko soul companionship chahiye — dimaag se connect hone wala partner. Apni needs clearly bolo; sab log 'mental intimacy' ko pyaar nahi samajhte, aur aapko samjhaana padega.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII (neg.) — Venus Negative 21 Sep–20 Oct (minor until 27 Oct): Mount seldom prominent; affections as intense but mental rather than physical; spiritual love, crave soul companionship",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "astro_overlay",
+        "love"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-015",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_NEG"
+        },
+        {
+          "feature": "mounts.venus",
+          "op": "gte",
+          "value": 0.7
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aap Venus Negative window mein born ho par Venus mount phir bhi saaf ubhra hua hai — Cheiro kehta hai yeh exception hai: mental pyaar ke saath physical warmth bhi poori tarah active hai. Best of both worlds — bas dono needs ko ek hi partner se expect karte waqt patient raho.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII (neg.) — exceptions can be seen by watching if the Mount of Venus is large with people born in this period",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "reading_method",
+        "exception"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-016",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapki intuition tez hai — presentiments, sapne jo sach nikalte hain, gut feelings jo sahi hoti hain. Problem: aap unhe reasoning se kaat dete ho. Intuition ko data ki tarah treat karo — note karo, date lagao, track karo ki kitni baar sahi thi. Phir usse bharosa karna aasaan hoga.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII (neg.) — keen intuition and mental balance; presentiments, psychic experiences, dreams, clairvoyance, often spoiled by the reasoning faculties",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "intuition",
+        "mystic"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-017",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Pyaar mein aapka sabse bada dushman hesitation hai — aap sochte reh jaate ho, pros-cons tolte ho, aur mauka nikal jaata hai; bas regret bachta hai. Cheiro ki seedhi salah: pehle impression par act karo, jo mauka saamne hai usse lo. Perfect clarity kabhi nahi aayegi — 70% sure ho toh haan bolo.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII (neg.) — in love nearly always unhappy because they hesitate and reason while opportunity passes; advised to act on first impressions and intuition and take the opportunities Fate offers",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "love",
+        "action",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-018",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Law, medicine, judiciary, research — jahan har point ko imaandaari se tolna padta hai, wahan aap master ban sakte ho. Aapka motive paisa nahi, mastery aur insaaf hai — isliye specialist bano, generalist nahi. Aur haan, mastery ki sahi keemat lena bhi insaaf hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII (neg.) — study Law to improve it for others; great desire for knowledge, abstruse subjects, weigh every point conscientiously; excellent doctors, judges, lawyers as masters of a branch rather than for worldly gain",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "career",
+        "mastery"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MVEN-019",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "eq",
+          "value": "VEN_NEG"
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Aapki physical reserve limited hai aur nerves jaldi thak jaati hain — low mood aur akelepan ki feeling aa sakti hai. Isko fight mat karo, manage karo: neend non-negotiable, roz halka movement, aur hafte mein kam se kam ek gehri baat-cheet kisi apne se. Agar mood lamba neeche rahe, toh doctor ya counsellor se baat karna samajhdaari hai, kamzori nahi.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.XII (neg.) — lack of physical strength, exhaustion of the nerves, low spirits, intense feeling of loneliness — softened per safety policy (named conditions and surgery prediction EXCLUDED; professional-help pointer added)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "mount_venus",
+        "dob_rule",
+        "vitality",
+        "mood",
+        "softened"
+      ],
+      "safety_class": "sensitive"
+    }
+  ]
+}
