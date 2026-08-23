@@ -133,6 +133,20 @@ export const MOUNTS: readonly MountSpec[] = [
 
 export const MOUNT_KEYS: readonly string[] = MOUNTS.map((mount) => mount.key);
 
+/**
+ * The four rectification anchors — wrist, thumb CMC, index MCP, little MCP — in this viewBox, in the
+ * same order as `lib/scan/rectify.ts`'s `PALM_ANCHORS`.
+ *
+ * These let a homography carry polylines traced in the 256² rectified crop onto the replica hand, so
+ * the reading can show the user's *own* lines rather than the idealised ones.
+ */
+export const HOLO_PALM_ANCHORS: ReadonlyArray<{ readonly x: number; readonly y: number }> = [
+  { x: 150, y: 350 }, // wrist
+  { x: 86, y: 250 }, // thumb CMC
+  { x: 104, y: 180 }, // index MCP
+  { x: 232, y: 196 }, // little MCP
+];
+
 /* --------------------------------- Levels --------------------------------- */
 
 export interface MountLevel {

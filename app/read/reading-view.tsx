@@ -177,6 +177,7 @@ function SourceDrawer({ rule, onClose }: { readonly rule: PublicRule | null; rea
 export function ReadingView({
   reading,
   mounts,
+  lines,
   feedback,
   onFeedback,
   onRestart,
@@ -184,6 +185,8 @@ export function ReadingView({
   readonly reading: ReadingResponse;
   /** What the user actually reported, so the report palm shows their scan and not a default one. */
   readonly mounts: Record<string, number>;
+  /** Polylines traced from the user's own palm, already in HoloPalm's viewBox. */
+  readonly lines?: Readonly<Record<string, ReadonlyArray<readonly [number, number]>>>;
   readonly feedback: Record<number, FeedbackState>;
   readonly onFeedback: (readingId: string, sectionIndex: number, ruleIds: readonly string[], verdict: Verdict) => Promise<void>;
   readonly onRestart: () => void;
@@ -231,7 +234,7 @@ export function ReadingView({
       <header className="flex flex-col items-center gap-6">
         <span className="font-display text-xs uppercase tracking-[0.22em] text-mount-glow">Scan report</span>
         <div className="w-full max-w-[15rem]">
-          <HoloPalm mounts={mounts} animate />
+          <HoloPalm mounts={mounts} lines={lines} animate />
         </div>
       </header>
 

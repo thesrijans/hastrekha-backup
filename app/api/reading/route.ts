@@ -68,6 +68,7 @@ async function persistReading(args: {
   readonly guestKeyHash: string;
   readonly tier: ReadingTier;
   readonly features: FeatureBag;
+  readonly source: ReadingSource;
   readonly question: string | undefined;
   readonly result: ReadingResult;
   readonly narration: Narration;
@@ -79,7 +80,7 @@ async function persistReading(args: {
         userId: args.userId,
         guestKey: args.guestKeyHash,
         tier: TIER_TO_DB[args.tier],
-        source: readingSource(args.features),
+        source: args.source,
         kbVersion: args.result.meta.kbVersion,
         features: args.features as unknown as Prisma.InputJsonValue,
         question: args.question,
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const sanitized = sanitizeReadingRequest(rawJson, new TextEncoder().encode(rawText).length);
   if (!sanitized.ok) return NextResponse.json({ error: sanitized.error }, { status: 400 });
 
-  const { features, tier, question, userName, categories } = sanitized.request;
+  const { features, tier, question, userName, categories, source } = sanitized.request;
   const userId = await resolveUserId(request);
   const guest = resolveGuest(request);
   if (tier !== "free" && userId === null) {
@@ -164,6 +165,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     guestKeyHash: guestKey(guest.token),
     tier,
     features,
+    // A camera scan cannot be inferred from the bag, so the client declares it; anything else is derived.
+    source: source ?? readingSource(features),
     question,
     result,
     narration,

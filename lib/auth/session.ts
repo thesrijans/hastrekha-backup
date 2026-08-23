@@ -38,6 +38,8 @@ export interface SessionUser {
   readonly role: UserRole;
   readonly persona: string;
   readonly locale: string;
+  /** ISO date (YYYY-MM-DD) or null. Lets the scan seed `user.birth_date` without asking again. */
+  readonly birthDate: string | null;
 }
 
 /** Thrown by {@link requireUser}. Carries the HTTP status a route should reply with. */
@@ -154,7 +156,16 @@ export async function getSessionUser(request: NextRequest): Promise<SessionUser 
       userId: true,
       expiresAt: true,
       user: {
-        select: { id: true, email: true, name: true, role: true, persona: true, locale: true, deletedAt: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          persona: true,
+          locale: true,
+          birthDate: true,
+          deletedAt: true,
+        },
       },
     },
   });
@@ -164,8 +175,17 @@ export async function getSessionUser(request: NextRequest): Promise<SessionUser 
   if (session.expiresAt.getTime() <= Date.now()) return null; // row expired even if the JWT has not
   if (session.user.deletedAt !== null) return null; // account deleted under DPDP erasure
 
-  const { id, email, name, role, persona, locale } = session.user;
-  return { id, email, name, role, persona, locale };
+  const { id, email, name, role, persona, locale, birthDate } = session.user;
+  return {
+    id,
+    email,
+    name,
+    role,
+    persona,
+    locale,
+    // Stored as a DATE column; the client only ever needs the calendar day.
+    birthDate: birthDate === null ? null : birthDate.toISOString().slice(0, 10),
+  };
 }
 
 /** {@link getSessionUser} for routes where anonymous access is not an option. */

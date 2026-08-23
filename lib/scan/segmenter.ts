@@ -28,6 +28,10 @@ export interface Segmenter {
   readonly id: string;
   /** False while assets are loading or unavailable; callers must degrade, not throw. */
   readonly ready: boolean;
+  /** Execution provider actually in use: "webgpu", "wasm", "loading", "unavailable". */
+  readonly backend: string;
+  /** Wall-clock milliseconds for the most recent inference. */
+  readonly lastInferenceMs: number;
   /** Which lines this implementation can tell apart. Empty means "lines, undifferentiated". */
   readonly resolves: readonly PalmLineId[];
   /** @returns null when the implementation has nothing to offer for this frame. */
@@ -80,6 +84,8 @@ export function createNoopSegmenter(): Segmenter {
   return {
     id: "noop",
     ready: false,
+    backend: "none",
+    lastInferenceMs: 0,
     resolves: [],
     async segment(): Promise<LineMask | null> {
       return null;

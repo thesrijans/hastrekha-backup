@@ -4,45 +4,70 @@ import type { HandLandmarker } from "@mediapipe/tasks-vision";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createHandLandmarker, MissingScanAssetError, toObservation } from "@/lib/scan/landmarks";
 import { featuresFromLandmarks, type LandmarkFeatureResult } from "@/lib/scan/features";
-import { gradeFrame, landmarkJitter } from "@/lib/scan/quality";
+import {
+  CAPTURE_POSES,
+  gradeFrame,
+  landmarkJitter,
+  palmSpan,
+  SPAN_HISTORY_FRAMES,
+  type PoseProfile,
+} from "@/lib/scan/quality";
 import { palmQuad, rectifyPalm, type RectifyResult } from "@/lib/scan/rectify";
-import { createNoopSegmenter } from "@/lib/scan/segmenter";
-import type { FrameStats, HandObservation, Landmark3, QualityVerdict } from "@/lib/scan/types";
+import { createOnnxSegmenter } from "@/lib/scan/segmenter-onnx";
+import type { Segmenter } from "@/lib/scan/segmenter";
+import { emptyFusion, fuse, resetFusion, shouldReset, type FusionState } from "@/lib/scan/fusion";
+import { extractLines, type LineExtraction, type Poly } from "@/lib/scan/lines";
+import {
+  commitCapture,
+  currentPose,
+  emptyCapture,
+  poseProgressOf,
+  progressOf,
+  readyToCapture,
+  tickCapture,
+  type CaptureState,
+} from "@/lib/scan/capture";
+import type { FrameStats, Handedness, HandObservation, Landmark3, QualityVerdict } from "@/lib/scan/types";
 
 export type ScanStatus = "idle" | "starting" | "running" | "denied" | "unsupported" | "error";
 
 /** Feature/rule cadence. Landmarks run at camera rate; everything downstream is throttled. */
 const FEATURE_INTERVAL_MS = 160;
 /** Rectification is ~65k bilinear samples, so it runs far below frame rate and only on good frames. */
-const RECTIFY_INTERVAL_MS = 260;
+const RECTIFY_INTERVAL_MS = 200;
+/** Thinning + tracing is the most expensive CPU step; it does not need to keep up with inference. */
+const EXTRACT_INTERVAL_MS = 700;
 /** Luma is sampled from a tiny downscale — reading a full frame back every tick would stall the loop. */
 const LUMA_SIZE = 48;
+/** Clamp on the frame delta fed to the capture clock, so a backgrounded tab cannot auto-capture. */
+const MAX_FRAME_DELTA_MS = 120;
 
-const IDLE_QUALITY: QualityVerdict = { ok: false, issues: ["no_hand"], hint: "Camera chalu karo", score: 0 };
+const IDLE_QUALITY: QualityVerdict = {
+  ok: false,
+  issues: ["no_hand"],
+  hint: "Camera chalu karo",
+  score: 0,
+  checks: {} as QualityVerdict["checks"],
+};
 
 export interface UseHandScanOptions {
   /** Front camera is the natural pose for reading your own palm, and it needs a mirrored preview. */
   readonly mirrored?: boolean;
   readonly facingMode?: "user" | "environment";
   /**
-   * Called from the frame loop each time features are recomputed.
-   *
-   * This is the seam the live ticker folds into: it fires from a rAF callback rather than an effect,
-   * so accumulating state off it costs no extra render pass.
+   * Called from the frame loop **only for frames that pass the gate**, each time features are
+   * recomputed. Firing on a failing frame is what previously let rules confirm off the back of a
+   * hand, so the filter lives here rather than at the call site.
    */
   readonly onFeatures?: (result: LandmarkFeatureResult) => void;
+  /** Called for every frame that fails the gate, so the latch can decay. */
+  readonly onGateFail?: (nowMs: number) => void;
+  /** Called once the last guided pose is captured. */
+  readonly onCaptureComplete?: (capture: CaptureState) => void;
 }
 
-/**
- * Owns the camera, the landmark loop and everything derived from a frame.
- *
- * Deliberately started by an explicit `start()` rather than on mount: camera permission should follow
- * a user gesture, and it keeps a heavyweight side effect out of render.
- *
- * Nothing here uploads anything. Frames live in a canvas that is never read by any network call.
- */
 export function useHandScan(options: UseHandScanOptions = {}) {
-  const { onFeatures } = options;
+  const { onFeatures, onGateFail, onCaptureComplete } = options;
   const mirrored = options.mirrored ?? true;
   const facingMode = options.facingMode ?? "user";
 
@@ -53,19 +78,19 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const frameCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const lumaCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const previousLandmarksRef = useRef<readonly Landmark3[] | null>(null);
+  const spanHistoryRef = useRef<number[]>([]);
+  const baselineHandRef = useRef<Handedness | null>(null);
   const lastFeatureAtRef = useRef(0);
   const lastRectifyAtRef = useRef(0);
+  const lastExtractAtRef = useRef(0);
   const lastFrameAtRef = useRef(0);
   const runningRef = useRef(false);
-  /**
-   * The loop schedules `requestAnimationFrame` through this rather than naming itself, which would be
-   * a self-referencing `useCallback`. It also means a re-created `tick` is picked up on the next frame
-   * instead of the loop running a stale closure forever.
-   */
   const loopRef = useRef<(() => void) | null>(null);
-
-  /** Stable for the lifetime of the hook, and readable during render — unlike a ref. */
-  const [segmenter] = useState(createNoopSegmenter);
+  const segmenterRef = useRef<Segmenter | null>(null);
+  const fusionRef = useRef<FusionState>(emptyFusion());
+  const captureRef = useRef<CaptureState>(emptyCapture());
+  const lastPoseRef = useRef<string | null>(null);
+  const lastRectifiedRef = useRef<ImageData | null>(null);
 
   const [status, setStatus] = useState<ScanStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -75,8 +100,15 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const [rectified, setRectified] = useState<RectifyResult | null>(null);
   const [stats, setStats] = useState<FrameStats>({ luma: 0, clipped: 0 });
   const [fps, setFps] = useState(0);
+  const [backend, setBackend] = useState("loading");
+  const [inferenceMs, setInferenceMs] = useState(0);
+  const [fusedConfidence, setFusedConfidence] = useState(0);
+  /** The EMA buffer itself, for the debug mask view. Mutated in place; redraws key off confidence. */
+  const [fusedField, setFusedField] = useState<Float32Array | null>(null);
+  const [polys, setPolys] = useState<readonly Poly[]>([]);
+  const [extraction, setExtraction] = useState<LineExtraction | null>(null);
+  const [capture, setCapture] = useState<CaptureState>(emptyCapture);
 
-  /** Callback ref: writing `.current` from here is an event, not a render-phase mutation. */
   const setVideoElement = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node;
   }, []);
@@ -89,11 +121,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     streamRef.current = null;
     landmarkerRef.current?.close();
     landmarkerRef.current = null;
-    segmenter.dispose();
+    segmenterRef.current?.dispose();
+    segmenterRef.current = null;
     previousLandmarksRef.current = null;
-  }, [segmenter]);
+    spanHistoryRef.current = [];
+  }, []);
 
-  /** Mean luma and clipping from a tiny downscale of the frame. */
   const sampleLuma = useCallback((video: HTMLVideoElement): FrameStats => {
     let canvas = lumaCanvasRef.current;
     if (canvas === null) {
@@ -153,10 +186,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     }
 
     const now = performance.now();
-    if (lastFrameAtRef.current > 0) {
-      const delta = now - lastFrameAtRef.current;
-      if (delta > 0) setFps((previous) => previous * 0.9 + (1000 / delta) * 0.1);
-    }
+    const delta = lastFrameAtRef.current === 0 ? 0 : now - lastFrameAtRef.current;
+    if (delta > 0) setFps((previous) => previous * 0.9 + (1000 / delta) * 0.1);
     lastFrameAtRef.current = now;
 
     try {
@@ -167,52 +198,128 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       const frameStats = sampleLuma(video);
       setStats(frameStats);
 
+      const pose: PoseProfile | null = currentPose(captureRef.current);
+
+      // A pose change invalidates the fused mask — a tilted palm rectifies to different pixels.
+      const poseKey = pose?.pose ?? "done";
+      const poseChanged = lastPoseRef.current !== null && lastPoseRef.current !== poseKey;
+      lastPoseRef.current = poseKey;
+
+      if (shouldReset(fusionRef.current, { handPresent: next !== null, poseChanged, nowMs: now })) {
+        fusionRef.current = resetFusion(fusionRef.current);
+        setFusedConfidence(0);
+        setPolys([]);
+      }
+
+      let verdict: QualityVerdict;
       if (next === null) {
         previousLandmarksRef.current = null;
-        setQuality(gradeFrame(null));
+        spanHistoryRef.current = [];
+        verdict = gradeFrame(null);
       } else {
+        if (baselineHandRef.current === null) baselineHandRef.current = next.handedness;
+
         const jitter = landmarkJitter(previousLandmarksRef.current, next.landmarks);
         previousLandmarksRef.current = next.landmarks;
 
-        const verdict = gradeFrame({
+        const history = spanHistoryRef.current;
+        history.push(palmSpan(next.landmarks));
+        if (history.length > SPAN_HISTORY_FRAMES) history.shift();
+
+        verdict = gradeFrame({
           landmarks: next.landmarks,
           world: next.world,
           handedness: next.handedness,
           mirrored,
           stats: frameStats,
           jitter,
+          score: next.score,
+          spanHistory: history,
+          pose: pose ?? undefined,
+          baselineHandedness: baselineHandRef.current,
         });
-        setQuality(verdict);
+      }
+      setQuality(verdict);
 
-        if (now - lastFeatureAtRef.current > FEATURE_INTERVAL_MS) {
-          lastFeatureAtRef.current = now;
-          const derived = featuresFromLandmarks(next.world, {
-            quality: verdict.score,
-            linesAvailable: segmenter.ready,
-          });
-          setFeatures(derived);
-          if (derived !== null) onFeatures?.(derived);
-        }
+      /*
+       * The hard rule from real-hand testing: a frame that fails ANY check contributes nothing.
+       * No features, no latch progress, no mask fusion, no capture progress. Everything downstream
+       * of this branch is gated on `verdict.ok`.
+       */
+      const nextCapture = tickCapture(captureRef.current, verdict.ok, Math.min(MAX_FRAME_DELTA_MS, delta));
+      if (nextCapture !== captureRef.current) {
+        captureRef.current = nextCapture;
+        setCapture(nextCapture);
+      }
 
-        // Only rectify frames worth keeping — a blurred or edge-on crop poisons the segmenter later.
-        if (verdict.ok && now - lastRectifyAtRef.current > RECTIFY_INTERVAL_MS) {
-          lastRectifyAtRef.current = now;
-          const source = frameImageData(video);
-          const quad = source === null ? null : palmQuad(next.landmarks, source.width, source.height);
-          if (source !== null && quad !== null) {
-            const warped = rectifyPalm(source, quad);
-            if (warped !== null) setRectified(warped);
+      if (!verdict.ok || next === null) {
+        onGateFail?.(now);
+        schedule();
+        return;
+      }
+
+      if (now - lastFeatureAtRef.current > FEATURE_INTERVAL_MS) {
+        lastFeatureAtRef.current = now;
+        const derived = featuresFromLandmarks(next.world, {
+          quality: verdict.score,
+          linesAvailable: fusionRef.current.frames > 0,
+        });
+        setFeatures(derived);
+        if (derived !== null) onFeatures?.(derived);
+      }
+
+      if (now - lastRectifyAtRef.current > RECTIFY_INTERVAL_MS) {
+        lastRectifyAtRef.current = now;
+        const source = frameImageData(video);
+        const quad = source === null ? null : palmQuad(next.landmarks, source.width, source.height);
+        if (source !== null && quad !== null) {
+          const warped = rectifyPalm(source, quad);
+          if (warped !== null) {
+            lastRectifiedRef.current = warped.image;
+            setRectified(warped);
+
+            // Fire and forget: the segmenter drops this frame if one is already in flight.
+            void segmenterRef.current?.segment(warped.image).then((mask) => {
+              if (mask === null || !runningRef.current) return;
+              fusionRef.current = fuse(fusionRef.current, mask, performance.now());
+              setFusedConfidence(fusionRef.current.confidence);
+              setFusedField(fusionRef.current.ema);
+              setInferenceMs(mask.inferenceMs ?? 0);
+              setBackend(mask.backend ?? segmenterRef.current?.backend ?? "wasm");
+
+              const at = performance.now();
+              if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS) {
+                lastExtractAtRef.current = at;
+                const found = extractLines(fusionRef.current.ema, fusionRef.current.size);
+                setExtraction(found);
+                setPolys(found.polys);
+              }
+            });
           }
         }
+      }
+
+      if (readyToCapture(captureRef.current) && fusionRef.current.frames > 0) {
+        const committed = commitCapture(
+          captureRef.current,
+          fusionRef.current.ema,
+          fusionRef.current.confidence,
+          now,
+        );
+        captureRef.current = committed;
+        setCapture(committed);
+        // Each pose starts from a clean average; the merged mask is assembled at the end.
+        fusionRef.current = resetFusion(fusionRef.current);
+        setFusedConfidence(0);
+        if (committed.done) onCaptureComplete?.(committed);
       }
     } catch (loopError) {
       console.error("[scan] frame failed:", loopError);
     }
 
     schedule();
-  }, [frameImageData, mirrored, onFeatures, sampleLuma, schedule, segmenter]);
+  }, [frameImageData, mirrored, onCaptureComplete, onFeatures, onGateFail, sampleLuma, schedule]);
 
-  // Keeps the running loop pointed at the newest closure without restarting it.
   useEffect(() => {
     loopRef.current = tick;
   }, [tick]);
@@ -241,6 +348,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       await video.play();
 
       landmarkerRef.current = await createHandLandmarker();
+      // Starts loading in the background; scanning proceeds while the model warms up.
+      segmenterRef.current = createOnnxSegmenter();
+
       runningRef.current = true;
       setStatus("running");
       schedule();
@@ -273,7 +383,15 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     setFps(0);
   }, [teardown]);
 
-  useEffect(() => teardown, [teardown]);
+  const restartCapture = useCallback(() => {
+    captureRef.current = emptyCapture();
+    setCapture(captureRef.current);
+    fusionRef.current = resetFusion(fusionRef.current);
+    setFusedConfidence(0);
+    setPolys([]);
+    setExtraction(null);
+    baselineHandRef.current = null;
+  }, []);
 
   return {
     status,
@@ -284,10 +402,21 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     rectified,
     stats,
     fps,
-    segmenterId: segmenter.id,
+    backend,
+    inferenceMs,
+    fusedConfidence,
+    fusedField,
+    polys,
+    extraction,
+    capture,
+    pose: currentPose(capture),
+    poseProgress: poseProgressOf(capture),
+    totalProgress: progressOf(capture),
+    poseCount: CAPTURE_POSES.length,
     mirrored,
     setVideoElement,
     start,
     stop,
+    restartCapture,
   };
 }

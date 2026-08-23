@@ -16,13 +16,19 @@ const ALLOWED_GROUPS: ReadonlySet<string> = new Set([
   "mounts", "lines", "hand", "fingers", "thumb", "nails", "signs", "marks", "skin", "geometry", "context", "reading",
 ]);
 const TIERS: ReadonlySet<string> = new Set<ReadingTier>(["free", "premium", "deep"]);
+/** Mirrors the ReadingSource enum in prisma/schema.prisma. */
+const SOURCES: ReadonlySet<string> = new Set<ReadingSource>(["DOB_ONLY", "MANUAL_FORM", "CAMERA_SCAN"]);
 const CATEGORIES: ReadonlySet<string> = new Set<RuleCategory>([
   "career", "love", "wealth", "personality", "vitality", "timing", "travel", "obstacles", "children", "protection", "reading_method",
 ]);
 
+/** How the features were gathered. The camera scan cannot be inferred from the bag alone. */
+export type ReadingSource = "DOB_ONLY" | "MANUAL_FORM" | "CAMERA_SCAN";
+
 export interface ReadingRequest {
   readonly features: FeatureBag;
   readonly tier: ReadingTier;
+  readonly source?: ReadingSource;
   readonly question?: string;
   readonly userName?: string;
   readonly categories?: readonly RuleCategory[];
@@ -83,6 +89,8 @@ export function sanitizeReadingRequest(raw: unknown, rawByteLength: number): San
   const body = raw as Record<string, unknown>;
 
   const tier = typeof body.tier === "string" && TIERS.has(body.tier) ? (body.tier as ReadingTier) : "free";
+  // Unrecognised values fall through to undefined, and the route derives the source instead.
+  const source = typeof body.source === "string" && SOURCES.has(body.source) ? (body.source as ReadingSource) : undefined;
 
   const features: Record<string, FeatureBag> = {};
   if (typeof body.features === "object" && body.features !== null && !Array.isArray(body.features)) {
@@ -112,6 +120,7 @@ export function sanitizeReadingRequest(raw: unknown, rawByteLength: number): San
     request: {
       features,
       tier,
+      source,
       question: question || undefined,
       userName: userName || undefined,
       categories: categories && categories.length > 0 ? categories : undefined,

@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored third-party WASM glue (see scripts/vendor-mediapipe.mjs) — generated, not ours.
+    "public/**",
+    // Prisma's generated client, which ships with its own @ts-nocheck.
+    "lib/generated/**",
   ]),
 ]);
 

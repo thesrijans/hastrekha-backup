@@ -12,3 +12,4 @@ lib/generated/
 
 # vendored from node_modules by scripts/vendor-mediapipe.mjs (34MB, regenerated on prebuild)
 public/mediapipe/
+public/ort/

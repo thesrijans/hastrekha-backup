@@ -90,6 +90,10 @@ export interface LineMask {
   readonly perLine?: Partial<Record<PalmLineId, Float32Array>>;
   /** Which lines this mask can be trusted to distinguish. Empty means "undifferentiated". */
   readonly resolves: readonly PalmLineId[];
+  /** Wall-clock inference time, surfaced in the debug HUD. */
+  readonly inferenceMs?: number;
+  /** Which execution provider produced this, e.g. "webgpu" or "wasm". */
+  readonly backend?: string;
 }
 
 /** A traced line in rectified-crop pixel coordinates. Feeds both the geometry classifier and HoloPalm. */
@@ -104,13 +108,21 @@ export interface TracedLine {
 
 export type QualityIssue =
   | "no_hand"
+  /** MediaPipe's own confidence in the detection is too low to trust the landmarks. */
+  | "low_confidence"
   | "out_of_frame"
   | "too_far"
   | "too_close"
   | "not_palm_up"
+  /** Fingers are curled; a closed hand hides the very lines being read. */
+  | "fingers_curled"
+  /** The guided sequence asked for the other hand and got the same one. */
+  | "wrong_hand"
   | "too_dark"
   | "too_bright"
-  | "unsteady";
+  | "unsteady"
+  /** Palm span is drifting across frames — the pose is not being held. */
+  | "inconsistent";
 
 export interface QualityVerdict {
   /** True when a rectified crop taken from this frame is worth keeping. */
@@ -120,6 +132,8 @@ export interface QualityVerdict {
   readonly hint: string;
   /** 0–1 overall frame quality; feeds `hand.overall_quality`. */
   readonly score: number;
+  /** Per-check pass/fail, every check present. The debug HUD renders this live. */
+  readonly checks: Readonly<Record<QualityIssue, boolean>>;
 }
 
 /** Frame statistics the gate needs but cannot compute itself. */

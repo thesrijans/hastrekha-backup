@@ -1,17 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import kbDocument from "@/data/kb/hastrekha_kb.json";
 import { evaluateRules, loadKnowledgeBase, type FeatureBag, type FiredRule, type KnowledgeBase } from "@/lib/hastrekha";
-import { emptyLatch, updateLatch, type LatchState } from "@/lib/scan/latch";
+import { emptyLatch, markGateFail, updateLatch, type LatchState } from "@/lib/scan/latch";
 import type { LandmarkFeatureResult } from "@/lib/scan/features";
-import { NOT_DERIVABLE_FROM_LANDMARKS } from "@/lib/scan/features";
-import { RESERVED_LINE_IDS } from "@/lib/scan/types";
+import { extractLines, projectLines } from "@/lib/scan/lines";
+import { mergedMask, type CaptureState } from "@/lib/scan/capture";
+import { HOLO_PALM_ANCHORS } from "@/components/palm-geometry";
 import { DebugPanel } from "@/components/scan/debug-panel";
 import { LiveTicker } from "@/components/scan/live-ticker";
+import { PalmOverlay } from "@/components/scan/palm-overlay";
 import { ScanHud } from "@/components/scan/scan-hud";
 import { useHandScan } from "@/components/scan/use-hand-scan";
+import { ReadingView } from "@/app/read/reading-view";
+import type { FeedbackState, ReadingResponse, Verdict } from "@/app/read/reading-types";
 
 /**
  * Parsed once per browser session. 78 KB gzipped, and it buys evaluating all 377 rules on-device —
@@ -19,15 +23,80 @@ import { useHandScan } from "@/components/scan/use-hand-scan";
  */
 const KB: KnowledgeBase = loadKnowledgeBase(kbDocument);
 
+/**
+ * The scan does not read mounts — prominence is fleshy relief, which the line model cannot see.
+ *
+ * So two different values. The reading gets an empty bag: no mount feature is ever fabricated. The
+ * overlay gets a faint constant, because there the dots are *positional guides* showing where the
+ * mounts sit on the user's hand, not a measurement of them.
+ */
+const SCAN_MOUNTS: Record<string, number> = {};
+const MOUNT_ZONE_HINT: Record<string, number> = {
+  jupiter: 0.25,
+  saturn: 0.25,
+  sun: 0.25,
+  mercury: 0.25,
+  mars_inner: 0.25,
+  venus: 0.25,
+  moon: 0.25,
+};
+
+type Outcome =
+  | { readonly status: "scanning" }
+  | { readonly status: "building" }
+  | { readonly status: "failed"; readonly message: string }
+  | { readonly status: "ready"; readonly reading: ReadingResponse };
+
+/** Deep-merges the landmark bag and the line bag; both write disjoint groups except `reading`. */
+function mergeBags(...bags: ReadonlyArray<Record<string, unknown> | undefined>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const bag of bags) {
+    if (bag === undefined) continue;
+    for (const [group, value] of Object.entries(bag)) {
+      if (typeof value === "object" && value !== null && !Array.isArray(value) && typeof out[group] === "object") {
+        out[group] = { ...(out[group] as Record<string, unknown>), ...(value as Record<string, unknown>) };
+      } else {
+        out[group] = value;
+      }
+    }
+  }
+  return out;
+}
+
 export function ScanClient() {
   const [latch, setLatch] = useState<LatchState>(emptyLatch);
   const [fired, setFired] = useState<readonly FiredRule[]>([]);
+  const [outcome, setOutcome] = useState<Outcome>({ status: "scanning" });
+  const [feedback, setFeedback] = useState<Record<number, FeedbackState>>({});
+  const [birthDate, setBirthDate] = useState<string | null>(null);
+  const [holoLines, setHoloLines] = useState<Record<string, ReadonlyArray<readonly [number, number]>>>({});
 
-  /**
-   * Fires from the scan loop, not from an effect, so folding the latch costs no extra render pass.
-   * Free tier, so sensitive rules stay suppressed exactly as they are on the server.
-   */
+  const isMountedRef = useRef(true);
+  const landmarkBagRef = useRef<Record<string, unknown>>({});
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    const controller = new AbortController();
+    // Seeds user.birth_date from the session so a signed-in user is not asked twice.
+    void (async () => {
+      try {
+        const response = await fetch("/api/auth/me", { signal: controller.signal, cache: "no-store" });
+        if (!response.ok || !isMountedRef.current) return;
+        const payload = (await response.json()) as { user?: { birthDate?: string | null } };
+        if (isMountedRef.current) setBirthDate(payload.user?.birthDate ?? null);
+      } catch {
+        /* Not signed in, or offline — the scan works without a birth date. */
+      }
+    })();
+    return () => {
+      isMountedRef.current = false;
+      controller.abort();
+    };
+  }, []);
+
+  /** Fires only for gate-passing frames — enforced in the hook, not here. */
   const onFeatures = useCallback((result: LandmarkFeatureResult) => {
+    landmarkBagRef.current = result.features as Record<string, unknown>;
     const evaluation = evaluateRules(KB, result.features as FeatureBag, {
       includeSensitive: false,
       relaxMissingMounts: true,
@@ -36,16 +105,123 @@ export function ScanClient() {
     setLatch((previous) => updateLatch(previous, evaluation.fired.map((item) => item.rule.rule_id)));
   }, []);
 
-  const scan = useHandScan({ onFeatures });
-  const { status, error, quality, observation, features, rectified, stats, fps, segmenterId, mirrored, setVideoElement } = scan;
+  /** Every failing frame. After 2s of these the latch decays and confirmations become "captured". */
+  const onGateFail = useCallback((nowMs: number) => {
+    setLatch((previous) => markGateFail(previous, nowMs));
+  }, []);
+
+  const buildReading = useCallback(
+    async (capture: CaptureState) => {
+      setOutcome({ status: "building" });
+      try {
+        const merged = mergedMask(capture);
+        const found = extractLines(merged);
+        setHoloLines(projectLines(found.lines, HOLO_PALM_ANCHORS));
+
+        const features = mergeBags(
+          landmarkBagRef.current,
+          found.features as Record<string, unknown>,
+          birthDate === null ? undefined : { user: { birth_date: birthDate } },
+        );
+
+        const response = await fetch("/api/reading", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ tier: "free", source: "CAMERA_SCAN", features }),
+        });
+        if (!isMountedRef.current) return;
+        if (!response.ok) {
+          const detail = (await response.json().catch(() => null)) as { error?: string } | null;
+          setOutcome({ status: "failed", message: detail?.error ?? `Reading nahi ban payi (${response.status}).` });
+          return;
+        }
+        const reading = (await response.json()) as ReadingResponse;
+        if (isMountedRef.current) setOutcome({ status: "ready", reading });
+      } catch {
+        if (isMountedRef.current) setOutcome({ status: "failed", message: "Network thoda dagmaga gaya." });
+      }
+    },
+    [birthDate],
+  );
+
+  const onCaptureComplete = useCallback(
+    (capture: CaptureState) => {
+      void buildReading(capture);
+    },
+    [buildReading],
+  );
+
+  const scan = useHandScan({ onFeatures, onGateFail, onCaptureComplete });
+  const {
+    status,
+    error,
+    quality,
+    observation,
+    features,
+    rectified,
+    stats,
+    fps,
+    backend,
+    inferenceMs,
+    fusedConfidence,
+    fusedField,
+    polys,
+    extraction,
+    capture,
+    pose,
+    poseProgress,
+    poseCount,
+    mirrored,
+    setVideoElement,
+  } = scan;
 
   const running = status === "running";
-  const notDerivable = useMemo(() => Object.entries(NOT_DERIVABLE_FROM_LANDMARKS), []);
+
+  const sendFeedback = useCallback(
+    async (readingId: string, sectionIndex: number, ruleIds: readonly string[], verdict: Verdict) => {
+      setFeedback((previous) => ({ ...previous, [sectionIndex]: { status: "saving" } }));
+      try {
+        const response = await fetch("/api/reading/feedback", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ readingId, ruleIds, verdict }),
+        });
+        if (!isMountedRef.current) return;
+        setFeedback((previous) => ({
+          ...previous,
+          [sectionIndex]: response.ok ? { status: "done", verdict } : { status: "error" },
+        }));
+      } catch {
+        if (isMountedRef.current) setFeedback((previous) => ({ ...previous, [sectionIndex]: { status: "error" } }));
+      }
+    },
+    [],
+  );
+
+  const restart = useCallback(() => {
+    setOutcome({ status: "scanning" });
+    setFeedback({});
+    setHoloLines({});
+    setLatch(emptyLatch());
+    scan.restartCapture();
+  }, [scan]);
+
+  if (outcome.status === "ready") {
+    return (
+      <ReadingView
+        reading={outcome.reading}
+        mounts={SCAN_MOUNTS}
+        lines={holoLines}
+        feedback={feedback}
+        onFeedback={sendFeedback}
+        onRestart={restart}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        {/* --------------------------------- Camera -------------------------------- */}
         <div className="flex flex-col gap-4">
           <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-hairline bg-surface sm:aspect-square">
             {/* Always mounted: the hook needs the element before the stream exists. */}
@@ -58,7 +234,27 @@ export function ScanClient() {
               style={mirrored ? { transform: "scaleX(-1)" } : undefined}
             />
 
-            {running ? <ScanHud observation={observation} quality={quality} mirrored={mirrored} /> : null}
+            {running ? (
+              <>
+                <PalmOverlay
+                  landmarks={observation?.landmarks ?? null}
+                  polys={polys}
+                  mounts={MOUNT_ZONE_HINT}
+                  confidence={fusedConfidence}
+                  mirrored={mirrored}
+                />
+                <ScanHud observation={observation} quality={quality} mirrored={mirrored} />
+                {pose !== null ? (
+                  <PoseBadge
+                    label={pose.label}
+                    instruction={pose.instruction}
+                    index={capture.records.length}
+                    total={poseCount}
+                    progress={poseProgress}
+                  />
+                ) : null}
+              </>
+            ) : null}
 
             {!running ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
@@ -78,6 +274,12 @@ export function ScanClient() {
                 ) : null}
               </div>
             ) : null}
+
+            {outcome.status === "building" ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-night/80 backdrop-blur-sm">
+                <p className="font-display text-sm uppercase tracking-[0.22em] text-mount-glow">Reading ban rahi hai…</p>
+              </div>
+            ) : null}
           </div>
 
           {error !== null ? (
@@ -86,52 +288,110 @@ export function ScanClient() {
             </p>
           ) : null}
 
+          {outcome.status === "failed" ? (
+            <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-line-glow/40 bg-line-glow/10 px-4 py-3 text-sm text-ink">
+              {outcome.message}
+              <button
+                type="button"
+                onClick={restart}
+                className="rounded-full border border-hairline px-4 py-1.5 font-display text-xs font-medium text-ink"
+              >
+                Dobara scan karo
+              </button>
+            </div>
+          ) : null}
+
           {running ? (
-            <button
-              type="button"
-              onClick={scan.stop}
-              className="self-start rounded-full border border-hairline px-5 py-2 font-display text-sm font-medium text-muted transition-colors hover:text-ink"
-            >
-              Camera band karo
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={scan.stop}
+                className="rounded-full border border-hairline px-5 py-2 font-display text-sm font-medium text-muted transition-colors hover:text-ink"
+              >
+                Camera band karo
+              </button>
+              {capture.records.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={restart}
+                  className="rounded-full border border-hairline px-5 py-2 font-display text-sm font-medium text-muted transition-colors hover:text-ink"
+                >
+                  Shuru se
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
-        {/* --------------------------------- Ticker -------------------------------- */}
-        <LiveTicker fired={fired} latch={latch} />
+        <LiveTicker fired={fired} latch={latch} gatePassing={quality.ok} hint={quality.hint} />
       </div>
 
       <DebugPanel
         rectified={rectified}
+        fused={fusedField}
         metrics={features?.metrics ?? null}
         quality={quality}
         stats={stats}
         fps={fps}
-        segmenterId={segmenterId}
+        backend={backend}
+        inferenceMs={inferenceMs}
+        fusedConfidence={fusedConfidence}
+        traceCount={polys.length}
+        branchPoints={extraction?.branchPoints ?? 0}
       />
 
-      {/* What this stage cannot do. Stated plainly rather than left for someone to discover. */}
-      <section aria-labelledby="limits-heading" className="flex flex-col gap-3 rounded-xl border border-hairline p-5">
-        <h2 id="limits-heading" className="font-display text-xs uppercase tracking-[0.22em] text-muted">
-          Is stage mein kya nahi hota
-        </h2>
-        <p className="text-sm leading-6 text-muted">
-          Abhi sirf landmarks se features nikalte hain — haath ki shape, ungliyon ki lambai, angootha. Lines
-          (heart/head/life/fate) aur mounts abhi nahi padhe jaate; unke liye segmentation model chahiye, jo agle
-          stage mein aayega. Reserved lines:{" "}
-          <span className="text-ink">{RESERVED_LINE_IDS.join(", ")}</span>.
-        </p>
-        <ul className="flex flex-col gap-1.5 border-t border-hairline pt-3 text-xs leading-6 text-muted">
-          {notDerivable.map(([feature, reason]) => (
-            <li key={feature}>
-              <span className="text-ink">{feature}</span> — {reason}
-            </li>
-          ))}
-        </ul>
-        <Link href="/read" className="self-start text-sm text-mount-glow underline underline-offset-4">
-          Poori reading banao →
+      <p className="text-xs leading-6 text-muted">
+        Mounts abhi bhi khud batane padte hain — unke liye fleshy relief chahiye, jo lines ka model nahi dekhta.{" "}
+        <Link href="/read" className="text-mount-glow underline underline-offset-4">
+          Mounts bharo
         </Link>
-      </section>
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Current pose, its instruction, and a ring that fills only while the gate is passing.
+ *
+ * The ring emptying the moment a frame fails is the point: it makes the gate's verdict something the
+ * user can feel, rather than a message they have to read.
+ */
+function PoseBadge({
+  label,
+  instruction,
+  index,
+  total,
+  progress,
+}: {
+  readonly label: string;
+  readonly instruction: string;
+  readonly index: number;
+  readonly total: number;
+  readonly progress: number;
+}) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+      <div className="rounded-xl border border-hairline bg-night/70 px-3 py-2 backdrop-blur-md">
+        <p className="font-display text-[0.7rem] uppercase tracking-[0.22em] text-mount-glow">
+          {index + 1} / {total} · {label}
+        </p>
+        <p className="mt-0.5 text-xs text-ink">{instruction}</p>
+      </div>
+
+      <svg viewBox="0 0 40 40" className="hr-glow-chrome h-11 w-11 shrink-0 -rotate-90" role="img" aria-label={`Capture ${Math.round(progress * 100)} percent`}>
+        <circle cx="20" cy="20" r="17" fill="rgba(6,9,13,0.6)" stroke="var(--color-hairline)" strokeWidth="3" />
+        <circle
+          cx="20"
+          cy="20"
+          r="17"
+          fill="none"
+          stroke="var(--color-mount-glow)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          pathLength={1}
+          strokeDasharray={`${Math.max(0, Math.min(1, progress))} 1`}
+        />
+      </svg>
     </div>
   );
 }
