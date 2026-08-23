@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx test/engine.test.ts && tsx test/sanitize.test.ts && tsx test/scan.test.ts",
+    "test": "tsx test/engine.test.ts && tsx test/sanitize.test.ts && tsx test/scan.test.ts && tsx test/palm-edge.test.ts",
     "vendor:mediapipe": "node scripts/vendor-mediapipe.mjs",
     "prebuild": "node scripts/vendor-mediapipe.mjs"
   },

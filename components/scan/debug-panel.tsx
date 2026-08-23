@@ -124,7 +124,7 @@ export function DebugPanel({
           </div>
           {rectified !== null && !showMask ? (
             <span className="font-display text-xs tabular-nums text-muted">
-              coverage {(rectified.coverage * 100).toFixed(1)}%
+              coverage {(rectified.coverage * 100).toFixed(1)}% · {rectified.usedPercussion ? "5" : "4"} anchors
             </span>
           ) : null}
         </div>

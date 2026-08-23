@@ -42,6 +42,22 @@ export const EDGE_ZONES = {
   plainOfMars: { cx: 0.5, cy: 0.5, r: 0.16 },
 } as const;
 
+/**
+ * Percussion-edge zones, reserved for features no extractor produces yet.
+ *
+ * The ulnar edge is where the marriage lines sit and where the outer Mars mount lies, and both are
+ * only locatable now that `derivePalmEdge` gives that edge coordinates at all. Fixing the geometry
+ * here means adding marriage (27 KB rules on its own) later is an extractor change, not a coordinate
+ * archaeology exercise.
+ *
+ * `marriage` is a line zone; `mars_outer` is a mount zone. Kept together because they share the
+ * edge, labelled apart because they are not the same kind of thing.
+ */
+export const RESERVED_EDGE_ZONES: readonly Zone[] = [
+  { id: "marriage", label: "Marriage lines", cx: 0.9, cy: 0.36, r: 0.09 },
+  { id: "mars_outer", label: "Mars (outer)", cx: 0.9, cy: 0.52, r: 0.1 },
+];
+
 /** Upper-mount bands the heart line's terminal end is graded against, left to right. */
 export const HEART_END_ZONES: ReadonlyArray<{ readonly value: string; readonly cx: number; readonly cy: number }> = [
   { value: "mount_jupiter_outer", cx: 0.16, cy: 0.2 },

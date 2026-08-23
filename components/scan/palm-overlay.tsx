@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { applyHomography, canonicalQuad, solveHomography, type Matrix3 } from "@/lib/scan/rectify";
+import { applyHomography, canonicalQuad, palmQuad, solveHomography, type Matrix3 } from "@/lib/scan/rectify";
+import { palmBoundary } from "@/lib/scan/landmarks";
 import { MOUNT_ZONES } from "@/lib/scan/zones";
 import type { Poly } from "@/lib/scan/lines";
 import { RECTIFIED_SIZE, type Landmark3, type Point2 } from "@/lib/scan/types";
-import { palmQuad } from "@/lib/scan/rectify";
 
 const LINE_GLOW = "#ff9a3c";
 const MOUNT_GLOW = "#35e0c8";
@@ -109,6 +109,32 @@ export function PalmOverlay({ landmarks, polys, mounts, confidence, mirrored, cl
       if (flip) {
         context.translate(width, 0);
         context.scale(-1, 1);
+      }
+
+      /*
+       * The palm boundary is drawn straight from landmarks, not through the homography: it is
+       * already in image space, and routing it via the crop would put it at the mercy of the very
+       * rectification it exists to sanity-check.
+       */
+      const boundary = palmBoundary(marks);
+      if (boundary !== null) {
+        context.save();
+        context.strokeStyle = MOUNT_GLOW;
+        context.shadowColor = MOUNT_GLOW;
+        context.shadowBlur = 8;
+        context.globalAlpha = 0.35;
+        context.lineWidth = 1.5;
+        context.lineJoin = "round";
+        context.lineCap = "round";
+        context.beginPath();
+        boundary.forEach((point, index) => {
+          const x = point.x * width;
+          const y = point.y * height;
+          if (index === 0) context.moveTo(x, y);
+          else context.lineTo(x, y);
+        });
+        context.stroke();
+        context.restore();
       }
 
       const quad = palmQuad(marks, width, height);

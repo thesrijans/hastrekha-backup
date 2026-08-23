@@ -12,7 +12,7 @@ import {
   SPAN_HISTORY_FRAMES,
   type PoseProfile,
 } from "@/lib/scan/quality";
-import { palmQuad, rectifyPalm, type RectifyResult } from "@/lib/scan/rectify";
+import { palmAnchors, rectifyPalm, type RectifyResult } from "@/lib/scan/rectify";
 import { createOnnxSegmenter } from "@/lib/scan/segmenter-onnx";
 import type { Segmenter } from "@/lib/scan/segmenter";
 import { emptyFusion, fuse, resetFusion, shouldReset, type FusionState } from "@/lib/scan/fusion";
@@ -271,9 +271,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       if (now - lastRectifyAtRef.current > RECTIFY_INTERVAL_MS) {
         lastRectifyAtRef.current = now;
         const source = frameImageData(video);
-        const quad = source === null ? null : palmQuad(next.landmarks, source.width, source.height);
-        if (source !== null && quad !== null) {
-          const warped = rectifyPalm(source, quad);
+        // Five correspondences when the percussion point is in frame, four when it is not.
+        const anchors = source === null ? null : palmAnchors(next.landmarks, source.width, source.height);
+        if (source !== null && anchors !== null) {
+          const warped = rectifyPalm(source, anchors.src);
           if (warped !== null) {
             lastRectifiedRef.current = warped.image;
             setRectified(warped);

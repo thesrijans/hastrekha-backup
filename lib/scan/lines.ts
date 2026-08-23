@@ -18,7 +18,7 @@
  */
 import type { FeatureBag } from "@/lib/hastrekha";
 import { applyHomography, canonicalQuad, solveHomography } from "./rectify";
-import { EDGE_ZONES, HEART_END_ZONES, nearestZone } from "./zones";
+import { EDGE_ZONES, HEART_END_ZONES, nearestZone, RESERVED_EDGE_ZONES } from "./zones";
 import { ACTIVE_LINE_IDS, RECTIFIED_SIZE, type ActiveLineId, type Point2, type TracedLine } from "./types";
 
 /** A pixel is part of a line above this probability. */
@@ -267,6 +267,12 @@ interface LineSpec {
  * Heart above head, both roughly horizontal; life arcing down the thumb side; fate rising from the
  * wrist. These are the classical positions, and rectification is what makes them constants.
  */
+/**
+ * Percussion-edge zones this module does not yet extract, re-exported so the gap is visible from the
+ * place that would consume them. See `RESERVED_LINE_IDS` in types.ts for the matching vocabulary.
+ */
+export { RESERVED_EDGE_ZONES };
+
 export const LINE_SPECS: readonly LineSpec[] = [
   { id: "heart", from: { x: 0.9, y: 0.3 }, to: { x: 0.22, y: 0.22 }, verticality: 0.15 },
   { id: "head", from: { x: 0.2, y: 0.32 }, to: { x: 0.78, y: 0.5 }, verticality: 0.2 },

@@ -11,7 +11,9 @@
  * the WASM out of node_modules, and drop `hand_landmarker.task` into `public/models/` yourself.
  */
 import type { HandLandmarker, HandLandmarkerResult } from "@mediapipe/tasks-vision";
-import type { HandObservation, Handedness, Landmark3 } from "./types";
+import { LM } from "./landmark-index";
+import { palmSpan } from "./quality";
+import type { HandObservation, Handedness, Landmark3, Point2 } from "./types";
 
 export const MEDIAPIPE_WASM_PATH = "/mediapipe/wasm";
 export const HAND_LANDMARKER_MODEL_PATH = "/models/hand_landmarker.task";
@@ -92,4 +94,115 @@ export function toObservation(result: HandLandmarkerResult, timestampMs: number)
     score: handedness?.score ?? 0,
     timestampMs,
   };
+}
+
+/* ------------------------------- Palm edge -------------------------------- */
+
+/**
+ * The five landmarks whose mean defines the palm's centre.
+ *
+ * Knuckles and wrist only. Including fingertips would drag the centroid up into the fingers, and
+ * every "outward" direction derived from it would tilt with however the fingers happen to be spread.
+ */
+export const PALM_CENTROID_POINTS = [
+  LM.WRIST,
+  LM.INDEX_MCP,
+  LM.MIDDLE_MCP,
+  LM.RING_MCP,
+  LM.PINKY_MCP,
+] as const;
+
+/** Outward push as a fraction of palm span. */
+export const PALM_EDGE_OFFSET = 0.12;
+
+export interface PalmEdge {
+  /** One third of the way from the little knuckle to the wrist, pushed out to the skin edge. */
+  readonly p1: Point2;
+  /** Two thirds along the same run. */
+  readonly p2: Point2;
+  /** The little knuckle itself, pushed out — the top of the percussion edge. */
+  readonly percussionTop: Point2;
+  /** Palm centre the outward direction was taken from. Exposed for the debug overlay and tests. */
+  readonly centroid: Point2;
+  /** Push distance actually applied, in normalised frame units. */
+  readonly offset: number;
+}
+
+function lerp(a: Landmark3 | Point2, b: Landmark3 | Point2, t: number): Point2 {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+/**
+ * Derived points along the ulnar (percussion) edge of the palm.
+ *
+ * MediaPipe gives no landmark on the outer edge of the hand — the skeleton stops at the knuckles —
+ * so the visible palm boundary has nothing to trace against on that side. These three points are
+ * extrapolated: sample the little-knuckle-to-wrist run, then push each sample directly away from the
+ * palm centroid by a fraction of palm span, which lands them on the fleshy edge.
+ *
+ * Pushing along `point - centroid` means the direction is correct for either hand without any
+ * handedness branch: mirror the input and every offset mirrors with it.
+ *
+ * Works in normalised image space (0–1), the same space as `landmarks`.
+ */
+export function derivePalmEdge(
+  landmarks: readonly Landmark3[],
+  offsetFraction: number = PALM_EDGE_OFFSET,
+): PalmEdge | null {
+  if (landmarks.length < 21) return null;
+
+  let cx = 0;
+  let cy = 0;
+  for (const index of PALM_CENTROID_POINTS) {
+    cx += landmarks[index].x;
+    cy += landmarks[index].y;
+  }
+  const centroid: Point2 = { x: cx / PALM_CENTROID_POINTS.length, y: cy / PALM_CENTROID_POINTS.length };
+
+  const offset = palmSpan(landmarks) * offsetFraction;
+  if (!Number.isFinite(offset) || offset <= 0) return null;
+
+  const pushOut = (point: Point2): Point2 => {
+    const dx = point.x - centroid.x;
+    const dy = point.y - centroid.y;
+    const length = Math.hypot(dx, dy);
+    // A sample sitting exactly on the centroid has no outward direction; leave it where it is
+    // rather than inventing one.
+    if (length < 1e-9) return point;
+    return { x: point.x + (dx / length) * offset, y: point.y + (dy / length) * offset };
+  };
+
+  const pinky = landmarks[LM.PINKY_MCP];
+  const wrist = landmarks[LM.WRIST];
+
+  return {
+    p1: pushOut(lerp(pinky, wrist, 0.33)),
+    p2: pushOut(lerp(pinky, wrist, 0.66)),
+    percussionTop: pushOut({ x: pinky.x, y: pinky.y }),
+    centroid,
+    offset,
+  };
+}
+
+/**
+ * The full visible palm boundary, in normalised image space.
+ *
+ * Thumb ball → wrist → down the ulnar edge → little knuckle. This is the outline the overlay strokes,
+ * and it only closes because of the derived points above; the raw skeleton has nothing between the
+ * wrist and the little knuckle.
+ */
+export function palmBoundary(landmarks: readonly Landmark3[]): Point2[] | null {
+  const edge = derivePalmEdge(landmarks);
+  if (edge === null) return null;
+  const thumbBall = landmarks[LM.THUMB_CMC];
+  const wrist = landmarks[LM.WRIST];
+  const pinky = landmarks[LM.PINKY_MCP];
+  return [
+    { x: thumbBall.x, y: thumbBall.y },
+    { x: wrist.x, y: wrist.y },
+    edge.p1,
+    edge.p2,
+    edge.percussionTop,
+    { x: pinky.x, y: pinky.y },
+  ];
 }
