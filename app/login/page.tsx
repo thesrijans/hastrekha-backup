@@ -21,8 +21,8 @@ export default async function LoginPage(props: PageProps<"/login">) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-4 py-16 sm:px-6">
       <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Sign in</h1>
-        <p className="text-base leading-7 text-black/70 dark:text-white/70">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Sign in</h1>
+        <p className="text-base leading-7 text-muted">
           Apni hatheli, classical texts, aur zero dar-wali reading.
         </p>
       </div>
@@ -30,7 +30,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
       {message !== undefined ? (
         <div
           role="alert"
-          className="rounded-lg border border-red-600/30 bg-red-600/10 px-4 py-3 text-sm leading-6 text-red-900 dark:text-red-200"
+          className="rounded-lg border border-line-glow/40 bg-line-glow/10 px-4 py-3 text-sm leading-6 text-ink"
         >
           {message}
         </div>
@@ -38,7 +38,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
       <a
         href="/api/auth/google/start"
-        className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-foreground px-5 text-base font-medium text-background transition-opacity hover:opacity-90"
+        className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-mount-glow px-5 font-display text-base font-semibold text-night transition-opacity hover:opacity-90"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" focusable="false">
           <path
@@ -49,9 +49,9 @@ export default async function LoginPage(props: PageProps<"/login">) {
         Continue with Google
       </a>
 
-      <p className="text-xs leading-6 text-black/55 dark:text-white/55">
-        Sign in karne par tum hamari <Link href="/terms" className="underline underline-offset-4">Terms</Link> aur{" "}
-        <Link href="/privacy" className="underline underline-offset-4">Privacy Policy</Link> se sehmat ho.
+      <p className="text-xs leading-6 text-muted">
+        Sign in karne par tum hamari <Link href="/terms" className="underline underline-offset-4 hover:text-ink">Terms</Link> aur{" "}
+        <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">Privacy Policy</Link> se sehmat ho.
       </p>
     </main>
   );

@@ -7,11 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx test/engine.test.ts && tsx test/sanitize.test.ts"
+    "test": "tsx test/engine.test.ts && tsx test/sanitize.test.ts && tsx test/scan.test.ts",
+    "vendor:mediapipe": "node scripts/vendor-mediapipe.mjs",
+    "prebuild": "node scripts/vendor-mediapipe.mjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "framer-motion": "^13.1.1",
     "jose": "^6.2.10",
     "next": "16.3.2",
     "pg": "^8.23.0",

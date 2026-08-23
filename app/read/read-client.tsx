@@ -1,64 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-
-/* ------------------------------ API contract ------------------------------ */
-
-interface PublicRule {
-  readonly rule_id: string;
-  readonly category: string;
-  readonly polarity: string;
-  readonly interpretation_hi_en: string;
-  readonly weight: number;
-  readonly source: string;
-  readonly tags: readonly string[];
-}
-
-interface NarrationSection {
-  readonly title: string;
-  readonly body: string;
-  readonly rule_ids: readonly string[];
-}
-
-interface Narration {
-  readonly one_liner: string;
-  readonly sections: readonly NarrationSection[];
-  readonly disclaimer: string;
-  readonly engine: "llm" | "template";
-}
-
-interface ReadingResponse {
-  readonly readingId: string | null;
-  readonly narration: Narration;
-  readonly rules: readonly PublicRule[];
-  readonly lockedRuleCount: number;
-  readonly confidence: number;
-  readonly coverage: {
-    readonly provided: readonly string[];
-    readonly missing: readonly string[];
-    readonly ratio: number;
-  };
-}
-
-/* -------------------------------- Constants ------------------------------- */
-
-/** Anchored pricing shown on the upgrade card. Nothing is purchasable yet. */
-const PRICE_ANCHOR_INR = 199;
-const PRICE_NOW_INR = 99;
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { HoloPalm } from "@/components/holo-palm";
+import { emptyMounts, levelForValue, MOUNT_LEVELS, MOUNTS } from "@/components/palm-geometry";
+import { ReadingView } from "./reading-view";
+import type { FeedbackState, ReadingPayload, ReadingResponse, Verdict } from "./reading-types";
 
 const MIN_BIRTH_DATE = "1920-01-01";
 const MAX_QUESTION_CHARS = 500;
-const NEUTRAL_MOUNT = 0.5;
-
-const MOUNTS: ReadonlyArray<{ readonly key: string; readonly label: string; readonly helper: string }> = [
-  { key: "jupiter", label: "Jupiter", helper: "Index finger ke neeche ka tekra — mahatvakanksha aur netritva." },
-  { key: "saturn", label: "Saturn", helper: "Middle finger ke neeche — gambhirta, dhairya, akelapan." },
-  { key: "sun", label: "Sun (Apollo)", helper: "Ring finger ke neeche — kala, pehchaan, chamak." },
-  { key: "mercury", label: "Mercury", helper: "Chhoti ungli ke neeche — baat-cheet, business, chaturai." },
-  { key: "moon", label: "Moon (Luna)", helper: "Hatheli ka bahari-neecha hissa — kalpana aur safar." },
-  { key: "venus", label: "Venus", helper: "Angoothe ke neeche ka gadda — pyaar, urja, garmahat." },
-];
+const DEFAULT_HEAD_QUALITY = 0.45;
 
 const HAND_SHAPES: ReadonlyArray<{ readonly value: string; readonly label: string }> = [
   { value: "elementary", label: "Elementary — moti, kadak hatheli" },
@@ -70,15 +21,16 @@ const HAND_SHAPES: ReadonlyArray<{ readonly value: string; readonly label: strin
   { value: "mixed", label: "Mixed — ek jaisi nahi" },
 ];
 
-type Verdict = "ACCURATE" | "PARTLY" | "WRONG";
-
-const VERDICTS: ReadonlyArray<{ readonly value: Verdict; readonly label: string }> = [
-  { value: "ACCURATE", label: "Accurate" },
-  { value: "PARTLY", label: "Partly" },
-  { value: "WRONG", label: "Wrong" },
+/** Same 0–1 scale as the mounts, described the way a head line actually looks. */
+const HEAD_LEVELS: ReadonlyArray<{ readonly id: string; readonly label: string; readonly value: number }> = [
+  { id: "faint", label: "Dhundhli", value: 0.15 },
+  { id: "normal", label: "Normal", value: 0.45 },
+  { id: "clear", label: "Saaf", value: 0.72 },
+  { id: "deep", label: "Gehri", value: 0.95 },
 ];
 
-/* --------------------------------- State ---------------------------------- */
+const STEPS: readonly string[] = ["Janam", "Mounts", "Hatheli", "Sawaal", "Scan"];
+const RESULT_STEP = STEPS.length - 1;
 
 type Phase =
   | { readonly status: "idle" }
@@ -86,51 +38,53 @@ type Phase =
   | { readonly status: "error"; readonly message: string }
   | { readonly status: "done"; readonly reading: ReadingResponse };
 
-type FeedbackState =
-  | { readonly status: "saving" }
-  | { readonly status: "done"; readonly verdict: Verdict }
-  | { readonly status: "error" };
-
-interface ReadingPayload {
-  readonly tier: "free";
-  readonly features: Record<string, unknown>;
-  readonly question?: string;
-  readonly userName?: string;
-}
-
 function todayIso(): string {
   const now = new Date();
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
   return local.toISOString().slice(0, 10);
 }
 
-/** "Today" never changes underneath us mid-session, so there is nothing to subscribe to. */
+/** "Today" cannot change under us mid-session, so there is nothing to subscribe to. */
 const noSubscribe = (): (() => void) => () => {};
 
-const inputClass =
-  "w-full rounded-lg border border-black/15 bg-transparent px-3 py-2 text-base outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/50";
+const fieldClass =
+  "w-full rounded-lg border border-hairline bg-surface px-3 py-2.5 text-base text-ink outline-none transition-colors focus:border-mount-glow";
+
+function chipClass(active: boolean): string {
+  return [
+    "rounded-full border px-4 py-2 font-display text-sm font-medium tracking-tight transition-colors",
+    active
+      ? "border-mount-glow bg-mount-glow/12 text-mount-glow"
+      : "border-hairline text-muted hover:border-mount-glow/50 hover:text-ink",
+  ].join(" ");
+}
 
 export function ReadClient() {
-  /* Step 1 */
+  const reduced = useReducedMotion() ?? false;
+
+  const [step, setStep] = useState(0);
   const [birthDate, setBirthDate] = useState("");
   const [userName, setUserName] = useState("");
   const [question, setQuestion] = useState("");
 
-  /* Step 2 (optional) */
-  const [palmOpen, setPalmOpen] = useState(false);
-  const [mounts, setMounts] = useState<Record<string, number>>(() =>
-    Object.fromEntries(MOUNTS.map((mount) => [mount.key, NEUTRAL_MOUNT])),
-  );
+  /**
+   * Palm data is opt-in by touch, not by checkbox: picking any level flips this on. Leaving the palm
+   * steps untouched keeps the reading honestly DOB-only, and coverage reports it that way.
+   */
+  const [palmTouched, setPalmTouched] = useState(false);
+  const [mounts, setMounts] = useState<Record<string, number>>(() => emptyMounts());
+  const [selectedMount, setSelectedMount] = useState<string>(MOUNTS[0].key);
   const [handShape, setHandShape] = useState("");
-  const [headQuality, setHeadQuality] = useState(NEUTRAL_MOUNT);
+  const [headQuality, setHeadQuality] = useState(DEFAULT_HEAD_QUALITY);
 
   const [formError, setFormError] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>({ status: "idle" });
   const [feedback, setFeedback] = useState<Record<number, FeedbackState>>({});
+
   /**
    * The server's "today" and the browser's "today" disagree across timezones, so rendering it during
-   * SSR would be a hydration mismatch. `useSyncExternalStore` is React's answer to exactly that: the
-   * server snapshot is empty (no `max` attribute) and the client fills it in on hydration.
+   * SSR would be a hydration mismatch. `useSyncExternalStore` is React's answer: the server snapshot
+   * is empty (no `max` attribute) and the client fills it in on hydration.
    */
   const maxBirthDate = useSyncExternalStore(noSubscribe, todayIso, () => "");
 
@@ -180,35 +134,60 @@ export function ReadClient() {
     }
   }, []);
 
-  const onSubmit = useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (birthDate === "") {
-        setFormError("Date of birth zaroori hai — reading wahi se shuru hoti hai.");
-        return;
-      }
-      if (birthDate < MIN_BIRTH_DATE || (maxBirthDate !== "" && birthDate > maxBirthDate)) {
-        setFormError("Date of birth 1920 ke baad aur aaj se pehle honi chahiye.");
-        return;
-      }
-      setFormError(null);
+  const buildPayload = useCallback((): ReadingPayload => {
+    const features: Record<string, unknown> = { user: { birth_date: birthDate } };
+    if (palmTouched) {
+      features.mounts = { ...mounts };
+      features.lines = { head: { quality: headQuality } };
+      if (handShape !== "") features.hand = { shape: handShape };
+    }
+    return {
+      tier: "free",
+      features,
+      question: question.trim() === "" ? undefined : question.trim(),
+      userName: userName.trim() === "" ? undefined : userName.trim(),
+    };
+  }, [birthDate, palmTouched, mounts, headQuality, handShape, question, userName]);
 
-      const features: Record<string, unknown> = { user: { birth_date: birthDate } };
-      if (palmOpen) {
-        features.mounts = { ...mounts };
-        features.lines = { head: { quality: headQuality } };
-        if (handShape !== "") features.hand = { shape: handShape };
-      }
+  const validateBirthDate = useCallback((): boolean => {
+    if (birthDate === "") {
+      setFormError("Date of birth zaroori hai — scan wahi se shuru hota hai.");
+      return false;
+    }
+    if (birthDate < MIN_BIRTH_DATE || (maxBirthDate !== "" && birthDate > maxBirthDate)) {
+      setFormError("Date of birth 1920 ke baad aur aaj se pehle honi chahiye.");
+      return false;
+    }
+    setFormError(null);
+    return true;
+  }, [birthDate, maxBirthDate]);
 
-      void runReading({
-        tier: "free",
-        features,
-        question: question.trim() === "" ? undefined : question.trim(),
-        userName: userName.trim() === "" ? undefined : userName.trim(),
-      });
-    },
-    [birthDate, maxBirthDate, palmOpen, mounts, headQuality, handShape, question, userName, runReading],
-  );
+  const setMountLevel = useCallback((key: string, value: number) => {
+    setPalmTouched(true);
+    setMounts((previous) => ({ ...previous, [key]: value }));
+  }, []);
+
+  const goNext = useCallback(() => {
+    if (step === 0 && !validateBirthDate()) return;
+    if (step === RESULT_STEP - 1) {
+      setStep(RESULT_STEP);
+      void runReading(buildPayload());
+      return;
+    }
+    setStep((current) => Math.min(RESULT_STEP, current + 1));
+  }, [step, validateBirthDate, runReading, buildPayload]);
+
+  const goBack = useCallback(() => {
+    setFormError(null);
+    setStep((current) => Math.max(0, current - 1));
+  }, []);
+
+  const restart = useCallback(() => {
+    abortRef.current?.abort();
+    setPhase({ status: "idle" });
+    setFeedback({});
+    setStep(0);
+  }, []);
 
   const retry = useCallback(() => {
     const payload = lastPayloadRef.current;
@@ -236,118 +215,172 @@ export function ReadClient() {
     [],
   );
 
+  const selectedSpec = MOUNTS.find((mount) => mount.key === selectedMount) ?? MOUNTS[0];
+  const selectedLevel = levelForValue(mounts[selectedSpec.key] ?? 0);
+
+  /** Reduced motion drops the travel and duration but keeps the same mount/unmount structure. */
+  const slide = {
+    initial: reduced ? { opacity: 0 } : { opacity: 0, x: 24 },
+    animate: reduced ? { opacity: 1 } : { opacity: 1, x: 0 },
+    exit: reduced ? { opacity: 0 } : { opacity: 0, x: -24 },
+    transition: { duration: reduced ? 0 : 0.26, ease: [0.32, 0.72, 0, 1] as const },
+  };
+
   return (
-    <div className="flex flex-col gap-12">
-      <form onSubmit={onSubmit} className="flex flex-col gap-8" noValidate>
-        {/* ------------------------------- Step 1 ------------------------------- */}
-        <fieldset className="flex flex-col gap-5 rounded-xl border border-black/10 p-5 dark:border-white/15">
-          <legend className="px-2 text-lg font-semibold">Step 1 — DOB se shuru karo</legend>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="birthDate" className="text-sm font-medium">
-              Date of birth <span aria-hidden="true">*</span>
-            </label>
-            <input
-              id="birthDate"
-              name="birthDate"
-              type="date"
-              required
-              min={MIN_BIRTH_DATE}
-              max={maxBirthDate === "" ? undefined : maxBirthDate}
-              value={birthDate}
-              onChange={(event) => setBirthDate(event.target.value)}
-              aria-describedby="birthDate-help"
-              className={inputClass}
+    <div className="flex flex-col gap-8">
+      {/* ------------------------------ Progress HUD ----------------------------- */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between font-display text-xs uppercase tracking-[0.22em]">
+          <span className="text-mount-glow">
+            {`STEP ${String(step + 1).padStart(2, "0")} / ${String(STEPS.length).padStart(2, "0")}`}
+          </span>
+          <span className="text-muted">{STEPS[step]}</span>
+        </div>
+        <div
+          role="progressbar"
+          aria-valuenow={step + 1}
+          aria-valuemin={1}
+          aria-valuemax={STEPS.length}
+          aria-label={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}
+          className="flex gap-1.5"
+        >
+          {STEPS.map((label, index) => (
+            <motion.span
+              key={label}
+              aria-hidden="true"
+              className={`h-0.5 flex-1 rounded-full ${index <= step ? "bg-mount-glow" : "bg-hairline"}`}
+              initial={false}
+              animate={{ opacity: index <= step ? 1 : 0.6 }}
+              transition={{ duration: reduced ? 0 : 0.3 }}
             />
-            <p id="birthDate-help" className="text-xs text-black/55 dark:text-white/55">
-              Format YYYY-MM-DD. Sirf isse bhi ek poori reading ban jaati hai.
-            </p>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="userName" className="text-sm font-medium">
-              Naam <span className="font-normal text-black/50 dark:text-white/50">(optional)</span>
-            </label>
-            <input
-              id="userName"
-              name="userName"
-              type="text"
-              maxLength={60}
-              value={userName}
-              onChange={(event) => setUserName(event.target.value)}
-              className={inputClass}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="question" className="text-sm font-medium">
-              Koi sawaal? <span className="font-normal text-black/50 dark:text-white/50">(optional)</span>
-            </label>
-            <textarea
-              id="question"
-              name="question"
-              rows={3}
-              maxLength={MAX_QUESTION_CHARS}
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              aria-describedby="question-count"
-              className={`${inputClass} resize-y`}
-            />
-            <p id="question-count" aria-live="polite" className="text-xs text-black/55 dark:text-white/55">
-              {question.length} / {MAX_QUESTION_CHARS}
-            </p>
-          </div>
-        </fieldset>
-
-        {/* ------------------------------- Step 2 ------------------------------- */}
-        <fieldset className="flex flex-col gap-5 rounded-xl border border-black/10 p-5 dark:border-white/15">
-          <legend className="px-2 text-lg font-semibold">Step 2 — Hatheli ke baare mein batao (optional)</legend>
-
-          <button
-            type="button"
-            onClick={() => setPalmOpen((open) => !open)}
-            aria-expanded={palmOpen}
-            aria-controls="palm-details"
-            className="self-start rounded-full border border-black/15 px-4 py-2 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
-          >
-            {palmOpen ? "Palm details hata do" : "Palm details bharo — reading gehri hogi"}
-          </button>
-
-          <div id="palm-details" hidden={!palmOpen} className="flex flex-col gap-6">
-            {MOUNTS.map((mount) => (
-              <div key={mount.key} className="flex flex-col gap-1.5">
-                <label htmlFor={`mount-${mount.key}`} className="flex items-baseline justify-between text-sm font-medium">
-                  <span>{mount.label} mount</span>
-                  <span className="tabular-nums text-black/55 dark:text-white/55">{mounts[mount.key].toFixed(2)}</span>
-                </label>
-                <input
-                  id={`mount-${mount.key}`}
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  value={mounts[mount.key]}
-                  onChange={(event) =>
-                    setMounts((previous) => ({ ...previous, [mount.key]: Number(event.target.value) }))
-                  }
-                  aria-describedby={`mount-${mount.key}-help`}
-                  className="w-full"
-                />
-                <p id={`mount-${mount.key}-help`} className="text-xs text-black/55 dark:text-white/55">
-                  {mount.helper} 0 = bilkul flat, 1 = saaf ubhra hua.
-                </p>
-              </div>
-            ))}
+      {/* --------------------------------- Steps --------------------------------- */}
+      <AnimatePresence mode="wait" initial={false}>
+        {step === 0 ? (
+          <motion.section key="step-dob" {...slide} aria-labelledby="step-dob-heading" className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <h2 id="step-dob-heading" className="font-display text-2xl font-semibold tracking-tight text-ink">
+                Kab paida hue the?
+              </h2>
+              <p className="text-sm leading-6 text-muted">
+                Sirf isse bhi ek poori reading ban jaati hai — birth-window rules turant lag jaate hain.
+              </p>
+            </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="handShape" className="text-sm font-medium">
+              <label htmlFor="birthDate" className="font-display text-sm font-medium text-ink">
+                Date of birth <span aria-hidden="true">*</span>
+              </label>
+              <input
+                id="birthDate"
+                name="birthDate"
+                type="date"
+                required
+                min={MIN_BIRTH_DATE}
+                max={maxBirthDate === "" ? undefined : maxBirthDate}
+                value={birthDate}
+                onChange={(event) => setBirthDate(event.target.value)}
+                aria-describedby="birthDate-help"
+                className={fieldClass}
+              />
+              <p id="birthDate-help" className="text-xs text-muted">
+                Format YYYY-MM-DD.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="userName" className="font-display text-sm font-medium text-ink">
+                Naam <span className="font-normal text-muted">(optional)</span>
+              </label>
+              <input
+                id="userName"
+                name="userName"
+                type="text"
+                maxLength={60}
+                value={userName}
+                onChange={(event) => setUserName(event.target.value)}
+                className={fieldClass}
+              />
+            </div>
+          </motion.section>
+        ) : null}
+
+        {step === 1 ? (
+          <motion.section key="step-mounts" {...slide} aria-labelledby="step-mounts-heading" className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <h2 id="step-mounts-heading" className="font-display text-2xl font-semibold tracking-tight text-ink">
+                Mounts scan karo
+              </h2>
+              <p className="text-sm leading-6 text-muted">
+                Optional — chhod bhi sakte ho. Palm par mount tap karo, phir uska ubhaar chuno.
+              </p>
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-2">
+              <HoloPalm
+                mounts={mounts}
+                interactive
+                selected={selectedMount}
+                onSelectMount={setSelectedMount}
+              />
+
+              <div className="flex flex-col gap-5">
+                <fieldset className="flex flex-col gap-3">
+                  <legend className="font-display text-sm font-medium uppercase tracking-[0.18em] text-mount-glow">
+                    {selectedSpec.label}
+                  </legend>
+                  <p className="text-sm leading-6 text-muted">{selectedSpec.helper}</p>
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={`${selectedSpec.label} mount kitna ubhra hai`}>
+                    {MOUNT_LEVELS.map((level) => {
+                      const active = palmTouched && selectedLevel.id === level.id;
+                      return (
+                        <button
+                          key={level.id}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => setMountLevel(selectedSpec.key, level.value)}
+                          className={chipClass(active)}
+                        >
+                          {level.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                <p className="border-t border-hairline pt-4 text-xs leading-6 text-muted">
+                  Flat = bilkul chapta. Large = saaf, ubhra, haath mein mehsoos hone wala.
+                  {palmTouched ? null : " Abhi tak koi mount set nahi — reading DOB se hi banegi."}
+                </p>
+              </div>
+            </div>
+          </motion.section>
+        ) : null}
+
+        {step === 2 ? (
+          <motion.section key="step-hand" {...slide} aria-labelledby="step-hand-heading" className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <h2 id="step-hand-heading" className="font-display text-2xl font-semibold tracking-tight text-ink">
+                Haath aur head line
+              </h2>
+              <p className="text-sm leading-6 text-muted">Dono optional — pata na ho to chhod do.</p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="handShape" className="font-display text-sm font-medium text-ink">
                 Hand shape
               </label>
               <select
                 id="handShape"
                 value={handShape}
-                onChange={(event) => setHandShape(event.target.value)}
-                className={inputClass}
+                onChange={(event) => {
+                  setHandShape(event.target.value);
+                  if (event.target.value !== "") setPalmTouched(true);
+                }}
+                className={fieldClass}
               >
                 <option value="">Pata nahi — chhod do</option>
                 {HAND_SHAPES.map((shape) => (
@@ -358,242 +391,144 @@ export function ReadClient() {
               </select>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="headQuality" className="flex items-baseline justify-between text-sm font-medium">
-                <span>Head line quality</span>
-                <span className="tabular-nums text-black/55 dark:text-white/55">{headQuality.toFixed(2)}</span>
-              </label>
-              <input
-                id="headQuality"
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={headQuality}
-                onChange={(event) => setHeadQuality(Number(event.target.value))}
-                aria-describedby="headQuality-help"
-                className="w-full"
-              />
-              <p id="headQuality-help" className="text-xs text-black/55 dark:text-white/55">
-                Hatheli ke beech se jaati line. 0 = tootti, dhundhli. 1 = saaf, gehri, seedhi.
+            <fieldset className="flex flex-col gap-3">
+              <legend className="font-display text-sm font-medium text-ink">Head line kaisi hai?</legend>
+              <p id="head-help" className="text-sm leading-6 text-muted">
+                Hatheli ke beech se jaati line — kitni saaf aur gehri dikhti hai.
               </p>
-            </div>
-          </div>
-        </fieldset>
-
-        {formError !== null ? (
-          <p
-            role="alert"
-            className="rounded-lg border border-red-600/30 bg-red-600/10 px-4 py-3 text-sm text-red-900 dark:text-red-200"
-          >
-            {formError}
-          </p>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={phase.status === "loading"}
-          className="flex h-12 items-center justify-center rounded-full bg-foreground px-8 text-base font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
-        >
-          {phase.status === "loading" ? "Reading ban rahi hai…" : "Free reading dekho"}
-        </button>
-      </form>
-
-      {/* -------------------------------- Result -------------------------------- */}
-      <section aria-live="polite" aria-busy={phase.status === "loading"} className="flex flex-col gap-6">
-        {phase.status === "loading" ? <ReadingSkeleton /> : null}
-
-        {phase.status === "error" ? (
-          <div role="alert" className="flex flex-col items-start gap-4 rounded-xl border border-red-600/30 bg-red-600/10 p-5">
-            <p className="text-base text-red-900 dark:text-red-200">{phase.message}</p>
-            <button
-              type="button"
-              onClick={retry}
-              className="rounded-full border border-red-600/40 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-600/10 dark:text-red-200"
-            >
-              Dobara try karo
-            </button>
-          </div>
-        ) : null}
-
-        {phase.status === "done" ? (
-          <ReadingView reading={phase.reading} feedback={feedback} onFeedback={sendFeedback} />
-        ) : null}
-      </section>
-    </div>
-  );
-}
-
-/* -------------------------------- Subviews -------------------------------- */
-
-function ReadingSkeleton() {
-  return (
-    <div className="flex flex-col gap-4" aria-hidden="true">
-      <div className="h-24 animate-pulse rounded-xl bg-black/10 dark:bg-white/10" />
-      <div className="h-40 animate-pulse rounded-xl bg-black/10 dark:bg-white/10" />
-      <div className="h-40 animate-pulse rounded-xl bg-black/10 dark:bg-white/10" />
-    </div>
-  );
-}
-
-function ReadingView({
-  reading,
-  feedback,
-  onFeedback,
-}: {
-  readonly reading: ReadingResponse;
-  readonly feedback: Record<number, FeedbackState>;
-  readonly onFeedback: (
-    readingId: string,
-    sectionIndex: number,
-    ruleIds: readonly string[],
-    verdict: Verdict,
-  ) => Promise<void>;
-}) {
-  const rulesById = useMemo(
-    () => new Map(reading.rules.map((rule) => [rule.rule_id, rule] as const)),
-    [reading.rules],
-  );
-  const depthPercent = Math.round(reading.confidence * 100);
-  const missingCount = reading.coverage.missing.length;
-  const { readingId } = reading;
-
-  return (
-    <div className="flex flex-col gap-6">
-      <article className="rounded-xl border border-black/10 bg-black/[.03] p-6 dark:border-white/15 dark:bg-white/[.04]">
-        <h2 className="text-xl font-semibold leading-8 sm:text-2xl">{reading.narration.one_liner}</h2>
-      </article>
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-baseline justify-between text-sm">
-          <span className="font-medium">Reading depth</span>
-          <span className="tabular-nums text-black/60 dark:text-white/60">{depthPercent}%</span>
-        </div>
-        <div
-          role="progressbar"
-          aria-valuenow={depthPercent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Reading depth"
-          className="h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15"
-        >
-          <div className="h-full rounded-full bg-foreground" style={{ width: `${depthPercent}%` }} />
-        </div>
-      </div>
-
-      {reading.narration.sections.map((section, index) => {
-        const state = feedback[index];
-        return (
-          <article
-            key={`${section.title}-${index}`}
-            className="flex flex-col gap-3 rounded-xl border border-black/10 p-5 dark:border-white/15"
-          >
-            <h3 className="text-lg font-semibold">{section.title}</h3>
-            <p className="text-base leading-7 text-black/80 dark:text-white/80">{section.body}</p>
-
-            {section.rule_ids.length > 0 ? (
-              <ul className="flex flex-wrap gap-2">
-                {section.rule_ids.map((ruleId) => {
-                  const rule = rulesById.get(ruleId);
-                  if (rule === undefined || rule.source === "") return null;
-                  return (
-                    <li
-                      key={ruleId}
-                      className="rounded-full border border-black/10 px-3 py-1 text-xs text-black/60 dark:border-white/15 dark:text-white/60"
-                    >
-                      Source: {rule.source}
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-
-            {readingId !== null ? (
-              <div className="flex flex-wrap items-center gap-2 border-t border-black/10 pt-3 dark:border-white/15">
-                <span id={`verdict-${index}`} className="text-xs text-black/55 dark:text-white/55">
-                  Yeh kitna sahi laga?
-                </span>
-                {VERDICTS.map((option) => {
-                  const chosen = state?.status === "done" && state.verdict === option.value;
+              <div className="flex flex-wrap gap-2" role="group" aria-describedby="head-help" aria-label="Head line quality">
+                {HEAD_LEVELS.map((level) => {
+                  const active = palmTouched && Math.abs(headQuality - level.value) < 0.01;
                   return (
                     <button
-                      key={option.value}
+                      key={level.id}
                       type="button"
-                      aria-describedby={`verdict-${index}`}
-                      aria-pressed={chosen}
-                      disabled={state?.status === "saving"}
-                      onClick={() => void onFeedback(readingId, index, section.rule_ids, option.value)}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium disabled:opacity-50 ${
-                        chosen
-                          ? "border-transparent bg-foreground text-background"
-                          : "border-black/15 hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
-                      }`}
+                      aria-pressed={active}
+                      onClick={() => {
+                        setPalmTouched(true);
+                        setHeadQuality(level.value);
+                      }}
+                      className={chipClass(active)}
                     >
-                      {option.label}
+                      {level.label}
                     </button>
                   );
                 })}
-                {state?.status === "saving" ? (
-                  <span className="text-xs text-black/55 dark:text-white/55">Save ho raha hai…</span>
-                ) : null}
-                {state?.status === "done" ? (
-                  <span className="text-xs text-black/55 dark:text-white/55">Shukriya.</span>
-                ) : null}
-                {state?.status === "error" ? (
-                  <span role="alert" className="text-xs text-red-700 dark:text-red-300">
-                    Save nahi hua — dobara try karo.
-                  </span>
-                ) : null}
+              </div>
+            </fieldset>
+          </motion.section>
+        ) : null}
+
+        {step === 3 ? (
+          <motion.section key="step-question" {...slide} aria-labelledby="step-question-heading" className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <h2 id="step-question-heading" className="font-display text-2xl font-semibold tracking-tight text-ink">
+                Kuch poochna hai?
+              </h2>
+              <p className="text-sm leading-6 text-muted">
+                Optional. Sawaal doge to reading usi ke aas-paas bunni jaayegi.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="question" className="font-display text-sm font-medium text-ink">
+                Tumhara sawaal
+              </label>
+              <textarea
+                id="question"
+                name="question"
+                rows={5}
+                maxLength={MAX_QUESTION_CHARS}
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                aria-describedby="question-count"
+                placeholder="Career kab badlega?"
+                className={`${fieldClass} resize-y placeholder:text-muted/60`}
+              />
+              <p id="question-count" aria-live="polite" className="text-xs tabular-nums text-muted">
+                {question.length} / {MAX_QUESTION_CHARS}
+              </p>
+            </div>
+          </motion.section>
+        ) : null}
+
+        {step === RESULT_STEP ? (
+          <motion.section key="step-reading" {...slide} aria-live="polite" aria-busy={phase.status === "loading"}>
+            {phase.status === "loading" ? <ScanSkeleton /> : null}
+
+            {phase.status === "error" ? (
+              <div role="alert" className="flex flex-col items-start gap-4 rounded-2xl border border-line-glow/40 bg-line-glow/10 p-6">
+                <p className="text-base text-ink">{phase.message}</p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={retry}
+                    className="rounded-full bg-mount-glow px-5 py-2 font-display text-sm font-semibold text-night transition-opacity hover:opacity-90"
+                  >
+                    Dobara try karo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={restart}
+                    className="rounded-full border border-hairline px-5 py-2 font-display text-sm font-medium text-muted transition-colors hover:text-ink"
+                  >
+                    Shuru se
+                  </button>
+                </div>
               </div>
             ) : null}
-          </article>
-        );
-      })}
 
-      {missingCount > 0 ? (
-        <article className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-black/20 p-5 dark:border-white/25">
-          <h3 className="text-lg font-semibold">Palm scan se +{missingCount} features unlock</h3>
-          <p className="text-sm leading-6 text-black/65 dark:text-white/65">
-            Tumhari hatheli ka scan {missingCount} aur features bhar dega — reading utni hi gehri hoti jaayegi. Scan
-            tumhare device par hi chalega.
-          </p>
-          <button
-            type="button"
-            disabled
-            className="cursor-not-allowed rounded-full border border-black/15 px-4 py-2 text-sm font-medium opacity-60 dark:border-white/20"
-          >
-            Palm scan — coming soon
-          </button>
-        </article>
+            {phase.status === "done" ? (
+              <ReadingView
+                reading={phase.reading}
+                mounts={palmTouched ? mounts : {}}
+                feedback={feedback}
+                onFeedback={sendFeedback}
+                onRestart={restart}
+              />
+            ) : null}
+          </motion.section>
+        ) : null}
+      </AnimatePresence>
+
+      {formError !== null ? (
+        <p role="alert" className="rounded-lg border border-line-glow/40 bg-line-glow/10 px-4 py-3 text-sm text-ink">
+          {formError}
+        </p>
       ) : null}
 
-      {reading.lockedRuleCount > 0 ? (
-        <article className="flex flex-col items-start gap-3 rounded-xl border border-black/15 bg-black/[.03] p-5 dark:border-white/20 dark:bg-white/[.04]">
-          <h3 className="text-lg font-semibold">{reading.lockedRuleCount} aur rules tumhare liye nikle hain</h3>
-          <p className="text-sm leading-6 text-black/65 dark:text-white/65">
-            Premium reading mein har category khulti hai — career, rishte, paisa, timing — har baat ke source ke saath.
-          </p>
-          <p className="text-base">
-            <s className="text-black/45 dark:text-white/45">₹{PRICE_ANCHOR_INR}</s>{" "}
-            <span className="text-xl font-semibold">₹{PRICE_NOW_INR}</span>
-          </p>
+      {/* ------------------------------ Step controls ----------------------------- */}
+      {step < RESULT_STEP ? (
+        <div className="flex items-center justify-between gap-4 border-t border-hairline pt-6">
           <button
             type="button"
-            disabled
-            className="cursor-not-allowed rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background opacity-60"
+            onClick={goBack}
+            disabled={step === 0}
+            className="rounded-full border border-hairline px-5 py-2.5 font-display text-sm font-medium text-muted transition-colors hover:text-ink disabled:opacity-40"
           >
-            Premium — coming soon
+            Peeche
           </button>
-        </article>
+          <button
+            type="button"
+            onClick={goNext}
+            className="rounded-full bg-mount-glow px-7 py-2.5 font-display text-sm font-semibold text-night transition-opacity hover:opacity-90"
+          >
+            {step === RESULT_STEP - 1 ? "Scan chalao" : "Aage"}
+          </button>
+        </div>
       ) : null}
+    </div>
+  );
+}
 
-      <p className="text-xs leading-6 text-black/55 dark:text-white/55">
-        {reading.narration.disclaimer}{" "}
-        <Link href="/terms" className="underline underline-offset-4">
-          Terms
-        </Link>
-        .
-      </p>
+function ScanSkeleton() {
+  return (
+    <div className="flex flex-col gap-6" aria-hidden="true">
+      <div className="h-4 w-32 animate-pulse rounded-full bg-hairline" />
+      <div className="mx-auto h-64 w-48 animate-pulse rounded-2xl bg-hairline" />
+      <div className="h-20 animate-pulse rounded-2xl bg-hairline" />
+      <div className="h-32 animate-pulse rounded-2xl bg-hairline" />
+      <div className="h-32 animate-pulse rounded-2xl bg-hairline" />
     </div>
   );
 }

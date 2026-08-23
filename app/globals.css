@@ -1,26 +1,191 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * HastRekha — "holographic scan" design tokens.
+ *
+ * A committed dark design, not a theme-switching one: this palette is the palette, so there is no
+ * `prefers-color-scheme` branch and no `dark:` variants anywhere in the app. `color-scheme: dark`
+ * makes the browser render form controls, scrollbars and the date picker to match instead of
+ * flashing a white widget over the dark surface.
+ *
+ * Two accents carry all the meaning: orange = the lines read off the palm, cyan = the mounts and
+ * every piece of scan chrome. Nothing else is allowed to be coloured.
+ */
+@theme {
+  --color-night: #06090d;
+  --color-surface: #0c1218;
+  --color-line-glow: #ff9a3c;
+  --color-mount-glow: #35e0c8;
+  --color-ink: #eaf2f4;
+  --color-muted: #8fa3ab;
+  --color-hairline: #1b2a33;
+
+  /* Kept as aliases so `bg-background` / `text-foreground` keep meaning what they meant. */
+  --color-background: #06090d;
+  --color-foreground: #eaf2f4;
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background-color: var(--color-night);
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Ambient instrument glow. `z-index: -1` on a body child keeps it above the html background and
+ * below all content, so no wrapper needs its own stacking context.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(56rem 34rem at 50% -10%, rgba(53, 224, 200, 0.1), transparent 70%),
+    radial-gradient(38rem 26rem at 88% 12%, rgba(255, 154, 60, 0.07), transparent 72%),
+    radial-gradient(44rem 32rem at 4% 86%, rgba(53, 224, 200, 0.05), transparent 74%);
+}
+
+/* Grain at 4%. Fixed and pointer-events-none, so it never intercepts input or shifts layout. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/*
+ * Glow is a layered drop-shadow on the stroke itself, not an SVG <filter> element: drop-shadow
+ * follows the alpha of the shape, so a 2px stroke blooms instead of the whole bounding box.
+ */
+.hr-glow-line {
+  filter: drop-shadow(0 0 6px rgba(255, 154, 60, 0.55)) drop-shadow(0 0 18px rgba(255, 154, 60, 0.32));
+}
+
+.hr-glow-mount {
+  filter: drop-shadow(0 0 6px rgba(53, 224, 200, 0.55)) drop-shadow(0 0 18px rgba(53, 224, 200, 0.28));
+}
+
+.hr-glow-chrome {
+  filter: drop-shadow(0 0 4px rgba(53, 224, 200, 0.5));
+}
+
+/* Paths carry pathLength={1}, so --dash is always 1 and the offset is just the ratio undrawn. */
+@keyframes hr-draw {
+  from {
+    stroke-dashoffset: var(--dash, 1);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes hr-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* One pass, top to bottom, then it stays out of the way. */
+@keyframes hr-sweep {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(var(--sweep-distance, 380px));
+  }
+}
+
+@keyframes hr-bracket-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hr-draw {
+  stroke-dasharray: var(--dash, 1);
+  stroke-dashoffset: var(--dash, 1);
+  animation: hr-draw 1.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.hr-dot-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: hr-dot-in 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.hr-sweep {
+  animation: hr-sweep 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.hr-bracket-in {
+  opacity: 0;
+  animation: hr-bracket-in 0.5s ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-mount-glow);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/*
+ * Honour the OS setting globally. Anything animated by other means (framer-motion) also checks
+ * `useReducedMotion`, because this rule cannot reach JS-driven transforms.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .hr-draw,
+  .hr-dot-in,
+  .hr-bracket-in {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* The sweep is pure decoration with nothing to reveal — remove it rather than flash it. */
+  .hr-sweep {
+    display: none;
+  }
 }

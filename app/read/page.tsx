@@ -13,11 +13,12 @@ export const metadata: Metadata = {
  */
 export default function ReadPage() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Apni reading banao</h1>
-        <p className="text-base leading-7 text-black/70 dark:text-white/70">
-          Sirf DOB se bhi chalega. Hatheli ke details jitne bharoge, reading utni gehri hogi.
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
+      <header className="flex flex-col gap-3">
+        <span className="font-display text-xs uppercase tracking-[0.22em] text-mount-glow">Free scan</span>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Apni hatheli scan karo</h1>
+        <p className="max-w-xl text-base leading-7 text-muted">
+          Sirf DOB se bhi chalega. Mounts jitne bharoge, scan utna gehra hoga.
         </p>
       </header>
 
