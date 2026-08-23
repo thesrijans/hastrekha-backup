@@ -3,6 +3,7 @@ import kbDocument from "@/data/kb/hastrekha_kb.json";
 import { evaluateRules, loadKnowledgeBase, narrateReading, type FiredRule, type KnowledgeBase } from "@/lib/hastrekha";
 import { sanitizeReadingRequest } from "@/lib/hastrekha/sanitize";
 import { checkRateLimit } from "@/lib/hastrekha/rate-limit";
+import { getSessionUser } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -43,12 +44,10 @@ function clientKey(request: NextRequest): string {
   return forwarded ? forwarded.split(",")[0].trim() : "anonymous";
 }
 
-/**
- * INTEGRATION SEAM — replace with the project's session helper (jose-verified httpOnly cookie).
- * Return a user id for premium/deep tiers; null for guests.
- */
-async function resolveUserId(_request: NextRequest): Promise<string | null> {
-  return null;
+/** Returns the signed-in user's id for premium/deep tiers; null for guests. */
+async function resolveUserId(request: NextRequest): Promise<string | null> {
+  const user = await getSessionUser(request);
+  return user === null ? null : user.id;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

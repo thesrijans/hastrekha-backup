@@ -1,0 +1,2041 @@
+{
+  "meta": {
+    "kb_name": "HastRekha AI — Rules Knowledge Base",
+    "kb_version": "0.1.0-sprint1-batch3",
+    "schema_version": "1.0",
+    "extraction_date": "2026-08-20",
+    "primary_source": {
+      "text": "Cheiro — Palmistry for All",
+      "publisher": "G. P. Putnam's Sons",
+      "year": 1916,
+      "copyright_status": "public_domain",
+      "fetched_from": [
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-VII-The-Line-Of-Heart-As-Indicating-The-Affectionate-And-Emotional-Natu.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-IX-Lines-Denoting-Children-Their-Sex-And-Other-Matters-Concerning-The.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XVI-The-Star-The-Cross-The-Square.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XIX-How-To-Tell-Time-And-Dates-Of-Principal-Events-In-The-Life.html"
+      ]
+    },
+    "batch_scope": [
+      "Ch.VII — Line of Heart (full chapter)",
+      "Ch.IX — Lines Denoting Children (full chapter)",
+      "Ch.XVI — The Star, The Cross, The Square (full chapter)",
+      "Ch.XIX — How To Tell Time And Dates (full chapter)"
+    ],
+    "rule_id_prefixes": [
+      "PALM-HEART",
+      "PALM-CHILD",
+      "PALM-SIGN",
+      "PALM-TIME"
+    ],
+    "rule_count": 54,
+    "safety_exclusion_policy": {
+      "policy": "Death, lifespan, suicide, and insanity claims from the source are NEVER encoded as rules. Rules touching health, injury, grief, fertility, or heavy emotional territory are encoded with safety_class 'sensitive' and softened, agency-preserving wording. Narrator must never harden a sensitive rule back toward the original fatalistic claim.",
+      "excluded_in_this_batch": [
+        {
+          "loc": "Ch.VII — blended single head+heart line",
+          "excluded_claim": "violent death / terrible accidents clause",
+          "action": "rule PALM-HEART-016 encoded WITHOUT the death clause; softened to risk-awareness"
+        },
+        {
+          "loc": "Ch.IX — children line broken/ending at island",
+          "excluded_claim": "child will never grow up (child death prediction)",
+          "action": "not encoded at all"
+        },
+        {
+          "loc": "Ch.IX — flat Mount of Venus + first bracelet arched into palm",
+          "excluded_claim": "unlikely to have children (infertility prediction)",
+          "action": "DEFERRED — not encoded; too emotionally heavy for automated output. Revisit only with practitioner sign-off (Dr. Anand network) and explicit opt-in UX."
+        },
+        {
+          "loc": "Ch.XVI — Star on Mount of Saturn",
+          "excluded_claim": "life ends in terrible disaster / crowned by doom",
+          "action": "not encoded at all"
+        },
+        {
+          "loc": "Ch.XVI — Cross on Mount of Saturn",
+          "excluded_claim": "violent death",
+          "action": "not encoded at all"
+        },
+        {
+          "loc": "Ch.XVI — Cross on Mars under Jupiter",
+          "excluded_claim": "death from quarrels",
+          "action": "rule PALM-SIGN-012 encoded as conflict-caution only, death clause dropped"
+        },
+        {
+          "loc": "Ch.XVI — Cross low on Mount of the Moon",
+          "excluded_claim": "death by drowning",
+          "action": "not encoded at all"
+        },
+        {
+          "loc": "Ch.XVI — Cross above Line of Heart",
+          "excluded_claim": "sudden death of a loved one",
+          "action": "not encoded at all"
+        }
+      ]
+    },
+    "children_lines_policy": {
+      "note": "Sex-of-child rules (PALM-CHILD-001/002) are traditional-belief content ONLY. In India, prenatal sex determination is prohibited (PCPNDT Act). Narrator must (a) render these strictly as 'paramparik manyata', (b) NEVER frame as prediction for a current or planned pregnancy, (c) surface children-line content only when the user explicitly asks about children.",
+      "reading_method": "Children lines are the fine upright lines immediately ABOVE the marriage line on the Mercury-mount edge. Press the edge to raise them; magnification often needed. Count from the outside edge of the palm inward. Typically more clearly marked on women's hands (per source)."
+    },
+    "timing_system": {
+      "method_1_seven_year_periods": {
+        "description": "Life, Fate, and Head lines are each divided into seven-year periods (Plate XXVI); Cheiro treats 7 years as the natural renewal cycle of the whole nature. Events found on a line are dated by which seven-year segment they fall in.",
+        "lines": [
+          "life",
+          "fate",
+          "head"
+        ],
+        "calibration_note": "Exact anchor crossings are on Plate XXVI (image, not digitized here). Head-line age-zone map already encoded in Batch 1 meta (Ch.II, p.25 reference) — reuse that for head-line dating. Life/fate anchor calibration: digitize Plate XXVI before CV dating ships.",
+        "cross_ref": "Batch 2 meta holds the 3 marriage-timing methods; this table is the general-events clock."
+      },
+      "method_2_eventful_years_by_birth_number": {
+        "description": "Cheiro's periodicity table: birth day-of-month reduces to a birth number 1-9; each number has a fixed list of most-eventful ages. DOB-only — computable with zero palm scan. OCR corrected against Cheiro's standard 1-9 day groupings.",
+        "table": {
+          "1": {
+            "birth_days": [
+              1,
+              10,
+              19,
+              28
+            ],
+            "emphasis_months": [
+              "July",
+              "August",
+              "January"
+            ],
+            "eventful_years": [
+              1,
+              7,
+              10,
+              16,
+              19,
+              28,
+              34,
+              37,
+              43,
+              46,
+              52,
+              55,
+              61,
+              70
+            ]
+          },
+          "2": {
+            "birth_days": [
+              2,
+              11,
+              20,
+              29
+            ],
+            "emphasis_months": [
+              "July",
+              "August",
+              "January"
+            ],
+            "eventful_years": [
+              2,
+              7,
+              11,
+              16,
+              20,
+              25,
+              29,
+              34,
+              38,
+              43,
+              47,
+              52,
+              56,
+              70
+            ]
+          },
+          "3": {
+            "birth_days": [
+              3,
+              12,
+              21,
+              30
+            ],
+            "emphasis_months": [
+              "December",
+              "February"
+            ],
+            "eventful_years": [
+              3,
+              12,
+              21,
+              30,
+              39,
+              48,
+              57,
+              66,
+              75
+            ]
+          },
+          "4": {
+            "birth_days": [
+              4,
+              13,
+              22,
+              31
+            ],
+            "emphasis_months": [
+              "July",
+              "August",
+              "January"
+            ],
+            "eventful_years": [
+              1,
+              4,
+              10,
+              13,
+              19,
+              22,
+              28,
+              31,
+              37,
+              40,
+              46,
+              49,
+              55,
+              58,
+              64,
+              67,
+              73,
+              76
+            ]
+          },
+          "5": {
+            "birth_days": [
+              5,
+              14,
+              23
+            ],
+            "emphasis_months": [
+              "June",
+              "September"
+            ],
+            "eventful_years": [
+              5,
+              14,
+              23,
+              32,
+              41,
+              50,
+              59,
+              68,
+              77
+            ]
+          },
+          "6": {
+            "birth_days": [
+              6,
+              15,
+              24
+            ],
+            "emphasis_months": [
+              "May",
+              "October"
+            ],
+            "eventful_years": [
+              6,
+              15,
+              24,
+              33,
+              42,
+              51,
+              60,
+              69,
+              78,
+              87
+            ]
+          },
+          "7": {
+            "birth_days": [
+              7,
+              16,
+              25
+            ],
+            "emphasis_months": [
+              "July",
+              "August",
+              "January"
+            ],
+            "eventful_years": [
+              2,
+              7,
+              11,
+              16,
+              20,
+              25,
+              29,
+              34,
+              38,
+              43,
+              47,
+              56,
+              61,
+              65,
+              70,
+              74,
+              79
+            ]
+          },
+          "8": {
+            "birth_days": [
+              8,
+              17,
+              26
+            ],
+            "emphasis_months": [
+              "January",
+              "February",
+              "July",
+              "August"
+            ],
+            "eventful_years": [
+              8,
+              17,
+              26,
+              35,
+              44,
+              53,
+              62,
+              71,
+              80
+            ]
+          },
+          "9": {
+            "birth_days": [
+              9,
+              18,
+              27
+            ],
+            "emphasis_months": [
+              "April",
+              "October",
+              "November"
+            ],
+            "eventful_years": [
+              9,
+              18,
+              27,
+              36,
+              45,
+              54,
+              63,
+              72,
+              81
+            ]
+          }
+        },
+        "ocr_corrections": [
+          "'nth' read as 11th (number-2 group)",
+          "'2dt' read as '2d,' (number-2 group)",
+          "archaic ordinals 2d/3d/43d etc. normalized to modern integers"
+        ]
+      }
+    },
+    "feature_vocabulary_additions": {
+      "lines.heart.origin": [
+        "mount_jupiter_outer",
+        "mount_jupiter_center",
+        "between_jupiter_saturn",
+        "mount_saturn_face",
+        "under_saturn_base"
+      ],
+      "lines.heart.position_vertical": [
+        "very_low_near_head",
+        "normal",
+        "very_high_head_raised"
+      ],
+      "lines.heart.start_fork_jupiter_and_gap": "boolean — fork at start, one prong on Jupiter, one between first and second fingers",
+      "lines.head_heart_blended_single": "boolean — one single deep line crossing the palm, head and heart merged",
+      "lines.children": "array — { depth_class: broad_deep|fine_narrow, straight: bool, faint_or_crooked: bool, early_island_then_clear: bool, standout: bool }; lines.children.count = integer",
+      "signs.<star|cross|square>.locations": "array of location tokens: mount_jupiter, mount_saturn, mount_sun, mount_mercury, mount_mars_under_jupiter, mount_mars_under_mercury, mount_luna, mount_venus, above_head_line, on_life_line, on_fate_line, on_any_line",
+      "user.birth_day_of_month": "integer 1-31 from DOB — no palm scan needed"
+    },
+    "normalized_to_v1": true
+  },
+  "rules": [
+    {
+      "rule_id": "PALM-HEART-001",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.depth",
+          "op": "eq",
+          "value": "deep"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Aapki hriday rekha gehri aur saaf hai — bhavnaon mein sthirta aur prem mein spashtata ka sanket. Jo mehsoos karte ho, poori tarah karte ho.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — Line of Heart, quality baseline (chestofbooks)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "emotional_stability",
+        "clear_affection"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-002",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.origin",
+          "op": "eq",
+          "value": "mount_jupiter_outer"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha Guru parvat ke bahari kinare se uthti hai — aap prem mein andhe bhakt hote hain. Jise chahte hain, usme koi kami nazar nahi aati, aur ideal itna ooncha rakhte hain ki nirasha ka khatra badh jaata hai. Prem karo, par aankhein khuli rakho.",
+      "polarity": "neutral",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — origin: extreme outside of Mount of Jupiter (2, Plate XVI)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "idealist_love",
+        "hero_worship",
+        "self_awareness"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-003",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.origin",
+          "op": "eq",
+          "value": "mount_jupiter_center"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha Guru parvat ke kendra se uthti hai — Cheiro ke anusaar iski sabse shubh sthiti. Prem mein pakke aur bharosemand, maan-maryada ka ooncha code, aur saathi ko safal dekhne ki mahatvakanksha. Ek baar dil diya toh jeevan bhar ka saath — aise log doosri shaadi ya alagav mein vishwas nahi rakhte.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — origin: centre of Mount of Jupiter",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "loyal_love",
+        "high_ideals",
+        "lifelong_bond",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-004",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.origin",
+          "op": "eq",
+          "value": "between_jupiter_saturn"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha pehli aur doosri ungli ke beech se uthti hai — shaant lekin bahut gehra prem swabhav. Dikhawa kam, tyaag zyada: jinse prem karte hain unke liye bade se bada balidaan kar sakte hain, aur saathi se devta jaisi ummeed nahi rakhte. Vyavharik aur gehra — santulit prem ka sunhera madhya-marg.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — origin: between first and second fingers (3, Plate XVI)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "balanced_love",
+        "sacrifice",
+        "realistic_expectations"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-005",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.origin",
+          "op": "eq",
+          "value": "mount_saturn_face"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha Shani parvat se uthti hai — prem mein apni zarooraton ko pehle rakhne ki pravritti. Jo chahiye use paane mein zid poori, par paane ke baad komalta kam. Saathi ki galti maaf karna mushkil, apni galti par aankh band. Yeh jaankar chalna hi rishton ko bachata hai — thodi si narmi bahut kuch badal degi.",
+      "polarity": "negative",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — origin: Mount of Saturn (4, Plate XVI)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "self_focused_love",
+        "reserved",
+        "growth_area"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-006",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.origin",
+          "op": "eq",
+          "value": "under_saturn_base"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha Shani parvat ke theek neeche se uthti hai — Saturn-origin ke saare lakshan aur bhi teevra roop mein. Apni duniya mein rehne ka swabhav prabal hai; doosron ki khushi ka khayal conscious effort se hi aayega. Rishton mein jaan-boojh kar dena seekhna aapki sabse badi growth hai.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — origin: under base of Mount of Saturn (5, Plate XVI)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "self_focused_love",
+        "intensified",
+        "growth_area"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-007",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.length_norm",
+          "op": "lte",
+          "value": 0.45
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha chhoti hai — prem ke unche bhaav (romance, samarpan, bhavukta) kam ubharte hain. Vyavharik rishte aapko zyada suit karte hain, par saathi ko express karna conscious habit banana hoga.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — the shorter the Line of Heart, the less the higher sentiments manifest",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "practical_love",
+        "low_expression"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-008",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.length_norm",
+          "op": "gte",
+          "value": 0.95
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha hatheli ke ek kinare se doosre tak atyadhik lambi hai — prem mein adhikaar-bhaav aur jalan (jealousy) ki teevra pravritti. Yeh prem ki gehrai ka hi doosra roop hai, par bina lagaam ke rishton ko jala sakti hai. Trust-building par kaam karna aapke liye zaroori hai.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — Line of Heart in excess denotes tendency toward jealousy (2, Plate XVI)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "jealousy",
+        "possessive",
+        "growth_area"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-009",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.length_norm",
+          "op": "gte",
+          "value": 0.95
+        },
+        {
+          "feature": "lines.head.curvature",
+          "op": "eq",
+          "value": "sloping_to_luna"
+        }
+      ],
+      "requires": [
+        "lines.heart.present",
+        "lines.head.present"
+      ],
+      "interpretation_hi_en": "Atyadhik lambi hriday rekha ke saath mastishk rekha Chandra parvat ki ore dhalti hai — jalan mein kalpana bhi shaamil ho jaati hai: bina baat ke scenarios banna, shak ka barhna. Iska tod hai seedhi baat-cheet — man mein kahani banane se pehle saathi se poochh lena.",
+      "polarity": "negative",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — jealousy alarmingly increased when Head Line slopes to Mount of Moon (6, Plate XVI)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "jealousy",
+        "imagination",
+        "combination_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-010",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.curvature",
+          "op": "eq",
+          "value": "downward_curve_at_jupiter"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha Guru parvat ke paas neeche ki ore mudti hai — dil sahi jagah lagane ki pehchaan kamzor padti hai, aur prem mein nirasha ka pattern ban sakta hai. Achhi baat: aapka swabhav behad dayalu aur sneh se bhara hai, aur aap status dekh kar prem nahi karte. Bas jaldi commit mat karo — samay lo, parakh lo, phir dil do.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — curving downward at base of Mount of Jupiter (7, Plate XVI); softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "misplaced_affection",
+        "kind_nature",
+        "discernment"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-HEART-011",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.chains",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha zanjeer jaisi bani hai ya chhoti-chhoti rekhaon se bhari hai — flirtation aur badalte aakarshan ka swabhav. Naye rishton ka romanch pasand hai, tikna mushkil lagta hai. Agar lambe saath ki chah hai toh novelty ko rishte ke ANDAR dhoondhna seekhna hoga, bahar nahi.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — chained Heart Line denotes flirtations and inconstancy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "inconstancy",
+        "flirtation",
+        "self_awareness"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-012",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.origin",
+          "op": "in",
+          "value": [
+            "mount_saturn_face",
+            "under_saturn_base"
+          ]
+        },
+        {
+          "feature": "lines.heart.chains",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "feature": "lines.heart.depth",
+          "op": "eq",
+          "value": "broad_shallow"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Shani se uthti chaudi, zanjeer jaisi hriday rekha — prem aur vipreet ling ke prati gehri udaseenta ya kadvahat ka sanket. Shayad puraane anubhavon ne bharosa toda hai. Yeh sthayi nahi hai — vishwas dobara banta hai, bas dheere aur sahi logon ke saath.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — chained broad line from Saturn; source's harsher claim softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cynicism_in_love",
+        "trust_rebuild"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-HEART-013",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.depth",
+          "op": "eq",
+          "value": "pale_broad_shallow"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha peeli, chaudi aur uthli hai — bhavnaon mein ek 'sab dekha hai' wali udaseenta. Kisi cheez mein poora dil nahi lagta. Iska ilaaj bada prem nahi, chhoti genuine khushi hai — roz ek cheez jo sach mein achhi lage.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — pale and broad without depth denotes blase, indifferent nature",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "indifference",
+        "low_engagement"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-014",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.position_vertical",
+          "op": "eq",
+          "value": "very_low_near_head"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha bahut neeche, mastishk rekha ko chhooti hui hai — dil hamesha dimaag ke faislon mein dakhal deta hai. Career, paisa, logic — sab par bhavnayein haavi ho jaati hain. Bade faislon mein 24 ghante ka rule rakho: pehle mehsoos karo, agle din decide karo.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — very low, almost touching Line of Head: heart interferes with affairs of the head",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "heart_over_head",
+        "emotional_decisions"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-015",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.position_vertical",
+          "op": "eq",
+          "value": "very_high_head_raised"
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha bahut oonchi hai aur mastishk rekha apni jagah se upar uthi hai — prem ke maamlon par dimaag ka raj chalta hai. Rishton mein bhi calculation pehle aati hai. Fayda: aap bhavnaon mein beh kar galti nahi karte. Dhyan: saathi ko kabhi-kabhi sirf dil chahiye hota hai, spreadsheet nahi.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — line very high with Head Line abnormally high: heart ruled by head, calculating in love",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "head_over_heart",
+        "calculated_love"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-016",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.head_heart_blended_single",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Hatheli par mastishk aur hriday rekha mil kar ek hi gehri rekha ban gayi hai — atyant ekagra, all-or-nothing swabhav. Prem karo toh poore dimaag se, kaam karo toh poore dil se. Dar naam ki cheez kam mehsoos hoti hai aur zid prachand hai. Yehi shakti hai aur yehi khatra bhi — risk lene se pehle ek baar rukna aapke liye zaroori aadat hai; suraksha ko halke mein mat lo.",
+      "polarity": "neutral",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — single blended head+heart line (see also Plate VI); death/accident clause excluded per safety policy, softened to risk-awareness",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "intensity",
+        "all_or_nothing",
+        "risk_awareness"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HEART-017",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.start_fork_jupiter_and_gap",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha ki shuruaat mein kaanta (fork) hai — ek shakha Guru parvat par, doosri pehli-doosri ungli ke beech. Cheiro ise sabse shubh sanketon mein ginte hain: santulit, khush-mizaaj aur sneh se bharpoor swabhav, aur prem ke maamlon mein bade sukh ka vaada. Rishton mein aapko ideality aur practicality dono ka best milta hai.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — fork at commencement, one branch on Jupiter, other between first and second fingers",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "balanced_love",
+        "happiness_promise",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-018",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.depth",
+          "op": "eq",
+          "value": "thin"
+        },
+        {
+          "feature": "lines.heart.forks",
+          "op": "eq",
+          "value": []
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha patli hai aur usme koi shakha nahi — bhavnatmak thandak ka sanket. Andar mehsoos karte ho, par bahar tak pahunchta nahi. Rishton ko zinda rakhne ke liye express karna practice karna hoga — chhote gestures se shuru karo.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — very thin line with no branches denotes coldness and want of heart",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "emotional_coldness",
+        "low_expression",
+        "growth_area"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HEART-019",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.present",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "interpretation_hi_en": "Hriday rekha spasht roop se dikhai nahi deti — bhavnatmak jud-aav aapke liye sahaj nahi hai; aakarshan sharirik star par zyada mehsoos hota hai, dil ke star par kam. Yeh koi kami nahi, ek banawat hai — par gehre rishte chahiye toh emotional connection par jaan-boojh kar mehnat karni hogi.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — no Line of Heart; source's harsher wording (with high Mount of Venus) softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "low_emotionality",
+        "physical_over_emotional"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HEART-020",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.heart.breaks",
+          "op": "gte",
+          "value": 1
+        }
+      ],
+      "requires": [
+        "lines.heart.present"
+      ],
+      "interpretation_hi_en": "Hriday rekha mein toot (break) hai — jeevan mein kisi gehre bhavnatmak aaghat ka sanket, jaise dil tootne ka aisa anubhav jo lambe samay tak saath rehta hai. Yeh past ki chhaap ho sakti hai, bhavishya ka faisla nahi. Aisi gehri chot ke baad healing mein samay lagta hai — apne logon ka sahara lena kamzori nahi, samajhdari hai.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VII — broken Heart Line; source's 'never recovered' fatalism removed per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "heartbreak",
+        "emotional_wound",
+        "healing"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-CHILD-001",
+      "domain": "palmistry",
+      "category": "children",
+      "conditions": [
+        {
+          "feature": "lines.children.depth_class",
+          "op": "eq",
+          "value": "broad_deep"
+        }
+      ],
+      "requires": [
+        "lines.children.count"
+      ],
+      "interpretation_hi_en": "Paramparik manyata ke anusaar chaudi aur gehri santaan rekha putra ka sanket maani jaati hai. Yeh keval Samudrik parampara ki vyakhya hai — kisi bhi garbh ya bhavishya ki santaan ke liye koi bhavishyavani nahi.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.IX — broad and deep lines denote male children",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "children_lines",
+        "traditional_claim",
+        "sex_indication"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-CHILD-002",
+      "domain": "palmistry",
+      "category": "children",
+      "conditions": [
+        {
+          "feature": "lines.children.depth_class",
+          "op": "eq",
+          "value": "fine_narrow"
+        }
+      ],
+      "requires": [
+        "lines.children.count"
+      ],
+      "interpretation_hi_en": "Paramparik manyata ke anusaar patli aur mahin santaan rekha kanya ka sanket maani jaati hai. Yeh keval Samudrik parampara ki vyakhya hai — kisi bhi garbh ya bhavishya ki santaan ke liye koi bhavishyavani nahi.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.IX — fine and narrow lines denote female children",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "children_lines",
+        "traditional_claim",
+        "sex_indication"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-CHILD-003",
+      "domain": "palmistry",
+      "category": "children",
+      "conditions": [
+        {
+          "feature": "lines.children.straight",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.children.count"
+      ],
+      "interpretation_hi_en": "Santaan rekhayein seedhi aur spasht hain — parampara mein yeh swasth, majboot santaan ka shubh sanket maana jaata hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.IX — straight lines denote strong healthy children",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "children_lines",
+        "child_wellbeing"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-CHILD-004",
+      "domain": "palmistry",
+      "category": "children",
+      "conditions": [
+        {
+          "feature": "lines.children.faint_or_crooked",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.children.count"
+      ],
+      "interpretation_hi_en": "Santaan rekhayein dheemi ya tedhi hain — parampara mein ise bachchon ke swasthya par vishesh dhyan dene ka sanket maana jaata hai. Iska matlab hai care aur poshan par thoda extra focus — koi medical nishkarsh nahi.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.IX — faint or crooked lines indicate delicate children; softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "children_lines",
+        "child_wellbeing",
+        "care_focus"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-CHILD-005",
+      "domain": "palmistry",
+      "category": "children",
+      "conditions": [
+        {
+          "feature": "lines.children.early_island_then_clear",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.children.count"
+      ],
+      "interpretation_hi_en": "Santaan rekha ki shuruaat mein chhota island hai par aage rekha saaf ho jaati hai — parampara mein iska arth: bachpan mein sehat nazuk, par badhne ke saath majboot aur swasth. Shuruaati varshon mein extra care, aage sab theek.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.IX — island at start then well-marked line: delicate early life, grows up strong; terminal-island clause excluded per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "children_lines",
+        "child_wellbeing",
+        "early_care"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-CHILD-006",
+      "domain": "palmistry",
+      "category": "children",
+      "conditions": [
+        {
+          "feature": "lines.children.standout",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.children.count"
+      ],
+      "interpretation_hi_en": "Santaan rekhaon mein ek rekha baaki sab se zyada spasht aur gehri hai — parampara kehti hai ki yeh santaan maata-pita ke sabse kareeb hogi aur sabse zyada safal bhi. Ghar ka sitara.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.IX — one line clear and distinct among others: that child closer to parent and more successful",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "children_lines",
+        "favourite_child",
+        "success",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-SIGN-001",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.star.locations",
+          "op": "eq",
+          "value": "mount_jupiter"
+        }
+      ],
+      "interpretation_hi_en": "Guru parvat par sitara (star) — Cheiro ke anusaar sabse bhagyashali chinhon mein se ek. Maan-samman, shakti aur pad mein vriddhi ka vaada. Netritva ke avsar aapki ore khinche chale aayenge.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Star on Mount of Jupiter (11, Plate XXII)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "star",
+        "honour",
+        "power",
+        "position",
+        "gold_rule"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-002",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "signs.star.locations",
+          "op": "eq",
+          "value": "mount_sun"
+        }
+      ],
+      "interpretation_hi_en": "Surya parvat par sitara — dhan aur yash ka yog, aksar sarvajanik jeevan (public life) ke zariye. Naam aur naame dono saath aane ka sanket — spotlight se bhaago mat.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Star on Mount of Sun: riches and glory via public life",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "star",
+        "riches",
+        "fame",
+        "public_life",
+        "gold_rule"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-003",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.star.locations",
+          "op": "eq",
+          "value": "mount_mercury"
+        }
+      ],
+      "interpretation_hi_en": "Budh parvat par sitara — vyapar, commerce, vigyan ya vaani-kala (eloquence) mein asadharan safalta ka sanket. Deal close karne ki kala aapke haath mein likhi hai.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Star on Mount of Mercury (11, Plate XXII)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "star",
+        "business_success",
+        "science",
+        "eloquence"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-004",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.star.locations",
+          "op": "eq",
+          "value": "mount_mars_under_jupiter"
+        }
+      ],
+      "interpretation_hi_en": "Guru ke neeche wale Mangal parvat par sitara — sahas ke kshetra mein vishisht pehchaan ka yog: ek nirnayak jeet ya bold move jo poore career ko naya naam de degi. Cheiro iski tulna Waterloo ki jeet se karte hain — aapka bhi ek defining moment likha hai.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Star on Mount of Mars under Jupiter: distinction via one decisive victory",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "star",
+        "courage",
+        "defining_victory"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-005",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.star.locations",
+          "op": "eq",
+          "value": "mount_mars_under_mercury"
+        }
+      ],
+      "interpretation_hi_en": "Budh ke neeche wale Mangal parvat par sitara — jeevan ki ladai dimaag se ladkar samman paane ka yog. Sangharsh se ghabrao mat; aapki mansik dridhta hi aapka hathiyaar hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Star on Mount of Mars under Mercury: honour won by mentality",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "star",
+        "mental_resilience",
+        "earned_honour"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-006",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.star.locations",
+          "op": "eq",
+          "value": "mount_luna"
+        }
+      ],
+      "interpretation_hi_en": "Chandra parvat par sitara — kalpana aur avishkar ki shakti se badi prasiddhi ka yog. Creator, writer, inventor, designer — aapki imagination hi aapka brand banegi.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Star on Mount of Moon: celebrity via imagination or inventive faculties",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "star",
+        "imagination",
+        "creative_fame"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-007",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "signs.star.locations",
+          "op": "eq",
+          "value": "mount_venus"
+        }
+      ],
+      "interpretation_hi_en": "Shukra parvat ke kendra par sitara — vyaktitva mein asadharan aakarshan (magnetism) ka sanket. Log aapki taraf sahaj khinche aate hain, aur prem ke maamlon mein aapka charm kaam karta hai. Is shakti ka istemal samajhdari se karna aapki zimmedari hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Star on centre of Mount of Venus: magnetism, success with opposite sex",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "star",
+        "magnetism",
+        "charm"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-008",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "signs.cross.locations",
+          "op": "eq",
+          "value": "mount_jupiter"
+        }
+      ],
+      "interpretation_hi_en": "Guru parvat par cross — Cheiro ke anusaar cross ki EK MATRA shubh sthiti. Jeevan mein ek asadharan bhagyashali prem ya sneh-sambandh aane ka sanket. Jab woh vyakti aaye, pehchaan lena.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Cross on Mount of Jupiter: extraordinarily fortunate affection; only favourable cross position",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cross",
+        "fortunate_love",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-009",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "signs.cross.locations",
+          "op": "eq",
+          "value": "mount_sun"
+        }
+      ],
+      "interpretation_hi_en": "Surya parvat par cross — dhan ke maamle mein nirasha ka sanket: ummeed se kam returns, atki hui kamai. Financial planning conservative rakho, ek hi daav par sab mat lagao.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Cross on Mount of Sun: disappointment in riches",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cross",
+        "financial_caution"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-010",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.cross.locations",
+          "op": "eq",
+          "value": "mount_mercury"
+        }
+      ],
+      "interpretation_hi_en": "Budh parvat par cross — len-den aur vyavhar mein imandari ka sawaal khada hota hai. Apne aas-paas ke sauda-baazon ki niyat parakh ke chalo, aur khud bhi shortcut ke lalach se door raho — chhoti bezimani badi keemat leti hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Cross on Mount of Mercury: dishonesty",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cross",
+        "integrity_caution",
+        "dealings"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-011",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.cross.locations",
+          "op": "eq",
+          "value": "mount_mars_under_mercury"
+        }
+      ],
+      "interpretation_hi_en": "Budh ke neeche wale Mangal parvat par cross — raaste mein bada virodh (opposition) aane ka sanket. Log aapke plans ke aade aayenge. Dhairya aur documentation — dono saath rakho; virodh se ladna nahi, use outlast karna hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Cross on Mount of Mars under Mercury: great opposition",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cross",
+        "opposition",
+        "perseverance"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-012",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.cross.locations",
+          "op": "eq",
+          "value": "mount_mars_under_jupiter"
+        }
+      ],
+      "interpretation_hi_en": "Guru ke neeche wale Mangal parvat par cross — jhagdon aur takraav se haani ka yog. Krodh par sanyam aapke liye luxury nahi, zaroorat hai: garam behas se door raho, vivaad ko likhit aur thande dimaag se suljhao.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Cross on Mount of Mars under Jupiter; death clause excluded per safety policy, encoded as conflict-caution",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cross",
+        "conflict_caution",
+        "anger_management"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-013",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.cross.locations",
+          "op": "eq",
+          "value": "mount_luna"
+        }
+      ],
+      "interpretation_hi_en": "Chandra parvat par cross — kalpana ka aapko hi dhokha dene ka sanket: man mein bani kahani ko sach maan lena. Bade faisle feelings par nahi, facts par lo — decide karne se pehle ek baar data ya kisi bharosemand vyakti se cross-check zaroor karo.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Cross on Mount of Moon: self-deception via imagination; low-Luna drowning clause excluded per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cross",
+        "self_deception",
+        "reality_check"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-014",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "signs.cross.locations",
+          "op": "eq",
+          "value": "mount_venus"
+        }
+      ],
+      "interpretation_hi_en": "Shukra parvat par cross — prem sambandhon mein ek bhaari, uljhane wala prabhav aane ka sanket: aisa rishta ya aakarshan jo kheenchta bahut hai par sukoon kam deta hai. Aise influence ko pehchaan kar boundaries banana hi bachav hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Cross on Mount of Venus: fatal influence of affections; softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cross",
+        "difficult_attachment",
+        "boundaries"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-015",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "signs.cross.locations",
+          "op": "eq",
+          "value": "above_head_line"
+        }
+      ],
+      "interpretation_hi_en": "Mastishk rekha ke theek upar cross — parampara mein sir ki suraksha ke prati saavdhani ka sanket. Practical roop mein: bike par helmet hamesha, adventure sports mein protection, laparwahi se bacho. Saavdhani hi is chinh ka jawab hai.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Cross above Line of Head: accident/injury to head; softened to protective-caution framing per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "cross",
+        "safety_caution",
+        "head_protection",
+        "legacy_category_health"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-016",
+      "domain": "palmistry",
+      "category": "protection",
+      "conditions": [
+        {
+          "feature": "signs.square.locations",
+          "op": "eq",
+          "value": "on_any_line"
+        }
+      ],
+      "interpretation_hi_en": "Hatheli par square (chaukor) — ise Raksha ka Chinh (Mark of Preservation) kaha jaata hai. Jis rekha par aur jis samay-bindu par yeh banta hai, us daur mein sankat aakar bhi tal jaane ka sanket. Aapke haath mein ek built-in raksha-kavach hai.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — The Square: Mark of Preservation, escape from dangers at that period (13, Plate XXII)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "square",
+        "protection",
+        "preservation",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-017",
+      "domain": "palmistry",
+      "category": "protection",
+      "conditions": [
+        {
+          "feature": "signs.square.locations",
+          "op": "eq",
+          "value": "on_life_line"
+        }
+      ],
+      "interpretation_hi_en": "Jeevan rekha par square — kathin samay mein raksha-kavach ka sanket: sehat ya suraksha par bada sankat aaye bhi toh nikal jaane ka yog. Parampara ise sabse mazboot protective chinhon mein ginti hai.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Square on Line of Life (13, Plate XXII); wording softened per safety policy (no lifespan claims)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "square",
+        "protection",
+        "vitality"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-SIGN-018",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "signs.square.locations",
+          "op": "eq",
+          "value": "on_fate_line"
+        }
+      ],
+      "interpretation_hi_en": "Bhagya rekha par square — nuksan se raksha ka sanket: career ya paise par aaya sankat poori tarah dooba nahi payega. Setback aayega toh bhi recovery likhi hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVI — Square on Line of Fate: preservation from loss",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "square",
+        "protection",
+        "career_recovery"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-001",
+      "domain": "palmistry",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "lines.fate.present",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ki timing paddhati: jeevan, bhagya aur mastishk rekha — teenon ko saat-saat saal ke khandon mein padha jaata hai, kyunki har saat varsh mein swabhav ka ek naya chakra shuru hota hai. Rekha par jo bhi chinh jis khand mein hai, ghatna usi umra-daur ki maani jaati hai.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — seven-year periods on Life, Fate, and Head lines (Plate XXVI)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "timing_system",
+        "seven_year_cycle"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-002",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            1,
+            10,
+            19,
+            28
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 1 hai (janm tithi 1, 10, 19 ya 28). Cheiro ki periodicity ke anusaar aapke jeevan ke sabse eventful varsh: 1, 7, 10, 16, 19, 28, 34, 37, 43, 46, 52, 55, 61 aur 70. In umra-padavon par bade mod, naye avsar aur mahatvapurn faisle aane ka yog — July, August aur January mein janme logon ke liye yeh prabhav aur bhi teevra.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 1",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-003",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            2,
+            11,
+            20,
+            29
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 2 hai (janm tithi 2, 11, 20 ya 29). Cheiro ki periodicity ke anusaar aapke sabse eventful varsh: 2, 7, 11, 16, 20, 25, 29, 34, 38, 43, 47, 52, 56 aur 70. In umra-padavon par jeevan ki dhara badalne wale mauke aate hain — July, August aur January mein janme logon ke liye vishesh roop se.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 2 (OCR corrected: 'nth' = 11th)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-004",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            3,
+            12,
+            21,
+            30
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 3 hai (janm tithi 3, 12, 21 ya 30). Cheiro ki periodicity ke anusaar aapke sabse eventful varsh nau-nau saal ke antar par aate hain: 3, 12, 21, 30, 39, 48, 57, 66 aur 75. December aur February mein janme logon par yeh chakra sabse spasht chalta hai.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 3",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-005",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            4,
+            13,
+            22,
+            31
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 4 hai (janm tithi 4, 13, 22 ya 31). Cheiro ki periodicity ke anusaar aapke eventful varsh jodon mein aate hain: 1-4, 10-13, 19-22, 28-31, 37-40, 46-49, 55-58, 64-67 aur 73-76. Matlab jab badlav shuru ho toh agle teen saal tak uska asar chalta hai — July, August aur January janm walon ke liye vishesh roop se.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 4",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-006",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            5,
+            14,
+            23
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 5 hai (janm tithi 5, 14 ya 23). Cheiro ki periodicity ke anusaar aapke sabse eventful varsh nau-nau saal ke antar par: 5, 14, 23, 32, 41, 50, 59, 68 aur 77. June aur September mein janme logon par yeh chakra sabse teevra hota hai.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 5",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-007",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            6,
+            15,
+            24
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 6 hai (janm tithi 6, 15 ya 24). Cheiro ki periodicity ke anusaar aapke sabse eventful varsh: 6, 15, 24, 33, 42, 51, 60, 69, 78 aur 87. May aur October mein janme logon ke liye yeh varsh vishesh roop se nirnayak hote hain.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 6",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-008",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            7,
+            16,
+            25
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 7 hai (janm tithi 7, 16 ya 25). Cheiro ki periodicity ke anusaar aapke sabse eventful varsh: 2, 7, 11, 16, 20, 25, 29, 34, 38, 43, 47, 56, 61, 65, 70, 74 aur 79 — ank 2 ke saath gehra taal-mel, jo Cheiro ke 2-7 sambandh ki khaas pehchaan hai. July, August aur January janm walon par prabhav sabse spasht.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 7",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-009",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            8,
+            17,
+            26
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 8 hai (janm tithi 8, 17 ya 26). Cheiro ki periodicity ke anusaar aapke sabse eventful varsh nau-nau saal ke antar par: 8, 17, 26, 35, 44, 53, 62, 71 aur 80. January, February, July aur August mein janme logon par yeh chakra sabse gehra chalta hai.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 8",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TIME-010",
+      "domain": "numerology",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "user.birth_day_of_month",
+          "op": "in",
+          "value": [
+            9,
+            18,
+            27
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapka janm-ank 9 hai (janm tithi 9, 18 ya 27). Cheiro ki periodicity ke anusaar aapke sabse eventful varsh nau-nau saal ke antar par: 9, 18, 27, 36, 45, 54, 63, 72 aur 81. April, October aur November mein janme logon ke liye in varshon ka mahatva sabse zyada.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIX — eventful years for birth number 9",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "eventful_years",
+        "numerology_bridge",
+        "dob_only"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    }
+  ]
+}

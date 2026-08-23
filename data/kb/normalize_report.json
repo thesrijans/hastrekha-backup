@@ -1,0 +1,3805 @@
+{
+  "files": {
+    "hastrekha_kb_sprint1_batch1.json": {
+      "changes": 224,
+      "by_kind": {
+        "requires_added": 69,
+        "category": 54,
+        "op": 76,
+        "polarity": 17,
+        "feature_renamed": 2,
+        "weight_clamped": 5,
+        "head_quality_numeric": 1
+      },
+      "log": [
+        {
+          "rule_id": "PALM-FING-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FING-001",
+          "change": "category",
+          "before": "personality_career",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FING-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FING-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FING-002",
+          "change": "category",
+          "before": "money_style",
+          "after": "wealth"
+        },
+        {
+          "rule_id": "PALM-FING-002",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-FING-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FING-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FING-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FING-003",
+          "change": "category",
+          "before": "personality_communication",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-FING-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FING-003",
+          "change": "feature_renamed",
+          "before": "fingers.mercury_length",
+          "after": "fingers.mercury.length"
+        },
+        {
+          "rule_id": "PALM-FING-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FING-004",
+          "change": "category",
+          "before": "personality_communication",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-FING-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FING-004",
+          "change": "feature_renamed",
+          "before": "fingers.mercury_length",
+          "after": "fingers.mercury.length"
+        },
+        {
+          "rule_id": "PALM-FING-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FING-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FING-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FING-006",
+          "change": "category",
+          "before": "willpower",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-FING-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FING-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FING-007",
+          "change": "category",
+          "before": "money_style",
+          "after": "wealth"
+        },
+        {
+          "rule_id": "PALM-FING-007",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-FING-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-001",
+          "change": "category",
+          "before": "mentality",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-001",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-HEAD-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-002",
+          "change": "category",
+          "before": "mentality",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-003",
+          "change": "category",
+          "before": "mentality",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-004",
+          "change": "category",
+          "before": "mentality_creative",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-005",
+          "change": "category",
+          "before": "mentality",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-006",
+          "change": "category",
+          "before": "mentality",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-008",
+          "change": "category",
+          "before": "mentality",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-008",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-HEAD-008",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-009",
+          "change": "category",
+          "before": "mentality_creative",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-009",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-010",
+          "change": "category",
+          "before": "mentality_creative",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-010",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-HEAD-010",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-011",
+          "change": "category",
+          "before": "money_style",
+          "after": "wealth"
+        },
+        {
+          "rule_id": "PALM-HEAD-011",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-012",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-012",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-013",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-013",
+          "change": "category",
+          "before": "mentality",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-013",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-014",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-014",
+          "change": "category",
+          "before": "life_events",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-HEAD-014",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-015",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-015",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-016",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-016",
+          "change": "category",
+          "before": "mentality",
+          "after": "personality"
+        },
+        {
+          "rule_id": "PALM-HEAD-016",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEAD-017",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEAD-017",
+          "change": "category",
+          "before": "wellbeing",
+          "after": "vitality"
+        },
+        {
+          "rule_id": "PALM-HEAD-017",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-HEAD-017",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-002",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-LIFE-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-007",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-LIFE-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-008",
+          "change": "category",
+          "before": "life_events",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-LIFE-008",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-009",
+          "change": "category",
+          "before": "life_events",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-LIFE-009",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-LIFE-009",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-010",
+          "change": "category",
+          "before": "love_career_crossover",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-LIFE-010",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LIFE-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LIFE-011",
+          "change": "category",
+          "before": "life_events",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-LIFE-011",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARS-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARS-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARS-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARS-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARS-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARS-003",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARS-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-001",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-002",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-002",
+          "change": "weight_clamped",
+          "before": 0.9,
+          "after": 0.85
+        },
+        {
+          "rule_id": "PALM-FATE-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-003",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-004",
+          "change": "category",
+          "before": "marriage",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-FATE-004",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-005",
+          "change": "category",
+          "before": "marriage_influence",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-FATE-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-006",
+          "change": "category",
+          "before": "marriage_influence",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-FATE-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-007",
+          "change": "category",
+          "before": "relationships_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-FATE-007",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-FATE-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-008",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-008",
+          "change": "weight_clamped",
+          "before": 0.9,
+          "after": 0.85
+        },
+        {
+          "rule_id": "PALM-FATE-008",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-009",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-009",
+          "change": "weight_clamped",
+          "before": 0.9,
+          "after": 0.85
+        },
+        {
+          "rule_id": "PALM-FATE-009",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-010",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-010",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-011",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-011",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-012",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-012",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-012",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-013",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-013",
+          "change": "category",
+          "before": "career_caution",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-013",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-FATE-013",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-014",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-014",
+          "change": "category",
+          "before": "career_caution",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-014",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-FATE-014",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-015",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-015",
+          "change": "category",
+          "before": "marriage",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-FATE-015",
+          "change": "weight_clamped",
+          "before": 0.9,
+          "after": 0.85
+        },
+        {
+          "rule_id": "PALM-FATE-015",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-016",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-016",
+          "change": "category",
+          "before": "life_events",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-FATE-016",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-017",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-017",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-017",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-018",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-018",
+          "change": "category",
+          "before": "career_destiny",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-FATE-018",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-018",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-018",
+          "change": "head_quality_numeric",
+          "before": {
+            "op": "eq",
+            "value": "strong_clear"
+          },
+          "after": {
+            "op": "gte",
+            "value": 0.6
+          }
+        },
+        {
+          "rule_id": "PALM-FATE-019",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-019",
+          "change": "category",
+          "before": "life_events_caution",
+          "after": "obstacles"
+        },
+        {
+          "rule_id": "PALM-FATE-019",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-FATE-019",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FATE-020",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FATE-020",
+          "change": "category",
+          "before": "life_events_caution",
+          "after": "obstacles"
+        },
+        {
+          "rule_id": "PALM-FATE-020",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-FATE-020",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-001",
+          "change": "category",
+          "before": "success",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-SUN-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-002",
+          "change": "category",
+          "before": "success",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-SUN-002",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-003",
+          "change": "category",
+          "before": "success",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-SUN-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-004",
+          "change": "category",
+          "before": "success",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-SUN-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-005",
+          "change": "category",
+          "before": "success",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-SUN-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-006",
+          "change": "category",
+          "before": "marriage_success",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-SUN-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-007",
+          "change": "category",
+          "before": "success_caution",
+          "after": "obstacles"
+        },
+        {
+          "rule_id": "PALM-SUN-007",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-SUN-007",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-008",
+          "change": "category",
+          "before": "success",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-SUN-008",
+          "change": "weight_clamped",
+          "before": 0.9,
+          "after": 0.85
+        },
+        {
+          "rule_id": "PALM-SUN-008",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-009",
+          "change": "category",
+          "before": "success",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-SUN-009",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-SUN-009",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-010",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SUN-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SUN-011",
+          "change": "category",
+          "before": "success",
+          "after": "career"
+        },
+        {
+          "rule_id": "PALM-SUN-011",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        }
+      ]
+    },
+    "hastrekha_kb_sprint1_batch2_marriage.json": {
+      "changes": 100,
+      "by_kind": {
+        "requires_added": 27,
+        "category": 27,
+        "op": 27,
+        "polarity": 16,
+        "weight_clamped": 3
+      },
+      "log": [
+        {
+          "rule_id": "PALM-MARR-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-001",
+          "change": "category",
+          "before": "marriage",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-002",
+          "change": "category",
+          "before": "marriage",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-003",
+          "change": "category",
+          "before": "marriage_timing",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-MARR-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-004",
+          "change": "category",
+          "before": "marriage_timing",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-MARR-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-005",
+          "change": "category",
+          "before": "marriage",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-006",
+          "change": "category",
+          "before": "marriage",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-006",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-007",
+          "change": "category",
+          "before": "marriage_wellbeing",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-007",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-007",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-008",
+          "change": "category",
+          "before": "marriage_timing",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-MARR-008",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-008",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-009",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-009",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-009",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-010",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-010",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-010",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-011",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-011",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-011",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-012",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-012",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-012",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-012",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-013",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-013",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-013",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-013",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-014",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-014",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-014",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-014",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-015",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-015",
+          "change": "category",
+          "before": "marriage_prosperity",
+          "after": "wealth"
+        },
+        {
+          "rule_id": "PALM-MARR-015",
+          "change": "weight_clamped",
+          "before": 0.9,
+          "after": 0.85
+        },
+        {
+          "rule_id": "PALM-MARR-015",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-016",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-016",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-016",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-016",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-017",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-017",
+          "change": "category",
+          "before": "marriage",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-017",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-018",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-018",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-018",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-018",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-019",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-019",
+          "change": "category",
+          "before": "marriage_interference",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-019",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-019",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-020",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-020",
+          "change": "category",
+          "before": "marriage_interference",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-020",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-020",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-021",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-021",
+          "change": "category",
+          "before": "marriage_timing",
+          "after": "timing"
+        },
+        {
+          "rule_id": "PALM-MARR-021",
+          "change": "weight_clamped",
+          "before": 0.9,
+          "after": 0.85
+        },
+        {
+          "rule_id": "PALM-MARR-021",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-021",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-022",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-022",
+          "change": "category",
+          "before": "marriage_romance",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-022",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-023",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-023",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-023",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-023",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-024",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-024",
+          "change": "category",
+          "before": "marriage_prosperity",
+          "after": "wealth"
+        },
+        {
+          "rule_id": "PALM-MARR-024",
+          "change": "weight_clamped",
+          "before": 0.9,
+          "after": 0.85
+        },
+        {
+          "rule_id": "PALM-MARR-024",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-025",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-025",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-025",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-025",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-026",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-026",
+          "change": "category",
+          "before": "marriage_caution",
+          "after": "love"
+        },
+        {
+          "rule_id": "PALM-MARR-026",
+          "change": "polarity",
+          "before": "caution",
+          "after": "negative"
+        },
+        {
+          "rule_id": "PALM-MARR-026",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARR-027",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARR-027",
+          "change": "category",
+          "before": "love_nature",
+          "after": "love"
+        }
+      ]
+    },
+    "hastrekha_kb_sprint1_batch3_heart_children_signs_timing.json": {
+      "changes": 75,
+      "by_kind": {
+        "op": 44,
+        "requires_added": 30,
+        "category": 1
+      },
+      "log": [
+        {
+          "rule_id": "PALM-HEART-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-009",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-010",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-011",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-012",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-012",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-013",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-014",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-015",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-016",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEART-016",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-017",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-018",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-018",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HEART-019",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HEART-019",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-CHILD-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-CHILD-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-CHILD-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-CHILD-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-CHILD-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-CHILD-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-001",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-002",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-003",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-004",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-005",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-006",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-007",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-008",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-009",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-010",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-011",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-012",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-012",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-013",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-013",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-014",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-014",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-015",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-015",
+          "change": "category",
+          "before": "health",
+          "after": "vitality"
+        },
+        {
+          "rule_id": "PALM-SIGN-015",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-016",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-016",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-017",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-017",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-SIGN-018",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-SIGN-018",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TIME-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TIME-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TIME-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        }
+      ]
+    },
+    "hastrekha_kb_sprint1_batch4_part1_complete.json": {
+      "changes": 114,
+      "by_kind": {
+        "requires_added": 43,
+        "op": 52,
+        "feature_renamed": 16,
+        "birth_window_ids": 3
+      },
+      "log": [
+        {
+          "rule_id": "PALM-HLTH-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HLTH-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HLTH-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HLTH-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HLTH-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HLTH-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-GIRD-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-GIRD-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-GIRD-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-GIRD-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-GIRD-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-GIRD-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-GIRD-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-GIRD-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-GIRD-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-INTU-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-INTU-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-INTU-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-INTU-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-INTU-002",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-INTU-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-INTU-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-INTU-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-INTU-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MYST-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MYST-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MYST-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MYST-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MYST-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MYST-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MYST-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRVL-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRVL-001",
+          "change": "feature_renamed",
+          "before": "lines.travel",
+          "after": "lines.travel.present"
+        },
+        {
+          "rule_id": "PALM-TRVL-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRVL-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRVL-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRVL-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRVL-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRVL-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRVL-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRVL-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRVL-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRVL-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRVL-008",
+          "change": "birth_window_ids",
+          "before": [
+            "jun21_jul21",
+            "oct21_nov21",
+            "feb21_mar21"
+          ],
+          "after": [
+            "MOON_POS",
+            "MARS_NEG",
+            "JUP_NEG"
+          ]
+        },
+        {
+          "rule_id": "PALM-TRVL-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRVL-009",
+          "change": "birth_window_ids",
+          "before": [
+            "apr21_may21",
+            "aug21_sep21",
+            "dec21_jan21"
+          ],
+          "after": [
+            "VEN_POS",
+            "MER_NEG",
+            "SAT_POS"
+          ]
+        },
+        {
+          "rule_id": "PALM-TRVL-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRVL-010",
+          "change": "birth_window_ids",
+          "before": [
+            "may21_jun21",
+            "sep21_oct21",
+            "jan21_feb21"
+          ],
+          "after": [
+            "MER_POS",
+            "VEN_NEG",
+            "SAT_NEG"
+          ]
+        },
+        {
+          "rule_id": "PALM-MARK-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-002",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARK-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-003",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARK-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-004",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARK-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-005",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARK-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-006",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARK-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-009",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-MARK-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-MARK-010",
+          "change": "op",
+          "before": "contains",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-001",
+          "change": "feature_renamed",
+          "before": "line_quality.color",
+          "after": "lines.quality.color"
+        },
+        {
+          "rule_id": "PALM-LINQ-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-002",
+          "change": "feature_renamed",
+          "before": "line_quality.color",
+          "after": "lines.quality.color"
+        },
+        {
+          "rule_id": "PALM-LINQ-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-003",
+          "change": "feature_renamed",
+          "before": "line_quality.color",
+          "after": "lines.quality.color"
+        },
+        {
+          "rule_id": "PALM-LINQ-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-004",
+          "change": "feature_renamed",
+          "before": "line_quality.color",
+          "after": "lines.quality.color"
+        },
+        {
+          "rule_id": "PALM-LINQ-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-005",
+          "change": "feature_renamed",
+          "before": "line_quality.forked_lines_general",
+          "after": "lines.quality.forked_lines_general"
+        },
+        {
+          "rule_id": "PALM-LINQ-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-006",
+          "change": "feature_renamed",
+          "before": "line_quality.head_end_fork",
+          "after": "lines.quality.head_end_fork"
+        },
+        {
+          "rule_id": "PALM-LINQ-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-007",
+          "change": "feature_renamed",
+          "before": "line_quality.tasselled_life_end",
+          "after": "lines.quality.tasselled_life_end"
+        },
+        {
+          "rule_id": "PALM-LINQ-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-008",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-008",
+          "change": "feature_renamed",
+          "before": "line_quality.wavy",
+          "after": "lines.quality.wavy"
+        },
+        {
+          "rule_id": "PALM-LINQ-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-009",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-009",
+          "change": "feature_renamed",
+          "before": "line_quality.break_overlap_repair",
+          "after": "lines.quality.break_overlap_repair"
+        },
+        {
+          "rule_id": "PALM-LINQ-010",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-010",
+          "change": "feature_renamed",
+          "before": "line_quality.sister_line_head",
+          "after": "lines.quality.sister_line_head"
+        },
+        {
+          "rule_id": "PALM-LINQ-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-011",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-011",
+          "change": "feature_renamed",
+          "before": "line_quality.network_all_over",
+          "after": "lines.quality.network_all_over"
+        },
+        {
+          "rule_id": "PALM-LINQ-012",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-012",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-012",
+          "change": "feature_renamed",
+          "before": "hands.comparison_available",
+          "after": "reading.hands_comparison_available"
+        },
+        {
+          "rule_id": "PALM-LINQ-013",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-013",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-013",
+          "change": "feature_renamed",
+          "before": "line_quality.descending_lines",
+          "after": "lines.quality.descending_lines"
+        },
+        {
+          "rule_id": "PALM-LINQ-014",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-LINQ-014",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-LINQ-014",
+          "change": "feature_renamed",
+          "before": "line_quality.chained_generic",
+          "after": "lines.quality.chained_generic"
+        },
+        {
+          "rule_id": "PALM-TRI-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRI-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRI-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRI-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRI-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRI-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRI-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRI-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-TRI-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-TRI-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        }
+      ]
+    },
+    "hastrekha_kb_sprint1_batch5a_hand_types_thumb_fingers_nails.json": {
+      "changes": 105,
+      "by_kind": {
+        "requires_added": 40,
+        "op": 47,
+        "feature_renamed": 18
+      },
+      "log": [
+        {
+          "rule_id": "PALM-HTYPE-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-001",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-002",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-003",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-004",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-005",
+          "change": "feature_renamed",
+          "before": "hand_shape_detail.spatulate_wider_at",
+          "after": "hand.shape_detail.spatulate_wider_at"
+        },
+        {
+          "rule_id": "PALM-HTYPE-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-006",
+          "change": "feature_renamed",
+          "before": "hand_shape_detail.spatulate_wider_at",
+          "after": "hand.shape_detail.spatulate_wider_at"
+        },
+        {
+          "rule_id": "PALM-HTYPE-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-007",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-008",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-008",
+          "change": "feature_renamed",
+          "before": "hand_shape_detail.philosophic_square_palm_combo",
+          "after": "hand.shape_detail.philosophic_square_palm_combo"
+        },
+        {
+          "rule_id": "PALM-HTYPE-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-009",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-009",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-010",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-010",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-011",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-011",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-011",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-011",
+          "change": "feature_renamed",
+          "before": "hand_shape_detail.conic_firmness",
+          "after": "hand.shape_detail.conic_firmness"
+        },
+        {
+          "rule_id": "PALM-HTYPE-012",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-012",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-012",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-012",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-012",
+          "change": "feature_renamed",
+          "before": "hand_shape_detail.conic_firmness",
+          "after": "hand.shape_detail.conic_firmness"
+        },
+        {
+          "rule_id": "PALM-HTYPE-013",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-013",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-013",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-014",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-HTYPE-014",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-014",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-015",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-HTYPE-015",
+          "change": "feature_renamed",
+          "before": "hand_shape",
+          "after": "hand.shape"
+        },
+        {
+          "rule_id": "PALM-HTYPE-015",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-001",
+          "change": "feature_renamed",
+          "before": "thumb",
+          "after": "thumb.present"
+        },
+        {
+          "rule_id": "PALM-THUMB-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-008",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-009",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-THUMB-010",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-THUMB-010",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-001",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-003",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-003",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-004",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-004",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-005",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-005",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-006",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-006",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-007",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-007",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-008",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-008",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-009",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-009",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-010",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-010",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-011",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-011",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-012",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-013",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-014",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-014",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-015",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-015",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-016",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-016",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-FINGR-017",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-FINGR-017",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        },
+        {
+          "rule_id": "PALM-NAIL-001",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-NAIL-002",
+          "change": "requires_added",
+          "before": null,
+          "after": []
+        },
+        {
+          "rule_id": "PALM-NAIL-002",
+          "change": "op",
+          "before": "equals",
+          "after": "eq"
+        }
+      ]
+    },
+    "hastrekha_kb_sprint1_batch5b_mounts.json": {
+      "changes": 0,
+      "by_kind": {},
+      "log": []
+    }
+  },
+  "total_changes": 618
+}

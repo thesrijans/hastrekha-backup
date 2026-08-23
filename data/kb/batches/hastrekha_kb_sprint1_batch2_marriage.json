@@ -1,0 +1,926 @@
+{
+  "meta": {
+    "kb_name": "HastRekha AI — Rules Knowledge Base",
+    "kb_version": "0.1.0-sprint1-batch2",
+    "schema_version": "1.0",
+    "extraction_date": "2026-08-20",
+    "primary_source": {
+      "text": "Cheiro — Palmistry for All",
+      "publisher": "G.P. Putnam's Sons, New York",
+      "year": 1916,
+      "copyright_status": "public_domain",
+      "provenance": "Full Chapter VIII text via chestofbooks.com chapter edition (Gutenberg EBook #20480 same work)",
+      "coverage_this_batch": "Ch.VIII Signs Relating to Marriage — complete (Marriage lines on Mercury mount; Influence Lines to Fate; Influence Lines on Venus)"
+    },
+    "pending_next_batches": [
+      "Ch.VII Heart line — https://chestofbooks.com/new-age/palmistry/All/Chapter-VII-The-Line-Of-Heart-As-Indicating-The-Affectionate-And-Emotional-Natu.html",
+      "Ch.IX Children lines — https://chestofbooks.com/new-age/palmistry/All/Chapter-IX-Lines-Denoting-Children-Their-Sex-And-Other-Matters-Concerning-The.html",
+      "Ch.XV-XVI minor marks, Ch.XIX timing, Part II Mounts — via https://chestofbooks.com/new-age/palmistry/All/index.html"
+    ],
+    "language_policy": "interpretation_hi_en is ORIGINAL Hinglish wording; source text never quoted verbatim",
+    "safety_policy": {
+      "excluded_content_this_batch": [
+        "Drooping marriage line = 'will outlive the other' (widowhood/death prediction) — EXCLUDED",
+        "Cross/line cutting end-curve = partner death by accident/sudden illness — EXCLUDED",
+        "Long gradual curve into Heart line = partner death by prolonged illness — EXCLUDED",
+        "'Fatality' framing on mid-line break — encoded as relationship-rupture risk only"
+      ],
+      "narrator_rule": "Marriage-difficulty rules are guidance about tendencies and windows, never verdicts. Never state that a marriage WILL fail, that a partner WILL fall ill or die, or give a guaranteed wedding date — only favorable windows and patterns to be mindful of."
+    },
+    "feature_vocabulary_additions": {
+      "lines.marriage.presence": [
+        "clear_deep",
+        "short_faint_marks",
+        "absent"
+      ],
+      "lines.marriage.position_norm": "0.0 = touching heart line, 1.0 = base of little finger; timing gradient (lower = earlier union)",
+      "lines.marriage.shape": [
+        "straight_clear",
+        "upturn",
+        "chained_many_islands",
+        "broken_center"
+      ],
+      "lines.marriage.marks": [
+        "island_start",
+        "island_middle",
+        "island_end",
+        "fork_end",
+        "deep_fork_toward_mars",
+        "crossbar_full_palm",
+        "drop_lines",
+        "parallel_upper_companion",
+        "joins_sun_line",
+        "cuts_sun_line",
+        "mercury_line_falling_in"
+      ],
+      "lines.marriage.interference_from": [
+        "mount_mars",
+        "mount_venus"
+      ],
+      "lines.influence.origin": [
+        "mount_luna",
+        "mount_venus_parallel_life"
+      ],
+      "lines.influence.relation_to_fate": [
+        "joins_strong",
+        "parallel_never_joins",
+        "cuts_to_thumb_side",
+        "diverges_widening"
+      ],
+      "lines.influence.marks": [
+        "island_on_line",
+        "island_at_termination"
+      ],
+      "lines.fate.after_union_quality": [
+        "stronger",
+        "weaker",
+        "unchanged"
+      ],
+      "lines.influence.venus_count": "integer — number of fine lines parallel to Life line on Venus"
+    },
+    "timing_methods_marriage": {
+      "method_1_position": "Marriage-line height between Heart line and little-finger base maps to age gradient: close to Heart line = early union (approx. late teens–early 20s), midway = late 20s–mid 30s, near finger base = later. Calibrate against Ch.XIX system in next batch.",
+      "method_2_influence_join": "Age at which an Influence Line joins the Fate line (read on Fate-line age scale) gives the union date; confidence rises sharply when a clear Marriage line exists for approximately the same date — Cheiro's own cross-verification method.",
+      "method_3_venus_duration": "Length of a Venus influence line running parallel to the Life line maps to duration of that relationship on the Life-line age scale."
+    },
+    "rule_count": 27,
+    "normalized_to_v1": true
+  },
+  "rules": [
+    {
+      "rule_id": "PALM-MARR-001",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.presence",
+          "op": "eq",
+          "value": "clear_deep"
+        }
+      ],
+      "interpretation_hi_en": "Budh parvat par saaf, gehri vivah rekha — jeevan mein ek sachcha, pakka bandhan likha hai. Prachin niyam: sirf spashth rekha hi vivah/sthayi union ko darshati hai.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVII pos.1",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "union",
+        "core_sign",
+        "legacy_category_marriage"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-002",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.presence",
+          "op": "eq",
+          "value": "short_faint_marks"
+        }
+      ],
+      "interpretation_hi_en": "Chhoti-halki rekhayein — gehri mohabbat ya aisa rishta jo vivah ki dehleez tak aaya par usme badla nahi. Har halki rekha ek aisi kahani hai jo adhoori rahi — yeh dil ki gehrai dikhati hai, kami nahi.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVII pos.2",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "affection",
+        "past_relationships",
+        "unfulfilled",
+        "legacy_category_marriage"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-003",
+      "domain": "palmistry",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "lines.marriage.presence",
+          "op": "eq",
+          "value": "clear_deep"
+        },
+        {
+          "feature": "lines.marriage.position_norm",
+          "op": "lte",
+          "value": 0.35
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha hriday rekha ke bilkul paas hai — jaldi vivah ka prachin sanket. Jeevan ke shuruati adhyay mein hi bandhan ka yog; exact window kundli ke dasha-vishleshan se aur pakki hogi.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — line close to Heart line = early marriage",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "timing",
+        "early_marriage",
+        "legacy_category_marriage_timing"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-004",
+      "domain": "palmistry",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "lines.marriage.presence",
+          "op": "eq",
+          "value": "clear_deep"
+        },
+        {
+          "feature": "lines.marriage.position_norm",
+          "op": "gte",
+          "value": 0.65
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha kanishtika ke aadhaar ke kareeb, hriday rekha se door — union jeevan ke baad ke daur mein aayega. Der ka matlab inkaar nahi: yeh rekha kehti hai ki aapka bandhan pakne ke baad hi bandhna likha hai.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — position gradient between Heart line and finger base (inverse of early-marriage rule)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "timing",
+        "late_marriage",
+        "legacy_category_marriage_timing"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-005",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.shape",
+          "op": "eq",
+          "value": "straight_clear"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha seedhi, saaf aur bina toot ke — sukhi aur sthir vaivahik jeevan ka shreshth sanket. Prachin niyam: sukhi union ke liye Budh parvat ki rekhayein seedhi aur nirdosh honi chahiye — aur aapki hain.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVII pos.1",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "happy_union",
+        "excellent_sign",
+        "legacy_category_marriage"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-006",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.shape",
+          "op": "eq",
+          "value": "upturn"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha upar ki or mudti hai — swatantrata-priya swabhav; vivah mein vilamb ya bandhan ke prati sahaj jhijhak ka sanket. Iska matlab akela jeevan nahi — bas union tabhi hoga jab vyakti bilkul sahi ho aur aapki azaadi ka samman kare.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVII pos.4 (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "delay",
+        "independence",
+        "legacy_category_marriage"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-007",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "drop_lines"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha se neeche girti mahin rekhayein — jeevansaathi ki sehat aur aaram ka khayal rakhna aapke rishtey ka vishesh adhyay rahega. Care-giver banna bojh nahi, aapke prem ki gehrai ka saboot hai — bas apna khayal bhi saath mein rakhna.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVII pos.5 (heavily softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "partner_wellbeing",
+        "care",
+        "legacy_category_marriage_wellbeing"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-008",
+      "domain": "palmistry",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "island_start"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha ki shuruaat mein island — vivah mein vilamb, aur shaadi ke shuruati daur mein doori ka yog (long-distance, kaam ki wajah se alagav, ya paristhitiyan). Yeh doori pyaar ki pariksha hai, uska ant nahi — jo jode is phase ko samajh kar chalte hain, unka bandhan aur gehra hota hai.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — island at beginning of Marriage line",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "delay",
+        "long_distance",
+        "timing",
+        "legacy_category_marriage_timing"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-009",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "island_middle"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha ke beech mein island — vaivahik jeevan ke madhya varshon mein tanav ya doori ka ek daur. Yeh warning window hai, faisla nahi: jis daur ko pehchan liya jaye, us daur ko sambhala ja sakta hai. Us phase mein rishtey pe invest karna hi asli upaay hai.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVIII pos.3 (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "mid_life_strain",
+        "timing",
+        "caution",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-010",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "island_end"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha ke ant mein island — baad ke varshon mein alagav ke sanket. Lekin yaad rakho: rekha tendency dikhati hai, taqdeer nahi likhti. Jinke haath mein yeh sanket hota hai aur jo samay rehte jaag jaate hain, woh is likhaavat ko badalte dekhe gaye hain.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — island toward end of Marriage line (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "late_strain",
+        "caution",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-011",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "fork_end"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha ant mein do bhaagon mein bat'ti hai (fork) — jeevansaathi se doori ya alag-alag rehne ka yog (kaam, sheher, ya mann ki doori). Fork ka rukh neeche hriday rekha ki or ho toh alagav zyada aupcharik roop le sakta hai. Communication is rekha ki kaat hai.",
+      "polarity": "negative",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVIII pos.4-5",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "separation_risk",
+        "caution",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-012",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "deep_fork_toward_mars"
+        }
+      ],
+      "interpretation_hi_en": "Fork gehra hai aur Mangal kshetra ki or utarta hai — kanooni alagav (talak) ka prachin sanket, aur agar ek rekha poori hatheli paar karti hai toh alagav mein kadvahat bhi. Yeh sabse serious warning-class sanket hai — iska matlab yeh hai ki partner chunne aur rishta nibhane, dono mein aapko doosron se zyada savdhani chahiye. Sahi partner + imandaar communication = yeh rekha kabhi activate hi nahi hoti.",
+      "polarity": "negative",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVIII pos.5 + full-palm crossing line (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "divorce_risk",
+        "serious_caution",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-013",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.shape",
+          "op": "eq",
+          "value": "chained_many_islands"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha kadi-jaisi, islands se bhari — rishton mein baar-baar uljhan aur kheench-taan ka pattern. Prachin salah yahan sakht hai: jaldi ya dabav mein commitment mat karna. Aapke liye sahi formula: lamba samay, poori parakh, phir faisla. Patience hi aapki kismat sudhaarta hai.",
+      "polarity": "negative",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — chained Marriage line (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "pattern_warning",
+        "patience",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-014",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.shape",
+          "op": "eq",
+          "value": "broken_center"
+        }
+      ],
+      "interpretation_hi_en": "Achhi-khaasi vivah rekha beech mein tooti hai — sukhi chal rahe rishtey mein ek bada jhatka aane ka sanket (galatfehmi, teesra prabhav, ya paristhiti). Jo jode is window ko pehle se jaante hain, woh toofan mein bhi haath nahi chhodte. Forewarned is forearmed.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — break at centre of Marriage line (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "shock_event",
+        "caution",
+        "timing",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-015",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "joins_sun_line"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha (ya uski shakha) haath ke andar jaakar Surya rekha se milti/uske saath upar chadhti hai — dhanvaan ya pratishthit vyakti se vivah ka prachin yog. Jeevansaathi ke saath samriddhi, samman aur samajik uchai — sasural paksh se saubhagya ka spashth sanket.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVIII pos.6",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "sasural_dhan",
+        "wealthy_spouse",
+        "excellent_sign",
+        "legacy_category_marriage_prosperity"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-016",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "cuts_sun_line"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha neeche mudkar Surya rekha ko KAAT-ti hai — aisa rishta jo aapki position, pratishtha ya career ko nuksan pahunchaye (status ka takrav, samaj ya pariwar ka virodh, ya galat sangat). Pyaar mein bhi hisaab rakhna: jo rishta aapko chhota kare, woh aapka rishta nahi.",
+      "polarity": "negative",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — Marriage line cutting Line of Sun",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "status_loss_risk",
+        "caution",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-017",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "mercury_line_falling_in"
+        }
+      ],
+      "interpretation_hi_en": "Budh parvat ke upar se ek rekha vivah rekha mein girti hai — vivah ke raaste mein badi rukavatein (pariwar ki sehmati, paristhitiyan, ya samaj). Lekin niyam saaf hai: agar vivah rekha khud achhi hai, toh yeh sari rukavatein paar ho jayengi. Ladna padega, lekin jeet likhi hai.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — line from top of Mercury falling into Marriage line",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "obstacles",
+        "overcome",
+        "legacy_category_marriage"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-018",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.marks",
+          "op": "eq",
+          "value": "parallel_upper_companion"
+        }
+      ],
+      "interpretation_hi_en": "Vivah rekha ke upar, uske saath ek halki samanantar rekha — vivah ke BAAD jeevan mein kisi naye prabhav ke aane ka sanket. Yeh dost bhi ho sakta hai, mentor bhi, ya aisa aakarshan jo boundaries maange. Sanket ka kaam savdhan karna hai — rishtey ki deewarein mazboot rakhna aapke haath mein hai.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII — slighter line close to upper side of Marriage line",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "third_influence",
+        "boundaries",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-019",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.interference_from",
+          "op": "eq",
+          "value": "mount_mars"
+        }
+      ],
+      "interpretation_hi_en": "Mangal parvat se rekhayein vivah rekha ki or uthti hain — rishtey mein bahari logon ki dakhal-andazi aur jhagdon ka sanket. Jahan yeh rekhayein bhagya rekha ko kaat-ti hain, wahi umra is dakhal ki timing batati hai. Upaay purana hai: apne rishtey ki baatein sirf rishtey ke andar rakho.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVII pos.6 — interference lines from Mars, dated where they cross Destiny line",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "interference",
+        "quarrels",
+        "timing",
+        "legacy_category_marriage_interference"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-020",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.marriage.interference_from",
+          "op": "eq",
+          "value": "mount_venus"
+        }
+      ],
+      "interpretation_hi_en": "Shukra parvat ki or se rekhayein vivah rekha tak — rishtey mein pareshaniyan aayengi, lekin Mangal wali dakhal jitni teekhi nahi; yeh zyada emotional kheench-taan hai, dushmani nahi. Thoda dhairya aur saaf baat-cheet se yeh badal chhat jaate hain.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII, Plate XVII pos.7 — annoyances from Venus, less vindictive",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "interference",
+        "mild",
+        "legacy_category_marriage_interference"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-021",
+      "domain": "palmistry",
+      "category": "timing",
+      "conditions": [
+        {
+          "feature": "lines.influence.relation_to_fate",
+          "op": "eq",
+          "value": "joins_strong"
+        },
+        {
+          "feature": "lines.marriage.presence",
+          "op": "eq",
+          "value": "clear_deep"
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ka khud ka cross-verification niyam: prabhav rekha bhagya rekha se MAJBOOTI se milti hai, aur usi daur ki saaf vivah rekha bhi maujood hai — toh vivah ki timing sabse zyada bharose se batayi ja sakti hai. Jis umra par milan hai (bhagya rekha ke scale par), wahi aapke union ka window hai.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII cont., Plate XVIII pos.7 — double-confirmation dating method",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "timing",
+        "high_confidence",
+        "engine_method",
+        "legacy_category_marriage_timing"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-022",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.influence.origin",
+          "op": "eq",
+          "value": "mount_luna"
+        }
+      ],
+      "interpretation_hi_en": "Prabhav rekha Chandra parvat se aati hai — union mein romance ki chhap pakki hai. Aur sabse khoobsurat sanket: aapka saathi ghar se DOOR milega — yatra mein, doosre sheher mein, ya ghar se bahar ki duniya mein. Ghar baithe kismat nahi milegi; niklo, ghoomo — wahi kahin aapki kahani shuru hogi.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII cont. — influence from Moon: romantic union, affinity met while travelling/away from home",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "romance",
+        "meet_while_travelling",
+        "shareable",
+        "legacy_category_marriage_romance"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-023",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.influence.marks",
+          "op": "eq",
+          "value": "island_on_line"
+        }
+      ],
+      "interpretation_hi_en": "Aane wale prabhav (vyakti) ki rekha par island — jo vyakti aapke jeevan mein aayega, uske ateet mein uljhanein ya vivaad ho sakte hain. Faisla judge karke nahi, jaankar lena: commitment se pehle poora sach jaan lena aapka haq hai, shak nahi.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII cont., Plate XVIII pos.8 (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "partner_past",
+        "due_diligence",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-024",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "lines.fate.after_union_quality",
+          "op": "eq",
+          "value": "stronger"
+        }
+      ],
+      "interpretation_hi_en": "Union ke milan-bindu ke BAAD bhagya rekha aur majboot dikhti hai — vivah se unnati ka pakka sanket. Jeevansaathi aapke liye bhagyashali hai: union ke baad dhan, pad aur pragati badhegi. Aur agar usi daur mein Surya rekha bhi ubharti hai, toh yeh sasural/saathi se saubhagya ka sabse prabal yog hai.",
+      "polarity": "positive",
+      "weight": 0.85,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII cont. — Fate line stronger after Influence joins; accentuated if Sun line appears",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "sasural_dhan",
+        "lucky_spouse",
+        "excellent_sign",
+        "legacy_category_marriage_prosperity"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-025",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.fate.after_union_quality",
+          "op": "eq",
+          "value": "weaker"
+        }
+      ],
+      "interpretation_hi_en": "Union ke baad bhagya rekha halki ya asthir dikhti hai — is union ne (ya yeh union) aapki pragati ko dheema kar sakta hai. Yeh saathi ke bure hone ka nahi, galat FIT ka sanket hai. Rishtey mein imandaar hisaab: kya yeh saath aapko badha raha hai ya rok raha hai? Jawab aapko pata hai.",
+      "polarity": "negative",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII cont. — Fate line weaker after union (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "wrong_fit",
+        "honest_assessment",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-026",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.influence.relation_to_fate",
+          "op": "eq",
+          "value": "parallel_never_joins"
+        }
+      ],
+      "interpretation_hi_en": "Ek prabhav rekha bhagya rekha ke bilkul paas, saath-saath chalti hai — par kabhi milti nahi. Ek gehra rishta jo kisi badi rukavat ki wajah se vivah tak nahi pahunch pata. Yeh sanket dard nahi, clarity dene aaya hai: jahan milan likha nahi, wahan saal mat gawao — pehchano aur aage badho.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII cont. — parallel influence never joining = obstacle prevents marriage",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "marriage",
+        "blocked_union",
+        "clarity",
+        "move_on",
+        "legacy_category_marriage_caution"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARR-027",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "lines.influence.venus_count",
+          "op": "gte",
+          "value": 3
+        }
+      ],
+      "interpretation_hi_en": "Shukra parvat par jeevan rekha ke samanantar kai prabhav rekhayein — teevra bhavuk, prem-pradhan swabhav. Prem ke bina jeena aapke liye mushkil hai, aur ek saath ek se zyada aakarshan aana aapke liye swabhavik hai. Yeh dosh nahi, design hai — bas commitment aapke liye conscious choice honi chahiye, bahaav nahi. Har rekha ki lambai batati hai woh rishta kitna chalega.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.VIII cont. — Influence Lines on Mount of Venus; many lines = cannot live without love (softened per safety policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "love_nature",
+        "passionate",
+        "multiple_attractions",
+        "self_awareness",
+        "legacy_category_love_nature"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    }
+  ]
+}

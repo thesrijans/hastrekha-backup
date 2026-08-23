@@ -1,0 +1,1456 @@
+{
+  "meta": {
+    "kb_name": "HastRekha AI — Rules Knowledge Base",
+    "kb_version": "0.1.0-sprint1-batch5a",
+    "schema_version": "1.0",
+    "extraction_date": "2026-08-20",
+    "primary_source": {
+      "text": "Cheiro — Palmistry for All",
+      "publisher": "G. P. Putnam's Sons",
+      "year": 1916,
+      "copyright_status": "public_domain",
+      "fetched_from": [
+        "https://chestofbooks.com/new-age/palmistry/All/The-Seven-Types-Of-Hands.html",
+        "https://chestofbooks.com/new-age/palmistry/All/The-Seven-Types-Of-Hands-Part-2.html",
+        "https://chestofbooks.com/new-age/palmistry/All/The-Seven-Types-Of-Hands-Part-3.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-II-The-Thumb.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-III-The-Fingers-Length-To-One-Another-The-Smooth-And-The-Knotty.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-IV-The-Nails-Of-The-Hand.html"
+      ]
+    },
+    "batch_scope": [
+      "Part II — The Seven Types of Hands (all 3 pages)",
+      "Part II Ch.II — The Thumb",
+      "Part II Ch.III — The Fingers",
+      "Part II Ch.IV — The Nails (near-total exclusion, see policy)"
+    ],
+    "part2_status": "Batch 5A of 2. Remaining for Batch 5B: Part II Mounts cluster (Ch.V-XII + continuation pages) and Ch.I intro. Ch.XIII (plaster casts) has no rules — skipped permanently.",
+    "rule_id_prefixes": [
+      "PALM-HTYPE",
+      "PALM-THUMB",
+      "PALM-FINGR",
+      "PALM-NAIL"
+    ],
+    "rule_count": 44,
+    "safety_exclusion_policy": {
+      "policy": "Death, lifespan, suicide, insanity, criminality-prediction, and named-disease diagnostic claims are NEVER encoded. Victorian-era class/character slurs in the source are softened to neutral temperament language.",
+      "excluded_in_this_batch": [
+        {
+          "loc": "Part II — Psychic hand",
+          "excluded_claim": "'starve', 'pushed aside', 'take their own lives' (suicide clause)",
+          "action": "rule PALM-HTYPE-013 encoded as support-structure framing only; doom and suicide content has zero trace in KB"
+        },
+        {
+          "loc": "Part II Ch.II — Clubbed Thumb",
+          "excluded_claim": "'murderer's thumb' label, crime and violence prediction",
+          "action": "rule PALM-THUMB-007 encoded as temper-management framing only; criminality label excluded"
+        },
+        {
+          "loc": "Part II Ch.IV — Nails (chapter-level exclusion)",
+          "excluded_claim": "diagnostic claims: lung/chest disease, laryngitis and bronchial disease, weak heart action, nerve disease, paralysis (shell nails), spinal weakness and curvature, anaemia of brain, over-strained heart valves / bursting blood vessel (large moons), bluish/black nails as death approach",
+          "action": "entire diagnostic content of Ch.IV not encoded; only 2 softened non-diagnostic rules kept (PALM-NAIL-001/002). Narrator must NEVER read nail shape as disease."
+        },
+        {
+          "loc": "Part II Ch.III — short stubby fingers = 'animalism and gross materialism'",
+          "excluded_claim": "dehumanizing framing; also likely Batch 1 semantic duplicate",
+          "action": "not re-encoded; see batch1_dedup_note"
+        }
+      ]
+    },
+    "victorian_bias_note": "Cheiro's Elementary/Psychic/Mixed type descriptions carry 1916-era class prejudice ('brute', 'lowest type', 'starve'). Classifier MAY output all 7 types, but narrator must use ONLY the softened interpretations in this KB — never source adjectives. Elementary render weight deliberately low (0.4).",
+    "batch1_dedup_note": "Batch 1 contains 7 rapid-observation finger/thumb rules from Part I intro pages (short stumpy fingers, first-finger ambition, thumb will-power basics). Likely semantic overlaps with PALM-FINGR-001 and PALM-THUMB doctrine rules. Repo merge script should flag rules with matching feature paths across batches; where duplicated, keep the Batch 5A version (fuller Part II treatment) and retire the Batch 1 quick-rule.",
+    "hand_type_classifier_cv_notes": {
+      "description": "The 7-type classifier is MediaPipe-computable without crease extraction. Heuristic feature set:",
+      "features": [
+        "palm aspect ratio (wrist width vs finger-base width vs palm length) -> square vs spatulate-wide-base vs spatulate-wide-wrist",
+        "finger length : palm length ratio -> long-fingered (philosophic/psychic) vs short (elementary/square)",
+        "fingertip taper (tip width : base width per finger) -> pointed (conic/psychic) vs square-cut vs spatulate pads",
+        "joint prominence (inter-phalange width bumps) -> knotty (philosophic) vs smooth",
+        "per-finger type disagreement -> mixed hand",
+        "thumb set height + thumb length -> elementary flag, will-force proxy"
+      ]
+    },
+    "finger_spacing_map": {
+      "description": "Ch.III independence quads — landmark-computable spread angles at rest pose. Encoded as single rule PALM-FINGR-013.",
+      "thumb_to_first": "independence of will / fearlessness",
+      "first_to_second": "independence of thought",
+      "second_to_third": "independence of circumstances",
+      "third_to_fourth": "independence of action"
+    },
+    "nail_growth_clock": {
+      "description": "Ch.IV dating mechanic kept as non-diagnostic stress-history tool: nail grows base-to-edge in ~9 months. Furrow near edge ~9 months ago, centre ~4-5 months, base ~1 month. Used only by PALM-NAIL-001.",
+      "months_full_growth": 9
+    },
+    "feature_vocabulary_additions": {
+      "hand_shape": "elementary|square|spatulate|philosophic|conic|psychic|mixed  (extends Batch 3 usage)",
+      "hand_shape_detail": "{ spatulate_wider_at: fingers|wrist, philosophic_square_palm_combo: bool, conic_firmness: soft|firm }",
+      "thumb": "{ joint_top: supple|stiff, joint_middle_supple: bool, nail_phalange_long: bool, cramped_to_palm: bool, clubbed: bool, waist_like: bool, straight_full: bool, base_phalange_long: bool }",
+      "fingers.<jupiter|saturn|sun|mercury>.length": "short|normal|long|excessive",
+      "fingers.mercury.crooked": "boolean",
+      "fingers.length_vs_palm": "long|proportionate|short",
+      "fingers.lean_toward": "jupiter|saturn|sun|mercury|none",
+      "fingers.spacing": "{ thumb_first: narrow|wide, first_second: narrow|wide, second_third: narrow|wide, third_fourth: narrow|wide }",
+      "fingers.curve": "backward_loose|straight_firm|inward",
+      "fingers.joints": "smooth|knotty",
+      "nails": "{ furrow_position: edge|centre|base|none, white_flecks_many: bool }"
+    },
+    "normalized_to_v1": true
+  },
+  "rules": [
+    {
+      "rule_id": "PALM-HTYPE-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "elementary"
+        }
+      ],
+      "interpretation_hi_en": "Aapka haath Elementary type ka hai — chhota, thos, mazboot banawat. Iska arth seedha-saada, zameen se juda swabhav: sharirik kaam aur seedhi zindagi mein sahajta, baareek philosophical uljhanon mein kam ruchi. Aapki taqat simplicity aur sahansheelta hai — jo saamne hai, usse nipatna aapko aata hai.",
+      "polarity": "neutral",
+      "weight": 0.4,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Elementary hand (Fig.1, Plate I); Victorian slurs softened per policy, render weight deliberately low",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "elementary",
+        "victorian_bias_softened"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-002",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "square"
+        }
+      ],
+      "interpretation_hi_en": "Aapka haath Square — Useful/Practical — type ka hai: chaukor hatheli, square-cut ungliyaan. Iska arth: practical, logical, method se chalne wala dimaag jo cheezon ko proof aur reason se maanta hai. Solid, serious worker — business, law, medicine, science jaise fields mein Cheiro ke anusaar yeh type sabse zyada safal hota hai. Hawa mein mehal nahi, zameen par imarat banane wale haath.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Square/Useful hand (Fig.2, Plate I)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "square",
+        "practical",
+        "professional_success"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-003",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "square"
+        },
+        {
+          "feature": "thumb.nail_phalange_long",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "feature": "thumb.joint_top",
+          "op": "eq",
+          "value": "stiff"
+        }
+      ],
+      "interpretation_hi_en": "Square haath ke saath lamba, stiff-jointed angootha — determination ka double dose: jo thaan liya, woh hokar rahega. Zid bhi isi package mein aati hai. Bahas mein aapko harana lagbhag namumkin hai — bas yeh dekhna ki har ladai ladne layak ho.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Square hand determined/obstinate with long stiff first thumb joint",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "square",
+        "determination",
+        "combination_rule"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-004",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "spatulate"
+        }
+      ],
+      "interpretation_hi_en": "Aapka haath Spatulate type ka hai — ungliyon ke sire par chaude pads, thodi irregular banawat. Cheiro ke anusaar yeh 'hamesha kuch na kuch thok-peet karne walon' ka haath hai: athak oorja, zabardast originality, inventive aur unconventional soch, khuli bhavnayein. Jahan doosre rukte hain, aapka engine wahan se shuru hota hai. Builder/maker DNA.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Spatulate hand (Fig.3): untiring energy, originality, inventive, unconventional",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "spatulate",
+        "energy",
+        "originality",
+        "maker"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape_detail.spatulate_wider_at",
+          "op": "eq",
+          "value": "fingers"
+        }
+      ],
+      "requires": [
+        "hand_shape"
+      ],
+      "interpretation_hi_en": "Aapki Spatulate hatheli ungliyon ki base par zyada chaudi hai — is variant mein oorja ke saath practicality aati hai: kaam aur soch mein zameen se jude, impulse par kam behne wale. Idea + execution dono ek hi haath mein.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Spatulate wider at finger base: more practical, less impulsive",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "spatulate",
+        "practical_variant"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HTYPE-006",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape_detail.spatulate_wider_at",
+          "op": "eq",
+          "value": "wrist"
+        }
+      ],
+      "requires": [
+        "hand_shape"
+      ],
+      "interpretation_hi_en": "Aapki Spatulate hatheli kalai ki taraf zyada chaudi hai — is variant mein impulse ka accelerator zyada tez hai: bolne, karne aur gussa hone mein jaldi. Speed aapki taqat hai, par bade faislon par 24-ghante ka pause rule laga lo — jitna tez engine, utna zaroori brake.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Spatulate wider at wrist: carried by impulses, hasty in temper, speech, action",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "spatulate",
+        "impulsive_variant",
+        "pause_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HTYPE-007",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "philosophic"
+        }
+      ],
+      "interpretation_hi_en": "Aapka haath Philosophic type ka hai — lamba, patla, ubhri hui joints wala. Greek parampara se hi yeh gyaan-premiyon ka haath maana gaya: gehre padhne wale, literature ki taraf khinchav, akele baith kar sochne mein sukoon, aur ek halka ascetic (tapasvi) streak. Puraane zamane ke woh monks jinhone shastra aur vigyan ke granth likhe — sabke haath aise hi the. Cheiro ise maansik vikas ke sabse unche types mein ginte hain.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Philosophic hand (Fig.4): studious, literary, ascetic; highest mental developments",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "philosophic",
+        "scholar",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-008",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "hand.shape_detail.philosophic_square_palm_combo",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapke haath mein aaj ke daur ka sabse kaam ka combo hai — square (practical) hatheli par philosophic (studious) ungliyaan. Matlab: practical foundation ke upar sochne-padhne wala dimaag apni theories, research aur likhai banata hai. Scholar jo bill bhi bhar sakta hai — Cheiro khud maante hain ki modern zamane mein asli philosophic haath ka yahi upgraded roop chalta hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — modified philosophic: square palm + philosophic fingers, practical base for studious mind",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "philosophic",
+        "practical_scholar",
+        "combination_rule"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-009",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "philosophic"
+        }
+      ],
+      "interpretation_hi_en": "Philosophic haath ke saath Cheiro ki ek honest warning bhi hai: yeh type Square haathon jitna dhan shayad hi jama karta hai — kyunki priority gyaan hai, paisa nahi. Iska matlab gareebi nahi, bas yeh ki wealth aapke liye by-default nahi aayegi — usse system banana padega (auto-invest, fixed saving) taaki dimaag books mein rahe aur paisa apne aap badhta rahe.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — philosophic type rarely accumulates wealth like the Square hand",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "philosophic",
+        "wealth_system",
+        "honest_note"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-010",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "conic"
+        }
+      ],
+      "interpretation_hi_en": "Aapka haath Conic — Artistic — type ka hai: graceful banawat, taper hoti nukili ungliyaan. Iska arth kalatmak temperament: rang, sangeet, sundarta aur fine arts ke prati gehri samvedansheelta. Zaroori nahi aap painter hi ho — par sundar cheezein aapke andar kuch chhoo jaati hain jo doosron ko dikhta bhi nahi. Aesthetic sense aapka built-in gift hai.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Conic/Artistic hand: emotional artistic temperament, sensitive to colour, music, fine arts",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "conic",
+        "artistic",
+        "aesthetic_sense"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-011",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "conic"
+        },
+        {
+          "feature": "hand.shape_detail.conic_firmness",
+          "op": "eq",
+          "value": "soft"
+        }
+      ],
+      "interpretation_hi_en": "Aapka Conic haath naram aur bhara hua hai — Cheiro ki saaf warning: is variant mein aaram-pasandi (indolence) built-in aati hai. Kala ki APPRECIATION mein samay chala jaata hai, CREATION mein nahi. Formula seedha hai: consume kam, create zyada — roz ek chhoti cheez banao, chahe adhoori ho. Talent aapke paas pehle se hai; usse output tak le jaana hi asli kaam hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — soft/fleshy conic: pronounced indolence, squanders time appreciating rather than creating",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "conic",
+        "indolence_risk",
+        "create_daily"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-012",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "conic"
+        },
+        {
+          "feature": "hand.shape_detail.conic_firmness",
+          "op": "eq",
+          "value": "firm"
+        }
+      ],
+      "interpretation_hi_en": "Aapka Conic haath firm aur kasa hua hai — Cheiro ke anusaar yahi woh variant hai jo apne artistic temperament se sach mein KUCH BANA leta hai. Sensitivity + discipline ka rare combo: kala ka gift bhi hai aur usse duniya tak pahunchane ka dum bhi. Creator economy aapke liye bani hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — harder/firmer conic hand: possessor really makes something of the artistic temperament",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "conic",
+        "disciplined_artist",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-013",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "psychic"
+        }
+      ],
+      "interpretation_hi_en": "Aapka haath Psychic — Idealistic — type ka hai: patla, nazuk, sundar banawat. Cheiro ise shuddh maansik star par haath ka sabse uncha vikas kehte hain: sapnon, aadarshon aur antardrishti ki duniya ke log, jinke paas vision aur sookshm samajh ka durlabh gift hota hai. Is gift ki ek shart hai — practical STRUCTURE: fixed routine, paise ka automatic system, aur grounded log saath mein. Jab zameen ka intezam pakka ho, tab yeh haath aasman ki cheezein dekh pata hai — aur wahi iska asli kamaal hai.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Psychic/Idealistic hand; starvation and suicide clauses excluded per safety policy, encoded as support-structure framing",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "psychic",
+        "visionary",
+        "structure_needed"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-014",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "mixed"
+        }
+      ],
+      "interpretation_hi_en": "Aapka haath Mixed type ka hai — alag-alag ungliyaan alag types ki (koi pointed, koi square, koi spatulate). Iska arth: versatility aapka middle name hai — har vishay par baat kar sakte ho, har kaam thoda-bahut aata hai. Iska tax: purpose badalta rehta hai, toh ek talent gehra hone se pehle agla shuru ho jaata hai. Aapke liye sawaal talent ka nahi, CHUNAAV ka hai.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Mixed hand: versatility itself, changeable in purpose",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "mixed",
+        "versatility",
+        "focus_challenge"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HTYPE-015",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "hand.shape",
+          "op": "eq",
+          "value": "mixed"
+        },
+        {
+          "feature": "lines.head.curvature",
+          "op": "eq",
+          "value": "straight_clear"
+        }
+      ],
+      "requires": [
+        "lines.head.present"
+      ],
+      "interpretation_hi_en": "Mixed haath ke saath saaf, seedhi mastishk rekha — Cheiro ke anusaar YAHI woh combination hai jisme versatility mein se EK talent nikhar kar champion banta hai. Aapke paas options bhi hain aur unme se chunne wala clear dimaag bhi. Ek chuno, do saal do, aur dekho.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II — Mixed hand + clear straight Head line: likelihood of developing one talent from versatility",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "hand_type",
+        "mixed",
+        "one_talent",
+        "combination_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-THUMB-001",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "thumb.present",
+          "op": "exists",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ka angootha-siddhant: angootha teen lokon ka naksha hai — base (Shukra parvat se juda) = PREM, beech ka phalange = TARK (logic), aur nail wala upari hissa = ICCHHA-SHAKTI (will). Jo hissa jitna bada, woh gun jeevan mein utna hi prabal. D'Arpentigny ki baat Cheiro dohrate hain: 'angootha hi insaan ko individual banata hai.'",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — three worlds of the Thumb: Love (base), Logic (middle), Will (nail phalange)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "reading_method",
+        "three_worlds"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "thumb.joint_top",
+          "op": "eq",
+          "value": "supple"
+        }
+      ],
+      "interpretation_hi_en": "Aapka angootha supple-jointed hai — peechhe ki taraf mudne wala, lachila. Iska arth: adaptable, broad-minded, unconventional swabhav aur soch-daulat dono mein dariyadili. Safar mein ajnabiyon se dosti aapki speciality hai. Cheiro ka negotiation-secret bhi note kar lo: aap impulse par haan bolte ho par sochne par palat sakte ho — isliye jo aapse kaam nikalwana chahe, woh usi waqt pakka karwa leta hai. Apni is pattern ko jaano, aur bade commitments par 'kal batata hoon' bolna seekho.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — supple-jointed thumb (Fig.2, Plate III): adaptable, generous, impulsive yes then reversal on reflection",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "supple",
+        "adaptable",
+        "negotiation_insight"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-003",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "thumb.joint_top",
+          "op": "eq",
+          "value": "stiff"
+        }
+      ],
+      "interpretation_hi_en": "Aapka angootha stiff-jointed hai — seedha, kasa hua. Iska arth: soch-samajh kar bolne wala, resist karne wala swabhav. Cheiro ka mirror-insight: aap pehle NA bolte ho aur sochne par HAAN kar sakte ho — bilkul supple walon ka ulta. Aur ek baar faisla ho gaya toh virodh aapko aur pakka kar deta hai. Dosti dheere banti hai par tootti nahi. Train mein ajnabi se baat? Sirf tab jab khidki khuli-band ki behas ho.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — firm-jointed thumb (Fig.3): refuses first agrees on reflection, opposition hardens resolve",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "stiff",
+        "deliberate",
+        "negotiation_insight"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "thumb.joint_top",
+          "op": "eq",
+          "value": "stiff"
+        },
+        {
+          "feature": "thumb.nail_phalange_long",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Stiff angoothe ke saath lamba nail-phalange — icchha-shakti ka sabse strong combination: jitna lamba yeh upari hissa, utni prachand will force. Jo thaan liya, duniya rok nahi sakti. Bas yeh will sahi cheezon par lage — kyunki galat zid bhi isi taqat se chalti hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — firm joint + longer nail phalange = stronger will force",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "will_power",
+        "combination_rule"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-005",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "thumb.cramped_to_palm",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapka angootha hatheli se chipka hua, andar ki taraf khincha rehta hai — parampara mein yeh 'pakad kar rakhne' wale swabhav ka chinh hai: paisa, cheezein, control — chhodna mushkil. Saving aapki superpower hai, par kanjoosi aur security ke beech ki line yaad rakhna — kabhi-kabhi kharch karna bhi investment hota hai, khaaskar rishton mein.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — thumb cramped to palm, nail phalange turned in: grasping/retentive nature (miser framing softened)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "retentive",
+        "saving_vs_hoarding"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-006",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "thumb.joint_middle_supple",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapke angoothe ka beech wala joint (Logic phalange) supple hai — Cheiro ka sookshm point: yeh logon ke aage jhukna nahi, PARISTHITIYON ke saath adjust hona dikhata hai. Aap reason se maan lete ho ki halaat ke hisaab se dhalna hi samajhdari hai. Survival skill top-class — bas dhyan raho ki adjust karte-karte apna direction na kho do.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — supple middle joint: adapts to circumstances rather than persons",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "logic_phalange",
+        "adaptability"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-007",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "thumb.clubbed",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapka angootha clubbed (moongri jaisa mota) type ka hai — parampara mein iska arth: gusse ka fuse bahut chhota, aur jab phat-ta hai toh control mushkil. Yeh jaanna hi aadhi jeet hai. Aapke liye do cheezein non-negotiable hain: (1) trigger ke waqt 10-second pause + kamre se bahar — blind gusse mein KOI faisla, koi message, kuch nahi; (2) regular physical outlet (gym, daud, khel) jo pressure release karta rahe. Fuse chhota hai toh handling careful chahiye — bas itni si baat.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — Clubbed thumb (Fig.1, Plate III); 'murderer's thumb' label and crime prediction excluded per safety policy, encoded as temper-management only",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "clubbed",
+        "temper_management"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-008",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "thumb.waist_like",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapke angoothe ka beech ka hissa patla — 'waist-like' — hai. Cheiro ke anusaar aise log apni baat argument se nahi, TACT aur diplomacy se manwate hain: sahi waqt, sahi shabd, sahi angle. Aap kamre ka mood padh kar chaal chalte ho — negotiation mein yeh hammer se zyada kaam aata hai.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — waist-like thumb (Fig.4): relies on tact and diplomacy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "waist_like",
+        "diplomacy"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-009",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "thumb.straight_full",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapka angootha seedha, bharpoor banawat ka hai — waist-like ka ulta: aap tact par nahi, seedhe TARK aur argument par chalte ho. Ghuma-phira kar baat karna aapko aata hi nahi — jo hai, saamne rakh do, reason jeetega. Ijjat isi se milti hai, bas kabhi-kabhi logic ke saath thodi narmi mila lo — sach kadwa ho toh sunna mushkil ho jaata hai.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — straight thumb (Fig.5): depends on argument and reason, little tact",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "straight",
+        "logic_over_tact"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-THUMB-010",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "thumb.base_phalange_long",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Angoothe ka base phalange (Prem ka hissa, Shukra parvat se juda) lamba hai — parampara mein iska arth: prem aur aakarshan ki oorja par achha SANYAM. Bhavnayein gehri hain par unki steering aapke haath mein hai — dil chalata nahi, aap dil ko chalate ho.",
+      "polarity": "positive",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.II — long third (Love) phalange: more control over the love/sensual nature; harsher short-phalange claim softened out",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "thumb",
+        "love_phalange",
+        "self_control"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-001",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "fingers.jupiter.length",
+          "op": "eq",
+          "value": "long"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Guru ungli (pehli/index) lambi hai — netritva aur command ka chinh: logon ko direction dena, zimmedari uthana, aage khade hona aapko naturally aata hai. Power aapko darati nahi, bulati hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — long Finger of Jupiter: love of power and command",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "jupiter",
+        "leadership"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-002",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "fingers.jupiter.length",
+          "op": "eq",
+          "value": "short"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Guru ungli chhoti hai — bade pad aur zimmedari ka bojh aapko aakarshit nahi karta; aap limelight ke bina, apne kaam mein sukoon se rehna pasand karte ho. Yeh kami nahi hai — duniya ko har jagah boss nahi, bharosemand expert bhi chahiye. Bas itna dekhna ki jo deserve karte ho, uske liye awaaz utha sako.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — short Jupiter finger: dislike of responsibility, lack of ambition (reframed)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "jupiter",
+        "low_key_ambition"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-003",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.saturn.length",
+          "op": "eq",
+          "value": "long"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Shani ungli (beech wali) lambi hai — soch-samajh (prudence), ekant-priyata aur gambhir, studious swabhav ka chinh. Bheed se zyada aapko apni company pasand hai, aur halke topics se zyada gehre. Depth aapka default mode hai.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — long Saturn finger: prudence, solitude, reserved studious disposition",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "saturn",
+        "depth",
+        "solitude"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.saturn.length",
+          "op": "eq",
+          "value": "short"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Shani ungli chhoti hai — swabhav mein halkapan: zindagi ko zyada seriously na lene ki pravritti. Fun aapke saath hamesha hai, par jahan gambhirta chahiye (paisa, sehat, commitments) wahan conscious effort lagana padega. Mazaa lo, par zaroori cheezon ka calendar bana lo.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — short Saturn finger: frivolity, lack of seriousness",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "saturn",
+        "lightness",
+        "structure_needed"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-005",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "fingers.sun.length",
+          "op": "eq",
+          "value": "long"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Surya ungli (teesri/ring) lambi hai — sundarta se prem aur naam-yash ki chah ka chinh. Aap chahte ho ki aapka kaam dikhe, sarahe jaye, yaad rakha jaye — aur yeh bhookh hi aapse best kaam nikalwati hai. Fame-drive ko fuel banao, boss nahi.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — long Sun finger: love of the beautiful, desire for celebrity and fame",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "sun",
+        "fame_drive",
+        "aesthetics"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-006",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "fingers.sun.length",
+          "op": "eq",
+          "value": "excessive"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Surya ungli zaroorat se zyada lambi hai — Cheiro ki saaf warning wala variant: yash ki chah notoriety mein, aur paise ki chah SATTEBAZI-JUE ke aakarshan mein badal sakti hai. Risk ka nasha aapke liye real hai. Iska ilaaj sharm nahi, HARD LIMITS hain: speculation ke liye fixed chhota budget (jo doob jaye toh farak na pade), usse ek rupaya upar nahi — aur udhaar lekar daanv kabhi nahi. Limit hi aapki asli jeet hai.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — excessively long Sun finger: notoriety, risk in speculation, love of gambling; rendered as hard-limits caution per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "sun",
+        "speculation_caution",
+        "hard_limits"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-007",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.sun.length",
+          "op": "eq",
+          "value": "short"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Surya ungli chhoti hai — naam-yash ke khel mein aapki ruchi kam hai: dikhawa, limelight, social race — yeh sab aapko kheenchta nahi. Aap kaam ke liye kaam karte ho, taaliyon ke liye nahi. Shanti isi mein hai.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — short Sun finger: dislike of fame/beauty pursuits",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "sun",
+        "low_fame_drive"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-008",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "fingers.mercury.length",
+          "op": "eq",
+          "value": "long"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Budh ungli (chhoti/pinky) lambi hai — maansik shakti, bhashaon ki pakad aur EXPRESSION ka chinh, khaaskar bolne mein. Communication aapka natural hathiyar hai: samjhana, manana, bechna, sikhana — sab isi ungli se chalta hai. Speaking-heavy roles mein aapka edge built-in hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — long Mercury finger: mental power, grasp of languages, power of expression in speech",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "mercury",
+        "communication",
+        "languages"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-009",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.mercury.length",
+          "op": "eq",
+          "value": "short"
+        }
+      ],
+      "interpretation_hi_en": "Aapki Budh ungli chhoti hai — andar ke vichar bahar laane mein mehnat lagti hai: jo sochte ho, waisa keh nahi paate. Yeh capability ki kami nahi, channel ki hai — likh kar express karna, bolne se pehle points note karna, aur chhoti-chhoti speaking practice se yeh channel khulta hai.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — short Mercury finger: difficulty in speaking and expressing thoughts",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "mercury",
+        "expression_practice"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-010",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.mercury.crooked",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "feature": "lines.head.texture",
+          "op": "eq",
+          "value": "irregular"
+        }
+      ],
+      "requires": [
+        "lines.head.present"
+      ],
+      "interpretation_hi_en": "Budh ungli tedhi hai aur mastishk rekha irregular — parampara is combo ko soch aur communication ki uljhan ka sanket maanti hai: vichar ghoomte hain, seedhi baat tedhi nikalti hai. Iska practical tod: LIKH KAR sochna — pehle paper par saaf karo, phir bolo. Clarity practice se aati hai, aur likhna uska sabse chhota raasta hai.",
+      "polarity": "negative",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — crooked Mercury + irregular Head line; 'evil sign of mentality' softened per safety policy to clarity-practice framing",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "mercury",
+        "clarity_practice",
+        "combination_rule"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-FINGR-011",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.length_vs_palm",
+          "op": "eq",
+          "value": "long"
+        }
+      ],
+      "interpretation_hi_en": "Aapki ungliyaan hatheli ke anupaat mein lambi hain — Cheiro ke anusaar yeh badhi hui intellectuality aur maansik shakti ka chinh hai. Aapka dimaag detail aur nuance pakadta hai jo short-fingered log miss kar dete hain. Sochne ka kaam aapke liye bana hai.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — fingers long in proportion to palm: greater intellectuality and mental power (short-finger counterpart excluded, see policy)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "proportion",
+        "intellect"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-012",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "fingers.lean_toward",
+          "op": "in",
+          "value": [
+            "jupiter",
+            "saturn",
+            "sun",
+            "mercury"
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ka lean-rule: jab koi ungli apni padosi ungli ki taraf jhukti hai, toh woh us ungli ke gun apna leti hai — jaise Surya ungli Shani ki taraf jhuke toh fame-drive mein gambhirta ghul jaati hai. Reading mein har jhukaav ek flavour-mix hai.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — leaning fingers take the qualities of the finger toward which they lean",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "reading_method",
+        "lean_rule"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-013",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.spacing",
+          "op": "exists",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ka spacing-map — ungliyon ke beech ki khuli jagah aazadi ka naksha hai: angoothe aur pehli ungli ke beech chauda gap = ICCHHA ki aazadi aur nidarta; pehli-doosri ke beech = VICHAR ki aazadi; doosri-teesri ke beech = HALAAT se aazadi (paise-parivesh ki parwah kam); teesri-chauthi ke beech = KARM ki aazadi (apne dhang se kaam karna). Jitna khula haath, utna aazad insaan.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — finger spacing independence map (see meta.finger_spacing_map)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "spacing",
+        "independence_map",
+        "cv_computable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-014",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.curve",
+          "op": "eq",
+          "value": "backward_loose"
+        }
+      ],
+      "interpretation_hi_en": "Aapki ungliyaan dheeli hain aur halki peechhe ki taraf mudti hain — open-minded, naye ideas ko turant pakadne wala dimaag. Suggestion do, aap usme possibilities dekh lete ho. Trade-off: stick-at-it wali methodical pakad kam — isliye naye ideas ke saath ek finish-line system rakho, warna shuruaatein bahut, samaptiyaan kam.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — loose backward-curving fingers: open-minded quick grasp, less methodical persistence",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "curve",
+        "open_minded",
+        "finish_system"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-015",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.curve",
+          "op": "eq",
+          "value": "inward"
+        }
+      ],
+      "interpretation_hi_en": "Aapki ungliyaan andar ki taraf mudti hain — savdhaan, sambhal kar chalne wala swabhav: jo pata hai aur jo paas hai, usko pakad kar rakhna. Naye ideas ko waqt lagta hai, par jo apnate ho use poora nibhate ho. Duniya ko early-adopters bhi chahiye aur aap jaise quality-checkers bhi.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — inward-curved fingers: cautious, slow to new ideas, holds what he has",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "curve",
+        "cautious",
+        "loyal_adopter"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-016",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "fingers.joints",
+          "op": "eq",
+          "value": "smooth"
+        }
+      ],
+      "interpretation_hi_en": "Aapki ungliyon ke joints smooth hain — vichar bina ruke seedha action mein jaata hai: impulsive-intuitive processing. Speed aur spontaneity aapki taqat hai; detail-checking ke liye ek doosri aankh (checklist ya partner) rakh lo, kyunki aapka dimaag udaan ke liye bana hai, proof-reading ke liye nahi.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — smooth-jointed fingers: more impulsive",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "joints",
+        "smooth",
+        "intuitive_speed"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-FINGR-017",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "fingers.joints",
+          "op": "eq",
+          "value": "knotty"
+        }
+      ],
+      "interpretation_hi_en": "Aapki ungliyon ke joints ubhre hue (knotty) hain — Cheiro ke anusaar yeh mahaan ORGANISERS ka chinh hai: joints impulse ko rok kar reflection ka samay dete hain, isliye detail, planning aur soch-samajh kar kaam karna aapka natural mode hai. Bade plans jinko baareeki chahiye — woh aap jaise haathon se hi poore hote hain.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.III — knotty joints: reflection, love of detail, hands of great organisers",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "fingers",
+        "joints",
+        "knotty",
+        "organiser"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-NAIL-001",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "nails.furrow_position",
+          "op": "in",
+          "value": [
+            "edge",
+            "centre",
+            "base"
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Aapke nakhoon par ek gehri aadi lakeer (furrow) hai — parampara mein iska arth: kuch samay pehle sharir ya nervous system par ek asadharan strain aaya tha (bimari, bada stress). Nakhoon 9 mahine mein base se edge tak badhta hai, toh lakeer ki jagah us daur ki timeline batati hai: kinare ke paas = lagbhag 9 mahine pehle, beech mein = 4-5 mahine, base ke paas = pichhla mahina. Yeh guzre hue daur ka nishan hai — matlab body ne woh phase paar kar liya. Ab recovery ko poora hone do: neend, poshan, aur pace ka dhyan.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IV — nail furrow + 9-month growth clock; rendered as past-strain recovery framing per safety policy (see meta.nail_growth_clock)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "nails",
+        "stress_history",
+        "recovery"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-NAIL-002",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "nails.white_flecks_many",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapke nakhoonon par bahut saare safed dhabbe hain — parampara ise thake hue system ka sanket maanti hai: nervous energy low chal rahi hai. Practical matlab: yeh recharge ka signal hai — neend poori, khana dhang ka, aur schedule mein saans lene ki jagah. Koi diagnosis nahi — bas body ka ek gentle reminder.",
+      "polarity": "negative",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Part II Ch.IV — many white flecks: nervous system in low state; softened to recharge framing per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "nails",
+        "low_energy",
+        "recharge"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    }
+  ]
+}

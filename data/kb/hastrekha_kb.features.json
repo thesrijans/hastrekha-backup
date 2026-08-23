@@ -1,0 +1,1437 @@
+{
+  "features": {
+    "context.moon_phase": {
+      "ops": [
+        "in"
+      ],
+      "values": [
+        "\"first_quarter\"",
+        "\"full\"",
+        "\"waning_gibbous\"",
+        "\"waxing_crescent\"",
+        "\"waxing_gibbous\""
+      ],
+      "rule_count": 1
+    },
+    "fingers.curve": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"backward_loose\"",
+        "\"inward\""
+      ],
+      "rule_count": 2
+    },
+    "fingers.joints": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"knotty\"",
+        "\"smooth\""
+      ],
+      "rule_count": 2
+    },
+    "fingers.jupiter.length": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"long\"",
+        "\"short\""
+      ],
+      "rule_count": 2
+    },
+    "fingers.jupiter_vs_apollo": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"apollo_much_longer\"",
+        "\"equal\"",
+        "\"jupiter_near_saturn_length\""
+      ],
+      "rule_count": 3
+    },
+    "fingers.lean_toward": {
+      "ops": [
+        "in"
+      ],
+      "values": [
+        "\"jupiter\"",
+        "\"mercury\"",
+        "\"saturn\"",
+        "\"sun\""
+      ],
+      "rule_count": 1
+    },
+    "fingers.length_vs_palm": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"long\""
+      ],
+      "rule_count": 1
+    },
+    "fingers.mercury.crooked": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "fingers.mercury.length": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"long\"",
+        "\"long_past_apollo_nail\"",
+        "\"short\""
+      ],
+      "rule_count": 4
+    },
+    "fingers.saturn.length": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"long\"",
+        "\"short\""
+      ],
+      "rule_count": 2
+    },
+    "fingers.spacing": {
+      "ops": [
+        "exists"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "fingers.sun.length": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"excessive\"",
+        "\"long\"",
+        "\"short\""
+      ],
+      "rule_count": 3
+    },
+    "geometry.quadrangle_shape": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"even\"",
+        "\"very_narrow\"",
+        "\"very_wide\""
+      ],
+      "rule_count": 3
+    },
+    "geometry.triangle_large": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "geometry.triangle_upper_angle_acute": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "hand.overall_quality": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.4,
+        0.6
+      ],
+      "rule_count": 2
+    },
+    "hand.shape": {
+      "ops": [
+        "eq",
+        "in"
+      ],
+      "values": [
+        "\"conic\"",
+        "\"elementary\"",
+        "\"mixed\"",
+        "\"philosophic\"",
+        "\"psychic\"",
+        "\"spatulate\"",
+        "\"square\""
+      ],
+      "rule_count": 13
+    },
+    "hand.shape_detail.conic_firmness": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"firm\"",
+        "\"soft\""
+      ],
+      "rule_count": 2
+    },
+    "hand.shape_detail.philosophic_square_palm_combo": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "hand.shape_detail.spatulate_wider_at": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"fingers\"",
+        "\"wrist\""
+      ],
+      "rule_count": 2
+    },
+    "hand.shape_type_available": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.children.depth_class": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"broad_deep\"",
+        "\"fine_narrow\""
+      ],
+      "rule_count": 2
+    },
+    "lines.children.early_island_then_clear": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.children.faint_or_crooked": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.children.standout": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.children.straight": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.fate.after_union_quality": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"stronger\"",
+        "\"weaker\""
+      ],
+      "rule_count": 2
+    },
+    "lines.fate.influence_line": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"cuts_toward_jupiter\"",
+        "\"merges\"",
+        "\"parallel_no_merge\""
+      ],
+      "rule_count": 3
+    },
+    "lines.fate.offshoot_to": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"jupiter\"",
+        "\"mercury\"",
+        "\"sun\""
+      ],
+      "rule_count": 3
+    },
+    "lines.fate.origin": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"head_line\"",
+        "\"life_line\"",
+        "\"mount_luna\"",
+        "\"plain_of_mars\"",
+        "\"wrist\""
+      ],
+      "rule_count": 5
+    },
+    "lines.fate.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.fate.special": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"island_at_head_junction\"",
+        "\"island_plain_of_mars\"",
+        "\"joins_heart_ascends_jupiter\"",
+        "\"luna_origin_joins_heart\""
+      ],
+      "rule_count": 4
+    },
+    "lines.fate.stopped_at": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"head_line\"",
+        "\"heart_line\""
+      ],
+      "rule_count": 2
+    },
+    "lines.fate.structure": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"broken_with_overlap\"",
+        "\"double\"",
+        "\"faint\""
+      ],
+      "rule_count": 3
+    },
+    "lines.head.curvature": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"sloping_to_luna\"",
+        "\"straight_clear\""
+      ],
+      "rule_count": 2
+    },
+    "lines.head.marks": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"double_line\"",
+        "\"fused_with_heart\"",
+        "\"island_under_jupiter\"",
+        "\"islands_chain\"",
+        "\"rising_branch\"",
+        "\"square_touching\""
+      ],
+      "rule_count": 6
+    },
+    "lines.head.origin": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"inside_life_line\"",
+        "\"joined_life_line\"",
+        "\"separated_narrow\"",
+        "\"separated_wide\""
+      ],
+      "rule_count": 8
+    },
+    "lines.head.quality": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.4,
+        0.6
+      ],
+      "rule_count": 11
+    },
+    "lines.head.termination": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"deep_slope_luna\"",
+        "\"gentle_slope_luna\"",
+        "\"straight_mental_mars\"",
+        "\"upturn_mercury\""
+      ],
+      "rule_count": 7
+    },
+    "lines.head.texture": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"irregular\""
+      ],
+      "rule_count": 1
+    },
+    "lines.head_heart_blended_single": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.health.color": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"yellowish\""
+      ],
+      "rule_count": 1
+    },
+    "lines.health.deepening_with_stress": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.health.form": {
+      "ops": [
+        "eq",
+        "in"
+      ],
+      "values": [
+        "\"crossing_to_life\"",
+        "\"straight_free\"",
+        "\"touching_life\""
+      ],
+      "rule_count": 2
+    },
+    "lines.health.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        false
+      ],
+      "rule_count": 1
+    },
+    "lines.health.texture": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"twisted_irregular\""
+      ],
+      "rule_count": 1
+    },
+    "lines.heart.breaks": {
+      "ops": [
+        "gte"
+      ],
+      "values": [
+        1
+      ],
+      "rule_count": 1
+    },
+    "lines.heart.chains": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 2
+    },
+    "lines.heart.curvature": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"downward_curve_at_jupiter\""
+      ],
+      "rule_count": 1
+    },
+    "lines.heart.depth": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"broad_shallow\"",
+        "\"deep\"",
+        "\"pale_broad_shallow\"",
+        "\"thin\""
+      ],
+      "rule_count": 4
+    },
+    "lines.heart.forks": {
+      "ops": [
+        "eq"
+      ],
+      "values": [],
+      "rule_count": 1
+    },
+    "lines.heart.length_norm": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.45,
+        0.95
+      ],
+      "rule_count": 3
+    },
+    "lines.heart.origin": {
+      "ops": [
+        "eq",
+        "in"
+      ],
+      "values": [
+        "\"between_jupiter_saturn\"",
+        "\"mount_jupiter_center\"",
+        "\"mount_jupiter_outer\"",
+        "\"mount_saturn_face\"",
+        "\"under_saturn_base\""
+      ],
+      "rule_count": 6
+    },
+    "lines.heart.position_vertical": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"very_high_head_raised\"",
+        "\"very_low_near_head\""
+      ],
+      "rule_count": 2
+    },
+    "lines.heart.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        false
+      ],
+      "rule_count": 1
+    },
+    "lines.heart.start_fork_jupiter_and_gap": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.influence.marks": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"island_on_line\""
+      ],
+      "rule_count": 1
+    },
+    "lines.influence.origin": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"mount_luna\""
+      ],
+      "rule_count": 1
+    },
+    "lines.influence.relation_to_fate": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"joins_strong\"",
+        "\"parallel_never_joins\""
+      ],
+      "rule_count": 2
+    },
+    "lines.influence.venus_count": {
+      "ops": [
+        "gte"
+      ],
+      "values": [
+        3
+      ],
+      "rule_count": 1
+    },
+    "lines.intuition.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 3
+    },
+    "lines.life.arc": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"narrow_hugging_thumb\"",
+        "\"wide_into_palm\""
+      ],
+      "rule_count": 2
+    },
+    "lines.life.ascending_branch_target": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"joins_fate_line\"",
+        "\"mount_jupiter\"",
+        "\"stops_at_head_line\"",
+        "\"stops_at_heart_line\""
+      ],
+      "rule_count": 4
+    },
+    "lines.life.branch_to_luna": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.life.breaks_count": {
+      "ops": [
+        "gte"
+      ],
+      "values": [
+        1
+      ],
+      "rule_count": 1
+    },
+    "lines.life.rise_origin": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"jupiter_side\"",
+        "\"mars_low\""
+      ],
+      "rule_count": 2
+    },
+    "lines.life.sweeps_to_luna": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.life.texture": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"broad_shallow\"",
+        "\"chained\"",
+        "\"clear_deep\""
+      ],
+      "rule_count": 3
+    },
+    "lines.life.tight_venus_arc": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.marriage.interference_from": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"mount_mars\"",
+        "\"mount_venus\""
+      ],
+      "rule_count": 2
+    },
+    "lines.marriage.marks": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"cuts_sun_line\"",
+        "\"deep_fork_toward_mars\"",
+        "\"drop_lines\"",
+        "\"fork_end\"",
+        "\"island_end\"",
+        "\"island_middle\"",
+        "\"island_start\"",
+        "\"joins_sun_line\"",
+        "\"mercury_line_falling_in\"",
+        "\"parallel_upper_companion\""
+      ],
+      "rule_count": 10
+    },
+    "lines.marriage.position_norm": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.35,
+        0.65
+      ],
+      "rule_count": 2
+    },
+    "lines.marriage.presence": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"clear_deep\"",
+        "\"short_faint_marks\""
+      ],
+      "rule_count": 5
+    },
+    "lines.marriage.shape": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"broken_center\"",
+        "\"chained_many_islands\"",
+        "\"straight_clear\"",
+        "\"upturn\""
+      ],
+      "rule_count": 4
+    },
+    "lines.mars.branch_to_luna": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.mars.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 2
+    },
+    "lines.quality.break_overlap_repair": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.quality.chained_generic": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.quality.color": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"pale\"",
+        "\"pink_red\"",
+        "\"very_red\"",
+        "\"yellow\""
+      ],
+      "rule_count": 4
+    },
+    "lines.quality.descending_lines": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.quality.forked_lines_general": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.quality.head_end_fork": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.quality.network_all_over": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.quality.sister_line_head": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.quality.tasselled_life_end": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.quality.wavy": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.sun.marks": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"absent\"",
+        "\"island\"",
+        "\"many_scattered\"",
+        "\"multiple_parallel\"",
+        "\"square\"",
+        "\"star\""
+      ],
+      "rule_count": 6
+    },
+    "lines.sun.origin": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"fate_line\"",
+        "\"head_line\"",
+        "\"heart_line\"",
+        "\"mount_luna\""
+      ],
+      "rule_count": 4
+    },
+    "lines.sun.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 3
+    },
+    "lines.travel.present": {
+      "ops": [
+        "exists"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "lines.travel.terminus_mark": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"cross\"",
+        "\"island\"",
+        "\"square\""
+      ],
+      "rule_count": 3
+    },
+    "lines.via_lasciva.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "mounts.jupiter": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.3,
+        0.5,
+        0.7
+      ],
+      "rule_count": 9
+    },
+    "mounts.mars_inner": {
+      "ops": [
+        "gte"
+      ],
+      "values": [
+        0.5,
+        0.7
+      ],
+      "rule_count": 9
+    },
+    "mounts.mercury": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.3,
+        0.5,
+        0.7
+      ],
+      "rule_count": 11
+    },
+    "mounts.moon": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.3,
+        0.5,
+        0.6,
+        0.7
+      ],
+      "rule_count": 13
+    },
+    "mounts.overall_prominence": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.3,
+        0.65
+      ],
+      "rule_count": 2
+    },
+    "mounts.saturn": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.3,
+        0.5,
+        0.7,
+        0.9
+      ],
+      "rule_count": 9
+    },
+    "mounts.sun": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.3,
+        0.5,
+        0.7
+      ],
+      "rule_count": 9
+    },
+    "mounts.venus": {
+      "ops": [
+        "gte",
+        "lte"
+      ],
+      "values": [
+        0.3,
+        0.5,
+        0.6,
+        0.7,
+        0.85
+      ],
+      "rule_count": 15
+    },
+    "nails.furrow_position": {
+      "ops": [
+        "in"
+      ],
+      "values": [
+        "\"base\"",
+        "\"centre\"",
+        "\"edge\""
+      ],
+      "rule_count": 1
+    },
+    "nails.white_flecks_many": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "reading.hand_shape_available": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "reading.hands_comparison_available": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "reading.lines_available": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "reading.mounts_available": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 3
+    },
+    "signs.bracelets.count": {
+      "ops": [
+        "gte"
+      ],
+      "values": [
+        3
+      ],
+      "rule_count": 1
+    },
+    "signs.circle.locations": {
+      "ops": [
+        "eq",
+        "exists"
+      ],
+      "values": [
+        "\"mount_sun\"",
+        "true"
+      ],
+      "rule_count": 2
+    },
+    "signs.croix_mystique.position": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"centre_or_saturn\"",
+        "\"near_jupiter\"",
+        "\"near_luna\""
+      ],
+      "rule_count": 3
+    },
+    "signs.croix_mystique.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "signs.cross.locations": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"above_head_line\"",
+        "\"mount_jupiter\"",
+        "\"mount_luna\"",
+        "\"mount_mars_under_jupiter\"",
+        "\"mount_mars_under_mercury\"",
+        "\"mount_mercury\"",
+        "\"mount_sun\"",
+        "\"mount_venus\""
+      ],
+      "rule_count": 8
+    },
+    "signs.girdle_of_venus.exits_through_marriage_lines": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "signs.girdle_of_venus.form": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"broken_pieces\""
+      ],
+      "rule_count": 1
+    },
+    "signs.girdle_of_venus.present": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "signs.girdle_of_venus.span": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"jupiter_to_mercury\"",
+        "\"saturn_to_mercury\""
+      ],
+      "rule_count": 2
+    },
+    "signs.grille.locations": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"on_any_mount\""
+      ],
+      "rule_count": 1
+    },
+    "signs.island.locations": {
+      "ops": [
+        "eq",
+        "exists"
+      ],
+      "values": [
+        "\"on_any_mount\"",
+        "\"on_fate_line\"",
+        "\"on_heart_line\"",
+        "\"on_life_line\"",
+        "true"
+      ],
+      "rule_count": 5
+    },
+    "signs.ring_of_saturn": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "signs.ring_of_solomon": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "signs.spot.locations": {
+      "ops": [
+        "eq",
+        "exists"
+      ],
+      "values": [
+        "\"on_life_line\"",
+        "true"
+      ],
+      "rule_count": 2
+    },
+    "signs.square.locations": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"on_any_line\"",
+        "\"on_fate_line\"",
+        "\"on_life_line\""
+      ],
+      "rule_count": 3
+    },
+    "signs.star.locations": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"mount_jupiter\"",
+        "\"mount_luna\"",
+        "\"mount_mars_under_jupiter\"",
+        "\"mount_mars_under_mercury\"",
+        "\"mount_mercury\"",
+        "\"mount_sun\"",
+        "\"mount_venus\""
+      ],
+      "rule_count": 7
+    },
+    "thumb.base_phalange_long": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "thumb.clubbed": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "thumb.cramped_to_palm": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "thumb.joint_middle_supple": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "thumb.joint_top": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"stiff\"",
+        "\"supple\""
+      ],
+      "rule_count": 4
+    },
+    "thumb.nail_phalange_long": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 2
+    },
+    "thumb.present": {
+      "ops": [
+        "exists"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "thumb.set": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"tied_in\""
+      ],
+      "rule_count": 1
+    },
+    "thumb.straight_full": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "thumb.waist_like": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "thumb.will_phalange": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        "\"long_thin\""
+      ],
+      "rule_count": 1
+    },
+    "user.birth_date_available": {
+      "ops": [
+        "eq"
+      ],
+      "values": [
+        true
+      ],
+      "rule_count": 1
+    },
+    "user.birth_day_of_month": {
+      "ops": [
+        "in"
+      ],
+      "values": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "rule_count": 9
+    },
+    "user.birth_window": {
+      "ops": [
+        "eq",
+        "in"
+      ],
+      "values": [
+        "\"JUP_NEG\"",
+        "\"JUP_POS\"",
+        "\"MARS_NEG\"",
+        "\"MARS_POS\"",
+        "\"MER_NEG\"",
+        "\"MER_POS\"",
+        "\"MOON_NEG\"",
+        "\"MOON_POS\"",
+        "\"SAT_NEG\"",
+        "\"SAT_POS\"",
+        "\"SUN_NEG\"",
+        "\"SUN_POS\"",
+        "\"VEN_NEG\"",
+        "\"VEN_POS\""
+      ],
+      "rule_count": 78
+    }
+  },
+  "possible_collisions": {}
+}

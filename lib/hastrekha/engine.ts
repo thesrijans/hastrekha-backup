@@ -20,6 +20,7 @@ import type {
 
 export const BIRTH_WINDOW_FEATURE = "user.birth_window";
 export const BIRTH_DATE_FEATURE = "user.birth_date";
+export const BIRTH_DAY_OF_MONTH_FEATURE = "user.birth_day_of_month";
 const MOUNT_FEATURE_PREFIX = "mounts.";
 const NEGATIVE_WINDOW_SUFFIX = "_NEG";
 
@@ -80,6 +81,12 @@ function valueAsList(value: ConditionValue): readonly FeatureScalar[] {
 }
 
 function evaluateCondition(condition: RuleCondition, resolved: ResolvedFeature): ConditionOutcome {
+  if (condition.op === "exists") {
+    // "exists" is a presence test: a missing feature is a definite false, not unknown.
+    if (resolved.kind === "missing") return "false";
+    if (resolved.kind === "set") return resolved.values.length > 0 ? "true" : "false";
+    return resolved.value === false || resolved.value === "" ? "false" : "true";
+  }
   if (resolved.kind === "missing") return "missing";
   switch (condition.op) {
     case "gte":
@@ -101,6 +108,22 @@ function evaluateCondition(condition: RuleCondition, resolved: ResolvedFeature):
     default:
       return "false";
   }
+}
+
+/* ------------------------------ Derived features ------------------------------ */
+
+const ISO_DAY_PATTERN = /^\d{4}-\d{2}-(\d{2})/;
+
+/** Adds user.birth_day_of_month (1–31) from user.birth_date when absent. Never mutates the caller's bag. */
+function augmentDerivedFeatures(input: FeatureBag): FeatureBag {
+  const date = getFeature(input, BIRTH_DATE_FEATURE);
+  if (date.kind !== "scalar" || typeof date.value !== "string") return input;
+  if (getFeature(input, BIRTH_DAY_OF_MONTH_FEATURE).kind !== "missing") return input;
+  const match = ISO_DAY_PATTERN.exec(date.value);
+  if (!match) return input;
+  const user = input.user;
+  const userBag: FeatureBag = isBag(user) ? user : {};
+  return { ...input, user: { ...userBag, birth_day_of_month: Number(match[1]) } };
 }
 
 /* ------------------------------ DOB augmentation ------------------------------ */
@@ -237,7 +260,8 @@ export function kbFeatureKeys(kb: KnowledgeBase): readonly string[] {
   const keys = new Set<string>();
   for (const rule of kb.rules) {
     for (const condition of rule.conditions) {
-      keys.add(condition.feature === BIRTH_WINDOW_FEATURE ? BIRTH_DATE_FEATURE : condition.feature);
+      const derivedFromDob = condition.feature === BIRTH_WINDOW_FEATURE || condition.feature === BIRTH_DAY_OF_MONTH_FEATURE;
+      keys.add(derivedFromDob ? BIRTH_DATE_FEATURE : condition.feature);
     }
   }
   return [...keys].sort();
@@ -260,12 +284,13 @@ function buildCoverage(kb: KnowledgeBase, bag: FeatureBag): ReadingCoverage {
  * Evaluate the knowledge base against a feature bag.
  * Pure and deterministic — the LLM narrator consumes this output and never decides what fires.
  */
-export function evaluateRules(kb: KnowledgeBase, bag: FeatureBag, options: EvaluateOptions = {}): ReadingResult {
+export function evaluateRules(kb: KnowledgeBase, input: FeatureBag, options: EvaluateOptions = {}): ReadingResult {
   const includeSensitive = options.includeSensitive ?? true;
   const relaxMissingMounts = options.relaxMissingMounts ?? true;
   const maxRules = options.maxRules ?? DEFAULT_MAX_RULES;
   const categoryFilter = options.categories ? new Set<RuleCategory>(options.categories) : null;
 
+  const bag = augmentDerivedFeatures(input);
   const dob = buildDobContext(bag, kb);
   const fired: FiredRule[] = [];
   let suppressedSensitive = 0;

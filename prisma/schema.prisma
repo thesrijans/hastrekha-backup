@@ -3,12 +3,13 @@
 // Money-path tables (Order, Payment, Entitlement) mirror Physenta's proven shape — keep them boring.
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
+// Prisma 7: `url` lives in prisma.config.ts (CLI) and in the PrismaPg adapter (runtime, lib/db.ts).
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 /* ------------------------------------ Auth ------------------------------------ */

@@ -13,7 +13,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Top-level feature groups the engine understands. Anything else is dropped silently. */
 const ALLOWED_GROUPS: ReadonlySet<string> = new Set([
-  "mounts", "lines", "hand", "fingers", "thumb", "nails", "signs", "marks", "skin", "context", "reading",
+  "mounts", "lines", "hand", "fingers", "thumb", "nails", "signs", "marks", "skin", "geometry", "context", "reading",
 ]);
 const TIERS: ReadonlySet<string> = new Set<ReadingTier>(["free", "premium", "deep"]);
 const CATEGORIES: ReadonlySet<string> = new Set<RuleCategory>([

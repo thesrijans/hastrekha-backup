@@ -28,7 +28,8 @@ CATEGORIES = {"career", "love", "wealth", "personality", "vitality", "timing", "
               "obstacles", "children", "protection", "reading_method"}
 POLARITIES = {"positive", "negative", "neutral"}
 SAFETY = {"standard", "sensitive"}
-OPS = {"gte", "lte", "eq", "in"}
+OPS = {"gte", "lte", "eq", "in", "exists"}
+DOMAINS = {"palmistry", "numerology", "astrology"}
 WEIGHT_MIN, WEIGHT_MAX = 0.4, 0.85
 SCHEMA_VERSION = "1.0"
 
@@ -43,8 +44,8 @@ def validate_rule(rule: dict, problems: list[str]) -> None:
         problems.append(f"{rid}: unexpected fields {extra}")
     if not RULE_ID.match(str(rid)):
         problems.append(f"{rid}: bad rule_id format")
-    if rule.get("domain") != "palmistry":
-        problems.append(f"{rid}: domain")
+    if rule.get("domain") not in DOMAINS:
+        problems.append(f"{rid}: domain {rule.get('domain')}")
     if rule.get("category") not in CATEGORIES:
         problems.append(f"{rid}: category {rule.get('category')}")
     if rule.get("polarity") not in POLARITIES:
@@ -156,11 +157,21 @@ def main() -> int:
         for key, entry in sorted(features.items())
     }
 
-    # Collision report: same concept under different keys (e.g. lines.head.quality vs lines.head.* from batch 1)
-    stems = collections.defaultdict(list)
-    for key in features:
-        stems[".".join(key.split(".")[:2])].append(key)
-    collisions = {stem: keys for stem, keys in stems.items() if len(keys) > 1}
+    # Collision report: a key that is BOTH a leaf and a prefix of another key (e.g. "thumb" and "thumb.clubbed")
+    # cannot be represented in a nested feature bag — the engine would silently miss one of them.
+    all_keys = set(features)
+    collisions = {
+        key: sorted(k for k in all_keys if k.startswith(key + "."))
+        for key in sorted(all_keys)
+        if any(k.startswith(key + ".") for k in all_keys)
+    }
+
+    mixed_types = {}
+    for key, entry in features.items():
+        kinds = {type(json.loads(v)).__name__ for v in entry["values"]}
+        if len(kinds - {"bool"}) > 1:
+            mixed_types[key] = sorted(kinds)
+    collisions.update({f"{k} (mixed value types)": v for k, v in mixed_types.items()})
 
     rules.sort(key=lambda r: r["rule_id"])
     merged = {

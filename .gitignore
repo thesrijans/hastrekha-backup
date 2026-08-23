@@ -5,3 +5,7 @@ out
 !.env.example
 diff.txt
 *.log
+
+# build artefacts
+tsconfig.tsbuildinfo
+lib/generated/

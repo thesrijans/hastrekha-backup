@@ -1,0 +1,1944 @@
+{
+  "meta": {
+    "kb_name": "HastRekha AI — Rules Knowledge Base",
+    "kb_version": "0.1.0-sprint1-batch4",
+    "schema_version": "1.0",
+    "extraction_date": "2026-08-20",
+    "primary_source": {
+      "text": "Cheiro — Palmistry for All",
+      "publisher": "G. P. Putnam's Sons",
+      "year": 1916,
+      "copyright_status": "public_domain",
+      "fetched_from": [
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-X-The-Line-Of-Health-Or-The-Hepatica.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XI-The-Girdle-Of-Venus-The-Ring-Of-Saturn-And-The-Bracelets.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XII-The-Line-Of-Intuition-And-The-Via-Lasciva.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XIII-La-Croix-Mystique-The-Ring-Of-Solomon.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XIV-Travels-Voyages-And-Accidents.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XV-The-Island-The-Circle-The-Spot-And-The-Grills.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XVII-Different-Classes-Of-Lines.html",
+        "https://chestofbooks.com/new-age/palmistry/All/Chapter-XVIII-The-Great-Triangle-And-The-Quadrangle.html"
+      ]
+    },
+    "batch_scope": [
+      "Ch.X — Line of Health / Hepatica",
+      "Ch.XI — Girdle of Venus, Ring of Saturn, Bracelets",
+      "Ch.XII — Line of Intuition, Via Lasciva",
+      "Ch.XIII — La Croix Mystique, Ring of Solomon",
+      "Ch.XIV — Travels, Voyages and Accidents",
+      "Ch.XV — Island, Circle, Spot, Grille",
+      "Ch.XVII — Different Classes of Lines",
+      "Ch.XVIII — Great Triangle and Quadrangle"
+    ],
+    "part1_status": "COMPLETE — with Batches 1-4, all of Part I (Cheiromancy, Ch.I-XIX) of Palmistry for All is now extracted. Batch 5 = Part II (Cheirognomy: hand shapes, thumb, fingers, nails, mounts).",
+    "rule_id_prefixes": [
+      "PALM-HLTH",
+      "PALM-GIRD",
+      "PALM-INTU",
+      "PALM-MYST",
+      "PALM-TRVL",
+      "PALM-MARK",
+      "PALM-LINQ",
+      "PALM-TRI"
+    ],
+    "rule_count": 59,
+    "safety_exclusion_policy": {
+      "policy": "Death, lifespan, suicide, insanity, and addiction-prediction claims from the source are NEVER encoded. Named-disease diagnostic claims (TB, paralysis, heart disease, brain fever, kidney disease, etc.) are NEVER encoded — the product is entertainment/guidance, not diagnosis. Health-adjacent rules are encoded only in softened, non-diagnostic, agency-preserving wellness framing with safety_class 'sensitive'.",
+      "excluded_in_this_batch": [
+        {
+          "loc": "Ch.X — Health line meeting Life line of equal strength",
+          "excluded_claim": "date of death calculation (the single hardest exclusion in the book)",
+          "action": "not encoded at all; narrator must never date-stamp health events as terminal"
+        },
+        {
+          "loc": "Ch.X — nail-shape + health-line combinations",
+          "excluded_claim": "diagnostic claims: heart disease, tuberculosis/consumption, paralysis and nerve diseases, brain fever, rheumatic fever, liver disease as diagnosis",
+          "action": "not encoded; only generic softened wellness rules kept (PALM-HLTH-003/004/005)"
+        },
+        {
+          "loc": "Ch.XI — Ring of Saturn closing clause",
+          "excluded_claim": "lives generally close in suffering, poverty, or sinister tragedy/fatality; ghastly marriage failure",
+          "action": "rule PALM-GIRD-005 encoded WITHOUT doom clauses; softened to isolation/completion-discipline framing"
+        },
+        {
+          "loc": "Ch.XI — first Bracelet arched into palm",
+          "excluded_claim": "internal malformation / cannot bear children (Greek Vestal Virgin lore)",
+          "action": "not encoded — same deferral as Batch 3 Ch.IX infertility rule; practitioner sign-off + opt-in UX required before any future inclusion"
+        },
+        {
+          "loc": "Ch.XII — Via Lasciva cutting Line of Life",
+          "excluded_claim": "death connected with licentiousness",
+          "action": "not encoded at all"
+        },
+        {
+          "loc": "Ch.XII — Via Lasciva + soft/hard palm combinations",
+          "excluded_claim": "opium/morphine drug-taking and uncontrolled-drinking predictions",
+          "action": "not encoded — addiction prediction is stigmatizing and potentially self-fulfilling; only channeling-of-energy framing kept (PALM-INTU-004)"
+        },
+        {
+          "loc": "Ch.XII — weak Head line + islands + descending to Luna",
+          "excluded_claim": "insanity / worst degeneracy destroying character and career",
+          "action": "not encoded at all"
+        },
+        {
+          "loc": "Ch.XIV — Travel line to Luna ending in fork or circle",
+          "excluded_claim": "great danger of losing life on the journey",
+          "action": "not encoded at all"
+        },
+        {
+          "loc": "Ch.XIV — Life line sweeping to Luna",
+          "excluded_claim": "'end of the life... in some land far distant' clause",
+          "action": "rule PALM-TRVL-003 reworded to settlement-abroad (pravaas yog) without the end-of-life framing"
+        },
+        {
+          "loc": "Ch.XV — Circle on Mount of the Moon",
+          "excluded_claim": "death from drowning",
+          "action": "not encoded at all"
+        },
+        {
+          "loc": "Ch.XV — Health-line islands + nail combinations",
+          "excluded_claim": "diagnostic claims: throat/bronchial disease, lung delicacy, weak heart action, paralysis, kidney and bladder disease",
+          "action": "not encoded; generic island principle kept instead"
+        },
+        {
+          "loc": "Ch.XV — Spot on Head line (shock/injury) and on Health line (fever)",
+          "excluded_claim": "injury and fever specifics",
+          "action": "not encoded — head-safety caution already exists as PALM-SIGN-015 (Batch 3); generic spot rule + softened life-line spot kept"
+        }
+      ],
+      "skipped_batch1_overlap": [
+        "Ch.XV island on Head line — Batch 1 already encodes head-line islands (Ch.II material)",
+        "Ch.XV island on Sun line — Batch 1 already encodes sun-line island",
+        "Ch.XVII generic ascending lines — Batch 1 already encodes ascending lines from Life line (Ch.III material)"
+      ]
+    },
+    "handedness_doctrine": {
+      "source_rule": "Ch.XVII: left hand = natural/inherited tendencies, right hand = developed/active result; a mark bears fruit only if present on the right; identical hands = no development beyond heredity. Cheiro's reasoning is brain-crossing based.",
+      "engine_note": "Implement as dominant-hand mapping: active = user's dominant hand, passive = non-dominant. Ask handedness at onboarding; default active = right if unknown. Encoded as reading-method rule PALM-LINQ-012."
+    },
+    "travel_caution_by_birth_window": {
+      "description": "Ch.XIV birth-window travel-caution table. DOB-only, no palm scan. MUST always render as gentle preparedness advice (insurance, safety norms), never as fear. Encoded as rules PALM-TRVL-008/009/010.",
+      "water_travel_caution": [
+        "Jun 21 - Jul 21",
+        "Oct 21 - Nov 21",
+        "Feb 21 - Mar 21"
+      ],
+      "land_travel_caution": [
+        "Apr 21 - May 21",
+        "Aug 21 - Sep 21",
+        "Dec 21 - Jan 21"
+      ],
+      "weather_storm_caution": [
+        "May 21 - Jun 21",
+        "Sep 21 - Oct 21",
+        "Jan 21 - Feb 21"
+      ]
+    },
+    "feature_vocabulary_additions": {
+      "lines.health": "{ present: bool, form: straight_free|touching_life|crossing_to_life, texture: twisted_irregular, color: yellowish, deepening_with_stress: bool }",
+      "signs.girdle_of_venus": "{ present: bool, form: unbroken|broken_pieces, span: jupiter_to_mercury|saturn_to_mercury, exits_through_marriage_lines: bool }",
+      "signs.ring_of_saturn": "boolean — semi-circle across Mount of Saturn",
+      "signs.bracelets": "{ count: int }  (first-bracelet arch feature intentionally NOT in vocabulary — see exclusions)",
+      "lines.intuition": "{ present: bool }  — Mercury-to-Luna semi-circle, distinct from health line",
+      "lines.via_lasciva": "{ present: bool, form: luna_to_venus|luna_to_wrist }",
+      "signs.croix_mystique": "{ present: bool, position: near_jupiter|centre_or_saturn|near_luna }",
+      "signs.ring_of_solomon": "boolean",
+      "lines.travel": "array — { terminus_mark: none|cross|square|island }",
+      "lines.life.branch_to_luna": "boolean; lines.life.sweeps_to_luna: boolean; lines.life.tight_venus_arc: boolean",
+      "signs.island.locations / signs.circle.locations / signs.spot.locations / signs.grille.locations": "location tokens as in Batch 3 signs vocabulary + on_heart_line, on_any_mount",
+      "line_quality": "{ color: pink_red|pale|very_red|yellow, tasselled_life_end: bool, wavy: bool, break_overlap_repair: bool, sister_line_head: bool, network_all_over: bool, descending_lines: bool, chained_generic: bool, head_end_fork: bool }",
+      "geometry.triangle_large / geometry.triangle_upper_angle_acute": "from Head+Life+Health lines",
+      "geometry.quadrangle_shape": "even|very_narrow|very_wide",
+      "user.birth_window": "date-range token from DOB for travel-caution rules"
+    },
+    "normalized_to_v1": true
+  },
+  "rules": [
+    {
+      "rule_id": "PALM-HLTH-001",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.health.present",
+          "op": "eq",
+          "value": false
+        }
+      ],
+      "interpretation_hi_en": "Aapke haath mein swasthya rekha hai hi nahi — aur Cheiro ke anusaar yeh sabse achha sanket hai! Iski anupasthiti behad majboot constitution aur swasth nervous system ki nishani maani jaati hai. Aapki body ka default mode hi 'strong' hai.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.X — absence of Health line denotes extremely robust constitution",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "vitality",
+        "robust_constitution",
+        "gold_rule",
+        "counterintuitive"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-HLTH-002",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.health.form",
+          "op": "eq",
+          "value": "straight_free"
+        }
+      ],
+      "requires": [
+        "lines.health.present"
+      ],
+      "interpretation_hi_en": "Swasthya rekha seedhi neeche jaati hai aur jeevan rekha ko chhooti nahi — iska matlab: constitution bhale hi bahut heavy-duty na ho, par wiry hai. Bimari se ladne ki reserve shakti gehri hai. Aap girte kam ho, aur girke uthte jaldi ho.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.X — straight Health line not touching Life line: wiry, great reserve resistance (3-3, Plate XIX)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "vitality",
+        "resilience",
+        "recovery"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-HLTH-003",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.health.deepening_with_stress",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.health.present"
+      ],
+      "interpretation_hi_en": "Cheiro swasthya rekha ko jeevan ka 'thermometer' kehte hain — yeh badalti rehti hai. Jab yeh gehri dikhne lage toh iska paramparik arth hai ki nervous system par wear-and-tear badh raha hai, khaaskar mental overwork se. Signal saaf hai: aaram, neend aur stress-management ko abhi priority do — yeh rekha halki bhi ho jaati hai jab sharir sambhal jaata hai.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.X — line as thermometer, deepens with nervous wear and over-taxed mental strength; fades with returning strength",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "stress_signal",
+        "rest",
+        "nervous_system"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-HLTH-004",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.health.form",
+          "op": "in",
+          "value": [
+            "touching_life",
+            "crossing_to_life"
+          ]
+        }
+      ],
+      "requires": [
+        "lines.health.present"
+      ],
+      "interpretation_hi_en": "Swasthya rekha jeevan rekha ki taraf badh rahi hai ya use chhoo rahi hai — parampara mein yeh sehat par vishesh dhyan dene ka samay maana jaata hai. Iska practical matlab: lifestyle ka audit karo (neend, khana, movement, stress) aur routine health checkup karwa lo. Yeh koi medical nishkarsh nahi hai — bas dhyan dene ka ishara.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.X — line crossing/touching Life line; softened per safety policy, no diagnosis encoded",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "health_attention",
+        "checkup",
+        "lifestyle_audit"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-HLTH-005",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.health.texture",
+          "op": "eq",
+          "value": "twisted_irregular"
+        },
+        {
+          "feature": "lines.health.color",
+          "op": "eq",
+          "value": "yellowish"
+        }
+      ],
+      "requires": [
+        "lines.health.present"
+      ],
+      "interpretation_hi_en": "Swasthya rekha tedhi-medhi aur peelapan liye hai — parampara ise paachan aur pitt (digestion/liver ke domain) par dhyan dene ka sanket maanti hai, jiska asar mood par bhi padta hai (chidchidapan, bhaaripan). Practical roop mein: khaan-paan halka rakho, paani zyada, tel-talan kam. Koi diagnosis nahi — sirf ek nudge.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.X — twisted, irregular, yellowish line; softened to wellness framing per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "digestion",
+        "mood",
+        "wellness_nudge"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-GIRD-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.girdle_of_venus.present",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "feature": "signs.girdle_of_venus.span",
+          "op": "eq",
+          "value": "jupiter_to_mercury"
+        }
+      ],
+      "interpretation_hi_en": "Aapke haath mein Shukra Mekhala (Girdle of Venus) hai — aur yahan Cheiro doosre palmists se alag rai rakhte hain: yeh sthool bhog ka nahi, MANSIK teevrata ka chinh hai. Bhavnayein aap dimaag se jeete ho — prem, sensuality, sambandhon ko samajhne-padhne ka gehra intellectual aakarshan, par jeevan mein sanyam. Refined sensitivity ka mark.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XI — Girdle of Venus; Cheiro's contrarian mental-not-physical reading (1-1, Plate XX)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "girdle_of_venus",
+        "mental_intensity",
+        "refined_sensitivity",
+        "myth_busting"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-GIRD-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.girdle_of_venus.form",
+          "op": "eq",
+          "value": "broken_pieces"
+        }
+      ],
+      "requires": [
+        "signs.girdle_of_venus.present"
+      ],
+      "interpretation_hi_en": "Shukra Mekhala tukdon mein bani hai — mood ka utaar-chadhav aapka sabse bada pattern hai. Aaj aasman, kal zameen. Yeh sensitivity ki nishani hai, kharabi nahi — par apne mood-cycles ko track karna (aur unpe bade faisle na lena) aapke liye game-changer hoga.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XI — broken Girdle: hysterical temperament softened to mood-variability framing",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "girdle_of_venus",
+        "moodiness",
+        "self_regulation"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-GIRD-003",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "signs.girdle_of_venus.exits_through_marriage_lines",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "signs.girdle_of_venus.present"
+      ],
+      "interpretation_hi_en": "Shukra Mekhala haath ke kinare se nikal kar vivah rekhaon ko kaat-ti hai — parampara mein iska arth: badalta mood rishton par bhaari pad sakta hai. Saathi ko aapke ups-downs samajhna mushkil lagega. Bachav ek hi hai — mood ko chhupao mat, bolo: 'aaj mera din bhaari hai' kehna aadha jhagda pehle hi khatam kar deta hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XI — Girdle passing out through Marriage lines; 'unusually unhappy marriage' softened per safety policy to actionable communication framing",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "girdle_of_venus",
+        "relationship_strain",
+        "communication"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-GIRD-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.girdle_of_venus.span",
+          "op": "eq",
+          "value": "saturn_to_mercury"
+        }
+      ],
+      "requires": [
+        "signs.girdle_of_venus.present"
+      ],
+      "interpretation_hi_en": "Shukra Mekhala Shani se Budh tak bani hai — kalpana ki dhaara gehri hai par uska rukh andhere ki taraf jhukta hai: overthinking, dark scenarios, man hi man uljhan. Is oorja ko creative outlet chahiye — likhna, banana, express karna. Khali dimaag mein yeh dhaara ulti ghoomti hai, kaam mein lagao toh yahi depth aapki taqat hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XI — Saturn-to-Mercury Girdle; 'morbid unhealthy imaginings' softened per safety policy to creative-channeling framing",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "girdle_of_venus",
+        "dark_imagination",
+        "creative_outlet"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-GIRD-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.ring_of_saturn",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Shani parvat par Ring of Saturn hai — ek durlabh chinh jo akelepan aur zid ke pattern ka sanket deta hai: apni duniya mein rehna, salah se chidna, aur plans ko beech mein chhod dena. Parampara ise kathin maanti hai, par iska tod bhi utna hi saaf hai: (1) ek kaam poora karke hi doosra shuru karo — completion discipline, (2) do-teen bharosemand logon ko apne plans mein jodo. Akela sher bhi jhund ke bina shikar nahi kar paata.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XI — Ring of Saturn (2, Plate XX); doom/tragedy/fatality clauses excluded per safety policy, encoded as isolation + completion-discipline framing",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "ring_of_saturn",
+        "isolation",
+        "completion_discipline"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-GIRD-006",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.bracelets.count",
+          "op": "gte",
+          "value": 3
+        }
+      ],
+      "interpretation_hi_en": "Aapki kalai par teenon bracelets (manibandh rekhayein) hain — Greek parampara inhe Swasthya, Dhan aur Sukh ke kangan kehti thi. Cheiro khud maante hain ki teenon ek saath milna durlabh hai, kyunki jeevan mein yeh teenon cheezein ek saath kam hi milti hain. Aapke haath mein teeno ka vaada likha hai — ab kamana aapka kaam hai.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XI — the three Bracelets: Health, Wealth, Happiness (Greek tradition, 3-3, Plate XX)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "bracelets",
+        "health_wealth_happiness",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-INTU-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.intuition.present",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapke haath mein Antargyaan Rekha (Line of Intuition) hai — Budh parvat se Chandra parvat tak ka ardh-chandrakaar chinh, jo har haath mein nahi milta. Iska arth: teevra sixth sense, pehle se aabhaas ho jaana, sapne jo sach nikalte hain, aur kabhi-kabhi aisi baatein 'bas pata hona' jinke liye koi logic nahi hota. Inspired bolne-likhne ki shakti bhi isi se aati hai. Apne gut par bharosa karna seekho — aapka gut aam logon se zyada data process karta hai.",
+      "polarity": "positive",
+      "weight": 0.8,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XII — Line of Intuition (5, Plate XX): presentiments, inspiration, vivid true dreams, inspired speech",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "intuition",
+        "sixth_sense",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-INTU-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.intuition.present",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "feature": "hand.shape",
+          "op": "in",
+          "value": [
+            "philosophic",
+            "conic",
+            "psychic"
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Antargyaan Rekha aapke haath ke type (darshanik/kalatmak/sookshm) par mili hai — Cheiro ke anusaar yeh rekha inhi haathon par sabse zyada ghar jaisi hoti hai. Matlab aapka intuition sirf present nahi, apne natural habitat mein hai — iski accuracy aur bhi zyada maani jaati hai.",
+      "polarity": "positive",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XII — line found chiefly on Philosophic, Conic, Psychic hands",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "intuition",
+        "hand_type_combo",
+        "amplifier"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-INTU-003",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.intuition.present",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ka ek interesting observation: jin logon mein yeh antargyaan shakti hoti hai, nashe (sharab aadi) se yeh turant kund ho jaati hai — unhone har case mein yeh paya. Toh agar clarity aur woh 'andar ki awaaz' chahiye, toh sar saaf rakhna hi is gift ki maintenance hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XII — gifted subjects lost powers the moment they indulged in alcohol",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "intuition",
+        "clarity",
+        "clean_living"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-INTU-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.via_lasciva.present",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapke haath mein Via Lasciva ka chinh hai — Chandra parvat se juda ardh-chandrakaar. Parampara ise teevra ichhaon aur kalpana ke pravah ka mark maanti hai: jo cheez pasand aaye, usme poora doob jaana. Yeh oorja apne aap mein na achhi hai na buri — bas ise discipline aur direction chahiye. Fitness, creation, business — kisi ek dhaara mein bahao toh yahi intensity aapki superpower hai; bina channel ke yeh bhatkati hai.",
+      "polarity": "neutral",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XII — Via Lasciva (6, Plate XX); death, addiction, and insanity clauses excluded per safety policy, encoded as energy-channeling framing",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "via_lasciva",
+        "intensity",
+        "discipline_channel"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MYST-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.croix_mystique.present",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapke haath ke chaturbhuj (hriday aur mastishk rekha ke beech) mein La Croix Mystique — Rahasyamayi Cross — bana hai. Yeh adhyatm, gupt-vidya aur rahasya-gyaan ki naisargik pratibha ka chinh hai. Jyotish, dhyan, tantra-mantra, ya bas 'parde ke peeche kya hai' — is disha mein aapki ruchi janamjaat hai, seekhi hui nahi.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIII — La Croix Mystique in the quadrangle (7, Plate XX): natural gift for mysticism and occultism",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "croix_mystique",
+        "mysticism",
+        "spiritual_gift",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MYST-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.croix_mystique.position",
+          "op": "eq",
+          "value": "near_jupiter"
+        }
+      ],
+      "requires": [
+        "signs.croix_mystique.present"
+      ],
+      "interpretation_hi_en": "Rahasyamayi Cross Guru parvat ki taraf jhuka hai — adhyatm mein aapki ruchi ke peeche thodi mahatvakanksha bhi hai: gyaan se milne wala samman aur pehchaan aapko utna hi kheenchta hai jitna gyaan khud. Isme burai nahi — bas jaante raho ki asli gehrai tab aati hai jab seekhna dikhaave se bada ho.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIII — mark nearer Jupiter: studies employed for pride or ambition",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "croix_mystique",
+        "ambition",
+        "status_seeking"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MYST-003",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.croix_mystique.position",
+          "op": "eq",
+          "value": "centre_or_saturn"
+        }
+      ],
+      "requires": [
+        "signs.croix_mystique.present"
+      ],
+      "interpretation_hi_en": "Rahasyamayi Cross chaturbhuj ke kendra mein hai (ya bhagya rekha par / Shani ke neeche) — adhyatm aapke liye shauk nahi, jeevan-dharm banega. Cheiro ke anusaar aise log is gyaan ko profession bana lete hain ya apni khoj ko kitabon ka roop dete hain. Aapki career ki dhaara mein guru, lekhak ya guide banne ka yog likha hai.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIII — centre position / across Fate / under Saturn: occultism as religion, profession, books",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "croix_mystique",
+        "spiritual_career",
+        "author_yog"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MYST-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.croix_mystique.position",
+          "op": "eq",
+          "value": "near_luna"
+        }
+      ],
+      "requires": [
+        "signs.croix_mystique.present"
+      ],
+      "interpretation_hi_en": "Rahasyamayi Cross Chandra parvat ki taraf neeche hai — aapka adhyatm shraddha aur bhaav se chalta hai, shastra se kam. Cheiro kehte hain aise log doosron ko gehra prabhavit karte hain, aur inke haathon se bhavishyavani ke sur wali sundar rahasyamayi kavita nikalti hai. Likhte ho toh mystic poetry try karo — woh aapki natural language hai.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIII — lower position near Luna: devotional-superstitious approach, influence, prophetic mystic poetry",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "croix_mystique",
+        "devotion",
+        "mystic_poetry"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MYST-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "signs.ring_of_solomon",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Guru parvat par Ring of Solomon — Suleman ki Mudrika — bani hai. Yeh bhi rahasya-vidya ka chinh hai, par Guru ki shakti ke saath: aap sirf seekhne wale nahi, MASTER banne ke liye bane ho. Adhyatm, jyotish ya gyaan ke kshetra mein adhikar aur netritva ki bhookh — guru-material likha hai aapke haath mein.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIII — Ring of Solomon (8, Plate XX): aims at mastery/adept-level power in mystic subjects",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "ring_of_solomon",
+        "mastery",
+        "guru_material",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRVL-001",
+      "domain": "palmistry",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "lines.travel.present",
+          "op": "exists",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapki jeevan rekha se Chandra parvat ki ore jaati yatra rekhayein hain — jeevan mein yatrayein spasht likhi hain. Jis umra-bindu par yeh rekhayein jeevan rekha se nikalti hain (saat-varsh wale map se), lagbhag usi daur mein yeh safar hote hain.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — travel lines from Life line toward Mount of Moon, dated via Plate XXVI (2, Plate XXI)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_lines",
+        "journey_timing"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRVL-002",
+      "domain": "palmistry",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "lines.life.branch_to_luna",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapki jeevan rekha do bhaagon mein bat-ti hai aur ek shakha Chandra parvat ki ore jhukti hai — poora jeevan badlaav aur yatra se bhara hoga. Ek jagah tik kar rehna aapki kismat mein kam, duniya dekhna zyada likha hai. Videsh ya door-desh ke avsar aate rahenge — bags ready rakho.",
+      "polarity": "neutral",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — Life line dividing with branch to Luna (1, Plate XXI): life full of change and travel",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_lines",
+        "videsh_yog",
+        "gold_rule",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRVL-003",
+      "domain": "palmistry",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "lines.life.sweeps_to_luna",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapki jeevan rekha apna raasta chhod kar poori tarah Chandra parvat ki ore beh gayi hai — jeevan ek lagataar safar hoga. Ek thikane par basna mushkil, aur parampara ke anusaar aapka sthayi ghar janmabhoomi se door kisi aur desh/pradesh mein banega. Pakka pravaas yog — NRI wali kismat.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — Life line sweeping to Luna: continual travel, settles far from birthplace; end-of-life clause excluded per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_lines",
+        "pravaas_yog",
+        "settle_abroad",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRVL-004",
+      "domain": "palmistry",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "lines.life.tight_venus_arc",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapki jeevan rekha bina kisi shakha ke Shukra parvat ke chaaron ore saaf ardh-vritt banati hai — jeevan mein sthirta ka yog. Badlaav aur bhatkav kam, apni mitti apne log zyada. Ghar, community aur jadein — yahi aapki taqat hai. Duniya ghoomne walon ko aakhir mein wapas aisi hi zindagi chahiye hoti hai jo aapke paas pehle se hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — Life line in unbroken semi-circle round Venus (3-3, Plate XXI): life free from change, remains in land of birth",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_lines",
+        "rooted_life",
+        "stability"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRVL-005",
+      "domain": "palmistry",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "lines.travel.terminus_mark",
+          "op": "eq",
+          "value": "cross"
+        }
+      ],
+      "requires": [
+        "lines.travel"
+      ],
+      "interpretation_hi_en": "Ek yatra rekha ke ant mein chhota cross hai — parampara mein us safar se apeksha ke mutabik phal na milne ka sanket: jo umeed lekar jaoge, poori nahi hogi. Aisi yatra ke liye backup plan aur realistic expectations rakho — trip ka maza phir bhi le sakte ho, bas usi par sab kuch daanv mat lagao.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — travel line ending in small cross (4, Plate XXI): journey ends in disappointment",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_lines",
+        "journey_disappointment",
+        "backup_plan"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-TRVL-006",
+      "domain": "palmistry",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "lines.travel.terminus_mark",
+          "op": "eq",
+          "value": "square"
+        }
+      ],
+      "requires": [
+        "lines.travel"
+      ],
+      "interpretation_hi_en": "Ek yatra rekha square (raksha-chinh) par khatam hoti hai — parampara ke anusaar us safar mein mushkil aa sakti hai, PAR square ka matlab hi hai bachav: sankat aakar tal jayega. Phir bhi common sense zaroori — travel insurance, safety norms, documents duplicate. Kavach haath mein hai, helmet phir bhi pehno.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — travel line ending in square: danger on journey but escape (preservation)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_lines",
+        "protection",
+        "journey_caution"
+      ],
+      "safety_class": "sensitive"
+    },
+    {
+      "rule_id": "PALM-TRVL-007",
+      "domain": "palmistry",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "lines.travel.terminus_mark",
+          "op": "eq",
+          "value": "island"
+        }
+      ],
+      "requires": [
+        "lines.travel"
+      ],
+      "interpretation_hi_en": "Ek yatra rekha island par khatam hoti hai — parampara mein us safar se nuksan (paisa, samaan, sauda) ka sanket. Practical bachav: us trip par bade financial commitments mat karo, insurance lo, keemti cheezein kam le jao. Yatra karo, par jeb sambhal ke.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — travel line ending in island (5, Plate XXI): journey ends in loss",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_lines",
+        "journey_loss",
+        "financial_caution"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-TRVL-008",
+      "domain": "numerology",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "in",
+          "value": [
+            "MOON_POS",
+            "MARS_NEG",
+            "JUP_NEG"
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ki parampara ke anusaar aapke janm-samay walon ko paani ke safar (nadi, samundar, boat, cruise) mein thodi extra saavdhani ki salah di jaati hai. Iska matlab darr nahi, bas tayyari: life jacket ka niyam maano, mausam dekh kar niklo, aur water-activity mein safety norms follow karo. Saavdhani hi shubh yatra ka asli tabeez hai.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — water-travel caution birth windows; rendered as preparedness advice per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_caution",
+        "water",
+        "dob_only",
+        "preparedness"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRVL-009",
+      "domain": "numerology",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "in",
+          "value": [
+            "VEN_POS",
+            "MER_NEG",
+            "SAT_POS"
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ki parampara ke anusaar aapke janm-samay walon ko sadak-rail ke safar mein thodi extra saavdhani ki salah di jaati hai. Practical matlab: seatbelt/helmet hamesha, raat ki over-speed drive se bacho, bharosemand transport chuno. Yeh koi bhavishyavani nahi — sirf ek gentle reminder ki safar mein laparwahi ka koi muhurat shubh nahi hota.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — land-travel caution birth windows; rendered as preparedness advice per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_caution",
+        "land",
+        "dob_only",
+        "preparedness"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRVL-010",
+      "domain": "numerology",
+      "category": "travel",
+      "conditions": [
+        {
+          "feature": "user.birth_window",
+          "op": "in",
+          "value": [
+            "MER_POS",
+            "VEN_NEG",
+            "SAT_NEG"
+          ]
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ki parampara ke anusaar aapke janm-samay walon ko kharab mausam (aandhi, toofan, bijli) mein safar se bachne ki salah di jaati hai. Practical matlab: nikalne se pehle weather check karna aapki aadat honi chahiye, aur monsoon/toofani alerts ko seriously lena. Plan flexible rakho — mausam se panga lene ka koi yog shubh nahi.",
+      "polarity": "neutral",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XIV — storm/weather caution birth windows; rendered as preparedness advice per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "travel_caution",
+        "weather",
+        "dob_only",
+        "preparedness"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-001",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "signs.island.locations",
+          "op": "exists",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Island ka general niyam: yeh jis bhi rekha ya parvat par bane, uske vaade ko us daur ke liye kam kar deta hai — ek temporary dip, poora shutdown nahi. Island ke aage rekha saaf ho toh samjho woh daur guzar kar phir raftar wapas aati hai.",
+      "polarity": "negative",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — the Island reduces the promise of the line or mount where found",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "island",
+        "general_principle",
+        "temporary_dip"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-002",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "signs.island.locations",
+          "op": "eq",
+          "value": "on_life_line"
+        }
+      ],
+      "interpretation_hi_en": "Jeevan rekha par island hai — parampara mein us umra-daur ko sehat ke liye 'extra dhyan wala samay' maana jaata hai: oorja kam, recovery dheemi. Practical matlab: us daur mein neend-poshan-checkup ko priority do aur body ko overload mat karo. Island ke baad rekha saaf hai toh wapas full form ka sanket bhi saath likha hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — island on Life line: delicacy/illness at that date (1, Plate XXII); softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "island",
+        "vitality_dip",
+        "care_window"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-003",
+      "domain": "palmistry",
+      "category": "love",
+      "conditions": [
+        {
+          "feature": "signs.island.locations",
+          "op": "eq",
+          "value": "on_heart_line"
+        }
+      ],
+      "interpretation_hi_en": "Hriday rekha par island hai — parampara mein iska arth bhavnatmak thakan ka ek daur: dil bhaari, rishton mein oorja kam. Us samay khud par narmi rakho. Saath hi, parampara ise dil (heart) ke domain se bhi jodti hai — toh regular health checkup waise bhi ek achhi aadat hai, chinta ki baat nahi.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — island on Heart line (3, Plate XXII); softened per safety policy, no diagnosis encoded",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "island",
+        "emotional_fatigue",
+        "checkup_habit"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-004",
+      "domain": "palmistry",
+      "category": "wealth",
+      "conditions": [
+        {
+          "feature": "signs.island.locations",
+          "op": "eq",
+          "value": "on_fate_line"
+        }
+      ],
+      "interpretation_hi_en": "Bhagya rekha par island hai — us daur mein career/dhan mein setback aur bhavishya ko lekar chinta ka sanket. Iska smart jawab: us daur mein conservative raho — badi risky bets mat lagao, emergency fund rakho, aur skill par invest karo. Island khatam, dhaara wapas — yeh daur hai, destiny nahi.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — island on Fate line (4, Plate XXII): heavy worldly loss, worry, anxiety about destiny",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "island",
+        "career_setback",
+        "conservative_phase"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-005",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "signs.island.locations",
+          "op": "eq",
+          "value": "on_any_mount"
+        }
+      ],
+      "interpretation_hi_en": "Kisi parvat par island hai — us parvat ki quality (jo bhi woh mount represent karta hai: netritva, kala, vyapar, kalpana...) us hisse mein kamzor padti hai. Us talent ko likha hua maankar chhodna mat — conscious practice se mount ki kami bharti hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — island on any Mount weakens the qualities the Mount expresses",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "island",
+        "mount_weakening",
+        "practice_fix"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-006",
+      "domain": "palmistry",
+      "category": "career",
+      "conditions": [
+        {
+          "feature": "signs.circle.locations",
+          "op": "eq",
+          "value": "mount_sun"
+        }
+      ],
+      "interpretation_hi_en": "Surya parvat par circle (vritt) — is chinh ki ek matra shubh sthiti, aur woh aapke paas hai! Yash, kala aur safalta ke ghar par poora gola matlab us kshetra mein completeness ka yog. Spotlight aapke liye bana hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — Circle favourable only on Mount of Sun (8, Plate XXII)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "circle",
+        "sun_success",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-007",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "signs.circle.locations",
+          "op": "exists",
+          "value": true
+        }
+      ],
+      "requires": [],
+      "interpretation_hi_en": "Surya parvat ke alawa kisi aur jagah circle bana hai — parampara mein Surya ke bahar yeh chinh ashubh maana jaata hai: us jagah ki quality ek band ghere mein ghoomti hai, aage nahi badhti. Us domain mein pattern todne ke liye kuch naya try karna hi chakra ko kholta hai.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — Circle unfavourable in all other positions; Luna drowning clause excluded per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "circle",
+        "stuck_loop",
+        "pattern_break"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-MARK-008",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "signs.spot.locations",
+          "op": "exists",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Kisi rekha par spot (bindu) hai — iska arth: us rekha ki quality ka TEMPORARY roken. Yeh full stop nahi, comma hai — us daur mein woh dhaara thodi ruk kar phir chal padti hai. Rukavat ko permanent samajh kar plan mat badlo.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — the Spot: temporary arrest of the line's qualities",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "spot",
+        "temporary_pause",
+        "general_principle"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-009",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "signs.spot.locations",
+          "op": "eq",
+          "value": "on_life_line"
+        }
+      ],
+      "interpretation_hi_en": "Jeevan rekha par spot hai — parampara mein us bindu ko sehat ke achanak chhote jhatke ka daur maana jaata hai. Practical matlab: us daur mein body ke signals ignore mat karo, aaram ko kaam jitni izzat do. Spot chhota hai, aur uske aage rekha apni raftar wapas pakad leti hai.",
+      "polarity": "negative",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — spot on Life line: sudden illness; softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "spot",
+        "health_blip",
+        "rest"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-MARK-010",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "signs.grille.locations",
+          "op": "eq",
+          "value": "on_any_mount"
+        }
+      ],
+      "interpretation_hi_en": "Kisi parvat par grille (jaali) bani hai — us parvat ke domain mein rukavaton aur adchanon ka sanket: talent hai par raasta uljha hua, safalta der se ya mushkil se. Grille ka tod hai focus — us kshetra mein ek waqt mein ek hi cheez pakdo, jaali ek-ek dhaaga khulti hai, ek jhatke mein nahi.",
+      "polarity": "negative",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XV — the Grille (10, Plate XXII): difficulties, obstacles, lack of success in the Mount's quality",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "grille",
+        "obstacles",
+        "focus_fix"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-001",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.quality.color",
+          "op": "eq",
+          "value": "pink_red"
+        }
+      ],
+      "interpretation_hi_en": "Aapki rekhayein saaf, gulabi-laal rang ki aur bina toot-phoot ke hain — Cheiro ke anusaar rekhaon ki aadarsh sthiti. Oorja ka pravah swasth hai, aur haath ki har rekha apna poora vaada nibhaane ki sthiti mein hai. Yeh baseline hi aapke poore haath ki reading ko upgrade kar deti hai.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — lines should be clear, pink/reddish, free from breaks and irregularities",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "healthy_baseline",
+        "amplifier"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-002",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.quality.color",
+          "op": "eq",
+          "value": "pale"
+        }
+      ],
+      "interpretation_hi_en": "Rekhayein bahut halki/pheeki hain — parampara mein iska arth: oorja ka bhandar abhi kam chal raha hai, force aur josh dono neeche. Yeh sthayi nahi hota — neend poori karo, poshan sudharo, dhoop aur movement badhao, aur rekhaon ka rang bhi lautta hai. Body ko recharge chahiye, replacement nahi.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — very pale lines: lack of force, loss of energy; softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "low_energy",
+        "recharge"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-003",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.quality.color",
+          "op": "eq",
+          "value": "very_red"
+        }
+      ],
+      "interpretation_hi_en": "Rekhayein bahut gehri laal hain — oorja ka overflow: josh zabardast, par gussa bhi utna hi tez. Yeh engine full throttle par hai; ise brake nahi, RACE TRACK chahiye — exercise, sports, mehnat wala kaam. Bina outlet ke yeh laal rang behas aur takraav mein nikalta hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — extremely red lines: excessive energy, rather violent disposition (softened to temper framing)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "high_energy",
+        "temper",
+        "outlet"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-004",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.quality.color",
+          "op": "eq",
+          "value": "yellow"
+        }
+      ],
+      "interpretation_hi_en": "Rekhaon mein peelapan hai — parampara ise pitt-paachan (liver/digestion ke domain) se jodti hai, aur kehti hai iska asar swabhav par udaasi-chidchidepan ke roop mein dikhta hai. Practical nudge: khaan-paan halka karo, paani badhao, aur mood bhaari lage toh pehle pet ki sunlo. Koi diagnosis nahi — bas parampara ka ishara.",
+      "polarity": "negative",
+      "weight": 0.5,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — yellow lines: bilious/liver tendency, melancholy morose nature; softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "digestion",
+        "mood"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.quality.forked_lines_general",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Rekhaon ke sire par kaante (forks) hain — Cheiro ke anusaar fork aam taur par SHUBH hota hai: jis rekha par bane, uski quality ko badha deta hai. Aapke haath ki khoobiyaan single-lane nahi, multi-lane hain.",
+      "polarity": "positive",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — forked lines generally good, increase the quality of the indication",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "fork_amplifier"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-006",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.quality.head_end_fork",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.head.present"
+      ],
+      "interpretation_hi_en": "Mastishk rekha ke ant mein fork hai — dual mentality ka chinh: dimaag ek saath do dhaaraon mein soch sakta hai. Fayda: versatility, har baat ke do pehlu dekhna. Keemat: ek cheez par lambi ekagrata mushkil. Deep-work ke liye time-block karna aapke liye optional nahi, zaroori hai.",
+      "polarity": "neutral",
+      "weight": 0.65,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — fork at end of Head line: dual mentality, less concentration (Plate XXIV)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "dual_mentality",
+        "versatility",
+        "focus_cost"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-LINQ-007",
+      "domain": "palmistry",
+      "category": "vitality",
+      "conditions": [
+        {
+          "feature": "lines.quality.tasselled_life_end",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Jeevan rekha ke ant mein jhaalar (tassel) jaisi bikhri rekhayein hain — parampara mein iska arth: jeevan ke aakhri padav mein oorja-sanchay ki zaroorat. Iska aaj se matlab: retirement sirf paise ka plan nahi, SEHAT ka plan bhi hai — abhi se strength, neend aur habits build karo taaki baad ke saal thake hue nahi, jame hue hon.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — tasselled lines weaken indications; at end of Life line foreshadow loss of nervous energy; softened per safety policy",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "energy_reserve",
+        "healthspan_planning"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-008",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.quality.wavy",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Rekhayein leharati hui (wavy) hain — anischay aur faisle mein dheelapan ka sanket: 'karoon ya na karoon' wala loop. Iska ilaaj bada courage nahi, chhota system hai — har faisle ki deadline rakho, aur 70% sure ho toh chal do. Wavy line walon ko perfect moment kabhi nahi milta, banana padta hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — wavy lines: uncertainty, lack of decision, want of force",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "indecision",
+        "decision_system"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-009",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "lines.quality.break_overlap_repair",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapki kisi rekha mein break toh hai, par ek sira doosre ke UPAR se shuru hota hai — Cheiro ke anusaar yeh 'repaired break' hai: rukavat aayi, par dhaara ne naya raasta pakad kar apna kaam jaari rakha. Jeevan mein bhi yahi pattern: jhatka lagega, par continuity nahi tootegi. Comeback aapke haath mein pehle se likha hai.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — broken lines destroy meaning at the break, but overlapping ends continue the quality",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "repaired_break",
+        "comeback"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-010",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.quality.sister_line_head",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "requires": [
+        "lines.head.present"
+      ],
+      "interpretation_hi_en": "Aapki mastishk rekha ke saath ek sister line (sahayak rekha) chal rahi hai — Cheiro ke anusaar sister lines kisi bhi rekha ki shakti DOUBLE kar deti hain, aur mastishk rekha ke paas milen toh mahaan shakti aur vaade ka chinh hai. Dimaag ka backup generator built-in hai — jahan aam log thak jaate hain, aap wahan se shuru karte ho.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — sister lines double the power; beside Head line give great power and promise",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "sister_line",
+        "mental_power",
+        "gold_rule"
+      ],
+      "safety_class": "standard"
+    },
+    {
+      "rule_id": "PALM-LINQ-011",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.quality.network_all_over",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Poori hatheli chhoti-chhoti rekhaon ke jaal se bhari hai — highly-strung, sochne wala dimaag: har baat par vichar, har vichar par chinta. Yeh sensitivity ki nishani hai, par mental worry aur decision-fatigue iska tax hai. Aapke liye meditation ya journaling luxury nahi, maintenance hai — dimaag ke tabs band karna seekhna hi asli upaay hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — network of small lines: highly nervous disposition, great mental worry, lack of decision",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "overthinking",
+        "stress_management"
+      ],
+      "safety_class": "sensitive",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-012",
+      "domain": "palmistry",
+      "category": "reading_method",
+      "conditions": [
+        {
+          "feature": "reading.hands_comparison_available",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Cheiro ka dono-haath niyam: passive haath (non-dominant) mein jo likha hai woh aapki JANMAJAT pravritti hai, aur active haath (dominant) mein jo hai woh aapne KAMAYA hai. Koi chinh phal tabhi deta hai jab active haath mein bhi ho. Dono haath ek jaise hon toh aap abhi wahi ho jo prakriti ne diya tha — develop hone ki poori gunjaish baaki hai. Isliye asli reading hamesha dono haath milakar hoti hai.",
+      "polarity": "neutral",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — Right and Left hands doctrine; engine maps active=dominant hand (see meta.handedness_doctrine)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "reading_method",
+        "two_hands",
+        "nature_vs_developed"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-013",
+      "domain": "palmistry",
+      "category": "obstacles",
+      "conditions": [
+        {
+          "feature": "lines.quality.descending_lines",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Kisi rekha se neeche ki ore girti (descending) rekhayein hain — parampara mein iska arth us dhaara mein shakti ka risaav: jis domain se yeh girti hain, wahan oorja leak ho rahi hai. Leak dhoondo — kaunsa kaam, aadat ya rishta us kshetra mein drain kar raha hai — aur band karo. Girti rekha ka jawab girna nahi, plug karna hai.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — descending lines mean loss of power (Plate XXIV)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "energy_leak",
+        "plug_the_drain"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-LINQ-014",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "lines.quality.chained_generic",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Rekhayein zanjeer jaisi kadiyon mein bani hain — parampara mein iska arth: iraade ki pakad dheeli, ek lakshya par tike rehna mushkil. Zanjeer ka tod hai ek kadi ek waqt: bade goal ko chhote milestones mein todo aur sirf agli kadi par focus karo. Chain wale haath sprint mein nahi, relay mein jeette hain.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVII — chained lines show lack of force or fixity of purpose",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "line_quality",
+        "consistency",
+        "milestones"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRI-001",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "geometry.triangle_large",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Aapke haath ka Maha Trikon (mastishk + jeevan + swasthya rekha se bana) bada aur khula hai — Cheiro ke anusaar iska arth: soch ka daayra chauda, kaam ka maidan bada, aur sehat ke liye bhi shubh (kyunki swasthya rekha jeevan rekha se door rehti hai). Chhoti soch aapke haath mein fit hi nahi hoti.",
+      "polarity": "positive",
+      "weight": 0.7,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVIII — larger Great Triangle: better health, broader views, wider field of action (Plate XXV)",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "great_triangle",
+        "broad_vision",
+        "shareable"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRI-002",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "geometry.triangle_upper_angle_acute",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "interpretation_hi_en": "Trikon ka upari kona (mastishk aur jeevan rekha ka sangam) bahut nukeela hai — swabhav mein sanvedansheelta aur jhijhak ka sanket: naye logon-jagahon mein pehla kadam mushkil lagta hai. Yeh kamzori nahi, calibration hai — aap pehle observe karte ho, phir move. Bas itna dhyan raho ki observe karte-karte train chhoot na jaye.",
+      "polarity": "neutral",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVIII — acute upper angle (Head+Life): more nervous, timid, sensitive",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "great_triangle",
+        "sensitivity",
+        "hesitation"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRI-003",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "geometry.quadrangle_shape",
+          "op": "eq",
+          "value": "even"
+        }
+      ],
+      "interpretation_hi_en": "Aapka chaturbhuj (hriday aur mastishk rekha ke beech ka sthan) dono siron par ek jaisa, santulit bana hai — Cheiro ise sabse behatreen chinhon mein ginte hain: nirnay mein santulan, har paristhiti mein level-headed rehna. Log garam hon ya panic mein — aap woh ho jo kamre ka temperature set karta hai.",
+      "polarity": "positive",
+      "weight": 0.75,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVIII — even Quadrangle: balance of judgment, level-headedness, most excellent sign",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "quadrangle",
+        "balanced_judgment",
+        "gold_rule"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRI-004",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "geometry.quadrangle_shape",
+          "op": "eq",
+          "value": "very_narrow"
+        }
+      ],
+      "interpretation_hi_en": "Aapka chaturbhuj bahut sankara hai — soch ke daayre mein kasav ka sanket: apni maanyata par itni pakad ki doosra nazariya ghusne ki jagah nahi paata. Conviction achhi cheez hai, par mahine mein ek baar jaan-boojh kar apne se ulti rai ko poora sunna — yeh exercise aapke chaturbhuj ko andar se chauda karti hai.",
+      "polarity": "negative",
+      "weight": 0.6,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVIII — extremely narrow Quadrangle: narrowness of views; bigotry claim softened to rigidity framing",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "quadrangle",
+        "rigidity",
+        "open_mind_exercise"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    },
+    {
+      "rule_id": "PALM-TRI-005",
+      "domain": "palmistry",
+      "category": "personality",
+      "conditions": [
+        {
+          "feature": "geometry.quadrangle_shape",
+          "op": "eq",
+          "value": "very_wide"
+        }
+      ],
+      "interpretation_hi_en": "Aapka chaturbhuj zaroorat se zyada chauda hai — soch itni khuli ki kabhi-kabhi apna hi stand dhoondhna mushkil: har baat mein 'ho bhi sakta hai' wala mode. Open mind asset hai, par faisle ke waqt ek framework chahiye — apne 3-4 non-negotiable values likh lo aur unhi par har badi baat tolo. Khuli khidki achhi hai, par ghar ki deewarein bhi honi chahiye.",
+      "polarity": "negative",
+      "weight": 0.55,
+      "sources": [
+        {
+          "text": "Cheiro — Palmistry for All",
+          "loc": "Ch.XVIII — excessively wide Quadrangle: lack of judgment, too much looseness of views",
+          "year": 1916
+        }
+      ],
+      "tags": [
+        "quadrangle",
+        "over_openness",
+        "values_framework"
+      ],
+      "safety_class": "standard",
+      "requires": []
+    }
+  ]
+}

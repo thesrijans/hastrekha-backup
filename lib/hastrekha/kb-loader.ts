@@ -5,12 +5,14 @@ import {
   type KnowledgeBase,
   type MountBirthWindows,
   type RuleCategory,
+  type RuleDomain,
 } from "./types";
 
 const RULE_ID_PATTERN = /^PALM-[A-Z]{3,5}-\d{3}$/;
 const DEVANAGARI_PATTERN = /[\u0900-\u097F]/;
 const WEIGHT_MIN = 0.4;
 const WEIGHT_MAX = 0.85;
+const DOMAINS: ReadonlySet<string> = new Set<RuleDomain>(["palmistry", "numerology", "astrology"]);
 const CATEGORIES: ReadonlySet<string> = new Set<RuleCategory>([
   "career", "love", "wealth", "personality", "vitality", "timing",
   "travel", "obstacles", "children", "protection", "reading_method",
@@ -33,7 +35,7 @@ export function validateRule(candidate: unknown, index: number): readonly string
   if (!isRecord(candidate)) return [`rules[${index}] is not an object`];
   const id = typeof candidate.rule_id === "string" ? candidate.rule_id : `rules[${index}]`;
   if (!RULE_ID_PATTERN.test(id)) problems.push(`${id}: bad rule_id format`);
-  if (candidate.domain !== "palmistry") problems.push(`${id}: domain must be "palmistry"`);
+  if (!DOMAINS.has(String(candidate.domain))) problems.push(`${id}: unknown domain ${String(candidate.domain)}`);
   if (!CATEGORIES.has(String(candidate.category))) problems.push(`${id}: unknown category`);
   if (!Array.isArray(candidate.conditions) || candidate.conditions.length === 0) problems.push(`${id}: conditions empty`);
   if (!Array.isArray(candidate.requires)) problems.push(`${id}: requires missing`);

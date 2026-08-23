@@ -20,8 +20,10 @@ export type RuleCategory =
   | "reading_method";
 
 export type Polarity = "positive" | "negative" | "neutral";
+/** DOB-only rules (birth-day numerology, birth-window tables) are honestly labelled by domain. */
+export type RuleDomain = "palmistry" | "numerology" | "astrology";
 export type SafetyClass = "standard" | "sensitive";
-export type ConditionOp = "gte" | "lte" | "eq" | "in";
+export type ConditionOp = "gte" | "lte" | "eq" | "in" | "exists";
 
 /** Scalar feature values understood by the engine. */
 export type FeatureScalar = number | string | boolean;
@@ -42,7 +44,7 @@ export interface RuleSource {
 
 export interface KbRule {
   readonly rule_id: string;
-  readonly domain: "palmistry";
+  readonly domain: RuleDomain;
   readonly category: RuleCategory;
   readonly conditions: readonly RuleCondition[];
   readonly requires: readonly string[];
