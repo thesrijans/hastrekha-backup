@@ -4,6 +4,12 @@ import { evaluateRules, loadKnowledgeBase, narrateReading, type FiredRule, type 
 import { sanitizeReadingRequest } from "@/lib/hastrekha/sanitize";
 import { checkRateLimit } from "@/lib/hastrekha/rate-limit";
 import { getSessionUser } from "@/lib/auth/session";
+import { attachGuestCookie, guestKey, resolveGuest } from "@/lib/auth/guest";
+import { clientIp } from "@/lib/http";
+import { db } from "@/lib/db";
+import type { Prisma, ReadingSource, ReadingTier as DbReadingTier } from "@/lib/generated/prisma/client";
+import type { FeatureBag, ReadingResult } from "@/lib/hastrekha";
+import type { Narration, ReadingTier } from "@/lib/hastrekha";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -40,8 +46,66 @@ function toPublicRule(item: FiredRule): PublicRule {
 }
 
 function clientKey(request: NextRequest): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  return forwarded ? forwarded.split(",")[0].trim() : "anonymous";
+  return clientIp(request);
+}
+
+const TIER_TO_DB: Readonly<Record<ReadingTier, DbReadingTier>> = { free: "FREE", premium: "PREMIUM", deep: "DEEP" };
+
+/** Palm data present means the user filled the manual form; DOB alone is the numerology-only path. */
+function readingSource(features: FeatureBag): ReadingSource {
+  return Object.keys(features).some((group) => group !== "user") ? "MANUAL_FORM" : "DOB_ONLY";
+}
+
+/**
+ * Writes the reading and one row per fired rule — this is what makes the KB learnable, and what
+ * per-rule feedback later attaches to.
+ *
+ * Persistence is best-effort on purpose: a database hiccup must not cost the user the reading they
+ * just waited for. On failure we log, return null, and the client simply renders without thumbs.
+ */
+async function persistReading(args: {
+  readonly userId: string | null;
+  readonly guestKeyHash: string;
+  readonly tier: ReadingTier;
+  readonly features: FeatureBag;
+  readonly question: string | undefined;
+  readonly result: ReadingResult;
+  readonly narration: Narration;
+  readonly visibleRuleIds: ReadonlySet<string>;
+}): Promise<string | null> {
+  try {
+    const reading = await db.reading.create({
+      data: {
+        userId: args.userId,
+        guestKey: args.guestKeyHash,
+        tier: TIER_TO_DB[args.tier],
+        source: readingSource(args.features),
+        kbVersion: args.result.meta.kbVersion,
+        features: args.features as unknown as Prisma.InputJsonValue,
+        question: args.question,
+        confidence: args.result.confidence,
+        coverageRatio: args.result.coverage.ratio,
+        birthWindows: [...args.result.birthWindows],
+        narration: args.narration as unknown as Prisma.InputJsonValue,
+        narrationEngine: args.narration.engine,
+        rules: {
+          create: args.result.fired.map((item) => ({
+            ruleId: item.rule.rule_id,
+            category: item.rule.category,
+            polarity: item.rule.polarity,
+            effectiveWeight: item.effectiveWeight,
+            reasons: [...item.reasons],
+            shownToUser: args.visibleRuleIds.has(item.rule.rule_id),
+          })),
+        },
+      },
+      select: { id: true },
+    });
+    return reading.id;
+  } catch (error) {
+    console.error("[reading] persist failed:", error);
+    return null;
+  }
 }
 
 /** Returns the signed-in user's id for premium/deep tiers; null for guests. */
@@ -73,6 +137,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { features, tier, question, userName, categories } = sanitized.request;
   const userId = await resolveUserId(request);
+  const guest = resolveGuest(request);
   if (tier !== "free" && userId === null) {
     return NextResponse.json({ error: "login required for premium reading", upgrade: true }, { status: 401 });
   }
@@ -94,7 +159,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const visibleRules = tier === "free" ? result.fired.slice(0, FREE_TIER_VISIBLE_RULES) : result.fired;
 
-  return NextResponse.json({
+  const readingId = await persistReading({
+    userId,
+    guestKeyHash: guestKey(guest.token),
+    tier,
+    features,
+    question,
+    result,
+    narration,
+    visibleRuleIds: new Set(visibleRules.map((item) => item.rule.rule_id)),
+  });
+
+  const response = NextResponse.json({
+    readingId,
     tier,
     narration,
     rules: visibleRules.map(toPublicRule),
@@ -111,4 +188,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     birthWindows: result.birthWindows,
     meta: result.meta,
   });
+
+  if (guest.isNew) attachGuestCookie(response, guest.token);
+  return response;
 }

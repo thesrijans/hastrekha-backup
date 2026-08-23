@@ -79,6 +79,23 @@ function cookieOptions(maxAgeSeconds: number): CookieOptions {
   return { httpOnly: true, secure: env.isLive, sameSite: "lax", path: "/", maxAge: maxAgeSeconds };
 }
 
+/**
+ * Writes the session cookie directly onto an outgoing response.
+ *
+ * {@link createSession} already sets it through `next/headers`, which is the right mechanism when a
+ * handler returns `NextResponse.json(...)`. When a handler instead returns a *redirect* it must also
+ * attach the cookie here, so the browser is guaranteed to carry it to the next page. Setting the same
+ * name/value twice is harmless.
+ */
+export function attachSessionCookie(response: NextResponse, jwt: string): void {
+  response.cookies.set(SESSION_COOKIE, jwt, cookieOptions(SESSION_TTL_SECONDS));
+}
+
+/** Expires the session cookie on an outgoing response. */
+export function clearSessionCookie(response: NextResponse): void {
+  response.cookies.set(SESSION_COOKIE, "", cookieOptions(0));
+}
+
 /** Reads and verifies the session JWT on an incoming request. Returns null for absent/forged/expired. */
 async function readClaims(request: NextRequest): Promise<SessionClaims | null> {
   const raw = request.cookies.get(SESSION_COOKIE)?.value;
@@ -170,6 +187,6 @@ export async function destroySession(request: NextRequest, response: NextRespons
   const claims = await readClaims(request);
   // deleteMany, not delete: logging out twice is not an error worth throwing over.
   if (claims !== null) await db.session.deleteMany({ where: { id: claims.sid } });
-  response.cookies.set(SESSION_COOKIE, "", cookieOptions(0));
+  clearSessionCookie(response);
   return response;
 }
