@@ -4,6 +4,7 @@ import { applyHomography, canonicalQuad, palmQuad, solveHomography } from "../li
 import {
   CAPTURE_POSES,
   fingerExtension,
+  MIN_FINGER_EXTENSION,
   gradeFrame,
   landmarkJitter,
   palmFacing,
@@ -14,7 +15,7 @@ import {
 import { featuresFromLandmarks, measure } from "../lib/scan/features";
 import { emptyLatch, markGateFail, standingOf, updateLatch, type LatchOptions } from "../lib/scan/latch";
 import { createNoopSegmenter, imageDataToNchw, sigmoidInPlace } from "../lib/scan/segmenter";
-import { confidenceOf, emptyFusion, fuse, mergeMax, resetFusion, shouldReset } from "../lib/scan/fusion";
+import { confidenceOf, emptyFusion, fuse, markHandSeen, mergeMax, resetFusion, shouldReset } from "../lib/scan/fusion";
 import { binarize, extractLines, FEATURE_MAPPING, projectLines, simplify, thin, tracePolylines } from "../lib/scan/lines";
 import {
   commitCapture,
@@ -118,9 +119,9 @@ function baseInput(overrides: Partial<QualityInput> = {}): QualityInput {
   assert.ok(!unsure.ok && unsure.checks.low_confidence === false, "a low-confidence detection is rejected");
 
   /* A2 — open-palm pose. A curled hand must not pass, however well lit and framed. */
-  assert.ok(fingerExtension(world) > 0.62, "the open synthetic hand reads as extended");
+  assert.ok(fingerExtension(world) > MIN_FINGER_EXTENSION, "the open synthetic hand reads as extended");
   const curled = curledHand();
-  assert.ok(fingerExtension(curled.world) < 0.62, "the curled hand reads as not extended");
+  assert.ok(fingerExtension(curled.world) < MIN_FINGER_EXTENSION, "the curled hand reads as not extended");
   const curledVerdict = gradeFrame(baseInput({ world: curled.world, landmarks: curled.image }));
   assert.ok(!curledVerdict.ok && curledVerdict.checks.fingers_curled === false, "a curled hand is rejected");
 
@@ -273,11 +274,16 @@ function maskOf(field: Float32Array): LineMask {
   assert.ok(confidenceOf(sparse) > 0.5, "a sparse bright line still reads as confident");
   assert.ok(confidenceOf(new Float32Array(plane)) < 1e-6, "an empty field has no confidence");
 
-  /* Reset rules. */
-  assert.equal(shouldReset(emptyFusion(), { handPresent: false, poseChanged: false, nowMs: 9999 }), false, "nothing to reset");
-  assert.equal(shouldReset(state, { handPresent: true, poseChanged: true, nowMs: 300 }), true, "a pose change resets immediately");
-  assert.equal(shouldReset(state, { handPresent: false, poseChanged: false, nowMs: 500 }), false, "a brief dropout is tolerated");
-  assert.equal(shouldReset(state, { handPresent: false, poseChanged: false, nowMs: 2000 }), true, "a long dropout resets");
+  /*
+   * Reset rules. Movement is deliberately NOT one of them any more — see `alignFusion`, which maps
+   * accumulated evidence onto the moving palm instead of discarding it.
+   */
+  const seen = markHandSeen(state, 200, "Right");
+  assert.equal(shouldReset(emptyFusion(), { handPresent: false, handedness: null, nowMs: 9999 }), false, "nothing to reset");
+  assert.equal(shouldReset(seen, { handPresent: true, handedness: "Right", nowMs: 5000 }), false, "movement never resets");
+  assert.equal(shouldReset(seen, { handPresent: true, handedness: "Left", nowMs: 300 }), true, "the other hand resets immediately");
+  assert.equal(shouldReset(seen, { handPresent: false, handedness: null, nowMs: 500 }), false, "a brief dropout is tolerated");
+  assert.equal(shouldReset(seen, { handPresent: false, handedness: null, nowMs: 2500 }), true, "a long dropout resets");
 
   const cleared = resetFusion(state);
   assert.equal(cleared.frames, 0, "reset clears the frame count");

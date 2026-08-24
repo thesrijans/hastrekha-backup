@@ -48,3 +48,13 @@ export const FINGER_MOUNTS = {
 
 export type FingerName = keyof typeof FINGER_MOUNTS;
 export const FINGER_NAMES = ["jupiter", "saturn", "sun", "mercury"] as const satisfies readonly FingerName[];
+
+/** MediaPipe's finger chains, for skeleton overlays. Pairs of landmark indices. */
+export const HAND_BONES: ReadonlyArray<readonly [number, number]> = [
+  [LM.WRIST, LM.THUMB_CMC], [LM.THUMB_CMC, LM.THUMB_MCP], [LM.THUMB_MCP, LM.THUMB_IP], [LM.THUMB_IP, LM.THUMB_TIP],
+  [LM.WRIST, LM.INDEX_MCP], [LM.INDEX_MCP, LM.INDEX_PIP], [LM.INDEX_PIP, LM.INDEX_DIP], [LM.INDEX_DIP, LM.INDEX_TIP],
+  [LM.INDEX_MCP, LM.MIDDLE_MCP], [LM.MIDDLE_MCP, LM.MIDDLE_PIP], [LM.MIDDLE_PIP, LM.MIDDLE_DIP], [LM.MIDDLE_DIP, LM.MIDDLE_TIP],
+  [LM.MIDDLE_MCP, LM.RING_MCP], [LM.RING_MCP, LM.RING_PIP], [LM.RING_PIP, LM.RING_DIP], [LM.RING_DIP, LM.RING_TIP],
+  [LM.RING_MCP, LM.PINKY_MCP], [LM.PINKY_MCP, LM.PINKY_PIP], [LM.PINKY_PIP, LM.PINKY_DIP], [LM.PINKY_DIP, LM.PINKY_TIP],
+  [LM.WRIST, LM.PINKY_MCP],
+];

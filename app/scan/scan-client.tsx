@@ -9,6 +9,7 @@ import type { LandmarkFeatureResult } from "@/lib/scan/features";
 import { extractLines, projectLines } from "@/lib/scan/lines";
 import { mergedMask, type CaptureState } from "@/lib/scan/capture";
 import { HOLO_PALM_ANCHORS } from "@/components/palm-geometry";
+import { PALM_EDGE_PEAK } from "@/lib/scan/landmarks";
 import { DebugPanel } from "@/components/scan/debug-panel";
 import { LiveTicker } from "@/components/scan/live-ticker";
 import { PalmOverlay } from "@/components/scan/palm-overlay";
@@ -24,22 +25,10 @@ import type { FeedbackState, ReadingResponse, Verdict } from "@/app/read/reading
 const KB: KnowledgeBase = loadKnowledgeBase(kbDocument);
 
 /**
- * The scan does not read mounts — prominence is fleshy relief, which the line model cannot see.
- *
- * So two different values. The reading gets an empty bag: no mount feature is ever fabricated. The
- * overlay gets a faint constant, because there the dots are *positional guides* showing where the
- * mounts sit on the user's hand, not a measurement of them.
+ * The scan does not read mounts — prominence is fleshy relief, which the line model cannot see, so
+ * no mount feature is ever fabricated into the reading.
  */
 const SCAN_MOUNTS: Record<string, number> = {};
-const MOUNT_ZONE_HINT: Record<string, number> = {
-  jupiter: 0.25,
-  saturn: 0.25,
-  sun: 0.25,
-  mercury: 0.25,
-  mars_inner: 0.25,
-  venus: 0.25,
-  moon: 0.25,
-};
 
 type Outcome =
   | { readonly status: "scanning" }
@@ -70,6 +59,8 @@ export function ScanClient() {
   const [feedback, setFeedback] = useState<Record<number, FeedbackState>>({});
   const [birthDate, setBirthDate] = useState<string | null>(null);
   const [holoLines, setHoloLines] = useState<Record<string, ReadonlyArray<readonly [number, number]>>>({});
+  /** Live override for the palm-edge bulge, driven by the debug panel's tuning slider. */
+  const [edgePeak, setEdgePeak] = useState(PALM_EDGE_PEAK);
 
   const isMountedRef = useRef(true);
   const landmarkBagRef = useRef<Record<string, unknown>>({});
@@ -144,14 +135,24 @@ export function ScanClient() {
     [birthDate],
   );
 
+  /** The hook object is stable across renders, so the completion callback can reach stop(). */
+  const scanRef = useRef<ReturnType<typeof useHandScan> | null>(null);
+
   const onCaptureComplete = useCallback(
     (capture: CaptureState) => {
+      // The scan is over — release the camera immediately. Holding it open behind the reading
+      // would betray the page's own promise about what happens on this device.
+      scanRef.current?.stop();
       void buildReading(capture);
     },
     [buildReading],
   );
 
   const scan = useHandScan({ onFeatures, onGateFail, onCaptureComplete });
+  // Synced in an effect, not during render — a render React discards must not mutate the ref.
+  useEffect(() => {
+    scanRef.current = scan;
+  }, [scan]);
   const {
     status,
     error,
@@ -162,10 +163,19 @@ export function ScanClient() {
     stats,
     fps,
     backend,
+    diagnostics,
     inferenceMs,
+    timeToFirstTraceMs,
+    traceEvidenceAtMs,
+    alignment,
+    photometric,
     fusedConfidence,
     fusedField,
+    stageMasks,
+    stageTimings,
+    videoSize,
     polys,
+    polySegments,
     extraction,
     capture,
     pose,
@@ -238,12 +248,15 @@ export function ScanClient() {
               <>
                 <PalmOverlay
                   landmarks={observation?.landmarks ?? null}
+                  videoSize={videoSize}
                   polys={polys}
-                  mounts={MOUNT_ZONE_HINT}
                   confidence={fusedConfidence}
+                  segments={polySegments}
+                  evidenceAtMs={traceEvidenceAtMs}
                   mirrored={mirrored}
+                  edgePeak={edgePeak}
                 />
-                <ScanHud observation={observation} quality={quality} mirrored={mirrored} />
+                <ScanHud quality={quality} />
                 {pose !== null ? (
                   <PoseBadge
                     label={pose.label}
@@ -329,15 +342,26 @@ export function ScanClient() {
       <DebugPanel
         rectified={rectified}
         fused={fusedField}
+        stageMasks={stageMasks}
+        stageTimings={stageTimings}
         metrics={features?.metrics ?? null}
         quality={quality}
         stats={stats}
         fps={fps}
         backend={backend}
+        timeToFirstTraceMs={timeToFirstTraceMs}
+        traceEvidenceAtMs={traceEvidenceAtMs}
+        alignment={alignment}
+        photometric={photometric}
+        completion={extraction?.completion ?? null}
+        diagnostics={diagnostics}
         inferenceMs={inferenceMs}
         fusedConfidence={fusedConfidence}
         traceCount={polys.length}
         branchPoints={extraction?.branchPoints ?? 0}
+        onExportFrame={scan.exportFrame}
+        edgePeak={edgePeak}
+        onEdgePeak={setEdgePeak}
       />
 
       <p className="text-xs leading-6 text-muted">

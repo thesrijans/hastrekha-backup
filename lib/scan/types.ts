@@ -92,16 +92,47 @@ export interface LineMask {
   readonly resolves: readonly PalmLineId[];
   /** Wall-clock inference time, surfaced in the debug HUD. */
   readonly inferenceMs?: number;
-  /** Which execution provider produced this, e.g. "webgpu" or "wasm". */
+  /** Which execution provider produced this, e.g. "webgpu", "wasm" or "ridge-only". */
   readonly backend?: string;
+  /**
+   * Raw per-detector fields, for the debug HUD's channel toggles.
+   *
+   * Every channel is nullable except `ridge`, because each has its own reason to be absent: no model
+   * file, a classical pass skipped this frame for budget, a stack not yet filled. A null channel is a
+   * fact about this frame rather than a failure, and the HUD says which.
+   */
+  readonly stages?: {
+    /** The UNet's own output. Null with no model file, and on frames it did not run. */
+    readonly unet: Float32Array | null;
+    /** Black-hat + Gabor. Held from the last frame it ran on when the budget skipped it. */
+    readonly ridge: Float32Array;
+    /** Frangi vesselness. */
+    readonly frangi: Float32Array | null;
+    /** The temporal low-order composite that fed this frame's detectors. */
+    readonly median: Float32Array | null;
+    /** Multi-pose photometric variance, applied on the main thread from capture state. */
+    readonly photometric: Float32Array | null;
+  };
+  /** Per-stage wall-clock milliseconds: unet / clahe / blackhat / gabor / total. */
+  readonly timings?: Readonly<Record<string, number>>;
 }
 
 /** A traced line in rectified-crop pixel coordinates. Feeds both the geometry classifier and HoloPalm. */
 export interface TracedLine {
   readonly id: PalmLineId;
   readonly points: readonly (readonly [number, number])[];
-  /** 0–1, how strongly this trace is believed. Drives temporal fusion later. */
+  /** 0–1, how strongly this trace is believed. Measured on observed samples only. */
   readonly confidence: number;
+  /**
+   * Which index ranges of `points` were actually seen versus bridged across a gap.
+   *
+   * A completed line necessarily contains stretches where no crease was detected. Carrying that
+   * distinction in the data — rather than smoothing it away — is what lets the overlay draw inferred
+   * stretches dimmer and lets the feature extraction refuse to make claims about them.
+   */
+  readonly segments?: ReadonlyArray<{ readonly from: number; readonly to: number; readonly observed: boolean }>;
+  /** Fraction of the curve's arc length that sits on observed evidence. */
+  readonly observedFraction?: number;
 }
 
 /* -------------------------------- Quality --------------------------------- */
@@ -114,6 +145,8 @@ export type QualityIssue =
   | "too_far"
   | "too_close"
   | "not_palm_up"
+  /** The guided pose asked for a tilt and got one the other way (or none at all). */
+  | "tilt_direction"
   /** Fingers are curled; a closed hand hides the very lines being read. */
   | "fingers_curled"
   /** The guided sequence asked for the other hand and got the same one. */
@@ -123,6 +156,37 @@ export type QualityIssue =
   | "unsteady"
   /** Palm span is drifting across frames — the pose is not being held. */
   | "inconsistent";
+
+/**
+ * Everything the palm/dorsum decision was made from, surfaced so the sign convention can be
+ * confirmed on a real device instead of argued about. Null when no hand was detected.
+ */
+export interface FacingReadout {
+  /** MediaPipe's raw label. */
+  readonly handedness: Handedness;
+  readonly handednessScore: number;
+  /** The physical hand, after correcting for MediaPipe's mirrored-input assumption. */
+  readonly physical: Handedness;
+  /** Raw signed winding of wrist → index knuckle → little knuckle, image space. */
+  readonly winding: number;
+  readonly windingSign: number;
+  /**
+   * |winding| / span² — how much projected area the winding triangle actually has. A tilted palm
+   * foreshortens to a sliver, where the sign is noise rather than evidence.
+   */
+  readonly windingStrength: number;
+  /** The sign a palm-toward-camera view of `physical` produces. */
+  readonly expectedSign: number;
+  /** z of the unit palm normal in world space. */
+  readonly normalZ: number;
+  /** |normalZ| — how square-on the palm is. */
+  readonly facing: number;
+  /** False when the handedness score was too low to fix the expected sign. */
+  readonly trusted: boolean;
+  /** False when the projection is too foreshortened for the winding sign to mean anything. */
+  readonly windingReadable: boolean;
+  readonly palmToward: boolean;
+}
 
 export interface QualityVerdict {
   /** True when a rectified crop taken from this frame is worth keeping. */
@@ -134,6 +198,8 @@ export interface QualityVerdict {
   readonly score: number;
   /** Per-check pass/fail, every check present. The debug HUD renders this live. */
   readonly checks: Readonly<Record<QualityIssue, boolean>>;
+  /** How the palm/dorsum call was made. Null when no hand was detected. */
+  readonly facingReadout: FacingReadout | null;
 }
 
 /** Frame statistics the gate needs but cannot compute itself. */

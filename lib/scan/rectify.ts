@@ -139,6 +139,110 @@ export function applyHomography(h: Matrix3, p: Point2): Point2 | null {
   return { x: (h[0] * p.x + h[1] * p.y + h[2]) / w, y: (h[3] * p.x + h[4] * p.y + h[5]) / w };
 }
 
+/**
+ * Inverse of a homography, via the adjugate.
+ *
+ * Everywhere else this module deliberately avoids inversion — it obtains the opposite mapping by
+ * re-solving with the correspondences swapped, which is better conditioned. That trick needs the
+ * correspondences, and the motion-compensation path in `fusion.ts` does not have them: it holds two
+ * *already solved* matrices from two different frames and must compose them. So inversion is
+ * genuinely required here rather than merely convenient.
+ *
+ * @returns null when the matrix is singular — a palm turned edge-on produces exactly that, so
+ * callers must handle it instead of assuming a transform always exists.
+ */
+export function invertHomography(h: Matrix3): Matrix3 | null {
+  const [a, b, c, d, e, f, g, i, j] = h;
+  // Cofactors, already transposed into the adjugate.
+  const A = e * j - f * i;
+  const B = c * i - b * j;
+  const C = b * f - c * e;
+  const D = f * g - d * j;
+  const E = a * j - c * g;
+  const F = c * d - a * f;
+  const G = d * i - e * g;
+  const H = b * g - a * i;
+  const I = a * e - b * d;
+
+  const determinant = a * A + b * D + c * G;
+  if (!Number.isFinite(determinant) || Math.abs(determinant) < 1e-12) return null;
+
+  // A homography is scale-invariant, so normalise on the last entry rather than the determinant —
+  // that keeps the `h[8] === 1` convention the rest of this module relies on.
+  const last = I / determinant;
+  if (!Number.isFinite(last) || Math.abs(last) < 1e-12) return null;
+  const s = 1 / (determinant * last);
+
+  const out: Matrix3 = [A * s, B * s, C * s, D * s, E * s, F * s, G * s, H * s, 1];
+  return out.some((value) => !Number.isFinite(value)) ? null : out;
+}
+
+/** Matrix product, row-major. `compose(a, b)` applies **b first**, then `a`. */
+export function compose(a: Matrix3, b: Matrix3): Matrix3 {
+  const out = new Array<number>(9);
+  for (let row = 0; row < 3; row += 1) {
+    for (let col = 0; col < 3; col += 1) {
+      out[row * 3 + col] = a[row * 3] * b[col] + a[row * 3 + 1] * b[3 + col] + a[row * 3 + 2] * b[6 + col];
+    }
+  }
+  const scale = out[8];
+  if (!Number.isFinite(scale) || Math.abs(scale) < 1e-12) return out as unknown as Matrix3;
+  for (let k = 0; k < 9; k += 1) out[k] /= scale;
+  return out as unknown as Matrix3;
+}
+
+/**
+ * The transform that reads a crop built under one anchor convention from one built under another.
+ *
+ * **Both matrices must come from the SAME frame.** That restriction is the whole correctness
+ * argument, and it is the opposite of what seems natural.
+ *
+ * Rectified space is already motion-compensated *by construction*: both fits send the hand's own
+ * anchors to the same canonical targets, so a given patch of skin lands on the same crop pixel
+ * however the hand has moved. Measured against a synthetic 3-D palm under a large pose change, the
+ * same skin point landed within 1.9e-13 of a pixel in both crops. The true frame-to-frame remap is
+ * the identity, and there is nothing to warp.
+ *
+ * Composing two *different frames'* fits does not give the identity — it gives the hand motion back.
+ * On that same synthetic motion it displaced the crop corners by 176px and put skin 90–109px from
+ * where it belongs. Warping accumulated evidence by that every frame would be far worse than the
+ * reset it was meant to replace.
+ *
+ * What genuinely does move the crop is a change of *convention*: {@link palmAnchors} switches
+ * between four and five correspondences as the percussion point enters and leaves frame, and the two
+ * solves put the same skin in visibly different places. Computed from one frame, this composition is
+ * exact for that — measured error 2.7e-13 px.
+ *
+ * Direction: resampling pulls from the source, so a destination pixel of the new crop maps back via
+ * `toNew⁻¹` into the frame, then forward via `toOld` into the old crop.
+ */
+export function conventionRemap(toOld: Matrix3, toNew: Matrix3): Matrix3 | null {
+  const inverse = invertHomography(toNew);
+  return inverse === null ? null : compose(toOld, inverse);
+}
+
+/**
+ * How far this transform moves the crop, in crop pixels: the largest corner displacement.
+ *
+ * Used to decide whether a re-warp is worth doing at all. Every warp resamples, and every resample
+ * low-pass filters, so warping through sub-pixel jitter would slowly blur accumulated evidence away
+ * for no gain — see `warpField` in fusion.ts.
+ */
+export function transformDisplacement(h: Matrix3, size: number): number {
+  let worst = 0;
+  for (const corner of [
+    { x: 0, y: 0 },
+    { x: size, y: 0 },
+    { x: 0, y: size },
+    { x: size, y: size },
+  ]) {
+    const moved = applyHomography(h, corner);
+    if (moved === null) return Infinity;
+    worst = Math.max(worst, Math.hypot(moved.x - corner.x, moved.y - corner.y));
+  }
+  return worst;
+}
+
 /** The four base palm anchors in frame pixel coordinates. */
 export function palmQuad(landmarks: readonly Landmark3[], frameWidth: number, frameHeight: number): Point2[] | null {
   if (landmarks.length < 21) return null;
@@ -234,6 +338,14 @@ export interface RectifyResult {
   readonly toCrop: Matrix3;
   /** Fraction of destination pixels that fell inside the source frame. Low means the hand is clipped. */
   readonly coverage: number;
+  /**
+   * Per-pixel 1 where the crop sampled real frame content.
+   *
+   * The pixels outside are filled with literal black, and downstream stages must be told which those
+   * are: an illumination estimate that ramps into that black turns the first genuine palm pixels into
+   * a bright halo, and the black-to-skin step is exactly the edge a black-hat responds to.
+   */
+  readonly inside: Uint8Array;
   /** Whether the fifth (percussion) correspondence was part of the fit. */
   readonly usedPercussion: boolean;
 }
@@ -263,6 +375,7 @@ export function rectifyPalm(
 
   const image = createImageData(size, size);
   const out = image.data;
+  const validity = new Uint8Array(size * size);
   let inside = 0;
 
   for (let dy = 0; dy < size; dy += 1) {
@@ -278,9 +391,16 @@ export function rectifyPalm(
       }
       bilinear(source, p.x, p.y, out, at);
       out[at + 3] = 255;
+      validity[dy * size + dx] = 1;
       inside += 1;
     }
   }
 
-  return { image, toCrop, coverage: inside / (size * size), usedPercussion: anchors.length === 5 };
+  return {
+    image,
+    toCrop,
+    coverage: inside / (size * size),
+    inside: validity,
+    usedPercussion: anchors.length === 5,
+  };
 }

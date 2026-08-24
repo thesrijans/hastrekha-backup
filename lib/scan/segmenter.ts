@@ -23,6 +23,110 @@ export const ONNX_INPUT_NAME = "input";
 export const ONNX_INPUT_SHAPE: readonly number[] = [1, 3, RECTIFIED_SIZE, RECTIFIED_SIZE];
 export const ONNX_OUTPUT_SHAPE: readonly number[] = [1, 1, RECTIFIED_SIZE, RECTIFIED_SIZE];
 
+/* ------------------------------ Model fusion ------------------------------- */
+
+export const UNET_WEIGHT = 0.7;
+export const RIDGE_BLEND_WEIGHT = 0.3;
+/** The ridge floor: what a crease is worth when the UNet is blind to it — or absent entirely. */
+export const RIDGE_FLOOR_WEIGHT = 0.55;
+
+/**
+ * Combines the UNet's learned probability with the classical ridge field:
+ *
+ *     lineProbability = max(unet·0.7 + ridge·0.3, ridge·0.55)
+ *
+ * The blend term trusts the model but lets strong classical evidence nudge it; the floor term
+ * guarantees a crease the model missed still surfaces at up to 0.55. With no model at all the
+ * formula degenerates to ridge·0.55 — the zero-ML path that keeps the live overlay working before
+ * (or without) the ONNX file. Pure, so the formula is unit-tested rather than trusted.
+ */
+export function combineProbabilities(unet: Float32Array | null, ridge: Float32Array): Float32Array {
+  const out = new Float32Array(ridge.length);
+  if (unet === null) {
+    for (let i = 0; i < ridge.length; i += 1) out[i] = ridge[i] * RIDGE_FLOOR_WEIGHT;
+    return out;
+  }
+  if (unet.length !== ridge.length) throw new Error("combineProbabilities: field sizes disagree");
+  for (let i = 0; i < ridge.length; i += 1) {
+    out[i] = Math.max(unet[i] * UNET_WEIGHT + ridge[i] * RIDGE_BLEND_WEIGHT, ridge[i] * RIDGE_FLOOR_WEIGHT);
+  }
+  return out;
+}
+
+/**
+ * Everything the segmenter knows about why it is or is not working.
+ *
+ * Load failures used to die in a `console.warn` inside a worker, where nobody sees them — the only
+ * symptom was that lines never appeared. Every step of startup now records itself here and is
+ * rendered in the debug HUD, so "no lines" always comes with a reason.
+ */
+export interface SegmenterDiagnostics {
+  readonly phase:
+    | "idle"
+    | "checking-model"
+    | "loading-ort"
+    | "creating-session"
+    | "warming"
+    | "ready"
+    | "failed";
+  readonly modelPath: string;
+  /** HTTP status from the HEAD probe; null before it runs. */
+  readonly modelStatus: number | null;
+  readonly modelBytes: number | null;
+  readonly modelContentType: string | null;
+  /** False when the model is absent, or when a dev server answered a 404 with an HTML page. */
+  readonly modelOk: boolean;
+  readonly wasmPath: string;
+  /** Result of probing one vendored ORT wasm file — catches a wasmPaths mismatch directly. */
+  readonly wasmProbe: string | null;
+  readonly providersTried: readonly string[];
+  readonly executionProvider: string | null;
+  readonly warmupMs: number | null;
+  readonly firstInferenceMs: number | null;
+  readonly inferences: number;
+  /** Frames dropped because one was already in flight — high is normal, it is the drop-not-queue rule. */
+  readonly dropped: number;
+  /** Measured median cost of the every-frame detector tier, and the cadence that measurement chose. */
+  readonly fastTierMs: number;
+  readonly fastTierStride: number;
+  readonly classicalStride: number;
+  /** Frames currently held in the temporal composite stack. */
+  readonly stackFilled: number;
+  readonly lastError: string | null;
+}
+
+export function emptyDiagnostics(modelPath: string, wasmPath: string): SegmenterDiagnostics {
+  return {
+    phase: "idle",
+    modelPath,
+    modelStatus: null,
+    modelBytes: null,
+    modelContentType: null,
+    modelOk: false,
+    wasmPath,
+    wasmProbe: null,
+    providersTried: [],
+    executionProvider: null,
+    warmupMs: null,
+    firstInferenceMs: null,
+    inferences: 0,
+    dropped: 0,
+    fastTierMs: 0,
+    fastTierStride: 1,
+    classicalStride: 1,
+    stackFilled: 0,
+    lastError: null,
+  };
+}
+
+/** What the detectors need to know about a crop beyond its pixels. */
+export interface SegmentContext {
+  /** Anchor count it was rectified with; a change invalidates the temporal stack. */
+  readonly convention: number;
+  /** Per-pixel 1 where the crop sampled real frame content. */
+  readonly inside?: Uint8Array;
+}
+
 export interface Segmenter {
   /** Stable identifier for the debug HUD, e.g. "noop", "ridge", "unet-onnx". */
   readonly id: string;
@@ -34,8 +138,10 @@ export interface Segmenter {
   readonly lastInferenceMs: number;
   /** Which lines this implementation can tell apart. Empty means "lines, undifferentiated". */
   readonly resolves: readonly PalmLineId[];
+  /** Live startup/runtime diagnostics, surfaced in the debug HUD. */
+  readonly diagnostics: SegmenterDiagnostics;
   /** @returns null when the implementation has nothing to offer for this frame. */
-  segment(rectified: ImageData): Promise<LineMask | null>;
+  segment(rectified: ImageData, context?: SegmentContext): Promise<LineMask | null>;
   dispose(): void;
 }
 
@@ -87,6 +193,7 @@ export function createNoopSegmenter(): Segmenter {
     backend: "none",
     lastInferenceMs: 0,
     resolves: [],
+    diagnostics: { ...emptyDiagnostics("(none)", "(none)"), phase: "idle", lastError: "no-op segmenter" },
     async segment(): Promise<LineMask | null> {
       return null;
     },

@@ -19,6 +19,7 @@
 import type { FeatureBag } from "@/lib/hastrekha";
 import { applyHomography, canonicalQuad, solveHomography } from "./rectify";
 import { EDGE_ZONES, HEART_END_ZONES, nearestZone, RESERVED_EDGE_ZONES } from "./zones";
+import { completeLines, endpointObserved, type CompletionResult } from "./completion";
 import { ACTIVE_LINE_IDS, RECTIFIED_SIZE, type ActiveLineId, type Point2, type TracedLine } from "./types";
 
 /** A pixel is part of a line above this probability. */
@@ -436,7 +437,12 @@ export const FEATURE_MAPPING: Readonly<Record<string, string>> = {
 
 export interface LineExtraction {
   readonly lines: Partial<Record<ActiveLineId, TracedLine>>;
+  /** The four completed curves, ready to draw. Empty for a line that had no evidence. */
   readonly polys: readonly Poly[];
+  /** The raw traced fragments, for the debug view — what the detector actually saw. */
+  readonly fragments: readonly Poly[];
+  /** Per-line completion outcome, including why a line was refused. */
+  readonly completion: CompletionResult;
   readonly features: FeatureBag;
   readonly branchPoints: number;
 }
@@ -452,7 +458,20 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
   const skeleton = thin(binarize(field), size);
   const { polys: rawPolys, stats } = tracePolylines(skeleton, size);
   const polys = rawPolys.map((poly) => simplify(poly));
-  const assigned = assignLines(polys, size);
+
+  /*
+   * Completion runs on the RAW fragments, not the simplified ones: binning wants every skeleton
+   * pixel it can get, and `simplify` exists for the debug overlay's point budget. It supersedes
+   * `assignLines`, which required a single fragment to reach both ends of a line and therefore
+   * scored a well-detected but broken crease as four failures. `assignLines` stays exported and
+   * tested — it is still the right answer when you have whole traces and want them labelled.
+   */
+  const completion = completeLines(rawPolys, field, size);
+  const assigned: Partial<Record<ActiveLineId, Poly>> = {};
+  for (const id of ACTIVE_LINE_IDS) {
+    const fitted = completion.lines[id];
+    if (fitted !== undefined) assigned[id] = fitted.points;
+  }
 
   const lines: Partial<Record<ActiveLineId, TracedLine>> = {};
   const heart: Record<string, unknown> = {};
@@ -468,12 +487,19 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
 
   for (const id of ACTIVE_LINE_IDS) {
     const poly = assigned[id];
-    if (poly === undefined) continue;
-    const depth = depthProxy(field, poly, size);
+    const fitted = completion.lines[id];
+    if (poly === undefined || fitted === undefined) continue;
+    /*
+     * Depth is measured on the OBSERVED samples only. Averaging across a bridged gap would dilute a
+     * genuinely deep line toward "broad_shallow" in proportion to how much of it the lighting
+     * happened to hide — a feature that reports the room rather than the palm.
+     */
     lines[id] = {
       id,
       points: poly.map((p) => [Number(p.x.toFixed(1)), Number(p.y.toFixed(1))] as const),
-      confidence: depth,
+      confidence: fitted.observedEnergy,
+      segments: fitted.segments,
+      observedFraction: fitted.observedFraction,
     };
     maxWaviness = Math.max(maxWaviness, waviness(poly));
   }
@@ -483,12 +509,26 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
   const lifePoly = assigned.life;
   const fatePoly = assigned.fate;
 
+  /*
+   * Endpoint-derived features are gated on whether that end was actually SEEN.
+   *
+   * A completed curve runs to the limit of its corridor, which means its ends may sit on inference
+   * rather than evidence. Reading "your heart line ends on the mount of Jupiter" off a stretch that
+   * was interpolated would be stating this module's prior as the user's anatomy — and the engine
+   * downstream renders these as fact. Whole-curve measurements (depth, waviness, arc) are unaffected:
+   * they average over the observed samples and degrade gracefully, where an enum simply lies.
+   */
+  const seen = (id: ActiveLineId, which: "start" | "end"): boolean => {
+    const fitted = completion.lines[id];
+    return fitted !== undefined && endpointObserved(fitted, which);
+  };
+
   if (heartPoly !== undefined) {
     const end = heartPoly[heartPoly.length - 1];
     const depth = depthProxy(field, heartPoly, size);
     heart.present = true;
     heart.length_norm = Number(Math.min(1, polylineLength(heartPoly) / size).toFixed(3));
-    heart.origin = nearestZone(HEART_END_ZONES, end, size).value;
+    if (seen("heart", "end")) heart.origin = nearestZone(HEART_END_ZONES, end, size).value;
     heart.depth = depth > 0.75 ? "deep" : depth > 0.55 ? "thin" : "broad_shallow";
     const breaks = breakCount(heartPoly);
     if (breaks > 0) heart.breaks = breaks;
@@ -506,7 +546,7 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
     const continuity = 1 / (1 + breakCount(headPoly));
     head.quality = Number(Math.min(1, depth * continuity).toFixed(3));
 
-    if (lifePoly !== undefined) {
+    if (lifePoly !== undefined && seen("head", "start") && seen("life", "start")) {
       const lifeStart = lifePoly[0];
       const separation = Math.hypot(start.x - lifeStart.x, start.y - lifeStart.y) / size;
       head.origin =
@@ -519,15 +559,17 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
               : "separated_wide";
     }
 
-    const drop = (end.y - start.y) / size;
-    head.termination =
-      drop < -0.04
-        ? "upturn_mercury"
-        : drop < 0.06
-          ? "straight_mental_mars"
-          : drop < 0.16
-            ? "gentle_slope_luna"
-            : "deep_slope_luna";
+    if (seen("head", "end")) {
+      const drop = (end.y - start.y) / size;
+      head.termination =
+        drop < -0.04
+          ? "upturn_mercury"
+          : drop < 0.06
+            ? "straight_mental_mars"
+            : drop < 0.16
+              ? "gentle_slope_luna"
+              : "deep_slope_luna";
+    }
     head.curvature = curvature(headPoly) > 0.07 ? "sloping_to_luna" : "straight_clear";
     if (waviness(headPoly) > 0.5) head.texture = "irregular";
   }
@@ -542,8 +584,8 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
     const breaks = breakCount(lifePoly);
     if (breaks > 0) life.breaks_count = breaks;
     life.texture = depth > 0.72 ? "clear_deep" : depth > 0.55 ? "broad_shallow" : "chained";
-    life.rise_origin = start.y < 0.3 * size ? "jupiter_side" : "mars_low";
-    if (end.x > 0.5 * size) life.sweeps_to_luna = true;
+    if (seen("life", "start")) life.rise_origin = start.y < 0.3 * size ? "jupiter_side" : "mars_low";
+    if (seen("life", "end") && end.x > 0.5 * size) life.sweeps_to_luna = true;
   }
 
   if (fatePoly !== undefined) {
@@ -558,9 +600,9 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
       { value: "mount_luna", cx: 0.76, cy: 0.66 },
       { value: "life_line", cx: 0.3, cy: 0.72 },
     ];
-    fate.origin = nearestZone(origins, start, size).value;
+    if (seen("fate", "start")) fate.origin = nearestZone(origins, start, size).value;
 
-    if (headPoly !== undefined || heartPoly !== undefined) {
+    if (seen("fate", "end") && (headPoly !== undefined || heartPoly !== undefined)) {
       const headY = headPoly === undefined ? Infinity : headPoly.reduce((s, p) => s + p.y, 0) / headPoly.length;
       const heartY = heartPoly === undefined ? Infinity : heartPoly.reduce((s, p) => s + p.y, 0) / heartPoly.length;
       if (Math.abs(end.y - headY) < 0.06 * size) fate.stopped_at = "head_line";
@@ -610,7 +652,17 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
   if (Object.keys(geometry).length > 0) features.geometry = geometry;
   if (Object.keys(reading).length > 0) features.reading = reading;
 
-  return { lines, polys, features: features as FeatureBag, branchPoints: stats.branchPoints };
+  return {
+    lines,
+    polys: ACTIVE_LINE_IDS.flatMap((id) => {
+      const fitted = completion.lines[id];
+      return fitted === undefined ? [] : [fitted.points];
+    }),
+    fragments: polys,
+    completion,
+    features: features as FeatureBag,
+    branchPoints: stats.branchPoints,
+  };
 }
 
 /**
