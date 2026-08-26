@@ -18,6 +18,14 @@ import { canonicalAnchors, palmAnchors, rectifyPalm, solveHomography, type Recti
 import { derivePalmEdge } from "@/lib/scan/landmarks";
 import { emptyStabiliser, resetStabiliser, stabiliseAnchors, type AnchorStabiliser } from "@/lib/scan/stabilise";
 import {
+  emptyTelemetry,
+  formatTelemetry,
+  publish as publishTelemetry,
+  record as recordStage,
+  type ScanTelemetry,
+  type TelemetryStage,
+} from "@/lib/scan/telemetry";
+import {
   addPose,
   applyPhotometric,
   emptyPhotometric,
@@ -53,7 +61,15 @@ import {
   tickCapture,
   type CaptureState,
 } from "@/lib/scan/capture";
-import { ACTIVE_LINE_IDS, type FrameStats, type Handedness, type HandObservation, type Landmark3, type QualityVerdict } from "@/lib/scan/types";
+import {
+  ACTIVE_LINE_IDS,
+  MASK_SIZE,
+  type FrameStats,
+  type Handedness,
+  type HandObservation,
+  type Landmark3,
+  type QualityVerdict,
+} from "@/lib/scan/types";
 
 export type ScanStatus = "idle" | "starting" | "running" | "denied" | "unsupported" | "error";
 
@@ -123,7 +139,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const runningRef = useRef(false);
   const loopRef = useRef<(() => void) | null>(null);
   const segmenterRef = useRef<Segmenter | null>(null);
-  const fusionRef = useRef<FusionState>(emptyFusion());
+  // Sized to the resolution the worker actually returns — see MASK_SIZE. A mismatch here makes
+  // `fuse()` return early and SILENTLY, which is exactly how the overlay went blank once before.
+  const fusionRef = useRef<FusionState>(emptyFusion(MASK_SIZE));
   /**
    * Landmark jitter slides the same skin a few crop pixels between frames — more than a crease is
    * wide — which is what smears the accumulated mask into an unthinnable band. Filtering the anchors
@@ -135,7 +153,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
    * while flat skin's does not — evidence no single-frame detector can produce. It accumulates only
    * at capture commits, and earns its weight from the tilt span actually observed.
    */
-  const photometricRef = useRef<PhotometricState>(emptyPhotometric());
+  const photometricRef = useRef<PhotometricState>(emptyPhotometric(MASK_SIZE));
   const photometricFieldRef = useRef<Float32Array | null>(null);
   const photometricWeightRef = useRef(0);
   const captureRef = useRef<CaptureState>(emptyCapture());
@@ -178,6 +196,17 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const [timeToFirstTraceMs, setTimeToFirstTraceMs] = useState<number | null>(null);
   /** How long the current traces have gone without fresh evidence — the overlay fades on this. */
   const [traceEvidenceAtMs, setTraceEvidenceAtMs] = useState(0);
+  /** False while the overlay is showing raw fragments because completion named nothing this pass. */
+  const [tracesNamed, setTracesNamed] = useState(true);
+  /**
+   * Per-stage frame counts over a rolling window. The first zero is the bug — that is the whole
+   * contract, and it exists because this pipeline has twice gone blank for a reason no stage-level
+   * test could see. Written from the loop, published to React once a second.
+   */
+  const telemetryRef = useRef<ScanTelemetry>(emptyTelemetry());
+  const [telemetry, setTelemetry] = useState<Readonly<Record<TelemetryStage, number>>>(
+    () => emptyTelemetry().totals,
+  );
   /** What the last motion-compensation decision was, and how far the crop moved. For the HUD. */
   const [alignment, setAlignment] = useState<{ outcome: AlignOutcome; displacement: number; warps: number } | null>(null);
   /** Photometric channel state, for the HUD: how many poses it has, and what weight they earned. */
@@ -290,6 +319,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     }
 
     const now = performance.now();
+    recordStage(telemetryRef.current, "framesSeen", now);
     const delta = lastFrameAtRef.current === 0 ? 0 : now - lastFrameAtRef.current;
     if (delta > 0) setFps((previous) => previous * 0.9 + (1000 / delta) * 0.1);
     lastFrameAtRef.current = now;
@@ -297,6 +327,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     try {
       const result = landmarker.detectForVideo(video, now);
       const next = toObservation(result, now);
+      if (next !== null) recordStage(telemetryRef.current, "handDetected", now);
       setObservation(next);
       latestRef.current.observation = next;
 
@@ -389,6 +420,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         if (source !== null && anchors !== null) {
           latestRef.current.anchorsUsed = anchors.points.length;
           const warped = rectifyPalm(source, anchors.points);
+          if (warped !== null) {
+            recordStage(telemetryRef.current, "rectifyOk", now);
+            telemetryRef.current.anchorsUsed = anchors.points.length;
+          }
           // A crop mostly outside the frame carries no palm to segment.
           if (warped !== null && segmentationEligible(next.score, warped.coverage)) {
             lastRectifiedRef.current = warped.image;
@@ -421,6 +456,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               warps: aligned.state.warps,
             });
 
+            recordStage(telemetryRef.current, "cropsSentToWorker", now);
             // Fire and forget: the segmenter drops this frame if one is already in flight.
             const epochAtFire = fusionEpochRef.current;
             const conventionAtFire = convention;
@@ -428,6 +464,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               ?.segment(warped.image, { convention, inside: warped.inside })
               .then((mask) => {
               if (mask === null || !runningRef.current) return;
+              recordStage(telemetryRef.current, "workerReplies", performance.now());
+              let above = 0;
+              for (let i = 0; i < mask.all.length; i += 1) if (mask.all[i] > 0.45) above += 1;
+              recordStage(telemetryRef.current, "maskPixelsAboveThreshold", performance.now(), above);
               // A reset happened while this inference was in flight — its evidence belongs to the
               // pre-restart world and must not contaminate the fresh average.
               if (epochAtFire !== fusionEpochRef.current) return;
@@ -455,7 +495,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                 applyPhotometric(mask.all, photo, mask.stages.ridge, mask.width, photoWeight);
               }
 
+              const framesBefore = fusionRef.current.frames;
               fusionRef.current = fuse(fusionRef.current, mask, performance.now());
+              if (fusionRef.current.frames > framesBefore) {
+                recordStage(telemetryRef.current, "fusionFrames", performance.now());
+              }
               setFusedConfidence(fusionRef.current.confidence);
               setFusedField(fusionRef.current.ema);
               setStageMasks(
@@ -471,6 +515,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS) {
                 lastExtractAtRef.current = at;
                 const found = extractLines(fusionRef.current.ema, fusionRef.current.size);
+                recordStage(telemetryRef.current, "tracesExtracted", at, found.fragments.length);
+                recordStage(telemetryRef.current, "polylinesAfterCompletion", at, found.polys.length);
                 /*
                  * An empty extraction is a momentary miss, not news. Publishing it would clear the
                  * overlay for the ~0.4s until the next one succeeds, which reads as the lines
@@ -478,18 +524,32 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                  * by better traces; when evidence genuinely stops, the overlay fades them on
                  * `traceEvidenceAtMs` instead of dropping them at a frame boundary.
                  */
-                if (found.polys.length > 0) {
+                /*
+                 * Completion is all-or-nothing per line, and on a hard frame it can accept none —
+                 * which used to mean a blank overlay even though the detector had traced perfectly
+                 * real creases. So the raw fragments are the fallback: they ARE detected structure,
+                 * they are simply unnamed, and the overlay draws them at reduced weight to say so.
+                 * Showing the evidence unlabelled is more honest than showing nothing.
+                 */
+                const named = found.polys.length > 0;
+                const drawable = named ? found.polys : found.fragments;
+                if (drawable.length > 0) {
                   // Deliberately outside the gate: a tilted palm shows the same creases, and line
                   // evidence is a measurement rather than a claim about pose quality.
-                  onLineFeatures?.(found, at);
+                  if (named) onLineFeatures?.(found, at);
                   setExtraction(found);
-                  setPolys(found.polys);
+                  setPolys(drawable);
                   setPolySegments(
-                    ACTIVE_LINE_IDS.flatMap((id) => {
-                      const fitted = found.completion.lines[id];
-                      return fitted === undefined ? [] : [fitted.segments];
-                    }),
+                    named
+                      ? ACTIVE_LINE_IDS.flatMap((id) => {
+                          const fitted = found.completion.lines[id];
+                          return fitted === undefined ? [] : [fitted.segments];
+                        })
+                      : // Unnamed fragments carry no observed/inferred split — every point was seen.
+                        drawable.map(() => undefined),
                   );
+                  setTracesNamed(named);
+                  recordStage(telemetryRef.current, "polylinesPassedToOverlay", at, drawable.length);
                   traceEvidenceAtRef.current = at;
                   setTraceEvidenceAtMs(at);
                   if (scanStartedAtRef.current > 0) {
@@ -575,6 +635,15 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         fusionEpochRef.current += 1;
         setFusedConfidence(0);
         if (committed.done) onCaptureComplete?.(committed);
+      }
+      /*
+       * Published once a second, not per frame: this is the one number the debug HUD renders that
+       * nothing else would re-render for, and a React update at frame rate on the page that is also
+       * decoding video is exactly the cost this instrument is supposed to help avoid.
+       */
+      if (publishTelemetry(telemetryRef.current, now)) {
+        setTelemetry(telemetryRef.current.totals);
+        console.debug("[scan]", formatTelemetry(telemetryRef.current.totals));
       }
     } catch (loopError) {
       console.error("[scan] frame failed:", loopError);
@@ -725,6 +794,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     fusionEpochRef.current += 1;
     setFusedConfidence(0);
     setPolys([]);
+    setPolySegments([]);
     setExtraction(null);
     baselineHandRef.current = null;
   }, []);
@@ -743,6 +813,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     inferenceMs,
     timeToFirstTraceMs,
     traceEvidenceAtMs,
+    tracesNamed,
+    telemetry,
     alignment,
     photometric,
     fusedConfidence,

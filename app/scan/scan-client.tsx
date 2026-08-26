@@ -16,6 +16,7 @@ import {
   type ReadingSession,
 } from "@/lib/scan/reading-session";
 import { mergedMask, type CaptureState } from "@/lib/scan/capture";
+import { MASK_SIZE } from "@/lib/scan/types";
 import { HOLO_PALM_ANCHORS } from "@/components/palm-geometry";
 import { PALM_EDGE_PEAK } from "@/lib/scan/landmarks";
 import { DebugPanel } from "@/components/scan/debug-panel";
@@ -96,6 +97,8 @@ export function ScanClient() {
   const [session, setSession] = useState<ReadingSession>(emptySession);
   /** One-time enhance beats, queued rather than derived, so a lock fires its toast exactly once. */
   const [toasts, setToasts] = useState<readonly EnhanceToast[]>([]);
+  /** Reported by the overlay from inside its draw — the only count that proves pixels were painted. */
+  const [polylinesDrawn, setPolylinesDrawn] = useState(0);
   const dismissToast = useCallback((id: string) => {
     setToasts((previous) => previous.filter((toast) => toast.id !== id));
   }, []);
@@ -236,8 +239,9 @@ export function ScanClient() {
     async (capture: CaptureState) => {
       setOutcome({ status: "building" });
       try {
-        const merged = mergedMask(capture);
-        const found = extractLines(merged);
+        // MASK_SIZE, not the default: every stored pose mask is at the worker's working resolution.
+        const merged = mergedMask(capture, MASK_SIZE);
+        const found = extractLines(merged, MASK_SIZE);
         setHoloLines(projectLines(found.lines, HOLO_PALM_ANCHORS));
 
         /*
@@ -313,6 +317,8 @@ export function ScanClient() {
     inferenceMs,
     timeToFirstTraceMs,
     traceEvidenceAtMs,
+    tracesNamed,
+    telemetry,
     alignment,
     photometric,
     fusedConfidence,
@@ -413,6 +419,8 @@ export function ScanClient() {
                   confidence={fusedConfidence}
                   segments={polySegments}
                   gatePassing={quality.ok}
+                  tracesNamed={tracesNamed}
+                  onDrawn={setPolylinesDrawn}
                   evidenceAtMs={traceEvidenceAtMs}
                   mirrored={mirrored}
                   edgePeak={edgePeak}
@@ -515,6 +523,8 @@ export function ScanClient() {
         alignment={alignment}
         photometric={photometric}
         completion={extraction?.completion ?? null}
+        telemetry={telemetry}
+        polylinesDrawn={polylinesDrawn}
         diagnostics={diagnostics}
         inferenceMs={inferenceMs}
         fusedConfidence={fusedConfidence}

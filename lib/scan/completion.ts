@@ -135,8 +135,17 @@ export const CORRIDOR_SAMPLES = 64;
 /** Densification steps per Catmull-Rom segment when measuring the centreline's arc length. */
 const DENSIFY_STEPS = 16;
 
-/** Fraction of a fragment's points that must lie inside a corridor before it may seed that line. */
-export const CORRIDOR_MIN_INSIDE = 0.6;
+/**
+ * Fraction of a fragment's points that must lie inside a corridor before it may seed that line.
+ *
+ * Swept against both reference frames rather than chosen. At 0.60 a perfectly good head-line
+ * fragment on a tilted palm measured 57% inside and seeded nothing at all — the line simply did not
+ * appear. Dropping to 0.55 admits it on both frames while still producing zero fragments that claim
+ * two lines at once; the first such ambiguity only appears at 0.45. So this sits at the low end of
+ * "a real majority of this fragment is this line", with a clear margin before the value where the
+ * corridors start competing.
+ */
+export const CORRIDOR_MIN_INSIDE = 0.55;
 /**
  * Worst angular deviation a genuine line makes from its prior, as a cosine — 35°. The steepest
  * classified head line leaves the corridor tangent by ~26° over its last quarter; 35° covers that

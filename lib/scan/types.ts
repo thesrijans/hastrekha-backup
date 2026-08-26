@@ -72,6 +72,23 @@ export type ActiveLineId = (typeof ACTIVE_LINE_IDS)[number];
 export const RECTIFIED_SIZE = 256;
 
 /**
+ * Side length everything downstream of the detectors works at: the fused field, the accumulator, the
+ * traced polylines, the completed lines.
+ *
+ * The crop stays at {@link RECTIFIED_SIZE} because that is what the UNet was trained on. The classical
+ * detectors do not need those pixels — a crease is 4–6px wide at 256, so 2–3px at 128, exactly the
+ * width the Frangi scales and the black-hat radii are tuned for — and half resolution is four times
+ * cheaper.
+ *
+ * What matters is that the pipeline then STAYS here. Upsampling the fields back to 256 to threshold
+ * and thin them there was measurably destructive: on a real palm the same evidence traced 10
+ * fragments at 128 and only 8 after the round trip, completing 2 lines instead of 1. Bilinear
+ * interpolation cannot add detail, and `thin()` is a topological operation — smoothing a ridge before
+ * skeletonising it changes which pixels survive, always for the worse.
+ */
+export const MASK_SIZE = 128;
+
+/**
  * Output of a segmenter.
  *
  * The pretrained checkpoint is `n_classes=1`: it emits a single "is this a line" probability field,

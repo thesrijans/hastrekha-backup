@@ -5,6 +5,7 @@ import type { LandmarkMetrics } from "@/lib/scan/features";
 import type { RectifyResult } from "@/lib/scan/rectify";
 import { ALL_CHECKS } from "@/lib/scan/quality";
 import type { CompletionResult } from "@/lib/scan/completion";
+import { firstStall, TELEMETRY_STAGES, TELEMETRY_WINDOW_MS, type TelemetryStage } from "@/lib/scan/telemetry";
 import type { SegmenterDiagnostics } from "@/lib/scan/segmenter";
 import { RECTIFIED_SIZE, type FrameStats, type QualityVerdict } from "@/lib/scan/types";
 
@@ -65,6 +66,10 @@ export interface DebugPanelProps {
   readonly photometric: { readonly samples: number; readonly weight: number; readonly tiltSpan: number } | null;
   /** Per-line completion outcome, so a refused line says why. */
   readonly completion: CompletionResult | null;
+  /** Rolling per-stage frame counts. The first zero after a non-zero is where frames are lost. */
+  readonly telemetry: Readonly<Record<TelemetryStage, number>>;
+  /** Polylines actually stroked onto the canvas — measured at the draw, not inferred from state. */
+  readonly polylinesDrawn: number;
   /** Captures the raw frame plus its derived geometry. Null result means nothing was ready. */
   readonly onExportFrame: () => Promise<{ png: Blob; json: Blob; stamp: string } | null>;
   /** Live PALM_EDGE_PEAK used by the overlay, and its setter. Dev-only tuning. */
@@ -78,7 +83,10 @@ function paintField(
   field: Float32Array,
   ramp: readonly [number, number, number],
 ): void {
-  const image = context.createImageData(RECTIFIED_SIZE, RECTIFIED_SIZE);
+  // Sized from the field itself: the detector channels and the crop are at different resolutions,
+  // and painting one into the other's box silently shows a quarter of the data stretched over all of it.
+  const side = Math.round(Math.sqrt(field.length));
+  const image = context.createImageData(side, side);
   for (let i = 0; i < field.length; i += 1) {
     const value = Math.max(0, Math.min(1, field[i]));
     const at = i * 4;
@@ -121,6 +129,8 @@ export function DebugPanel({
   alignment,
   photometric,
   completion,
+  telemetry,
+  polylinesDrawn,
   onExportFrame,
   edgePeak,
   onEdgePeak,
@@ -219,6 +229,8 @@ export function DebugPanel({
     return () => window.clearInterval(id);
   }, []);
 
+  const stall = firstStall({ ...telemetry, polylinesDrawn });
+
   const facingReadout = quality.facingReadout;
   /** Highlighted red: a trusted label whose winding disagrees is the exact "palm rejected" symptom. */
   const windingMismatch =
@@ -267,6 +279,8 @@ export function DebugPanel({
           </div>
           {/* Fixed box whether or not there is anything to draw, so toggling never shifts the page. */}
           <div className="relative h-[256px] w-[256px] overflow-hidden rounded-lg border border-hairline bg-night">
+            {/* The crop is the largest thing drawn here; the smaller channel fields paint top-left
+                at their own scale, which is honest about the resolution they were computed at. */}
             <canvas ref={canvasRef} width={RECTIFIED_SIZE} height={RECTIFIED_SIZE} className="h-full w-full" />
             {isEmpty ? (
               <p className="absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-muted">
@@ -310,6 +324,49 @@ export function DebugPanel({
               {stats.luma.toFixed(3)} / {stats.clipped.toFixed(3)}
             </dd>
           </dl>
+
+          {/*
+           * The stage counter, and the most useful thing on this panel.
+           *
+           * Read it left to right: the counts are in pipeline order, so the FIRST zero that follows a
+           * non-zero is the stage losing frames, and everything before it is working. Two separate
+           * blackouts were diagnosed from scratch before this existed, both of them plumbing between
+           * stages that each passed their own tests.
+           */}
+          <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="font-display text-[0.7rem] uppercase tracking-[0.18em] text-muted">
+                Pipeline · last {(TELEMETRY_WINDOW_MS / 1000).toFixed(0)}s
+              </span>
+              {stall === null ? (
+                <span className="font-display text-[0.7rem] uppercase tracking-[0.18em] text-mount-glow">flowing</span>
+              ) : (
+                <span className="font-display text-[0.7rem] uppercase tracking-[0.18em] text-line-glow">
+                  stall · {stall}
+                </span>
+              )}
+            </div>
+            <ol className="flex flex-col gap-0.5">
+              {TELEMETRY_STAGES.map((stage) => {
+                const value = stage === "polylinesDrawn" ? polylinesDrawn : telemetry[stage];
+                const isStall = stage === stall;
+                return (
+                  <li
+                    key={stage}
+                    className={`flex items-baseline justify-between gap-3 text-xs ${
+                      isStall ? "text-line-glow" : value > 0 ? "text-ink" : "text-muted"
+                    }`}
+                  >
+                    <span className="truncate">
+                      {isStall ? "▸ " : "  "}
+                      {stage}
+                    </span>
+                    <span className="tabular-nums">{value}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
 
           {/*
            * Persistence and latency — the two numbers this step is judged on.

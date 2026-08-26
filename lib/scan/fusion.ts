@@ -235,8 +235,25 @@ export function alignFusion(
   if (state.frames === 0 || state.convention === null) {
     return { state: { ...state, toCrop: toCropCurrent, convention }, outcome: "first", displacement: 0 };
   }
-  if (state.convention === convention || toCropUnderPrevious === null) {
+  if (state.convention === convention) {
     return { state: { ...state, toCrop: toCropCurrent }, outcome: "aligned", displacement: 0 };
+  }
+  if (toCropUnderPrevious === null) {
+    /*
+     * The convention changed but the remap could not be solved — the caller's re-solve under the old
+     * convention returned null, which degenerate or extrapolated anchors do produce. The evidence is
+     * now addressed to a crop nothing can map, so it is dropped rather than kept.
+     *
+     * Adopting the new convention here is the part that matters. Returning "aligned" while leaving
+     * `state.convention` on the old value stalled the accumulator permanently: `maskApplies` then
+     * rejected every subsequent mask, since none of them would ever again be fired under a convention
+     * the accumulator had silently kept.
+     */
+    return {
+      state: { ...resetFusion(state), toCrop: toCropCurrent, convention },
+      outcome: "dropped",
+      displacement: Infinity,
+    };
   }
 
   const remap = conventionRemap(toCropUnderPrevious, toCropCurrent);

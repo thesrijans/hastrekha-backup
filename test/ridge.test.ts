@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { LINE_THRESHOLD } from "../lib/scan/lines";
 import {
   blackHat,
   blackHatMulti,
@@ -250,11 +251,23 @@ import {
   /* Pixel 2: agreement. max(0.35+0.15, 0.275) = 0.5. */
   assert.ok(Math.abs(fused[2] - 0.5) < 1e-6, "agreement passes through");
 
-  /* No model at all: the zero-ML path is ridge scaled by the floor weight. */
+  /*
+   * No model at all: the classical field passes through UNCHANGED.
+   *
+   * This assertion used to demand `ridge * RIDGE_FLOOR_WEIGHT`, and in doing so it locked the defect
+   * in place for five steps. Attenuating the only evidence available to 55% put it against a 0.45
+   * binarisation threshold, so a crease had to reach 0.818 to survive — and since the model runs on
+   * one frame in six, five masks in six were being crushed before anything downstream saw them. The
+   * floor is a floor *relative to the model*; with no model there is nothing to floor against.
+   */
   const ridgeOnly = combineProbabilities(null, ridge);
   for (let i = 0; i < ridge.length; i += 1) {
-    assert.ok(Math.abs(ridgeOnly[i] - ridge[i] * RIDGE_FLOOR_WEIGHT) < 1e-6, "ridge-only path scales by the floor");
+    assert.ok(Math.abs(ridgeOnly[i] - ridge[i]) < 1e-6, "ridge-only passes the classical field through");
   }
+  assert.ok(
+    Math.max(...ridgeOnly) > LINE_THRESHOLD,
+    "and a full-strength crease clears the tracing threshold without a model — the zero-ML path must work",
+  );
 
   assert.throws(() => combineProbabilities(new Float32Array(2), new Float32Array(3)), "size mismatch throws");
 }

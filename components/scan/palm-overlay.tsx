@@ -7,7 +7,7 @@ import { catmullRomSegments } from "@/lib/scan/curve";
 import { HAND_BONES, LM } from "@/lib/scan/landmark-index";
 import { coverTransform, videoNormToCanvas, videoPxToCanvas, type CoverTransform } from "@/lib/scan/view-transform";
 import type { Poly } from "@/lib/scan/lines";
-import { RECTIFIED_SIZE, type Landmark3, type Point2 } from "@/lib/scan/types";
+import { MASK_SIZE, type Landmark3, type Point2 } from "@/lib/scan/types";
 
 const LINE_GLOW = "#ff9a3c";
 const MOUNT_GLOW = "#35e0c8";
@@ -49,6 +49,14 @@ const INFERRED_ALPHA = 0.4;
  * instead lets the guidance hint sit on top legibly while the lines stay visibly present.
  */
 const GATE_FAIL_ALPHA = 0.6;
+/**
+ * Weight for raw, unnamed fragments — what is drawn when completion could not name a single line.
+ *
+ * They are real detected creases, so hiding them would throw away the only thing the pipeline knows;
+ * but they carry no claim about WHICH line they are, and drawing them at the same weight as a fitted
+ * heart line would imply one. Dimmer says "seen, not yet identified".
+ */
+const UNNAMED_ALPHA = 0.55;
 
 const ANCHOR_SET = new Set<number>(PALM_ANCHORS);
 
@@ -71,6 +79,17 @@ export interface PalmOverlayProps {
    * brightness changes — because the gate governs what may be CLAIMED, never what may be shown.
    */
   readonly gatePassing: boolean;
+  /** False when `polys` are raw fragments rather than named lines; they are drawn at lower weight. */
+  readonly tracesNamed?: boolean;
+  /**
+   * Reports how many polylines were actually STROKED this frame.
+   *
+   * The last link in the telemetry chain, and the only one that cannot be inferred from state: every
+   * count upstream can be non-zero while nothing reaches the canvas, because a transform can be null,
+   * an alpha can be zero, or a projection can put every point off-screen. Measuring the draw itself is
+   * the difference between "we published traces" and "the user saw traces".
+   */
+  readonly onDrawn?: (count: number) => void;
   /**
    * `performance.now()` of the last extraction that produced these traces. The overlay fades them
    * out from here, so persistence is measured against real elapsed time rather than frame count —
@@ -133,6 +152,8 @@ export function PalmOverlay({
   segments,
   confidence,
   gatePassing,
+  tracesNamed = true,
+  onDrawn,
   evidenceAtMs,
   mirrored,
   edgePeak,
@@ -140,6 +161,8 @@ export function PalmOverlay({
 }: PalmOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  /** Stroke count from the most recent draw, sampled by an interval rather than reported per frame. */
+  const drawnRef = useRef(0);
   // Latest props, read by the animation loop without restarting it. Synced in an effect rather than
   // during render: a render that React discards must not leave a mutated ref behind.
   const stateRef = useRef({
@@ -149,6 +172,7 @@ export function PalmOverlay({
     segments,
     confidence,
     gatePassing,
+    tracesNamed,
     evidenceAtMs,
     mirrored,
     edgePeak,
@@ -161,11 +185,23 @@ export function PalmOverlay({
       segments,
       confidence,
       gatePassing,
+      tracesNamed,
       evidenceAtMs,
       mirrored,
       edgePeak,
     };
-  }, [landmarks, videoSize, polys, segments, confidence, gatePassing, evidenceAtMs, mirrored, edgePeak]);
+  }, [landmarks, videoSize, polys, segments, confidence, gatePassing, tracesNamed, evidenceAtMs, mirrored, edgePeak]);
+
+  /*
+   * Sampled on a timer, not pushed from the draw loop: calling back at 60fps would re-render the
+   * page that owns the video element sixty times a second to report a number that changes once a
+   * second, which is precisely the kind of cost this instrument exists to make visible.
+   */
+  useEffect(() => {
+    if (onDrawn === undefined) return;
+    const id = window.setInterval(() => onDrawn(drawnRef.current), 1000);
+    return () => window.clearInterval(id);
+  }, [onDrawn]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -184,6 +220,7 @@ export function PalmOverlay({
         segments: traceSegments,
         confidence: fused,
         gatePassing: gateOk,
+        tracesNamed: named,
         evidenceAtMs: evidenceAt,
         mirrored: flip,
         edgePeak: peakOverride,
@@ -272,7 +309,14 @@ export function PalmOverlay({
       /* --------------------------- Crop-space geometry -------------------------- */
       // The homography is solved in VIDEO pixel space; the cover transform carries it to canvas.
       const quad = palmQuad(marks, transform.videoW, transform.videoH);
-      const cropToVideo: Matrix3 | null = quad === null ? null : solveHomography(canonicalQuad(RECTIFIED_SIZE), quad);
+      /*
+       * The canonical square must be built at the size the POLYLINES are expressed in, not at the
+       * crop's. They are traced from the fused field, which lives at MASK_SIZE — using the crop's 256
+       * here would map every trace through a homography twice its scale and paint the whole set into
+       * the top-left quadrant of the palm, which looks exactly like "the lines are slightly wrong"
+       * rather than like a units bug.
+       */
+      const cropToVideo: Matrix3 | null = quad === null ? null : solveHomography(canonicalQuad(MASK_SIZE), quad);
       if (cropToVideo === null) {
         rafRef.current = requestAnimationFrame(draw);
         return;
@@ -305,7 +349,8 @@ export function PalmOverlay({
       const traceAlpha =
         (TRACE_MIN_ALPHA + Math.min(1, Math.max(0, fused)) * (1 - TRACE_MIN_ALPHA)) *
         freshness *
-        (gateOk ? 1 : GATE_FAIL_ALPHA);
+        (gateOk ? 1 : GATE_FAIL_ALPHA) *
+        (named ? 1 : UNNAMED_ALPHA);
 
       if (!warming) {
         /*
@@ -313,7 +358,8 @@ export function PalmOverlay({
          * alpha. Each run overlaps its neighbour by one point, which is what keeps the joins
          * seamless — stroking [from, to) exclusively would leave a hairline gap at every boundary.
          */
-        const strokePaths = (scale: number) => {
+        let strokedThisFrame = 0;
+        const strokePaths = (scale: number, count = false) => {
           traces.forEach((poly, index) => {
             if (poly.length < 2) return;
             const runs = traceSegments?.[index] ?? [{ from: 0, to: poly.length, observed: true }];
@@ -334,6 +380,7 @@ export function PalmOverlay({
                 }
               }
               context.stroke();
+              if (count && started) strokedThisFrame += 1;
             }
           });
         };
@@ -352,8 +399,10 @@ export function PalmOverlay({
         // Pass 2: thin, bright — the core that keeps the line legible inside the bloom.
         context.shadowBlur = 0;
         context.lineWidth = 1.5;
-        strokePaths(traceAlpha);
+        strokePaths(traceAlpha, true);
         context.restore();
+        // Reported from inside the draw, after the transform and the alpha have had their say.
+        drawnRef.current = traceAlpha > 0.01 ? strokedThisFrame : 0;
       } else if (boundaryCanvas !== null) {
         /*
          * Warming up: sweep the palm so the feed never looks dead while detection ramps.
@@ -365,9 +414,9 @@ export function PalmOverlay({
          * across the knuckles, so the sweep can only ever appear on skin.
          */
         const phase = reduceMotion ? 0.5 : (timestamp % SWEEP_PERIOD_MS) / SWEEP_PERIOD_MS;
-        const bandY = phase * RECTIFIED_SIZE;
+        const bandY = phase * MASK_SIZE;
         const left = project({ x: 0, y: bandY });
-        const right = project({ x: RECTIFIED_SIZE, y: bandY });
+        const right = project({ x: MASK_SIZE, y: bandY });
         if (left !== null && right !== null) {
           context.save();
 

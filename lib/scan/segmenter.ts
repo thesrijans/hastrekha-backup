@@ -36,14 +36,22 @@ export const RIDGE_FLOOR_WEIGHT = 0.55;
  *     lineProbability = max(unet·0.7 + ridge·0.3, ridge·0.55)
  *
  * The blend term trusts the model but lets strong classical evidence nudge it; the floor term
- * guarantees a crease the model missed still surfaces at up to 0.55. With no model at all the
- * formula degenerates to ridge·0.55 — the zero-ML path that keeps the live overlay working before
- * (or without) the ONNX file. Pure, so the formula is unit-tested rather than trusted.
+ * guarantees a crease the model missed still surfaces at up to 0.55.
+ *
+ * **With no UNet the classical field passes through unchanged**, and that is not the same as
+ * evaluating the formula with `unet = 0`. Doing that scales the only evidence there is down to 55%
+ * of itself, which — against `LINE_THRESHOLD` of 0.45 — silently raises the bar a crease must clear
+ * from 0.45 to 0.818. It was the single largest reason the live overlay stayed blank: the model runs
+ * on one frame in six, so five masks in six were being attenuated into near-nothing before anything
+ * downstream ever saw them. The floor weight is a floor *relative to the model*, not a tax on going
+ * without one.
+ *
+ * Pure, so the formula is unit-tested rather than trusted.
  */
 export function combineProbabilities(unet: Float32Array | null, ridge: Float32Array): Float32Array {
   const out = new Float32Array(ridge.length);
   if (unet === null) {
-    for (let i = 0; i < ridge.length; i += 1) out[i] = ridge[i] * RIDGE_FLOOR_WEIGHT;
+    out.set(ridge);
     return out;
   }
   if (unet.length !== ridge.length) throw new Error("combineProbabilities: field sizes disagree");

@@ -119,33 +119,6 @@ function downsample2(src: Float32Array, size: number, dst: Float32Array): void {
   }
 }
 
-/**
- * Bilinear upsample back to the full crop, aligning pixel CENTRES.
- *
- * Centre alignment rather than corner alignment: getting it wrong shifts the whole field by half a
- * source pixel, which is a whole destination pixel — enough to walk a thinned line off the evidence
- * it was traced from.
- */
-function upsample2(src: Float32Array, half: number, dst: Float32Array): void {
-  const size = half * 2;
-  const last = half - 1;
-  for (let y = 0; y < size; y += 1) {
-    const sy = (y + 0.5) * 0.5 - 0.5;
-    const y0 = sy < 0 ? 0 : sy > last ? last : Math.floor(sy);
-    const y1 = y0 + 1 > last ? last : y0 + 1;
-    const fy = sy - y0 < 0 ? 0 : sy - y0 > 1 ? 1 : sy - y0;
-    for (let x = 0; x < size; x += 1) {
-      const sx = (x + 0.5) * 0.5 - 0.5;
-      const x0 = sx < 0 ? 0 : sx > last ? last : Math.floor(sx);
-      const x1 = x0 + 1 > last ? last : x0 + 1;
-      const fx = sx - x0 < 0 ? 0 : sx - x0 > 1 ? 1 : sx - x0;
-      const top = src[y0 * half + x0] + (src[y0 * half + x1] - src[y0 * half + x0]) * fx;
-      const bottom = src[y1 * half + x0] + (src[y1 * half + x1] - src[y1 * half + x0]) * fx;
-      dst[y * size + x] = top + (bottom - top) * fy;
-    }
-  }
-}
-
 interface Tier {
   readonly size: number;
   /** Resolution the classical detectors run at; equals `size` when the crop is already small. */
@@ -157,8 +130,6 @@ interface Tier {
   readonly detectorInput: Float32Array;
   readonly workFrangi: Float32Array;
   readonly workRidge: Float32Array;
-  readonly frangi: Float32Array;
-  readonly ridge: Float32Array;
   readonly workValidity: Uint8Array;
   readonly classical: Float32Array;
   readonly stack: FrameStack;
@@ -190,9 +161,7 @@ function tierFor(size: number): Tier {
     workFrangi: new Float32Array(workPlane),
     workRidge: new Float32Array(workPlane),
     workValidity: new Uint8Array(workPlane),
-    frangi: new Float32Array(plane),
-    ridge: new Float32Array(plane),
-    classical: new Float32Array(plane),
+    classical: new Float32Array(workPlane),
     stack: emptyStack(work),
     probes: [],
     fastMedian: 0,
@@ -447,8 +416,6 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       blendComposite(tier.detectorInput, composite);
       detectVessels(tier.detectorInput, work, sigmasFor(work), tier.workFrangi);
       normalizeResponses(tier.workFrangi);
-      if (work === size) tier.frangi.set(tier.workFrangi);
-      else upsample2(tier.workFrangi, work, tier.frangi);
       const fastMs = performance.now() - tFast;
 
       /*
@@ -465,8 +432,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       let ridgeTimings = tier.lastRidgeTimings;
       if (wantClassical) {
         const measured = detectRidges(workGray, work);
-        if (work === size) tier.ridge.set(measured.probability);
-        else upsample2(measured.probability, work, tier.ridge);
+        tier.workRidge.set(measured.probability);
         ridgeTimings = measured.timings;
         tier.lastRidgeTimings = measured.timings;
         tier.ridgeFrames += 1;
@@ -482,7 +448,18 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           const input = new ortMod.Tensor("float32", toNchw(rgba, size, size), [1, 3, size, size]);
           const output = await session.run({ [INPUT_NAME]: input });
           const logits = output[OUTPUT_NAME] ?? Object.values(output)[0];
-          unet = sigmoidInPlace(Float32Array.from(logits.data as Float32Array));
+          const full = sigmoidInPlace(Float32Array.from(logits.data as Float32Array));
+          /*
+           * The model runs at its native size and its answer comes DOWN to the working resolution,
+           * rather than everything else going up to meet it. One resolution downstream is the whole
+           * point: the alternative re-thresholds and re-thins an interpolated field, which loses
+           * detail that interpolation cannot put back.
+           */
+          if (work === size) unet = full;
+          else {
+            unet = new Float32Array(work * work);
+            downsample2(full, size, unet);
+          }
           unetMs = performance.now() - tStart;
         } catch (error) {
           // One failed model run loses refinement for this frame, never the frame itself — but it
@@ -501,7 +478,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
        */
       const classical = tier.classical;
       for (let i = 0; i < classical.length; i += 1) {
-        classical[i] = tier.ridge[i] > tier.frangi[i] ? tier.ridge[i] : tier.frangi[i];
+        classical[i] = tier.workRidge[i] > tier.workFrangi[i] ? tier.workRidge[i] : tier.workFrangi[i];
       }
       const fused = combineProbabilities(unet, classical);
 
@@ -529,8 +506,8 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       };
 
       // Copies, because every buffer here is reused scratch and transferring it would detach it.
-      const ridgeOut = Float32Array.from(tier.ridge);
-      const frangiOut = Float32Array.from(tier.frangi);
+      const ridgeOut = Float32Array.from(tier.workRidge);
+      const frangiOut = Float32Array.from(tier.workFrangi);
       const medianOut = composite === null ? null : Float32Array.from(composite);
       const transfers: ArrayBuffer[] = [
         fused.buffer as ArrayBuffer,
@@ -548,7 +525,8 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           ridge: ridgeOut.buffer as ArrayBuffer,
           frangi: frangiOut.buffer as ArrayBuffer,
           median: medianOut === null ? null : (medianOut.buffer as ArrayBuffer),
-          size,
+          // The size EVERY field in this message is expressed at — the working size, not the crop's.
+          size: work,
           timings,
           diagnostics: diag,
         } satisfies WorkerResponse,
