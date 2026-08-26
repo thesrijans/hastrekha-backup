@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import kbDocument from "@/data/kb/hastrekha_kb.json";
 import { evaluateRules, loadKnowledgeBase, type FiredRule, type KnowledgeBase } from "@/lib/hastrekha";
 import { emptyLatch, markGateFail, updateLatch, type LatchState } from "@/lib/scan/latch";
@@ -22,6 +22,8 @@ import { PALM_EDGE_PEAK } from "@/lib/scan/landmarks";
 import { DebugPanel } from "@/components/scan/debug-panel";
 import { LiveTicker } from "@/components/scan/live-ticker";
 import { EnhanceToasts, type EnhanceToast } from "@/components/scan/enhance-toast";
+import { DeepScanButton, DeepScanFlash } from "@/components/scan/deep-scan-flash";
+import { scanFlags } from "@/lib/scan/flags";
 import { PalmOverlay } from "@/components/scan/palm-overlay";
 import { ScanHud } from "@/components/scan/scan-hud";
 import { useHandScan } from "@/components/scan/use-hand-scan";
@@ -99,6 +101,16 @@ export function ScanClient() {
   const [toasts, setToasts] = useState<readonly EnhanceToast[]>([]);
   /** Reported by the overlay from inside its draw — the only count that proves pixels were painted. */
   const [polylinesDrawn, setPolylinesDrawn] = useState(0);
+  /** A "Gehri scan" is running. Never automatic — see components/scan/deep-scan-flash.tsx. */
+  const [flashing, setFlashing] = useState(false);
+  /**
+   * A standing refusal, separate from the feature flag.
+   *
+   * The flag says whether the capability exists; this says whether this person wants their screen
+   * flashing white at them. Someone can reasonably want the feature available and still never want it
+   * to fire, so one switch could not express both.
+   */
+  const [noFlash, setNoFlash] = useState(false);
   const dismissToast = useCallback((id: string) => {
     setToasts((previous) => previous.filter((toast) => toast.id !== id));
   }, []);
@@ -319,6 +331,14 @@ export function ScanClient() {
     traceEvidenceAtMs,
     tracesNamed,
     telemetry,
+    camera,
+    contrast,
+    flashProgress,
+    bracketFrames,
+    requestFlashFrame,
+    beginFlashSequence,
+    completeFlashSequence,
+    clearFlashEvidence,
     alignment,
     photometric,
     fusedConfidence,
@@ -360,6 +380,28 @@ export function ScanClient() {
     [],
   );
 
+  /*
+   * Subscribed rather than read once: the flag is toggled live from the debug HUD, and the button
+   * has to appear and disappear with it.
+   */
+  const photometricEnabled = useSyncExternalStore(
+    scanFlags.subscribe,
+    () => scanFlags.snapshot().photometric,
+    () => false,
+  );
+
+  const startFlash = useCallback(() => {
+    if (noFlash) return;
+    beginFlashSequence();
+    setFlashing(true);
+  }, [beginFlashSequence, noFlash]);
+
+  const handleFlashComplete = useCallback(() => {
+    setFlashing(false);
+    const result = completeFlashSequence();
+    console.debug("[scan] gehri scan:", result.frames, "frames, meanRange", result.meanRange.toFixed(4));
+  }, [completeFlashSequence]);
+
   const restart = useCallback(() => {
     setOutcome({ status: "scanning" });
     setFeedback({});
@@ -378,8 +420,10 @@ export function ScanClient() {
     setFired([]);
     setToasts([]);
     lastEvaluatedAtRef.current = 0;
+    clearFlashEvidence();
+    setFlashing(false);
     scan.restartCapture();
-  }, [scan]);
+  }, [clearFlashEvidence, scan]);
 
   if (outcome.status === "ready") {
     return (
@@ -412,6 +456,12 @@ export function ScanClient() {
             {running ? (
               <>
                 <EnhanceToasts toasts={toasts} onDismiss={dismissToast} />
+                <DeepScanFlash
+                  active={flashing}
+                  disabled={noFlash}
+                  onQuadrant={requestFlashFrame}
+                  onComplete={handleFlashComplete}
+                />
                 <PalmOverlay
                   landmarks={observation?.landmarks ?? null}
                   videoSize={videoSize}
@@ -501,6 +551,28 @@ export function ScanClient() {
                   Shuru se
                 </button>
               ) : null}
+              {/* Only offered when the capability is switched on — see lib/scan/flags.ts. */}
+              {photometricEnabled ? (
+                <>
+                  <DeepScanButton onPress={startFlash} running={flashing} disabled={noFlash} progress={flashProgress} />
+                  <button
+                    type="button"
+                    aria-pressed={noFlash}
+                    onClick={() => {
+                      setNoFlash((previous) => !previous);
+                      if (!noFlash) {
+                        setFlashing(false);
+                        clearFlashEvidence();
+                      }
+                    }}
+                    className={`rounded-full border px-5 py-2 font-display text-sm font-medium transition-colors ${
+                      noFlash ? "border-mount-glow/60 text-mount-glow" : "border-hairline text-muted hover:text-ink"
+                    }`}
+                  >
+                    {noFlash ? "Flash band hai" : "Flash band karo"}
+                  </button>
+                </>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -525,6 +597,9 @@ export function ScanClient() {
         completion={extraction?.completion ?? null}
         telemetry={telemetry}
         polylinesDrawn={polylinesDrawn}
+        camera={camera}
+        contrast={contrast}
+        bracketFrames={bracketFrames}
         diagnostics={diagnostics}
         inferenceMs={inferenceMs}
         fusedConfidence={fusedConfidence}

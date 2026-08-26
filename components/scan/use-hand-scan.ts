@@ -17,6 +17,25 @@ import {
 import { canonicalAnchors, palmAnchors, rectifyPalm, solveHomography, type RectifyResult } from "@/lib/scan/rectify";
 import { derivePalmEdge } from "@/lib/scan/landmarks";
 import { emptyStabiliser, resetStabiliser, stabiliseAnchors, type AnchorStabiliser } from "@/lib/scan/stabilise";
+import { scanFlags } from "@/lib/scan/flags";
+import {
+  applyPhotometricEvidence,
+  mergeBracket,
+  photometricEvidence,
+  BRACKET_OFFSETS,
+  type FlashFrame,
+  type FlashQuadrant,
+} from "@/lib/scan/illumination-active";
+import {
+  applyPlan,
+  correctExposure,
+  creaseContrast,
+  emptyCameraControl,
+  lumaStats,
+  nextExposureBias,
+  CONTROL_INTERVAL_MS,
+  type CameraControlState,
+} from "@/lib/scan/camera-control";
 import {
   emptyTelemetry,
   formatTelemetry,
@@ -83,6 +102,17 @@ const EXTRACT_INTERVAL_MS = 700;
 const LUMA_SIZE = 48;
 /** Clamp on the frame delta fed to the capture clock, so a backgrounded tab cannot auto-capture. */
 const MAX_FRAME_DELTA_MS = 120;
+/**
+ * How long to let the sensor settle after asking for a new exposure.
+ *
+ * `applyConstraints` resolves when the request is ACCEPTED, not when the sensor has acted on it, and
+ * a camera typically takes several frames to walk to a new exposure. Sampling before it arrives puts
+ * two nearly-identical frames in the bracket and calls them different exposures — which produces a
+ * merge that looks like it worked and contains no more information than one frame did.
+ */
+const BRACKET_SETTLE_MS = 220;
+/** How often a bracket may be taken. It costs three rectify ticks, so not on every one. */
+const BRACKET_PERIOD_MS = 4000;
 
 const IDLE_QUALITY: QualityVerdict = {
   ok: false,
@@ -204,6 +234,34 @@ export function useHandScan(options: UseHandScanOptions = {}) {
    * test could see. Written from the loop, published to React once a second.
    */
   const telemetryRef = useRef<ScanTelemetry>(emptyTelemetry());
+  /** Camera-control state. Inert unless the flag is on; see lib/scan/flags.ts for why it is opt-in. */
+  const cameraRef = useRef<CameraControlState>(emptyCameraControl());
+  const lastControlAtRef = useRef(0);
+  const controlBusyRef = useRef(false);
+  const [camera, setCamera] = useState<CameraControlState | null>(null);
+  /** Mean detector response over the palm interior — the number that says whether any of it helped. */
+  const [contrast, setContrast] = useState(0);
+  /**
+   * The quadrant the flash overlay is currently lighting, or null.
+   *
+   * Set by the overlay and consumed by the next rectify tick: the sequence needs exactly ONE frame
+   * per quadrant, and the frame must be the one the panel was actually lit for. A pull model (the
+   * loop takes a frame when it notices a request) is the only way to get that, because the loop is
+   * the only thing that knows when a usable rectified crop exists.
+   */
+  const flashRequestRef = useRef<FlashQuadrant | null>(null);
+  const flashFramesRef = useRef<FlashFrame[]>([]);
+  /** Evidence from the last completed sequence, applied to masks until the hand moves on. */
+  const flashFieldRef = useRef<Float32Array | null>(null);
+  /** Merged bracket luma, or null. */
+  const bracketFieldRef = useRef<Float32Array | null>(null);
+  const bracketRef = useRef<{ step: number; frames: Float32Array[]; startedAtMs: number }>({
+    step: -1,
+    frames: [],
+    startedAtMs: 0,
+  });
+  const [flashProgress, setFlashProgress] = useState(0);
+  const [bracketFrames, setBracketFrames] = useState(0);
   const [telemetry, setTelemetry] = useState<Readonly<Record<TelemetryStage, number>>>(
     () => emptyTelemetry().totals,
   );
@@ -430,6 +488,141 @@ export function useHandScan(options: UseHandScanOptions = {}) {
             setRectified(warped);
 
             /*
+             * ── Camera control, entirely opt-in ────────────────────────────────────────────────
+             *
+             * Nothing in this block runs with the flag off — not the metering, not the loop, not the
+             * software fallback. `correctExposure` returns the caller's own array *by identity* in
+             * that case, which is the guarantee `test/flags-identity.test.ts` pins by reference
+             * rather than by comparing values.
+             *
+             * The crop is metered rather than the frame, and that is the whole idea: the camera's
+             * own metering already sees the entire scene, and it is what got the palm wrong.
+             */
+            const flags = scanFlags.snapshot();
+
+            /*
+             * Serve a pending flash request from THIS crop, before any exposure correction — the
+             * photometric comparison is between frames lit differently, so a per-frame gamma applied
+             * to some of them and not others would be measuring the correction rather than the light.
+             */
+            const pending = flashRequestRef.current;
+            if (pending !== null && flags.photometric) {
+              flashRequestRef.current = null;
+              const luma = new Float32Array(MASK_SIZE * MASK_SIZE);
+              const step = warped.image.width / MASK_SIZE;
+              for (let y = 0; y < MASK_SIZE; y += 1) {
+                for (let x = 0; x < MASK_SIZE; x += 1) {
+                  const sx = Math.min(warped.image.width - 1, Math.round(x * step));
+                  const sy = Math.min(warped.image.height - 1, Math.round(y * step));
+                  const at = (sy * warped.image.width + sx) * 4;
+                  luma[y * MASK_SIZE + x] =
+                    (0.2126 * warped.image.data[at] +
+                      0.7152 * warped.image.data[at + 1] +
+                      0.0722 * warped.image.data[at + 2]) /
+                    255;
+                }
+              }
+              flashFramesRef.current.push({ quadrant: pending, luma });
+              setFlashProgress(flashFramesRef.current.length);
+            }
+
+            /*
+             * ── Exposure bracket ───────────────────────────────────────────────────────────────
+             *
+             * Gated on the camera having ACCEPTED an exposure constraint, not merely on the flag. On
+             * a device where the constraint was refused, the three "different" exposures are the same
+             * frame three times: the merge costs two extra rectify ticks and hands back the middle
+             * one. Doing nothing and saying so is better than spending the time and calling it HDR.
+             *
+             * The merged plane is currently produced and measured rather than fed to the detectors.
+             * That is deliberate: I have no device here on which `exposureCompensation` is settable,
+             * so the settle timing below is reasoned rather than measured, and wiring an unverified
+             * capture sequence into the detector input is exactly the kind of change that has taken
+             * this pipeline down before. The maths is unit-tested; the timing needs a real camera.
+             */
+            if (
+              flags.hdrBracket &&
+              cameraRef.current.applied.includes("exposureCompensation") &&
+              !controlBusyRef.current
+            ) {
+              const bracket = bracketRef.current;
+              if (bracket.step < 0) {
+                if (now - bracket.startedAtMs > BRACKET_PERIOD_MS) {
+                  bracketRef.current = { step: 0, frames: [], startedAtMs: now };
+                }
+              } else if (now - bracket.startedAtMs > BRACKET_SETTLE_MS) {
+                const luma = new Float32Array(MASK_SIZE * MASK_SIZE);
+                const stride = warped.image.width / MASK_SIZE;
+                for (let y = 0; y < MASK_SIZE; y += 1) {
+                  for (let x = 0; x < MASK_SIZE; x += 1) {
+                    const sx = Math.min(warped.image.width - 1, Math.round(x * stride));
+                    const sy = Math.min(warped.image.height - 1, Math.round(y * stride));
+                    const at = (sy * warped.image.width + sx) * 4;
+                    luma[y * MASK_SIZE + x] =
+                      (0.2126 * warped.image.data[at] +
+                        0.7152 * warped.image.data[at + 1] +
+                        0.0722 * warped.image.data[at + 2]) /
+                      255;
+                  }
+                }
+                bracket.frames.push(luma);
+                setBracketFrames(bracket.frames.length);
+
+                const nextStep = bracket.step + 1;
+                if (nextStep >= BRACKET_OFFSETS.length) {
+                  bracketFieldRef.current = mergeBracket(bracket.frames, MASK_SIZE);
+                  bracketRef.current = { step: -1, frames: [], startedAtMs: now };
+                } else {
+                  bracket.step = nextStep;
+                  bracket.startedAtMs = now;
+                  const track = streamRef.current?.getVideoTracks()[0];
+                  if (track !== undefined) {
+                    controlBusyRef.current = true;
+                    void applyPlan(
+                      track,
+                      cameraRef.current,
+                      cameraRef.current.bias + BRACKET_OFFSETS[nextStep],
+                      now,
+                    ).then((state) => {
+                      controlBusyRef.current = false;
+                      cameraRef.current = state;
+                    });
+                  }
+                }
+              }
+            }
+
+            let cropData = warped.image.data;
+            if (flags.cameraControl) {
+              const stats = lumaStats(warped.image.data, warped.inside);
+              const corrected = correctExposure(warped.image.data, true, stats);
+              cropData = corrected.rgba;
+
+              const track = streamRef.current?.getVideoTracks()[0];
+              const due = now - lastControlAtRef.current > CONTROL_INTERVAL_MS;
+              if (track !== undefined && due && !controlBusyRef.current) {
+                lastControlAtRef.current = now;
+                const wanted = nextExposureBias(cameraRef.current.bias, stats);
+                /*
+                 * One in flight at a time. `applyConstraints` regularly takes longer than the control
+                 * interval, and queueing them makes the camera lurch through a backlog of decisions
+                 * that were made about frames it has already moved past.
+                 */
+                controlBusyRef.current = true;
+                void applyPlan(track, { ...cameraRef.current, gamma: corrected.gamma }, wanted, now).then(
+                  (state) => {
+                    controlBusyRef.current = false;
+                    cameraRef.current = state;
+                    setCamera(state);
+                  },
+                );
+              } else if (corrected.gamma !== cameraRef.current.gamma) {
+                cameraRef.current = { ...cameraRef.current, gamma: corrected.gamma };
+                setCamera(cameraRef.current);
+              }
+            }
+
+            /*
              * Align BEFORE firing, not after the worker answers, so the accumulator is already in
              * this crop's space when the mask for this crop arrives and the blend is pixel-for-pixel.
              *
@@ -460,8 +653,17 @@ export function useHandScan(options: UseHandScanOptions = {}) {
             // Fire and forget: the segmenter drops this frame if one is already in flight.
             const epochAtFire = fusionEpochRef.current;
             const conventionAtFire = convention;
+            /*
+             * The very same ImageData when uncorrected: with the flag off `cropData` IS
+             * `warped.image.data`, so this allocates nothing and the worker receives byte-for-byte
+             * what it always received.
+             */
+            const cropForWorker =
+              cropData === warped.image.data
+                ? warped.image
+                : ({ width: warped.image.width, height: warped.image.height, data: cropData } as ImageData);
             void segmenterRef.current
-              ?.segment(warped.image, { convention, inside: warped.inside })
+              ?.segment(cropForWorker, { convention, inside: warped.inside })
               .then((mask) => {
               if (mask === null || !runningRef.current) return;
               recordStage(telemetryRef.current, "workerReplies", performance.now());
@@ -495,6 +697,17 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                 applyPhotometric(mask.all, photo, mask.stages.ridge, mask.width, photoWeight);
               }
 
+              /*
+               * Screen-flash evidence, from the last completed "Gehri scan". Same additive, gated
+               * form as the multi-pose channel: it may only raise a probability, and only where the
+               * live detectors already saw something. A sequence captured over three quarters of a
+               * second has no business originating a line on its own.
+               */
+              const flash = flashFieldRef.current;
+              if (flash !== null && mask.stages !== undefined && flash.length === mask.all.length) {
+                applyPhotometricEvidence(mask.all, flash, mask.stages.ridge);
+              }
+
               const framesBefore = fusionRef.current.frames;
               fusionRef.current = fuse(fusionRef.current, mask, performance.now());
               if (fusionRef.current.frames > framesBefore) {
@@ -508,6 +721,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   : { ...mask.stages, photometric: photometricFieldRef.current },
               );
               setStageTimings(mask.timings ?? null);
+              // Read-only measurement over a field the worker already produced — it cannot alter the
+              // pipeline, which is why it is safe to compute with the flags off and compare against.
+              if (mask.stages?.frangi != null) {
+                setContrast(creaseContrast(mask.stages.frangi, mask.width));
+              }
               setInferenceMs(mask.inferenceMs ?? 0);
               setBackend(mask.backend ?? segmenterRef.current?.backend ?? "wasm");
 
@@ -739,6 +957,52 @@ export function useHandScan(options: UseHandScanOptions = {}) {
    * flipped would not match the landmarks stored beside it. Entirely client-side — the frame goes to
    * a canvas and straight into a Blob download, and nothing is uploaded.
    */
+  /**
+   * Called by the flash overlay as each quadrant lights.
+   *
+   * Records a REQUEST rather than grabbing a frame here: this fires from a React effect, and the only
+   * place a usable rectified crop exists is inside the frame loop. The loop serves the request on its
+   * next rectify tick, which is also the first tick that could have seen the panel.
+   */
+  const requestFlashFrame = useCallback((quadrant: FlashQuadrant) => {
+    flashRequestRef.current = quadrant;
+  }, []);
+
+  /** Starts a sequence: clears whatever the last one gathered so the two are never mixed. */
+  const beginFlashSequence = useCallback(() => {
+    flashFramesRef.current = [];
+    flashRequestRef.current = null;
+    setFlashProgress(0);
+  }, []);
+
+  /**
+   * Folds a completed sequence into an evidence field.
+   *
+   * A short sequence is discarded rather than used: with fewer than three quadrants the
+   * direction-consistency term has too few positions to distinguish a groove from a moving shadow,
+   * and a channel that cannot tell those apart is worse than no channel.
+   */
+  const completeFlashSequence = useCallback(() => {
+    const frames = flashFramesRef.current;
+    flashRequestRef.current = null;
+    if (frames.length < 3) {
+      flashFieldRef.current = null;
+      setFlashProgress(0);
+      return { frames: frames.length, meanRange: 0 };
+    }
+    const result = photometricEvidence(frames, MASK_SIZE);
+    flashFieldRef.current = result.field;
+    setFlashProgress(frames.length);
+    return { frames: result.frames, meanRange: result.meanRange };
+  }, []);
+
+  /** Drops flash evidence — the hand has moved on, or the user turned the feature off. */
+  const clearFlashEvidence = useCallback(() => {
+    flashFieldRef.current = null;
+    flashFramesRef.current = [];
+    setFlashProgress(0);
+  }, []);
+
   const exportFrame = useCallback(async (): Promise<{ png: Blob; json: Blob; stamp: string } | null> => {
     const video = videoRef.current;
     if (video === null || video.videoWidth === 0 || video.videoHeight === 0) return null;
@@ -815,6 +1079,14 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     traceEvidenceAtMs,
     tracesNamed,
     telemetry,
+    camera,
+    contrast,
+    flashProgress,
+    bracketFrames,
+    requestFlashFrame,
+    beginFlashSequence,
+    completeFlashSequence,
+    clearFlashEvidence,
     alignment,
     photometric,
     fusedConfidence,

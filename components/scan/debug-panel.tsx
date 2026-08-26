@@ -1,11 +1,13 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { LandmarkMetrics } from "@/lib/scan/features";
 import type { RectifyResult } from "@/lib/scan/rectify";
 import { ALL_CHECKS } from "@/lib/scan/quality";
 import type { CompletionResult } from "@/lib/scan/completion";
 import { firstStall, TELEMETRY_STAGES, TELEMETRY_WINDOW_MS, type TelemetryStage } from "@/lib/scan/telemetry";
+import { scanFlags, SCAN_FLAG_LABELS, SCAN_FLAG_NAMES } from "@/lib/scan/flags";
+import { LUMA_TARGET_HIGH, LUMA_TARGET_LOW, type CameraControlState } from "@/lib/scan/camera-control";
 import type { SegmenterDiagnostics } from "@/lib/scan/segmenter";
 import { RECTIFIED_SIZE, type FrameStats, type QualityVerdict } from "@/lib/scan/types";
 
@@ -70,6 +72,12 @@ export interface DebugPanelProps {
   readonly telemetry: Readonly<Record<TelemetryStage, number>>;
   /** Polylines actually stroked onto the canvas — measured at the draw, not inferred from state. */
   readonly polylinesDrawn: number;
+  /** Camera-control state, or null while the flag is off. */
+  readonly camera: CameraControlState | null;
+  /** Mean detector response over the palm interior — whether any of this measurably helped. */
+  readonly contrast: number;
+  /** Frames gathered by the exposure bracket, when that flag is on and exposure is settable. */
+  readonly bracketFrames: number;
   /** Captures the raw frame plus its derived geometry. Null result means nothing was ready. */
   readonly onExportFrame: () => Promise<{ png: Blob; json: Blob; stamp: string } | null>;
   /** Live PALM_EDGE_PEAK used by the overlay, and its setter. Dev-only tuning. */
@@ -131,6 +139,9 @@ export function DebugPanel({
   completion,
   telemetry,
   polylinesDrawn,
+  camera,
+  contrast,
+  bracketFrames,
   onExportFrame,
   edgePeak,
   onEdgePeak,
@@ -230,6 +241,12 @@ export function DebugPanel({
   }, []);
 
   const stall = firstStall({ ...telemetry, polylinesDrawn });
+  /*
+   * Subscribed rather than mirrored into state: the frame loop reads these dozens of times a second
+   * and must never re-render anything to do so, while this panel must re-render when they change.
+   */
+  const flags = useSyncExternalStore(scanFlags.subscribe, scanFlags.snapshot, scanFlags.snapshot);
+  const lumaText = `${(stats.luma * 255).toFixed(0)} · clip ${(stats.clipped * 100).toFixed(2)}%`;
 
   const facingReadout = quality.facingReadout;
   /** Highlighted red: a trusted label whose winding disagrees is the exact "palm rejected" symptom. */
@@ -324,6 +341,79 @@ export function DebugPanel({
               {stats.luma.toFixed(3)} / {stats.clipped.toFixed(3)}
             </dd>
           </dl>
+
+          {/*
+           * Feature flags and what turning them on did.
+           *
+           * Live toggles rather than a build constant, because the comparison worth making is
+           * before-and-after on the SAME hand in the SAME light, seconds apart — a page reload loses
+           * both. Crease contrast is printed beside them so the effect is a number rather than an
+           * impression; it is a read-only reduction over a field the worker already produced, so it
+           * cannot itself change what the pipeline does.
+           */}
+          <div className="flex flex-col gap-2 border-t border-hairline pt-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="font-display text-[0.7rem] uppercase tracking-[0.18em] text-muted">
+                Experiments
+              </span>
+              <span className="font-display text-xs tabular-nums text-ink">
+                crease {contrast.toFixed(4)}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {SCAN_FLAG_NAMES.map((name) => {
+                const on = flags[name];
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => scanFlags.toggle(name)}
+                    className={`rounded-full border px-2.5 py-1 font-display text-[0.7rem] uppercase tracking-[0.14em] transition-colors ${
+                      on
+                        ? "border-mount-glow/60 bg-mount-glow/10 text-mount-glow"
+                        : "border-hairline text-muted hover:text-ink"
+                    }`}
+                  >
+                    {SCAN_FLAG_LABELS[name]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {camera !== null ? (
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 pt-1 text-xs">
+                <dt className="text-muted">exposure bias</dt>
+                <dd className="tabular-nums text-ink">
+                  {camera.bias.toFixed(2)}
+                  {camera.gamma > 1 ? ` · gamma ${camera.gamma.toFixed(2)}` : ""}
+                </dd>
+                <dt className="text-muted">crop luma</dt>
+                <dd className="tabular-nums text-ink">
+                  {lumaText}
+                  <span className="text-muted"> (target {LUMA_TARGET_LOW}–{LUMA_TARGET_HIGH})</span>
+                </dd>
+                <dt className="text-muted">bracket</dt>
+                <dd className="tabular-nums text-ink">{bracketFrames} / 3 frames</dd>
+                <dt className="text-muted">accepted</dt>
+                <dd className={camera.applied.length > 0 ? "text-ink" : "text-line-glow"}>
+                  {camera.applied.length > 0 ? camera.applied.join(", ") : "none — software fallback"}
+                </dd>
+                {camera.unsupported.length > 0 ? (
+                  <>
+                    <dt className="text-muted">unsupported</dt>
+                    <dd className="break-words text-muted">{camera.unsupported.join(", ")}</dd>
+                  </>
+                ) : null}
+                {camera.lastError !== null ? (
+                  <>
+                    <dt className="text-muted">camera error</dt>
+                    <dd className="break-words text-line-glow">{camera.lastError}</dd>
+                  </>
+                ) : null}
+              </dl>
+            ) : null}
+          </div>
 
           {/*
            * The stage counter, and the most useful thing on this panel.
