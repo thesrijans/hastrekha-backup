@@ -94,13 +94,72 @@ const CLASSICAL_STRIDE = 3;
 /** How often the UNet runs. It is the most expensive stage and the least time-critical. */
 const UNET_STRIDE = 6;
 
+/**
+ * Side length the classical detectors actually work at.
+ *
+ * The crop arrives at the UNet's native 256² because the model was trained there and nothing else in
+ * the pipeline should have to care about resolution. But the classical chain does not need those
+ * pixels: a palm crease is 4–6px wide at 256, so halving still leaves 2–3px, which is exactly the
+ * width the Frangi scales and the black-hat radii are tuned for. Measured, the difference is not
+ * marginal — the worst frame costs 352ms at 256² against 139ms at 128², and the honest reason to
+ * care is that inference slower than the rectify tick used to have its result discarded outright.
+ */
+const WORK_SIZE = 128;
+
+/** Box-average 2×2 into a half-size plane. The antialias prefilter a plain decimation would skip. */
+function downsample2(src: Float32Array, size: number, dst: Float32Array): void {
+  const half = size >> 1;
+  for (let y = 0; y < half; y += 1) {
+    const a = 2 * y * size;
+    const b = a + size;
+    for (let x = 0; x < half; x += 1) {
+      const at = 2 * x;
+      dst[y * half + x] = (src[a + at] + src[a + at + 1] + src[b + at] + src[b + at + 1]) * 0.25;
+    }
+  }
+}
+
+/**
+ * Bilinear upsample back to the full crop, aligning pixel CENTRES.
+ *
+ * Centre alignment rather than corner alignment: getting it wrong shifts the whole field by half a
+ * source pixel, which is a whole destination pixel — enough to walk a thinned line off the evidence
+ * it was traced from.
+ */
+function upsample2(src: Float32Array, half: number, dst: Float32Array): void {
+  const size = half * 2;
+  const last = half - 1;
+  for (let y = 0; y < size; y += 1) {
+    const sy = (y + 0.5) * 0.5 - 0.5;
+    const y0 = sy < 0 ? 0 : sy > last ? last : Math.floor(sy);
+    const y1 = y0 + 1 > last ? last : y0 + 1;
+    const fy = sy - y0 < 0 ? 0 : sy - y0 > 1 ? 1 : sy - y0;
+    for (let x = 0; x < size; x += 1) {
+      const sx = (x + 0.5) * 0.5 - 0.5;
+      const x0 = sx < 0 ? 0 : sx > last ? last : Math.floor(sx);
+      const x1 = x0 + 1 > last ? last : x0 + 1;
+      const fx = sx - x0 < 0 ? 0 : sx - x0 > 1 ? 1 : sx - x0;
+      const top = src[y0 * half + x0] + (src[y0 * half + x1] - src[y0 * half + x0]) * fx;
+      const bottom = src[y1 * half + x0] + (src[y1 * half + x1] - src[y1 * half + x0]) * fx;
+      dst[y * size + x] = top + (bottom - top) * fy;
+    }
+  }
+}
+
 interface Tier {
   readonly size: number;
+  /** Resolution the classical detectors run at; equals `size` when the crop is already small. */
+  readonly work: number;
   readonly gray: Float32Array;
+  /** Half-resolution working planes. Identical to the full ones when no downscale is happening. */
+  readonly workGray: Float32Array;
   readonly normalised: Float32Array;
   readonly detectorInput: Float32Array;
+  readonly workFrangi: Float32Array;
+  readonly workRidge: Float32Array;
   readonly frangi: Float32Array;
   readonly ridge: Float32Array;
+  readonly workValidity: Uint8Array;
   readonly classical: Float32Array;
   readonly stack: FrameStack;
   readonly probes: number[];
@@ -118,15 +177,23 @@ function tierFor(size: number): Tier {
   const cached = tiers.get(size);
   if (cached !== undefined) return cached;
   const plane = size * size;
+  // Only halve when there is something to halve; a crop already at the working size stays put.
+  const work = size >= WORK_SIZE * 2 && size % 2 === 0 ? size >> 1 : size;
+  const workPlane = work * work;
   const fresh: Tier = {
     size,
+    work,
     gray: new Float32Array(plane),
-    normalised: new Float32Array(plane),
-    detectorInput: new Float32Array(plane),
+    workGray: work === size ? new Float32Array(0) : new Float32Array(workPlane),
+    normalised: new Float32Array(workPlane),
+    detectorInput: new Float32Array(workPlane),
+    workFrangi: new Float32Array(workPlane),
+    workRidge: new Float32Array(workPlane),
+    workValidity: new Uint8Array(workPlane),
     frangi: new Float32Array(plane),
     ridge: new Float32Array(plane),
     classical: new Float32Array(plane),
-    stack: emptyStack(size),
+    stack: emptyStack(work),
     probes: [],
     fastMedian: 0,
     fastStride: 1,
@@ -344,13 +411,44 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       /* ---------------------------- Fast tier ---------------------------- */
       grayInto(rgba, tier.gray);
       const tFast = performance.now();
-      const illumination = normaliseIllumination(tier.gray, size, tier.normalised, validityFrom(message));
+
+      /*
+       * Everything classical runs at `tier.work`, then comes back up. The crop keeps the UNet's
+       * native size so the model still sees what it was trained on; the detectors that do not care
+       * about those pixels stop paying for them.
+       */
+      const work = tier.work;
+      let workGray = tier.gray;
+      let validity = validityFrom(message);
+      if (work !== size) {
+        downsample2(tier.gray, size, tier.workGray);
+        workGray = tier.workGray;
+        if (validity !== null) {
+          // A destination pixel counts as valid only if all four sources were — the conservative
+          // direction, because an invalid pixel is black and would drag its neighbourhood dark.
+          const full = validity;
+          for (let y = 0; y < work; y += 1) {
+            const a = 2 * y * size;
+            const b = a + size;
+            for (let x = 0; x < work; x += 1) {
+              const at = 2 * x;
+              tier.workValidity[y * work + x] =
+                full[a + at] & full[a + at + 1] & full[b + at] & full[b + at + 1];
+            }
+          }
+          validity = tier.workValidity;
+        }
+      }
+
+      const illumination = normaliseIllumination(workGray, work, tier.normalised, validity);
       pushFrame(tier.stack, illumination.out, message.convention, illumination.bypassed);
       const composite = compositeStack(tier.stack);
       tier.detectorInput.set(illumination.out);
       blendComposite(tier.detectorInput, composite);
-      detectVessels(tier.detectorInput, size, sigmasFor(size), tier.frangi);
-      normalizeResponses(tier.frangi);
+      detectVessels(tier.detectorInput, work, sigmasFor(work), tier.workFrangi);
+      normalizeResponses(tier.workFrangi);
+      if (work === size) tier.frangi.set(tier.workFrangi);
+      else upsample2(tier.workFrangi, work, tier.frangi);
       const fastMs = performance.now() - tFast;
 
       /*
@@ -366,8 +464,9 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       const wantClassical = frameIndex % tier.classicalStride === 0 || tier.ridgeFrames === 0;
       let ridgeTimings = tier.lastRidgeTimings;
       if (wantClassical) {
-        const measured = detectRidges(tier.gray, size);
-        tier.ridge.set(measured.probability);
+        const measured = detectRidges(workGray, work);
+        if (work === size) tier.ridge.set(measured.probability);
+        else upsample2(measured.probability, work, tier.ridge);
         ridgeTimings = measured.timings;
         tier.lastRidgeTimings = measured.timings;
         tier.ridgeFrames += 1;
@@ -424,6 +523,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         firstInferenceMs: diag.firstInferenceMs ?? timings.total,
         fastTierMs: tier.fastMedian,
         fastTierStride: tier.fastStride,
+        workSize: tier.work,
         classicalStride: tier.classicalStride,
         stackFilled: tier.stack.filled,
       };

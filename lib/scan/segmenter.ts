@@ -89,6 +89,8 @@ export interface SegmenterDiagnostics {
   /** Measured median cost of the every-frame detector tier, and the cadence that measurement chose. */
   readonly fastTierMs: number;
   readonly fastTierStride: number;
+  /** Resolution the classical detectors ran at, which may be half the crop's. */
+  readonly workSize: number;
   readonly classicalStride: number;
   /** Frames currently held in the temporal composite stack. */
   readonly stackFilled: number;
@@ -113,6 +115,7 @@ export function emptyDiagnostics(modelPath: string, wasmPath: string): Segmenter
     dropped: 0,
     fastTierMs: 0,
     fastTierStride: 1,
+    workSize: 0,
     classicalStride: 1,
     stackFilled: 0,
     lastError: null,

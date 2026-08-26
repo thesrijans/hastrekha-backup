@@ -3,15 +3,24 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import kbDocument from "@/data/kb/hastrekha_kb.json";
-import { evaluateRules, loadKnowledgeBase, type FeatureBag, type FiredRule, type KnowledgeBase } from "@/lib/hastrekha";
+import { evaluateRules, loadKnowledgeBase, type FiredRule, type KnowledgeBase } from "@/lib/hastrekha";
 import { emptyLatch, markGateFail, updateLatch, type LatchState } from "@/lib/scan/latch";
 import type { LandmarkFeatureResult } from "@/lib/scan/features";
-import { extractLines, projectLines } from "@/lib/scan/lines";
+import { extractLines, projectLines, type LineExtraction } from "@/lib/scan/lines";
+import {
+  emptySession,
+  observe,
+  observeLines,
+  sessionBag,
+  LINE_LOCKED_COPY,
+  type ReadingSession,
+} from "@/lib/scan/reading-session";
 import { mergedMask, type CaptureState } from "@/lib/scan/capture";
 import { HOLO_PALM_ANCHORS } from "@/components/palm-geometry";
 import { PALM_EDGE_PEAK } from "@/lib/scan/landmarks";
 import { DebugPanel } from "@/components/scan/debug-panel";
 import { LiveTicker } from "@/components/scan/live-ticker";
+import { EnhanceToasts, type EnhanceToast } from "@/components/scan/enhance-toast";
 import { PalmOverlay } from "@/components/scan/palm-overlay";
 import { ScanHud } from "@/components/scan/scan-hud";
 import { useHandScan } from "@/components/scan/use-hand-scan";
@@ -23,6 +32,15 @@ import type { FeedbackState, ReadingResponse, Verdict } from "@/app/read/reading
  * which is what lets the ticker run without a round trip per frame.
  */
 const KB: KnowledgeBase = loadKnowledgeBase(kbDocument);
+
+/**
+ * How often the whole KB is re-evaluated against the session bag.
+ *
+ * Matched to the line-extraction cadence rather than the landmark one: landmark features settle
+ * within the first second and then barely move, so re-deriving rules at 160ms spends most of its
+ * effort confirming what it already knew, on the one page in the app that is also decoding video.
+ */
+const RULE_EVAL_INTERVAL_MS = 700;
 
 /**
  * The scan does not read mounts — prominence is fleshy relief, which the line model cannot see, so
@@ -64,6 +82,23 @@ export function ScanClient() {
 
   const isMountedRef = useRef(true);
   const landmarkBagRef = useRef<Record<string, unknown>>({});
+  /**
+   * The monotonic session. Held in a ref as well as state because the frame callbacks fire from the
+   * rAF loop and must fold into the LATEST session, not whichever one their closure captured.
+   */
+  const sessionRef = useRef<ReadingSession>(emptySession());
+  const lastEvaluatedAtRef = useRef(0);
+  /** Every rule that has ever fired, by id. A card's text must outlive the evidence that raised it. */
+  const retainedRulesRef = useRef<Map<string, FiredRule>>(new Map());
+  /** Ids the CURRENT bag supports. A held rule outside this set is shown, but marked as revised. */
+  const currentRuleIdsRef = useRef<ReadonlySet<string>>(new Set());
+  const [currentRuleIds, setCurrentRuleIds] = useState<ReadonlySet<string>>(new Set());
+  const [session, setSession] = useState<ReadingSession>(emptySession);
+  /** One-time enhance beats, queued rather than derived, so a lock fires its toast exactly once. */
+  const [toasts, setToasts] = useState<readonly EnhanceToast[]>([]);
+  const dismissToast = useCallback((id: string) => {
+    setToasts((previous) => previous.filter((toast) => toast.id !== id));
+  }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -85,16 +120,112 @@ export function ScanClient() {
     };
   }, []);
 
+  /**
+   * Re-evaluates the rules from the SESSION's bag rather than this frame's.
+   *
+   * That single indirection is what stops the ticker thrashing: the session only ever improves, so
+   * rules accumulate instead of flickering in and out with whatever the newest frame happened to
+   * measure. It also means the reading the user watches assemble is the one that will be posted.
+   */
+  /**
+   * Folds an observation into the session, and — separately — decides whether it may advance a claim.
+   *
+   * Three cadences meet here and each has to keep its own, which is the whole reason this is one
+   * function with two flags rather than three call sites:
+   *
+   *  - **Folding** happens on every observation. Evidence is a measurement, and measurements are not
+   *    gated on pose quality.
+   *  - **Rule evaluation** is throttled. The bag grows across the whole scan, so re-walking the KB
+   *    against it is not cheap, and this page is simultaneously decoding video — a long main-thread
+   *    block here is a dropped frame the user can see.
+   *  - **Latching** ticks once per gate-passing frame, at the frame's own rate, using whatever the
+   *    last evaluation found. It has to: `updateLatch` promotes by COUNTING consecutive passes, not
+   *    by elapsed time, so pacing it with the evaluation would have quietly stretched `confirmAfter`
+   *    from about two thirds of a second to nearly three.
+   */
+  const foldSession = useCallback(
+    (next: ReadingSession, options: { readonly latch: boolean; readonly force?: boolean }) => {
+      sessionRef.current = next;
+      setSession(next);
+
+      const at = performance.now();
+      if (options.force === true || at - lastEvaluatedAtRef.current >= RULE_EVAL_INTERVAL_MS) {
+        lastEvaluatedAtRef.current = at;
+        const evaluation = evaluateRules(KB, sessionBag(next), {
+          includeSensitive: false,
+          relaxMissingMounts: true,
+        });
+
+        /*
+         * Rule BODIES are retained forever, even for rules the current bag no longer supports.
+         *
+         * The ticker looks a rule's text up by id; without this, a rule that stopped firing — which
+         * a monotonic bag still permits, when better evidence replaces a value — would have its card
+         * silently disappear. "Once latched, never withdrawn" has to mean the card survives, not
+         * merely that the id stays in a set nothing can render.
+         */
+        for (const item of evaluation.fired) retainedRulesRef.current.set(item.rule.rule_id, item);
+        currentRuleIdsRef.current = new Set(evaluation.fired.map((item) => item.rule.rule_id));
+        setFired([...retainedRulesRef.current.values()]);
+        setCurrentRuleIds(currentRuleIdsRef.current);
+      }
+
+      // The gate governs claims, never evidence. Latching is a claim.
+      if (options.latch) {
+        setLatch((previous) => updateLatch(previous, [...currentRuleIdsRef.current]));
+      }
+    },
+    [],
+  );
+
   /** Fires only for gate-passing frames — enforced in the hook, not here. */
-  const onFeatures = useCallback((result: LandmarkFeatureResult) => {
-    landmarkBagRef.current = result.features as Record<string, unknown>;
-    const evaluation = evaluateRules(KB, result.features as FeatureBag, {
-      includeSensitive: false,
-      relaxMissingMounts: true,
-    });
-    setFired(evaluation.fired);
-    setLatch((previous) => updateLatch(previous, evaluation.fired.map((item) => item.rule.rule_id)));
-  }, []);
+  const onFeatures = useCallback(
+    (result: LandmarkFeatureResult, quality: number) => {
+      landmarkBagRef.current = result.features as Record<string, unknown>;
+      // The gate score IS this observation's confidence: it is exactly how much the frame is trusted.
+      const { session: next } = observe(sessionRef.current, result.features as Record<string, unknown>, {
+        source: "landmark",
+        nowMs: performance.now(),
+        confidence: quality,
+      });
+      // Gate-passing by construction — the hook only calls this for frames that passed.
+      foldSession(next, { latch: true });
+    },
+    [foldSession],
+  );
+
+  /**
+   * Line evidence, on any frame with a hand — gate or no gate.
+   *
+   * A locked line is a one-time premium beat, so the toast is queued here rather than derived from
+   * state during render: a line locks once, and re-deriving "is it locked" every render would fire
+   * the toast again on every unrelated update.
+   */
+  const onLineFeatures = useCallback(
+    (extraction: LineExtraction, nowMs: number) => {
+      const { session: next, delta } = observeLines(
+        sessionRef.current,
+        extraction.features as Record<string, unknown>,
+        extraction.completion,
+        "line",
+        nowMs,
+      );
+      if (delta.locked.length > 0) {
+        setToasts((previous) => [
+          ...previous,
+          ...delta.locked.map((id) => ({ id: `${id}-${nowMs}`, text: LINE_LOCKED_COPY[id] })),
+        ]);
+      }
+      /*
+       * `latch: false`, and this is the seam the whole design turns on. Line evidence is
+       * deliberately gate-independent — a tilted palm shows the same creases — so it must reach the
+       * session. But a frame that failed the gate has not earned the right to advance a rule toward
+       * "confirmed", which is a claim made to the user. Evidence in, claims out.
+       */
+      foldSession(next, { latch: false });
+    },
+    [foldSession],
+  );
 
   /** Every failing frame. After 2s of these the latch decays and confirmations become "captured". */
   const onGateFail = useCallback((nowMs: number) => {
@@ -109,9 +240,24 @@ export function ScanClient() {
         const found = extractLines(merged);
         setHoloLines(projectLines(found.lines, HOLO_PALM_ANCHORS));
 
-        const features = mergeBags(
-          landmarkBagRef.current,
+        /*
+         * The merged-mask extraction is the best-evidenced observation of the whole scan — every
+         * pose's mask at once — but it enters the session on exactly the same terms as every other
+         * observation rather than overwriting it. It wins where it is genuinely more confident, which
+         * on merged evidence is most places, and loses where it is not. What posts is therefore the
+         * bag the user watched build, with the strongest available evidence folded in last.
+         */
+        const { session: finalSession } = observeLines(
+          sessionRef.current,
           found.features as Record<string, unknown>,
+          found.completion,
+          "capture",
+          performance.now(),
+        );
+        foldSession(finalSession, { latch: false, force: true });
+
+        const features = mergeBags(
+          sessionBag(finalSession) as Record<string, unknown>,
           birthDate === null ? undefined : { user: { birth_date: birthDate } },
         );
 
@@ -132,7 +278,7 @@ export function ScanClient() {
         if (isMountedRef.current) setOutcome({ status: "failed", message: "Network thoda dagmaga gaya." });
       }
     },
-    [birthDate],
+    [birthDate, foldSession],
   );
 
   /** The hook object is stable across renders, so the completion callback can reach stop(). */
@@ -148,7 +294,7 @@ export function ScanClient() {
     [buildReading],
   );
 
-  const scan = useHandScan({ onFeatures, onGateFail, onCaptureComplete });
+  const scan = useHandScan({ onFeatures, onGateFail, onLineFeatures, onCaptureComplete });
   // Synced in an effect, not during render — a render React discards must not mutate the ref.
   useEffect(() => {
     scanRef.current = scan;
@@ -213,6 +359,19 @@ export function ScanClient() {
     setFeedback({});
     setHoloLines({});
     setLatch(emptyLatch());
+    /*
+     * A restart is a new reading, so the session goes with it. Without this the accumulator carried
+     * the previous attempt's evidence and depth into the new scan — and because the bag is monotonic
+     * that stale evidence could never be displaced by anything the new scan measured more faintly.
+     */
+    sessionRef.current = emptySession();
+    setSession(emptySession());
+    retainedRulesRef.current = new Map();
+    currentRuleIdsRef.current = new Set();
+    setCurrentRuleIds(new Set());
+    setFired([]);
+    setToasts([]);
+    lastEvaluatedAtRef.current = 0;
     scan.restartCapture();
   }, [scan]);
 
@@ -246,12 +405,14 @@ export function ScanClient() {
 
             {running ? (
               <>
+                <EnhanceToasts toasts={toasts} onDismiss={dismissToast} />
                 <PalmOverlay
                   landmarks={observation?.landmarks ?? null}
                   videoSize={videoSize}
                   polys={polys}
                   confidence={fusedConfidence}
                   segments={polySegments}
+                  gatePassing={quality.ok}
                   evidenceAtMs={traceEvidenceAtMs}
                   mirrored={mirrored}
                   edgePeak={edgePeak}
@@ -336,7 +497,7 @@ export function ScanClient() {
           ) : null}
         </div>
 
-        <LiveTicker fired={fired} latch={latch} gatePassing={quality.ok} hint={quality.hint} />
+        <LiveTicker fired={fired} latch={latch} gatePassing={quality.ok} hint={quality.hint} depth={session.depth} currentRuleIds={currentRuleIds} />
       </div>
 
       <DebugPanel

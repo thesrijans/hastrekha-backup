@@ -288,6 +288,26 @@ export function alignFusion(
 }
 
 /**
+ * Whether a mask fired some frames ago may still be blended into `state`.
+ *
+ * This guard exists because inference is asynchronous and the accumulator can move underneath an
+ * in-flight request. What it must compare is **which crop space the mask is addressed to**, and that
+ * is the anchor convention — not the particular homography the frame was rectified with. Two frames
+ * solved under the same convention put the same skin on the same pixel however the hand moved (see
+ * {@link alignFusion}), so a mask from three frames ago is still perfectly registered.
+ *
+ * Comparing the *matrix* instead was a real and total regression: `alignFusion` mints a fresh
+ * `toCrop` on every rectify tick, so any inference slower than the rectify interval was stale by the
+ * time it answered and was thrown away — every single time, not occasionally. Simulated against the
+ * real fusion code at a 300ms inference and a 200ms tick, the matrix guard fused 0 masks and
+ * discarded 13; this one fuses all 13. The overlay stayed blank on exactly the devices where
+ * inference was slowest, which is the opposite of the intended behaviour.
+ */
+export function maskApplies(state: FusionState, conventionAtFire: number): boolean {
+  return state.convention === null || state.convention === conventionAtFire;
+}
+
+/**
  * Flags destination pixels whose source lay outside the old crop.
  *
  * Those pixels have no prior to average against, so {@link fuse} seeds them outright from the next

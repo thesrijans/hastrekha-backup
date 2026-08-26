@@ -40,6 +40,15 @@ const TRACE_DECAY_FLOOR = 0.15;
  * the continuity is the thing that makes it read as a line at all.
  */
 const INFERRED_ALPHA = 0.4;
+/**
+ * How much of full brightness the traces keep while the gate is failing.
+ *
+ * Not zero, and that is the whole point. Detection is gate-independent — evidence accumulates on any
+ * frame with a hand in it — so hiding the traces during a failing pose would hide something the
+ * pipeline genuinely knows, and would read as "the scan lost my lines" when it has not. Dimming
+ * instead lets the guidance hint sit on top legibly while the lines stay visibly present.
+ */
+const GATE_FAIL_ALPHA = 0.6;
 
 const ANCHOR_SET = new Set<number>(PALM_ANCHORS);
 
@@ -57,6 +66,11 @@ export interface PalmOverlayProps {
   readonly segments?: readonly (readonly { readonly from: number; readonly to: number; readonly observed: boolean }[] | undefined)[];
   /** 0–1 fused confidence; scales trace opacity. The sweep plays only when there is no trace at all. */
   readonly confidence: number;
+  /**
+   * Whether the quality gate is currently passing. Traces are drawn either way — only their
+   * brightness changes — because the gate governs what may be CLAIMED, never what may be shown.
+   */
+  readonly gatePassing: boolean;
   /**
    * `performance.now()` of the last extraction that produced these traces. The overlay fades them
    * out from here, so persistence is measured against real elapsed time rather than frame count —
@@ -118,6 +132,7 @@ export function PalmOverlay({
   polys,
   segments,
   confidence,
+  gatePassing,
   evidenceAtMs,
   mirrored,
   edgePeak,
@@ -127,10 +142,30 @@ export function PalmOverlay({
   const rafRef = useRef<number | null>(null);
   // Latest props, read by the animation loop without restarting it. Synced in an effect rather than
   // during render: a render that React discards must not leave a mutated ref behind.
-  const stateRef = useRef({ landmarks, videoSize, polys, segments, confidence, evidenceAtMs, mirrored, edgePeak });
+  const stateRef = useRef({
+    landmarks,
+    videoSize,
+    polys,
+    segments,
+    confidence,
+    gatePassing,
+    evidenceAtMs,
+    mirrored,
+    edgePeak,
+  });
   useEffect(() => {
-    stateRef.current = { landmarks, videoSize, polys, segments, confidence, evidenceAtMs, mirrored, edgePeak };
-  }, [landmarks, videoSize, polys, segments, confidence, evidenceAtMs, mirrored, edgePeak]);
+    stateRef.current = {
+      landmarks,
+      videoSize,
+      polys,
+      segments,
+      confidence,
+      gatePassing,
+      evidenceAtMs,
+      mirrored,
+      edgePeak,
+    };
+  }, [landmarks, videoSize, polys, segments, confidence, gatePassing, evidenceAtMs, mirrored, edgePeak]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -148,6 +183,7 @@ export function PalmOverlay({
         polys: traces,
         segments: traceSegments,
         confidence: fused,
+        gatePassing: gateOk,
         evidenceAtMs: evidenceAt,
         mirrored: flip,
         edgePeak: peakOverride,
@@ -267,7 +303,9 @@ export function PalmOverlay({
           : TRACE_DECAY_FLOOR + (1 - TRACE_DECAY_FLOOR) * Math.pow(0.5, age / TRACE_HALF_LIFE_MS);
       const warming = traces.length === 0;
       const traceAlpha =
-        (TRACE_MIN_ALPHA + Math.min(1, Math.max(0, fused)) * (1 - TRACE_MIN_ALPHA)) * freshness;
+        (TRACE_MIN_ALPHA + Math.min(1, Math.max(0, fused)) * (1 - TRACE_MIN_ALPHA)) *
+        freshness *
+        (gateOk ? 1 : GATE_FAIL_ALPHA);
 
       if (!warming) {
         /*

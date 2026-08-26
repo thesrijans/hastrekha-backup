@@ -85,15 +85,29 @@ export function poseProgressOf(state: CaptureState): number {
 }
 
 /**
- * Per-pixel maximum across every captured pose.
+ * Per-pixel maximum across every captured pose **of the same hand**.
  *
  * Max, not mean: averaging would punish a line for being invisible in the four views that could not
  * see it, which is precisely backwards.
+ *
+ * OTHER_HAND is excluded, and that is not an optimisation. The guided sequence deliberately asks for
+ * the second hand, but its creases are a different palm's — merging them into the same rectified crop
+ * produces a mask that is a union of two people's-worth of lines, and every measurement taken from it
+ * afterwards describes neither hand. The second hand is worth capturing; it is not worth pretending
+ * it is more views of the first.
  */
 export function mergedMask(state: CaptureState, size: number = RECTIFIED_SIZE): Float32Array {
   const out = new Float32Array(size * size);
-  for (const record of state.records) mergeMax(out, record.mask);
+  for (const record of state.records) {
+    if (record.pose === "OTHER_HAND") continue;
+    mergeMax(out, record.mask);
+  }
   return out;
+}
+
+/** The second hand's own mask, kept apart from {@link mergedMask} for the reason stated there. */
+export function otherHandMask(state: CaptureState): Float32Array | null {
+  return state.records.find((record) => record.pose === "OTHER_HAND")?.mask ?? null;
 }
 
 /** Best single-pose confidence — a floor on how much the merged mask can be trusted. */

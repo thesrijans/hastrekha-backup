@@ -36,6 +36,7 @@ import {
   emptyFusion,
   fuse,
   markHandSeen,
+  maskApplies,
   resetFusion,
   shouldReset,
   type AlignOutcome,
@@ -85,15 +86,24 @@ export interface UseHandScanOptions {
    * recomputed. Firing on a failing frame is what previously let rules confirm off the back of a
    * hand, so the filter lives here rather than at the call site.
    */
-  readonly onFeatures?: (result: LandmarkFeatureResult) => void;
+  readonly onFeatures?: (result: LandmarkFeatureResult, quality: number) => void;
   /** Called for every frame that fails the gate, so the latch can decay. */
   readonly onGateFail?: (nowMs: number) => void;
+  /**
+   * Called whenever an extraction produces lines — on ANY frame with a hand, gate or no gate.
+   *
+   * Line evidence previously never reached the rules engine during a scan at all: it was computed
+   * once at the end, from the merged capture masks. So the reading the user was shown building had
+   * nothing in it about their actual lines, and the final reading contained rules they had never
+   * seen. This is the feed that closes that gap.
+   */
+  readonly onLineFeatures?: (extraction: LineExtraction, nowMs: number) => void;
   /** Called once the last guided pose is captured. */
   readonly onCaptureComplete?: (capture: CaptureState) => void;
 }
 
 export function useHandScan(options: UseHandScanOptions = {}) {
-  const { onFeatures, onGateFail, onCaptureComplete } = options;
+  const { onFeatures, onGateFail, onLineFeatures, onCaptureComplete } = options;
   const mirrored = options.mirrored ?? true;
   const facingMode = options.facingMode ?? "user";
 
@@ -410,10 +420,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               displacement: aligned.displacement,
               warps: aligned.state.warps,
             });
-            const cropAtFire = aligned.state.toCrop;
 
             // Fire and forget: the segmenter drops this frame if one is already in flight.
             const epochAtFire = fusionEpochRef.current;
+            const conventionAtFire = convention;
             void segmenterRef.current
               ?.segment(warped.image, { convention, inside: warped.inside })
               .then((mask) => {
@@ -421,9 +431,17 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               // A reset happened while this inference was in flight — its evidence belongs to the
               // pre-restart world and must not contaminate the fresh average.
               if (epochAtFire !== fusionEpochRef.current) return;
-              // The accumulator moved to a different crop while this was in flight; this mask is
-              // addressed to the old one, and blending it would misregister the whole field.
-              if (fusionRef.current.toCrop !== cropAtFire) return;
+              /*
+               * The accumulator moved to a different CROP SPACE while this was in flight — meaning
+               * the anchor convention changed and it was remapped — so this mask is addressed to the
+               * old one and blending it would misregister the whole field.
+               *
+               * Deliberately NOT a comparison of the homography itself. Two frames under the same
+               * convention are the same space, so a slow inference is late, not wrong. Comparing
+               * matrices here discarded every mask on any device where inference outran the rectify
+               * tick, which is what blanked the overlay.
+               */
+              if (!maskApplies(fusionRef.current, conventionAtFire)) return;
 
               /*
                * The photometric boost is applied here rather than in the worker because it is
@@ -461,6 +479,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                  * `traceEvidenceAtMs` instead of dropping them at a frame boundary.
                  */
                 if (found.polys.length > 0) {
+                  // Deliberately outside the gate: a tilted palm shows the same creases, and line
+                  // evidence is a measurement rather than a claim about pose quality.
+                  onLineFeatures?.(found, at);
                   setExtraction(found);
                   setPolys(found.polys);
                   setPolySegments(
@@ -508,7 +529,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           linesAvailable: fusionRef.current.frames > 0,
         });
         setFeatures(derived);
-        if (derived !== null) onFeatures?.(derived);
+        if (derived !== null) onFeatures?.(derived, verdict.score);
       }
 
       if (readyToCapture(captureRef.current) && fusionRef.current.frames > 0) {
@@ -560,7 +581,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     }
 
     schedule();
-  }, [frameImageData, mirrored, onCaptureComplete, onFeatures, onGateFail, sampleLuma, schedule]);
+  }, [frameImageData, mirrored, onCaptureComplete, onFeatures, onGateFail, onLineFeatures, sampleLuma, schedule]);
 
   useEffect(() => {
     loopRef.current = tick;

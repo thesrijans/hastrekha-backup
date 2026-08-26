@@ -36,12 +36,28 @@ export interface LatchState {
   readonly confirmed: ReadonlySet<string>;
   /** Confirmed during an earlier stretch, kept visible but marked. */
   readonly captured: ReadonlySet<string>;
+  /**
+   * First-seen sequence number per rule, assigned once and never reassigned.
+   *
+   * This is the render position. Ordering the ticker by standing made cards leap around whenever a
+   * batch of rules was demoted together; ordering by when a rule first appeared means a card, once
+   * placed, stays put for the rest of the session.
+   */
+  readonly order: ReadonlyMap<string, number>;
+  readonly nextOrder: number;
   /** When the current run of gate failures began, or null while the gate is passing. */
   readonly gateFailSinceMs: number | null;
 }
 
 export function emptyLatch(): LatchState {
-  return { streaks: new Map(), confirmed: new Set(), captured: new Set(), gateFailSinceMs: null };
+  return {
+    streaks: new Map(),
+    confirmed: new Set(),
+    captured: new Set(),
+    order: new Map(),
+    nextOrder: 1,
+    gateFailSinceMs: null,
+  };
 }
 
 /**
@@ -58,15 +74,22 @@ export function updateLatch(
 ): LatchState {
   const streaks = new Map<string, number>();
   const confirmed = new Set(previous.confirmed);
+  const order = new Map(previous.order);
+  let nextOrder = previous.nextOrder;
 
   for (const ruleId of new Set(firedRuleIds)) {
     const next = (previous.streaks.get(ruleId) ?? 0) + 1;
     streaks.set(ruleId, next);
     if (next >= options.confirmAfter) confirmed.add(ruleId);
+    // Assigned once, on first sight, and never reassigned — that is what pins the render position.
+    if (!order.has(ruleId)) {
+      order.set(ruleId, nextOrder);
+      nextOrder += 1;
+    }
   }
   // Rules absent this round simply do not carry a streak forward — that is the reset.
 
-  return { streaks, confirmed, captured: previous.captured, gateFailSinceMs: null };
+  return { streaks, confirmed, captured: previous.captured, order, nextOrder, gateFailSinceMs: null };
 }
 
 /**
@@ -91,6 +114,9 @@ export function markGateFail(
     streaks: new Map(),
     confirmed: new Set(),
     captured: new Set([...previous.captured, ...previous.confirmed]),
+    // Positions survive the decay: a demoted card must stay exactly where the user last saw it.
+    order: previous.order,
+    nextOrder: previous.nextOrder,
     gateFailSinceMs: since,
   };
 }
@@ -125,5 +151,16 @@ export function orderedStandings(
     if (state.confirmed.has(ruleId) || state.captured.has(ruleId)) continue;
     if ((state.streaks.get(ruleId) ?? 0) > 0) out.push({ ruleId, standing: "provisional" });
   }
+
+  /*
+   * Newest first, and — crucially — by FIRST-SEEN order rather than by standing.
+   *
+   * Grouping by standing meant a rule jumped position the moment it moved from confirmed to
+   * captured, which on a real scan happens to several rules at once every time the gate drops. The
+   * user sees the whole list rearrange under a card they were mid-sentence through. Sorting on a
+   * number that only ever gets assigned once means a card's position is fixed for the session: new
+   * confirmations arrive at the top and nothing already on screen moves relative to anything else.
+   */
+  out.sort((a, b) => (state.order.get(b.ruleId) ?? 0) - (state.order.get(a.ruleId) ?? 0));
   return out;
 }
