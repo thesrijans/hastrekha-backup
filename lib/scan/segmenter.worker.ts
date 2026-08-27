@@ -62,6 +62,8 @@ export type WorkerResponse =
       /** The temporal low-order composite, or null while the stack is still empty. */
       readonly median: ArrayBuffer | null;
       readonly size: number;
+      /** Anchor convention the crop was rectified with, echoed back for the overlay. */
+      readonly convention: number;
       readonly timings: Record<string, number>;
       readonly diagnostics: SegmenterDiagnostics;
     }
@@ -527,6 +529,8 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           median: medianOut === null ? null : (medianOut.buffer as ArrayBuffer),
           // The size EVERY field in this message is expressed at — the working size, not the crop's.
           size: work,
+          // Echoed so the overlay can project through the SAME convention the crop was built in.
+          convention: message.convention,
           timings,
           diagnostics: diag,
         } satisfies WorkerResponse,

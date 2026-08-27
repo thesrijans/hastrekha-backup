@@ -71,6 +71,17 @@ export const CONFIDENCE_TOP_FRACTION = 0.2;
 export const CONFIDENCE_FLOOR = 0.05;
 /** Below this a pixel is background and does not count as a hit. */
 export const HIT_THRESHOLD = 0.5;
+/**
+ * The faint tier: what a MINOR line is worth.
+ *
+ * Minor creases are genuinely shallower than the principal four — that is what makes them minor —
+ * so a single threshold either loses them or floods the strong tier with noise. This is 0.55 of the
+ * strong threshold, and the price of admitting it is paid in STABILITY rather than in strength: a
+ * faint pixel has to persist, which noise cannot do and a real crease does effortlessly.
+ */
+export const FAINT_THRESHOLD = 0.55 * HIT_THRESHOLD;
+/** Fused frames a faint pixel must survive before it may be traced. Noise cannot promote itself. */
+export const FAINT_STABILITY_FRAMES = 4;
 
 export interface FusionState {
   readonly size: number;
@@ -78,6 +89,8 @@ export interface FusionState {
   readonly ema: Float32Array;
   /** How many frames each pixel has exceeded {@link HIT_THRESHOLD}. */
   readonly hits: Uint16Array;
+  /** …and {@link FAINT_THRESHOLD}. This is what admits a minor line without admitting noise. */
+  readonly faintHits: Uint16Array;
   readonly frames: number;
   /** Mean of the top {@link CONFIDENCE_TOP_FRACTION} of `ema`, 0–1. */
   readonly confidence: number;
@@ -113,6 +126,7 @@ export function emptyFusion(size: number = RECTIFIED_SIZE): FusionState {
     size,
     ema: new Float32Array(plane),
     hits: new Uint16Array(plane),
+    faintHits: new Uint16Array(plane),
     frames: 0,
     confidence: 0,
     lastUpdateMs: 0,
@@ -289,6 +303,8 @@ export function alignFusion(
   state.ema.set(state.scratch);
   warpCounts(state.hits, state.scratchHits, state.size, remap);
   state.hits.set(state.scratchHits);
+  warpCounts(state.faintHits, state.scratchHits, state.size, remap);
+  state.faintHits.set(state.scratchHits);
   markFresh(state, remap);
 
   return {
@@ -419,7 +435,7 @@ export function fuse(
 ): FusionState {
   if (mask.width * mask.height !== state.ema.length) return state;
 
-  const { ema, hits, fresh } = state;
+  const { ema, hits, faintHits, fresh } = state;
   const source = mask.all;
   // First frame seeds the average outright; blending it against zeros would just cost frames.
   const blend = state.frames === 0 ? 1 : alpha;
@@ -431,6 +447,7 @@ export function fuse(
     // rather than blended up from a zero it was never actually observed to hold.
     ema[i] += (value - ema[i]) * (seedFresh && fresh[i] === 1 ? 1 : blend);
     if (value >= HIT_THRESHOLD && hits[i] < 0xffff) hits[i] += 1;
+    if (value >= FAINT_THRESHOLD && faintHits[i] < 0xffff) faintHits[i] += 1;
   }
   if (seedFresh) fresh.fill(0);
 
@@ -456,6 +473,7 @@ export function fuse(
 export function resetFusion(state: FusionState): FusionState {
   state.ema.fill(0);
   state.hits.fill(0);
+  state.faintHits.fill(0);
   return {
     ...state,
     frames: 0,

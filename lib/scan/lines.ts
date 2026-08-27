@@ -19,7 +19,9 @@
 import type { FeatureBag } from "@/lib/hastrekha";
 import { applyHomography, canonicalQuad, solveHomography } from "./rectify";
 import { EDGE_ZONES, HEART_END_ZONES, nearestZone, RESERVED_EDGE_ZONES } from "./zones";
-import { completeLines, endpointObserved, type CompletionResult } from "./completion";
+import { completeLines, endpointObserved, type CompletionResult, type LineSegment } from "./completion";
+import { classifyAll, type TraceClass } from "./classify";
+import { FAINT_STABILITY_FRAMES, FAINT_THRESHOLD } from "./fusion";
 import { ACTIVE_LINE_IDS, RECTIFIED_SIZE, type ActiveLineId, type Point2, type TracedLine } from "./types";
 
 /** A pixel is part of a line above this probability. */
@@ -338,18 +340,48 @@ export function assignLines(polys: readonly Poly[], size: number = RECTIFIED_SIZ
 
 /* -------------------------------- Measures -------------------------------- */
 
-/** Mean probability under the trace: a proxy for how deeply the line is cut. */
-function depthProxy(field: Float32Array, poly: Poly, size: number): number {
+/**
+ * Mean probability under the trace: a proxy for how deeply the line is cut.
+ *
+ * With `segments`, only samples inside observed runs are averaged. That restriction is not cosmetic.
+ * A bridged gap is, by definition, curve drawn where the detector saw nothing, so the field under it
+ * is near zero; averaging those samples in drags the mean down in direct proportion to how much of
+ * the line the *lighting* happened to hide. A deep, clear life line photographed with a shadow
+ * across its middle would report `chained`, and a Cheiro rule keyed on `clear_deep` would silently
+ * stop firing — a feature describing the room rather than the palm.
+ *
+ * Callers with no observed/inferred distinction to make — raw traces out of {@link extractAllTraces},
+ * which are all observed — omit `segments` and get the plain mean.
+ *
+ * `segments` must index into `poly`; the two come from the same {@link FittedLine}.
+ */
+function depthProxy(field: Float32Array, poly: Poly, size: number, segments?: readonly LineSegment[]): number {
   let sum = 0;
   let n = 0;
-  for (const point of poly) {
-    const x = Math.round(point.x);
-    const y = Math.round(point.y);
+  for (let i = 0; i < poly.length; i += 1) {
+    if (segments !== undefined && !observedAt(segments, i)) continue;
+    const x = Math.round(poly[i].x);
+    const y = Math.round(poly[i].y);
     if (x < 0 || y < 0 || x >= size || y >= size) continue;
     sum += field[y * size + x];
     n += 1;
   }
   return n === 0 ? 0 : sum / n;
+}
+
+/**
+ * Whether sample `i` falls in an observed run. Segments tile the point list contiguously and are
+ * few (a handful per line), so a linear scan beats any index.
+ *
+ * A line with no observed samples at all returns 0 depth from {@link depthProxy}, which would read
+ * as "shallowest bucket" rather than "unknown". Completion cannot produce one — MIN_OBSERVED_FRACTION
+ * refuses anything under 35% observed — so no accepted line reaches the buckets on zero evidence.
+ */
+function observedAt(segments: readonly LineSegment[], i: number): boolean {
+  for (const segment of segments) {
+    if (i >= segment.from && i < segment.to) return segment.observed;
+  }
+  return false;
 }
 
 /** Point-to-point jumps larger than {@link BREAK_GAP_PX} — the line stopping and restarting. */
@@ -435,6 +467,23 @@ export const FEATURE_MAPPING: Readonly<Record<string, string>> = {
 
 /* -------------------------------- Extraction ------------------------------ */
 
+/** One traced crease, whatever it turned out to be. */
+export interface ClassifiedTrace {
+  readonly points: Poly;
+  /** Which threshold found it. Faint traces are shallower AND had to persist to be admitted. */
+  readonly tier: "strong" | "faint";
+  /** 0-1 mean response along the trace — how DEEP the crease is, which several KB rules turn on. */
+  readonly depth: number;
+  readonly class: TraceClass;
+  readonly classScore: number;
+}
+
+export interface TraceSet {
+  readonly traces: readonly ClassifiedTrace[];
+  readonly strongCount: number;
+  readonly faintCount: number;
+}
+
 export interface LineExtraction {
   readonly lines: Partial<Record<ActiveLineId, TracedLine>>;
   /** The four completed curves, ready to draw. Empty for a line that had no evidence. */
@@ -454,6 +503,70 @@ export interface LineExtraction {
  * feature is emitted on a guess, and a line that was not assigned contributes nothing at all rather
  * than a default.
  */
+/**
+ * Everything on the palm, classified — the faint tier included.
+ *
+ * Traces the field at TWO thresholds. The strong tier is the one the principal lines have always been
+ * traced at; the faint tier is 0.55 of it, because a minor crease is genuinely shallower and a single
+ * threshold either loses it or floods the strong tier with noise. What keeps the faint tier honest is
+ * not strength but **persistence**: a faint pixel must have survived several fused frames, which real
+ * relief does effortlessly and sensor noise cannot do at all.
+ *
+ * @param stability optional per-pixel count of how many fused frames each pixel cleared the faint
+ * threshold in — `FusionState.faintHits`. Without it the faint tier is skipped entirely rather than
+ * admitted unguarded, because an unstabilised faint threshold on a real palm traces mostly skin texture.
+ */
+export function extractAllTraces(
+  field: Float32Array,
+  size: number = RECTIFIED_SIZE,
+  stability: Uint16Array | null = null,
+): TraceSet {
+  const strongSkeleton = thin(binarize(field, LINE_THRESHOLD), size);
+  const strong = tracePolylines(strongSkeleton, size).polys.map((poly) => simplify(poly));
+
+  const faint: Poly[] = [];
+  if (stability !== null) {
+    /*
+     * The faint mask is the low threshold AND the stability requirement, ANDed per pixel — not the
+     * low threshold filtered afterwards. Applying stability after tracing would let a stable fragment
+     * drag an unstable neighbour in with it through the skeleton's connectivity.
+     */
+    const faintMask = new Uint8Array(field.length);
+    for (let i = 0; i < field.length; i += 1) {
+      faintMask[i] = field[i] >= FAINT_THRESHOLD && stability[i] >= FAINT_STABILITY_FRAMES ? 1 : 0;
+    }
+    const faintSkeleton = thin(faintMask, size);
+    for (const poly of tracePolylines(faintSkeleton, size).polys) {
+      const simplified = simplify(poly);
+      // Anything the strong tier already found is not a faint discovery.
+      if (strong.some((existing) => overlaps(existing, simplified, size))) continue;
+      faint.push(simplified);
+    }
+  }
+
+  const all = [...strong, ...faint];
+  const classes = classifyAll(all, size);
+  return {
+    traces: all.map((points, index) => ({
+      points,
+      tier: index < strong.length ? ("strong" as const) : ("faint" as const),
+      depth: depthProxy(field, points, size),
+      class: classes[index].id,
+      classScore: classes[index].score,
+    })),
+    strongCount: strong.length,
+    faintCount: faint.length,
+  };
+}
+
+/** Whether two traces describe the same crease, by midpoint proximity relative to their length. */
+function overlaps(a: Poly, b: Poly, size: number): boolean {
+  const mid = (poly: Poly): Point2 => poly[Math.floor(poly.length / 2)];
+  const am = mid(a);
+  const bm = mid(b);
+  return Math.hypot(am.x - bm.x, am.y - bm.y) < size * 0.06;
+}
+
 export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE): LineExtraction {
   const skeleton = thin(binarize(field), size);
   const { polys: rawPolys, stats } = tracePolylines(skeleton, size);
@@ -490,9 +603,9 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
     const fitted = completion.lines[id];
     if (poly === undefined || fitted === undefined) continue;
     /*
-     * Depth is measured on the OBSERVED samples only. Averaging across a bridged gap would dilute a
-     * genuinely deep line toward "broad_shallow" in proportion to how much of it the lighting
-     * happened to hide — a feature that reports the room rather than the palm.
+     * `confidence` is `observedEnergy` — the mean field over observed samples — and the depth
+     * buckets below are likewise measured on observed samples only, by passing `fitted.segments` to
+     * {@link depthProxy}. Both deliberately ignore bridged gaps; see that function for why.
      */
     lines[id] = {
       id,
@@ -525,7 +638,7 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
 
   if (heartPoly !== undefined) {
     const end = heartPoly[heartPoly.length - 1];
-    const depth = depthProxy(field, heartPoly, size);
+    const depth = depthProxy(field, heartPoly, size, completion.lines.heart?.segments);
     heart.present = true;
     heart.length_norm = Number(Math.min(1, polylineLength(heartPoly) / size).toFixed(3));
     if (seen("heart", "end")) heart.origin = nearestZone(HEART_END_ZONES, end, size).value;
@@ -542,7 +655,7 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
   if (headPoly !== undefined) {
     const start = headPoly[0];
     const end = headPoly[headPoly.length - 1];
-    const depth = depthProxy(field, headPoly, size);
+    const depth = depthProxy(field, headPoly, size, completion.lines.head?.segments);
     const continuity = 1 / (1 + breakCount(headPoly));
     head.quality = Number(Math.min(1, depth * continuity).toFixed(3));
 
@@ -577,7 +690,7 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
   if (lifePoly !== undefined) {
     const start = lifePoly[0];
     const end = lifePoly[lifePoly.length - 1];
-    const depth = depthProxy(field, lifePoly, size);
+    const depth = depthProxy(field, lifePoly, size, completion.lines.life?.segments);
     // How far the arc bulges into the palm from the thumb edge.
     const excursion = Math.max(...lifePoly.map((p) => p.x)) / size;
     life.arc = excursion > 0.42 ? "wide_into_palm" : "narrow_hugging_thumb";
@@ -591,7 +704,7 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
   if (fatePoly !== undefined) {
     const start = fatePoly[0];
     const end = fatePoly[fatePoly.length - 1];
-    const depth = depthProxy(field, fatePoly, size);
+    const depth = depthProxy(field, fatePoly, size, completion.lines.fate?.segments);
     fate.present = true;
 
     const origins = [

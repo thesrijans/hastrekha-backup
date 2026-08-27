@@ -1,0 +1,28 @@
+{
+  "frame": "docs/reference/lines-misplaced-05.png",
+  "anchors": [
+    [
+      207,
+      540
+    ],
+    [
+      131,
+      517
+    ],
+    [
+      138,
+      266
+    ],
+    [
+      355,
+      326
+    ]
+  ],
+  "anchorSource": "THREE dots recovered from the overlay; the WRIST dot could not be found in the image at all. The wrist anchor above is estimated from where the cyan skeleton converges, and is the single most suspect number in this file.",
+  "geometryValid": false,
+  "geometryInvalidBecause": "The wrist end of the palm is outside the frame — the HUD on this screenshot reads \"Poora haath frame mein laao\". MEASURED on a synthetic hand pushed out by the same amount: once the wrist crosses the frame edge, canonical zone positions move by 4-15 video px at first contact and up to 54 px when the hand is a third of a frame out, because MediaPipe extrapolates the landmarks it cannot see and the homography is then fitted to guesses. Canonical-space ground truth cannot be recorded: the canonical space itself is displaced by more than a crease is wide, so \"where the heart line should be in crop coordinates\" has no stable answer.",
+  "lines": [],
+  "absent": [],
+  "absentNote": "Deliberately empty. This frame is ground truth for a GEOMETRY failure, not for a detection failure, and recording line positions in a broken coordinate system would manufacture a comparison that means nothing.",
+  "correction": "An earlier reading of this file claimed the crop's lower third was non-palm background. That was wrong — measured skin fraction is 85% overall and 77% in the bottom band, comparable to the good frame's 80%. The crop IS mostly palm; what is wrong is WHERE that palm is mapped to, not what it contains."
+}

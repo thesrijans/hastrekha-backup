@@ -10,7 +10,9 @@
  *     difference lifts exactly the dark creases and nothing else: a *bright* line produces zero.
  *  3. **Oriented Gabor bank** — 8 orientations × 2 scales of zero-mean, even-symmetric Gabor
  *     kernels; per-pixel max response. This turns "dark and thin" into "dark, thin and *elongated*",
- *     which is what separates a crease from a pore or a shadow blob.
+ *     which is what separates a crease from a pore or a shadow blob. A closed-form steered
+ *     alternative was built and measured against it in STEP 15 and did not replace it; the
+ *     side-by-side is on {@link gaborBank}.
  *
  * The result is normalised to a 0–1 ridge probability. Pure typed-array maths with no dependencies
  * and no DOM, so all of it runs in the worker and unit-tests in node.
@@ -345,11 +347,30 @@ export function buildSupport(blackhatField: Float32Array, size: number): Uint8Ar
 }
 
 /**
- * Per-pixel maximum response over the kernel bank, negatives clamped (we only want bright bars —
- * the black-hat stage already made creases bright). Replicate borders.
+ * Per-pixel maximum response over the kernel bank, negatives clamped (we only want bright bars — the black-hat stage
+ * already made creases bright). Replicate borders.
  *
  * With `support`, pixels outside the mask are skipped and left at 0; outside the mask every tap
  * sees ≈ 0 input, so the skipped value is what the convolution would have produced anyway.
+ *
+ * **Why this is still here after STEP 15.** {@link detectVessels}' `bars` output computes the same
+ * per-orientation maximum in closed form — continuously rather than at sixteen 22.5° samples, from
+ * derivatives Frangi already had in hand — for 8.4ms against this function's 41.2ms on a 128² crop.
+ * It was wired in and measured on both ground-truth frames, and it did not win. Sweeping its
+ * normalisation percentile to trace out an operating curve, at the point where precision against the
+ * hand-traced creases is *identical* to this bank's:
+ *
+ * ```text
+ *                bank              steered, matched precision
+ *   current-02   P 28.1  R 32.0    P 28.1  R 38.2     better
+ *   tilt-03      P 10.7  R 12.1    P 10.7  R  7.0     worse
+ * ```
+ *
+ * Better on the bright frame, worse on the tilted one, and end-to-end it took tilt-03 from three
+ * accepted lines to one. The configurations that looked like wins raised recall and litter together
+ * — a gain change, not a better detector. So the bank stays, the steered response stays available
+ * and unwired, and neither is the reason head-line recall is where it is. See §3 of
+ * docs/DETECTOR_AUDIT.md.
  */
 export function gaborBank(src: Float32Array, size: number, support: Uint8Array | null = null): Float32Array {
   const kernels = gaborKernels();

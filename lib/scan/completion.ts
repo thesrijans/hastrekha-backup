@@ -628,13 +628,35 @@ export function fitLine(
 
   const controls: Point2[] = [];
   const controlObserved: boolean[] = [];
+  /**
+   * Place a control at arc position `s`, taking its lateral offset from `bin`.
+   *
+   * The two are not always the same bin, and that distinction is the whole point. The offset is
+   * carried from the nearest bin that *has* evidence — that is what lets the ends extend past the
+   * last seed at all. The observed flag, though, must describe where the control actually **is**:
+   * `binAt(s)`, not the bin the offset came from.
+   *
+   * Conflating the two is what made the endpoint gates vacuous. The end controls are pushed at
+   * `sLow`/`sHigh`, up to {@link MAX_END_EXTRAPOLATION} of the arc beyond the outermost evidence,
+   * but were flagged from `lowBin`/`highBin` — which are *by construction* the first and last
+   * observed bins, so the flag was true by definition. Every fitted line therefore began and ended
+   * with a segment marked observed, {@link endpointObserved} returned true for all of them, and the
+   * origin gates on heart/head/life passed on lines whose origins were pure extrapolation. Reading
+   * a line's starting point off a synthetic control is exactly the kind of confident wrong answer
+   * those gates exist to stop.
+   *
+   * Interior controls sit at `(k + 0.5) / CONTROL_BINS`, so `binAt` returns `k` and they are
+   * unaffected.
+   */
+  const binAt = (s: number): number =>
+    Math.min(CONTROL_BINS - 1, Math.max(0, Math.floor(s * CONTROL_BINS)));
   const pushControl = (s: number, bin: number): void => {
     const centre = centreAt(samples, s);
     controls.push({
       x: (centre.x + offsets[bin] * centre.nx / size) * size,
       y: (centre.y + offsets[bin] * centre.ny / size) * size,
     });
-    controlObserved.push(observed[bin] === 1);
+    controlObserved.push(observed[binAt(s)] === 1);
   };
 
   pushControl(sLow, lowBin);

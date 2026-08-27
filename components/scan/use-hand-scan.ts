@@ -69,7 +69,7 @@ import {
   type AlignOutcome,
   type FusionState,
 } from "@/lib/scan/fusion";
-import { extractLines, type LineExtraction, type Poly } from "@/lib/scan/lines";
+import { extractAllTraces, extractLines, type ClassifiedTrace, type LineExtraction, type Poly } from "@/lib/scan/lines";
 import {
   commitCapture,
   currentPose,
@@ -83,6 +83,7 @@ import {
 import {
   ACTIVE_LINE_IDS,
   MASK_SIZE,
+  type Point2,
   type FrameStats,
   type Handedness,
   type HandObservation,
@@ -229,6 +230,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   /** False while the overlay is showing raw fragments because completion named nothing this pass. */
   const [tracesNamed, setTracesNamed] = useState(true);
   /**
+   * Every trace found, classified — including the minor creases the four-corridor fit used to drop.
+   * Parallel to nothing; the overlay draws these in addition to the named lines, thinner and dimmer.
+   */
+  const [traces, setTraces] = useState<readonly ClassifiedTrace[]>([]);
+  /**
    * Per-stage frame counts over a rolling window. The first zero is the bug — that is the whole
    * contract, and it exists because this pipeline has twice gone blank for a reason no stage-level
    * test could see. Written from the loop, published to React once a second.
@@ -262,6 +268,41 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   });
   const [flashProgress, setFlashProgress] = useState(0);
   const [bracketFrames, setBracketFrames] = useState(0);
+  /**
+   * The rectification the CURRENT traces were traced in — stabilised anchors in video pixels, and
+   * the convention. The overlay projects through this rather than re-deriving from raw landmarks,
+   * which measured 4.6 video pixels off the creases the traces came from.
+   */
+  const [projection, setProjection] = useState<{ anchors: readonly Point2[]; convention: number } | null>(null);
+  /**
+   * The rectification of the CURRENT frame — refreshed every rectify tick, not every trace update.
+   *
+   * The overlay projects through this rather than through {@link projection}'s frozen anchors. Both
+   * describe the same canonical space, which is motion-compensated: the same skin lands on the same
+   * crop pixel however the hand moves. So the traces stay correct under either matrix — but only the
+   * live one keeps them *glued* to the hand. The frozen anchors are captured when traces are
+   * re-extracted, which runs at the classical stride rather than per frame, so drawing through them
+   * pins the traces to where the hand was up to several frames ago and they visibly lag a moving
+   * palm.
+   *
+   * A ref, not state: the draw loop wants the freshest value at the instant it draws, and a state
+   * update per rectify tick would re-render the page that owns the video element for a number no
+   * React subtree reads.
+   *
+   * What must still match is the anchor CONVENTION — a 5-anchor crop fitted to five targets is not
+   * reproducible from four — which is what the overlay checks against `projection.convention`.
+   */
+  const liveProjectionRef = useRef<{ anchors: readonly Point2[]; convention: number } | null>(null);
+  /**
+   * True when landmarks fall outside the frame.
+   *
+   * MediaPipe still returns 21 points for a clipped hand — it extrapolates the ones it cannot see —
+   * and `coverage` does not catch it, because the crop is defined by the palm anchors and those may
+   * still be in view while the fingers are not. Measured on a hand pushed a third of a frame off the
+   * edge: three landmarks outside, coverage still 1.000. So this is its own check.
+   */
+  const [degraded, setDegraded] = useState(false);
+  const degradedRef = useRef(false);
   const [telemetry, setTelemetry] = useState<Readonly<Record<TelemetryStage, number>>>(
     () => emptyTelemetry().totals,
   );
@@ -386,6 +427,26 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       const result = landmarker.detectForVideo(video, now);
       const next = toObservation(result, now);
       if (next !== null) recordStage(telemetryRef.current, "handDetected", now);
+
+      /*
+       * ── Degraded: part of the hand is outside the frame ──────────────────────────────────────
+       *
+       * MediaPipe returns 21 points whatever it can see; the ones off-screen are extrapolated, and
+       * `derivePalmEdge` then builds the percussion anchor out of them. Measured on a hand pushed a
+       * third of a frame off the edge: three landmarks outside, and `coverage` still exactly 1.000 —
+       * so the segmentation eligibility check cannot catch this, because the crop is defined by the
+       * palm anchors and those can still be in view while the fingers are not.
+       *
+       * Evidence still accumulates, because a partly-clipped palm still shows real creases. What
+       * stops is the CLAIM: no line features are emitted while this is true, because a line placed
+       * from guessed geometry is worse than no line at all.
+       */
+      const clipped =
+        next !== null && next.landmarks.some((p) => p.x < 0 || p.x > 1 || p.y < 0 || p.y > 1);
+      if (clipped !== degradedRef.current) {
+        degradedRef.current = clipped;
+        setDegraded(clipped);
+      }
       setObservation(next);
       latestRef.current.observation = next;
 
@@ -475,6 +536,13 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         const raw = source === null ? null : palmAnchors(next.landmarks, source.width, source.height);
         // Filtered, and with a hysteresis-settled anchor count — see stabilise.ts for both reasons.
         const anchors = raw === null ? null : stabiliseAnchors(stabiliserRef.current, raw.src, now);
+        liveProjectionRef.current =
+          anchors === null
+            ? null
+            : {
+                anchors: anchors.points.map((p) => ({ x: p.x, y: p.y })),
+                convention: anchors.points.length,
+              };
         if (source !== null && anchors !== null) {
           latestRef.current.anchorsUsed = anchors.points.length;
           const warped = rectifyPalm(source, anchors.points);
@@ -653,6 +721,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
             // Fire and forget: the segmenter drops this frame if one is already in flight.
             const epochAtFire = fusionEpochRef.current;
             const conventionAtFire = convention;
+            const anchorsAtFire: readonly Point2[] = anchors.points.map((p) => ({ x: p.x, y: p.y }));
             /*
              * The very same ImageData when uncorrected: with the flag off `cropData` IS
              * `warped.image.data`, so this allocates nothing and the worker receives byte-for-byte
@@ -733,6 +802,19 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS) {
                 lastExtractAtRef.current = at;
                 const found = extractLines(fusionRef.current.ema, fusionRef.current.size);
+                /*
+                 * Everything else on the palm. The four completed lines are the headline, but a
+                 * reader looks at the minor creases too, and dropping them was throwing away most of
+                 * what the detector had already found. The faint tier is gated on the accumulator’s
+                 * own persistence counter, so a shallow trace has to have been there a while.
+                 */
+                const all = extractAllTraces(
+                  fusionRef.current.ema,
+                  fusionRef.current.size,
+                  fusionRef.current.faintHits,
+                );
+                setTraces(all.traces);
+                recordStage(telemetryRef.current, "tracesExtracted", at, all.faintCount);
                 recordStage(telemetryRef.current, "tracesExtracted", at, found.fragments.length);
                 recordStage(telemetryRef.current, "polylinesAfterCompletion", at, found.polys.length);
                 /*
@@ -754,7 +836,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                 if (drawable.length > 0) {
                   // Deliberately outside the gate: a tilted palm shows the same creases, and line
                   // evidence is a measurement rather than a claim about pose quality.
-                  if (named) onLineFeatures?.(found, at);
+                  // Refused while the hand is clipped: the crop was fitted to extrapolated
+                  // landmarks, so any line placed from it is a claim about guessed geometry.
+                  if (named && !degradedRef.current) onLineFeatures?.(found, at);
                   setExtraction(found);
                   setPolys(drawable);
                   setPolySegments(
@@ -767,6 +851,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                         drawable.map(() => undefined),
                   );
                   setTracesNamed(named);
+                  // The rectification these traces were traced in, so the overlay projects consistently.
+                  setProjection({ anchors: anchorsAtFire, convention: conventionAtFire });
                   recordStage(telemetryRef.current, "polylinesPassedToOverlay", at, drawable.length);
                   traceEvidenceAtRef.current = at;
                   setTraceEvidenceAtMs(at);
@@ -1078,9 +1164,13 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     timeToFirstTraceMs,
     traceEvidenceAtMs,
     tracesNamed,
+    traces,
     telemetry,
     camera,
     contrast,
+    projection,
+    liveProjectionRef,
+    degraded,
     flashProgress,
     bracketFrames,
     requestFlashFrame,

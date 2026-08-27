@@ -294,6 +294,77 @@ function fieldAlong(id: ActiveLineId, ranges: ReadonlyArray<readonly [number, nu
 }
 
 {
+  /*
+   * THE AUDIT'S FALSE POSITIVE. Before STEP 15 this returned true for the start of every accepted
+   * line on both ground-truth frames, so the origin gates on heart/head/life gated nothing.
+   *
+   * The cause: `fitLine` places its first control at `sLow`, up to MAX_END_EXTRAPOLATION of the arc
+   * *before* the first bin with evidence, but flagged it from that bin — which is by construction
+   * observed. The control was extrapolated and labelled seen.
+   *
+   * Here the evidence starts at s = 0.35, so the first control is placed near s = 0.18 with nothing
+   * under it. Claiming an origin from that point would put the start of the heart line a fifth of a
+   * palm from anything the detector actually saw.
+   */
+  const field = fieldAlong("heart", [[0.35, 0.9]]);
+  const fitted = fitLine("heart", [alongCorridor("heart", 0.35, 0.9)], field, SIZE);
+  assert.ok(fitted !== null, "a line whose evidence starts partway along still fits");
+  assert.ok(fitted.segments[0].observed === false, "and it opens with an inferred run, not a seen one");
+  assert.equal(
+    endpointObserved(fitted, "start"),
+    false,
+    "an extrapolated start is NOT claimable — the gate the audit found vacuous",
+  );
+  /* Its far end is extrapolated too — evidence stops at 0.9, the curve runs to 1.0 — so likewise. */
+  assert.equal(endpointObserved(fitted, "end"), false, "nor is an end that runs past the last evidence");
+
+  /*
+   * And the gate stays useful rather than merely strict. The same crease seen essentially end to end
+   * may claim both of its ends — otherwise "fix" would just mean "refuse everything".
+   */
+  const fromZero = fitLine("heart", [alongCorridor("heart", 0.05, 0.95)], fieldAlong("heart", [[0.05, 0.95]]), SIZE);
+  assert.ok(fromZero !== null);
+  assert.ok(endpointObserved(fromZero, "start"), "a start that begins on evidence is claimable");
+  assert.ok(endpointObserved(fromZero, "end"), "and so is an end that finishes on it");
+}
+
+{
+  /*
+   * Depth is averaged over observed samples only, so a bridged gap cannot make a deep line look
+   * shallow. Same crease at the same brightness, twice: once seen whole, once with the middle third
+   * hidden. The reported depth must not fall just because the lighting hid part of it.
+   */
+  const whole = fitLine("head", [alongCorridor("head", 0.05, 0.95)], fieldAlong("head", [[0.05, 0.95]]), SIZE);
+  const halved = fitLine(
+    "head",
+    [alongCorridor("head", 0.05, 0.35), alongCorridor("head", 0.65, 0.95)],
+    fieldAlong("head", [
+      [0.05, 0.35],
+      [0.65, 0.95],
+    ]),
+    SIZE,
+  );
+  assert.ok(whole !== null && halved !== null, "both fit");
+  assert.ok(halved.observedFraction < 0.8, `the bridged one really is bridged (${halved.observedFraction.toFixed(2)})`);
+
+  /*
+   * `observedEnergy` is the observed-only mean the feature bag reports as `confidence`, and the same
+   * restriction depthProxy now applies. Across the bridge the plain mean drops by the width of the
+   * gap; the observed-only mean does not.
+   */
+  assert.ok(
+    Math.abs(halved.observedEnergy - whole.observedEnergy) < 0.1,
+    `observed-only depth survives the gap (whole ${whole.observedEnergy.toFixed(2)} vs ` +
+      `bridged ${halved.observedEnergy.toFixed(2)})`,
+  );
+  assert.ok(
+    halved.energy < halved.observedEnergy - 0.1,
+    `while the whole-curve mean is dragged down by it (${halved.energy.toFixed(2)} vs ` +
+      `${halved.observedEnergy.toFixed(2)}) — which is the number that must NOT reach the depth buckets`,
+  );
+}
+
+{
   /* Sanity that sampleCorridor is deterministic and cached consistently. */
   const a = sampleCorridor(CORRIDORS.fate);
   const b = corridorFor("fate");

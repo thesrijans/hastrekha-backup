@@ -112,6 +112,14 @@ export interface LineMask {
   /** Which execution provider produced this, e.g. "webgpu", "wasm" or "ridge-only". */
   readonly backend?: string;
   /**
+   * How many anchor correspondences the crop this mask came from was rectified with.
+   *
+   * Carried so the OVERLAY can project through the same convention. A mask computed in a 5-anchor
+   * crop and drawn through a 4-anchor homography lands measurably off the creases it was traced
+   * from — about 4.6 video pixels on a typical frame, which is most of a crease width.
+   */
+  readonly convention?: number;
+  /**
    * Raw per-detector fields, for the debug HUD's channel toggles.
    *
    * Every channel is nullable except `ridge`, because each has its own reason to be absent: no model

@@ -1,0 +1,60 @@
+{
+  "frame": "lines-missing-tilt-03",
+  "polylines": 3,
+  "fragments": 10,
+  "completion": {
+    "fate": {
+      "accepted": false,
+      "energy": 0,
+      "observed": 0,
+      "reject": "no_seeds"
+    },
+    "head": {
+      "accepted": true,
+      "energy": 0.6823,
+      "observed": 0.5549,
+      "reject": null
+    },
+    "heart": {
+      "accepted": true,
+      "energy": 0.3401,
+      "observed": 0.4728,
+      "reject": null
+    },
+    "life": {
+      "accepted": true,
+      "energy": 0.475,
+      "observed": 0.7768,
+      "reject": null
+    }
+  },
+  "features": {
+    "geometry": {
+      "quadrangle_shape": "very_narrow"
+    },
+    "lines": {
+      "head": {
+        "curvature": "straight_clear",
+        "quality": 0.902,
+        "termination": "gentle_slope_luna"
+      },
+      "heart": {
+        "depth": "broad_shallow",
+        "length_norm": 0.273,
+        "origin": "mount_jupiter_center",
+        "present": true
+      },
+      "life": {
+        "arc": "narrow_hugging_thumb",
+        "rise_origin": "jupiter_side",
+        "texture": "broad_shallow"
+      },
+      "quality": {
+        "forked_lines_general": true
+      }
+    },
+    "reading": {
+      "lines_available": true
+    }
+  }
+}

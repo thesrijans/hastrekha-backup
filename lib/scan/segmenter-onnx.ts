@@ -107,6 +107,7 @@ export function createOnnxSegmenter(options: OnnxSegmenterOptions = {}): Segment
           resolves: [], // neither detector names lines; the geometry classifier does.
           inferenceMs: lastInferenceMs,
           backend,
+          convention: message.convention,
           stages: {
             unet: message.unet === null ? null : new Float32Array(message.unet),
             ridge: new Float32Array(message.ridge),

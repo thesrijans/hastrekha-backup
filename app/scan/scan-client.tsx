@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import kbDocument from "@/data/kb/hastrekha_kb.json";
 import { evaluateRules, loadKnowledgeBase, type FiredRule, type KnowledgeBase } from "@/lib/hastrekha";
 import { emptyLatch, markGateFail, updateLatch, type LatchState } from "@/lib/scan/latch";
@@ -330,9 +330,13 @@ export function ScanClient() {
     timeToFirstTraceMs,
     traceEvidenceAtMs,
     tracesNamed,
+    traces,
     telemetry,
     camera,
     contrast,
+    projection,
+    liveProjectionRef,
+    degraded,
     flashProgress,
     bracketFrames,
     requestFlashFrame,
@@ -402,6 +406,16 @@ export function ScanClient() {
     console.debug("[scan] gehri scan:", result.frames, "frames, meanRange", result.meanRange.toFixed(4));
   }, [completeFlashSequence]);
 
+  /*
+   * Minor traces are everything NOT already drawn as a named line. Memoised on the trace array so
+   * the overlay prop is stable between extractions — it re-renders a canvas that is redrawing at
+   * frame rate, and a new array identity every render would restart nothing but would churn.
+   */
+  const minorTraces = useMemo(
+    () => traces.filter((t) => t.class === "minor_unclassified").map((t) => ({ points: t.points, depth: t.depth })),
+    [traces],
+  );
+
   const restart = useCallback(() => {
     setOutcome({ status: "scanning" });
     setFeedback({});
@@ -470,6 +484,9 @@ export function ScanClient() {
                   segments={polySegments}
                   gatePassing={quality.ok}
                   tracesNamed={tracesNamed}
+                  projection={projection}
+                  liveProjection={liveProjectionRef}
+                  minorTraces={minorTraces}
                   onDrawn={setPolylinesDrawn}
                   evidenceAtMs={traceEvidenceAtMs}
                   mirrored={mirrored}
@@ -600,6 +617,7 @@ export function ScanClient() {
         camera={camera}
         contrast={contrast}
         bracketFrames={bracketFrames}
+        degraded={degraded}
         diagnostics={diagnostics}
         inferenceMs={inferenceMs}
         fusedConfidence={fusedConfidence}

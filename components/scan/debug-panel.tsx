@@ -78,6 +78,14 @@ export interface DebugPanelProps {
   readonly contrast: number;
   /** Frames gathered by the exposure bracket, when that flag is on and exposure is settable. */
   readonly bracketFrames: number;
+  /**
+   * True when landmarks fall outside the frame.
+   *
+   * The scan keeps accumulating evidence — a partly-clipped palm still shows real creases — but no
+   * line features are emitted, because the crop was fitted partly to landmarks MediaPipe guessed and
+   * a line placed from guessed geometry is worse than no line.
+   */
+  readonly degraded: boolean;
   /** Captures the raw frame plus its derived geometry. Null result means nothing was ready. */
   readonly onExportFrame: () => Promise<{ png: Blob; json: Blob; stamp: string } | null>;
   /** Live PALM_EDGE_PEAK used by the overlay, and its setter. Dev-only tuning. */
@@ -142,6 +150,7 @@ export function DebugPanel({
   camera,
   contrast,
   bracketFrames,
+  degraded,
   onExportFrame,
   edgePeak,
   onEdgePeak,
@@ -424,6 +433,12 @@ export function DebugPanel({
            * stages that each passed their own tests.
            */}
           <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
+            {degraded ? (
+              <p className="rounded-lg border border-dashed border-line-glow/50 px-3 py-2 text-xs leading-5 text-line-glow">
+                Degraded — haath frame se bahar hai. Evidence jama ho rahi hai, par koi line feature
+                nahi bheji ja rahi: crop ka ek hissa aise landmarks se bana hai jo dikhe hi nahi.
+              </p>
+            ) : null}
             <div className="flex items-baseline justify-between gap-3">
               <span className="font-display text-[0.7rem] uppercase tracking-[0.18em] text-muted">
                 Pipeline · last {(TELEMETRY_WINDOW_MS / 1000).toFixed(0)}s

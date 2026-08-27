@@ -1,0 +1,26 @@
+{
+  "frame": "docs/reference/lines-current-02.png",
+  "anchors": [[512, 530], [377, 490], [320, 234], [553, 235]],
+  "anchorSource": "recovered from the burned-in overlay dots, ±1px",
+  "geometryValid": true,
+  "note": "Severely overexposed. The palm is close to white across most of its area and the creases survive only as very low-contrast edges, so every trace here is marked faint.",
+  "lines": [
+    {
+      "id": "heart",
+      "confidence": "faint",
+      "points": [[0.141, 0.250], [0.469, 0.219], [0.703, 0.297], [0.844, 0.352]]
+    },
+    {
+      "id": "head",
+      "confidence": "faint",
+      "points": [[0.250, 0.273], [0.438, 0.336], [0.625, 0.391], [0.813, 0.414]]
+    },
+    {
+      "id": "life",
+      "confidence": "faint",
+      "points": [[0.313, 0.281], [0.391, 0.469], [0.438, 0.656], [0.484, 0.813]]
+    }
+  ],
+  "absent": ["fate", "sun", "health", "intuition", "girdle_of_venus", "bracelets"],
+  "absentNote": "Nothing else is distinguishable from the blown highlights; absence here means 'not visible', not 'not present on the hand'."
+}

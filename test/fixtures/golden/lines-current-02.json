@@ -1,0 +1,52 @@
+{
+  "frame": "lines-current-02",
+  "polylines": 2,
+  "fragments": 11,
+  "completion": {
+    "fate": {
+      "accepted": false,
+      "energy": 0,
+      "observed": 0,
+      "reject": "no_seeds"
+    },
+    "head": {
+      "accepted": false,
+      "energy": 0,
+      "observed": 0,
+      "reject": "no_seeds"
+    },
+    "heart": {
+      "accepted": true,
+      "energy": 0.7166,
+      "observed": 1,
+      "reject": null
+    },
+    "life": {
+      "accepted": true,
+      "energy": 0.6199,
+      "observed": 0.7976,
+      "reject": null
+    }
+  },
+  "features": {
+    "lines": {
+      "heart": {
+        "depth": "thin",
+        "length_norm": 0.69,
+        "origin": "mount_jupiter_center",
+        "present": true
+      },
+      "life": {
+        "arc": "narrow_hugging_thumb",
+        "rise_origin": "jupiter_side",
+        "texture": "clear_deep"
+      },
+      "quality": {
+        "forked_lines_general": true
+      }
+    },
+    "reading": {
+      "lines_available": true
+    }
+  }
+}

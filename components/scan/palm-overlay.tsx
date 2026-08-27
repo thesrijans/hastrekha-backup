@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { applyHomography, canonicalQuad, palmQuad, solveHomography, PALM_ANCHORS, type Matrix3 } from "@/lib/scan/rectify";
+import {
+  applyHomography,
+  canonicalAnchors,
+  solveHomography,
+  PALM_ANCHORS,
+  type Matrix3,
+} from "@/lib/scan/rectify";
 import { palmBoundary } from "@/lib/scan/landmarks";
 import { catmullRomSegments } from "@/lib/scan/curve";
 import { HAND_BONES, LM } from "@/lib/scan/landmark-index";
@@ -57,6 +63,18 @@ const GATE_FAIL_ALPHA = 0.6;
  * heart line would imply one. Dimmer says "seen, not yet identified".
  */
 const UNNAMED_ALPHA = 0.55;
+/**
+ * Weight and width for a MINOR trace — a crease that is real but is not one of the named lines.
+ *
+ * Drawn thinner and dimmer rather than not at all. They are genuinely on the palm and the user can
+ * see them being found, which is most of what makes the scan feel like it is looking; but they carry
+ * no claim about what they mean, and drawing them at a named line’s weight would imply one.
+ */
+const MINOR_ALPHA = 0.34;
+const MINOR_WIDTH = 0.9;
+/** Depth at which a trace is drawn at full brightness. Below it, dimmer in proportion — a faint
+ * crease IS fainter, and the overlay saying so is the same honesty the depth feature carries. */
+const DEPTH_FULL = 0.6;
 
 const ANCHOR_SET = new Set<number>(PALM_ANCHORS);
 
@@ -81,6 +99,28 @@ export interface PalmOverlayProps {
   readonly gatePassing: boolean;
   /** False when `polys` are raw fragments rather than named lines; they are drawn at lower weight. */
   readonly tracesNamed?: boolean;
+  /**
+   * The rectification the traces were traced in: the stabilised anchors in VIDEO pixels, and the
+   * convention they were fitted under. Null means the traces cannot be projected consistently and
+   * must not be drawn — a trace through the wrong homography is a confident claim about the wrong
+   * skin, which is worse than showing nothing.
+   *
+   * Only `convention` is read when {@link liveProjection} is supplying live anchors; see the draw
+   * loop for which of the two is projected through and why.
+   */
+  readonly projection?: { readonly anchors: readonly Point2[]; readonly convention: number } | null;
+  /**
+   * The CURRENT frame's rectification, refreshed every rectify tick by the scan hook.
+   *
+   * A ref rather than a prop value: the draw loop runs at frame rate and wants the freshest anchors
+   * at the instant it draws, not a snapshot React scheduled some renders ago.
+   */
+  readonly liveProjection?: { readonly current: { readonly anchors: readonly Point2[]; readonly convention: number } | null } | null;
+  /**
+   * Minor traces: everything found that is not one of the named lines. Drawn under them, thinner and
+   * dimmer, scaled by their measured depth.
+   */
+  readonly minorTraces?: readonly { readonly points: readonly Point2[]; readonly depth: number }[];
   /**
    * Reports how many polylines were actually STROKED this frame.
    *
@@ -153,6 +193,9 @@ export function PalmOverlay({
   confidence,
   gatePassing,
   tracesNamed = true,
+  projection = null,
+  liveProjection = null,
+  minorTraces,
   onDrawn,
   evidenceAtMs,
   mirrored,
@@ -173,6 +216,9 @@ export function PalmOverlay({
     confidence,
     gatePassing,
     tracesNamed,
+    projection,
+    liveProjection,
+    minorTraces,
     evidenceAtMs,
     mirrored,
     edgePeak,
@@ -186,11 +232,14 @@ export function PalmOverlay({
       confidence,
       gatePassing,
       tracesNamed,
+      projection,
+      liveProjection,
+      minorTraces,
       evidenceAtMs,
       mirrored,
       edgePeak,
     };
-  }, [landmarks, videoSize, polys, segments, confidence, gatePassing, tracesNamed, evidenceAtMs, mirrored, edgePeak]);
+  }, [landmarks, videoSize, polys, segments, confidence, gatePassing, tracesNamed, projection, liveProjection, minorTraces, evidenceAtMs, mirrored, edgePeak]);
 
   /*
    * Sampled on a timer, not pushed from the draw loop: calling back at 60fps would re-render the
@@ -221,6 +270,9 @@ export function PalmOverlay({
         confidence: fused,
         gatePassing: gateOk,
         tracesNamed: named,
+        projection,
+        liveProjection: livePro,
+        minorTraces: minor,
         evidenceAtMs: evidenceAt,
         mirrored: flip,
         edgePeak: peakOverride,
@@ -308,15 +360,48 @@ export function PalmOverlay({
 
       /* --------------------------- Crop-space geometry -------------------------- */
       // The homography is solved in VIDEO pixel space; the cover transform carries it to canvas.
-      const quad = palmQuad(marks, transform.videoW, transform.videoH);
       /*
-       * The canonical square must be built at the size the POLYLINES are expressed in, not at the
-       * crop's. They are traced from the fused field, which lives at MASK_SIZE — using the crop's 256
-       * here would map every trace through a homography twice its scale and paint the whole set into
-       * the top-left quadrant of the palm, which looks exactly like "the lines are slightly wrong"
-       * rather than like a units bug.
+       * ── The projection must match the rectification the traces were traced in ────────────────
+       *
+       * The crop is built from *stabilised* anchors under a 4- or 5-correspondence convention; this
+       * overlay used to project through *raw* landmarks and always four. Measured on a real frame,
+       * that put every trace 4.6 video pixels off the crease it came from — comparable to a crease's
+       * whole width, so the lines sat convincingly beside the creases rather than on them.
+       *
+       * So: project through the CURRENT frame's stabilised anchors, under the convention the traces
+       * were traced in.
+       *
+       * Current, not frozen. Canonical space is motion-compensated — the same skin lands on the same
+       * crop pixel however the hand moves — so a trace is equally valid under either frame's matrix.
+       * But `projection`'s anchors are captured when traces are re-extracted, which runs at the
+       * classical stride and not per frame, while this loop draws at frame rate. Drawing through them
+       * pegs the traces to where the hand was several frames ago, and they lag a moving palm. The
+       * live ref is refreshed every rectify tick, so they stay glued to it.
+       *
+       * What must match is the *convention*, not the matrix: a 5-anchor crop was fitted to five
+       * targets and reproducing it from four is a different transform. When this frame cannot
+       * reproduce the traced-in convention, NOTHING is drawn. Falling back to raw landmarks — which
+       * this did until STEP 15, contradicting the paragraph above it — reintroduces exactly the
+       * 4.6px offset the stabilised anchors exist to remove, and a trace through the wrong
+       * homography is worse than no trace: it is a confident claim about the wrong piece of skin.
        */
-      const cropToVideo: Matrix3 | null = quad === null ? null : solveHomography(canonicalQuad(MASK_SIZE), quad);
+      const live = livePro?.current ?? null;
+      const consistent =
+        projection !== null &&
+        live !== null &&
+        live.anchors.length === live.convention &&
+        live.convention === projection.convention;
+      const quad = consistent ? live.anchors : null;
+      /*
+       * The canonical square is built at the size the POLYLINES are expressed in AND under the
+       * convention they were traced in. MASK_SIZE rather than the crop's 256, because the field lives
+       * there; `canonicalAnchors(convention)` rather than a fixed four-corner square, because a
+       * 5-anchor crop was fitted to five targets and reproducing it from four is a different
+       * transform.
+       */
+      const targets = consistent && projection !== null ? canonicalAnchors(projection.convention, MASK_SIZE) : null;
+      const cropToVideo: Matrix3 | null =
+        quad === null || targets === null ? null : solveHomography(targets, quad);
       if (cropToVideo === null) {
         rafRef.current = requestAnimationFrame(draw);
         return;
@@ -351,6 +436,40 @@ export function PalmOverlay({
         freshness *
         (gateOk ? 1 : GATE_FAIL_ALPHA) *
         (named ? 1 : UNNAMED_ALPHA);
+
+      /*
+       * Minor traces first, so the named lines draw over them rather than under.
+       *
+       * Each is scaled by its own measured depth: a faint crease is drawn faint. That is the same
+       * honesty the depth feature carries into the reading — the overlay should not make a shallow
+       * mark look like a deep one any more than the feature bag should.
+       */
+      if (minor !== undefined && minor.length > 0) {
+        context.save();
+        context.strokeStyle = LINE_GLOW;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.lineWidth = MINOR_WIDTH;
+        context.shadowBlur = 0;
+        for (const trace of minor) {
+          if (trace.points.length < 2) continue;
+          const depth = Math.min(1, Math.max(0, trace.depth) / DEPTH_FULL);
+          context.globalAlpha = traceAlpha * MINOR_ALPHA * (0.4 + 0.6 * depth);
+          context.beginPath();
+          let started = false;
+          for (const point of trace.points) {
+            const projected = project(point);
+            if (projected === null) continue;
+            if (started) context.lineTo(projected.x, projected.y);
+            else {
+              context.moveTo(projected.x, projected.y);
+              started = true;
+            }
+          }
+          context.stroke();
+        }
+        context.restore();
+      }
 
       if (!warming) {
         /*

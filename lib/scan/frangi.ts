@@ -269,16 +269,23 @@ export function hessianEigenvalues(a: number, b: number, d: number): readonly [n
  *
  * @param out optional destination; a fresh array is allocated when omitted. Pass one from a caller
  * that runs per frame — with `out` supplied this function allocates nothing at all after warm-up.
+ * @param bars optional second destination for the STEERED ORIENTED-BAR response, the per-pixel
+ * maximum over scales of the larger Hessian eigenvalue. Un-normalised, so the caller decides the
+ * scale — pass it through `normalizeResponses` exactly as the Gabor output is. Filling it costs one
+ * comparison per pixel per scale, because the quantity is already in hand; see the note at the
+ * assignment for why it was previously discarded.
  */
 export function detectVessels(
   gray: Float32Array,
   size: number,
   sigmas: readonly number[] = sigmasFor(size),
   out?: Float32Array,
+  bars?: Float32Array,
 ): Float32Array {
   const plane = size * size;
   const result = out ?? new Float32Array(plane);
   result.fill(0);
+  bars?.fill(0);
   if (gray.length !== plane || sigmas.length === 0) return result;
 
   const scratch = scratchFor(size, sigmas.length);
@@ -305,6 +312,19 @@ export function detectVessels(
         norm[base + i] = 0;
         continue;
       }
+      /*
+       * `hi` IS the steered oriented-bar response, and it used to be thrown away here.
+       *
+       * The larger eigenvalue of the γ-normalised Hessian equals the Freeman–Adelson G2 basis
+       * steered to its own maximum over orientation — `(Ra+Rc)/2 + hypot((Ra−Rc)/2, Rb)` — which is
+       * the same quantity `gaborBank` approximates by correlating against sixteen dense kernels at
+       * 22.5° steps. Verified to 0.00e+0 over a full 128² plane, and against a 720-orientation brute
+       * force to 2.4e-6. Keeping only the *ratio* `lo/hi` for blobness and discarding `hi` meant this
+       * module computed the best line detector in the codebase and then divided the evidence away —
+       * which is why it measured near-zero response along real creases while costing real time.
+       */
+      if (bars !== undefined && hi > bars[i]) bars[i] = hi;
+
       const magnitude = Math.sqrt(lo * lo + hi * hi);
       if (magnitude < FRANGI_S_EPS) {
         aniso[base + i] = 0;
