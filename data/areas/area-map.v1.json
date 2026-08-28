@@ -1,0 +1,4878 @@
+{
+  "areas": {
+    "dhan": {
+      "feature_roots": [
+        "fingers.jupiter_vs_apollo",
+        "fingers.sun",
+        "hand.shape",
+        "lines.fate",
+        "lines.head",
+        "lines.marriage",
+        "lines.sun",
+        "mounts.moon",
+        "signs.cross",
+        "signs.island",
+        "signs.star",
+        "thumb.cramped_to_palm",
+        "thumb.set",
+        "user.birth_window"
+      ],
+      "label_hi_en": "Paisa aur Samriddhi",
+      "polarity_split": {
+        "negative": 9,
+        "neutral": 3,
+        "positive": 7
+      },
+      "rule_ids": [
+        "PALM-FATE-003",
+        "PALM-FATE-004",
+        "PALM-FATE-009",
+        "PALM-FATE-019",
+        "PALM-FATE-020",
+        "PALM-FING-002",
+        "PALM-FING-007",
+        "PALM-FINGR-006",
+        "PALM-HEAD-011",
+        "PALM-HTYPE-009",
+        "PALM-MARK-004",
+        "PALM-MARR-015",
+        "PALM-MARR-024",
+        "PALM-MMOO-004",
+        "PALM-MMOO-005",
+        "PALM-MSUN-010",
+        "PALM-SIGN-002",
+        "PALM-SIGN-009",
+        "PALM-THUMB-005"
+      ]
+    },
+    "karm": {
+      "feature_roots": [
+        "fingers.joints",
+        "fingers.jupiter",
+        "fingers.jupiter_vs_apollo",
+        "fingers.mercury",
+        "fingers.sun",
+        "hand.shape",
+        "hand.shape_detail",
+        "lines.fate",
+        "lines.head",
+        "lines.life",
+        "lines.sun",
+        "lines.travel",
+        "mounts.jupiter",
+        "mounts.mars_inner",
+        "mounts.mercury",
+        "mounts.moon",
+        "mounts.saturn",
+        "mounts.sun",
+        "signs.circle",
+        "signs.croix_mystique",
+        "signs.cross",
+        "signs.island",
+        "signs.square",
+        "signs.star",
+        "user.birth_window"
+      ],
+      "label_hi_en": "Career aur Kaam",
+      "polarity_split": {
+        "negative": 10,
+        "neutral": 20,
+        "positive": 57
+      },
+      "rule_ids": [
+        "PALM-FATE-001",
+        "PALM-FATE-002",
+        "PALM-FATE-003",
+        "PALM-FATE-008",
+        "PALM-FATE-009",
+        "PALM-FATE-010",
+        "PALM-FATE-011",
+        "PALM-FATE-012",
+        "PALM-FATE-013",
+        "PALM-FATE-014",
+        "PALM-FATE-015",
+        "PALM-FATE-017",
+        "PALM-FATE-018",
+        "PALM-FING-001",
+        "PALM-FING-003",
+        "PALM-FINGR-001",
+        "PALM-FINGR-002",
+        "PALM-FINGR-005",
+        "PALM-FINGR-008",
+        "PALM-FINGR-017",
+        "PALM-HEAD-007",
+        "PALM-HEAD-011",
+        "PALM-HTYPE-002",
+        "PALM-HTYPE-004",
+        "PALM-HTYPE-008",
+        "PALM-HTYPE-012",
+        "PALM-HTYPE-015",
+        "PALM-LIFE-006",
+        "PALM-LIFE-010",
+        "PALM-MARK-004",
+        "PALM-MARK-006",
+        "PALM-MJUP-001",
+        "PALM-MJUP-007",
+        "PALM-MJUP-008",
+        "PALM-MJUP-012",
+        "PALM-MMAR-002",
+        "PALM-MMAR-003",
+        "PALM-MMAR-012",
+        "PALM-MMAR-013",
+        "PALM-MMAR-014",
+        "PALM-MMER-007",
+        "PALM-MMOO-003",
+        "PALM-MMOO-006",
+        "PALM-MMOO-008",
+        "PALM-MMOO-011",
+        "PALM-MMOO-014",
+        "PALM-MMOO-015",
+        "PALM-MMOO-016",
+        "PALM-MSAT-006",
+        "PALM-MSAT-008",
+        "PALM-MSAT-013",
+        "PALM-MSAT-014",
+        "PALM-MSUN-009",
+        "PALM-MSUN-011",
+        "PALM-MSUN-012",
+        "PALM-MVEN-018",
+        "PALM-MYST-002",
+        "PALM-MYST-003",
+        "PALM-SIGN-001",
+        "PALM-SIGN-002",
+        "PALM-SIGN-003",
+        "PALM-SIGN-004",
+        "PALM-SIGN-005",
+        "PALM-SIGN-006",
+        "PALM-SIGN-010",
+        "PALM-SIGN-011",
+        "PALM-SIGN-018",
+        "PALM-SUN-001",
+        "PALM-SUN-002",
+        "PALM-SUN-003",
+        "PALM-SUN-004",
+        "PALM-SUN-005",
+        "PALM-SUN-007",
+        "PALM-SUN-008",
+        "PALM-SUN-009",
+        "PALM-SUN-010",
+        "PALM-SUN-011",
+        "PALM-TRVL-001",
+        "PALM-TRVL-002",
+        "PALM-TRVL-003",
+        "PALM-TRVL-004",
+        "PALM-TRVL-005",
+        "PALM-TRVL-006",
+        "PALM-TRVL-007",
+        "PALM-TRVL-008",
+        "PALM-TRVL-009",
+        "PALM-TRVL-010"
+      ]
+    },
+    "rishte": {
+      "feature_roots": [
+        "hand.overall_quality",
+        "lines.children",
+        "lines.fate",
+        "lines.head",
+        "lines.heart",
+        "lines.influence",
+        "lines.life",
+        "lines.marriage",
+        "lines.sun",
+        "mounts.mars_inner",
+        "mounts.mercury",
+        "mounts.moon",
+        "mounts.sun",
+        "mounts.venus",
+        "signs.cross",
+        "signs.girdle_of_venus",
+        "signs.island",
+        "signs.star",
+        "thumb.base_phalange_long",
+        "user.birth_window"
+      ],
+      "label_hi_en": "Pyaar aur Rishte",
+      "polarity_split": {
+        "negative": 37,
+        "neutral": 22,
+        "positive": 23
+      },
+      "rule_ids": [
+        "PALM-CHILD-001",
+        "PALM-CHILD-002",
+        "PALM-CHILD-003",
+        "PALM-CHILD-004",
+        "PALM-CHILD-005",
+        "PALM-CHILD-006",
+        "PALM-FATE-004",
+        "PALM-FATE-005",
+        "PALM-FATE-006",
+        "PALM-FATE-007",
+        "PALM-FATE-014",
+        "PALM-FATE-015",
+        "PALM-GIRD-003",
+        "PALM-HEART-001",
+        "PALM-HEART-002",
+        "PALM-HEART-003",
+        "PALM-HEART-004",
+        "PALM-HEART-005",
+        "PALM-HEART-006",
+        "PALM-HEART-007",
+        "PALM-HEART-008",
+        "PALM-HEART-009",
+        "PALM-HEART-010",
+        "PALM-HEART-011",
+        "PALM-HEART-012",
+        "PALM-HEART-013",
+        "PALM-HEART-014",
+        "PALM-HEART-015",
+        "PALM-HEART-017",
+        "PALM-HEART-018",
+        "PALM-HEART-019",
+        "PALM-HEART-020",
+        "PALM-LIFE-010",
+        "PALM-MARK-003",
+        "PALM-MARR-001",
+        "PALM-MARR-002",
+        "PALM-MARR-003",
+        "PALM-MARR-004",
+        "PALM-MARR-005",
+        "PALM-MARR-006",
+        "PALM-MARR-007",
+        "PALM-MARR-008",
+        "PALM-MARR-009",
+        "PALM-MARR-010",
+        "PALM-MARR-011",
+        "PALM-MARR-012",
+        "PALM-MARR-013",
+        "PALM-MARR-014",
+        "PALM-MARR-015",
+        "PALM-MARR-016",
+        "PALM-MARR-017",
+        "PALM-MARR-018",
+        "PALM-MARR-019",
+        "PALM-MARR-020",
+        "PALM-MARR-021",
+        "PALM-MARR-022",
+        "PALM-MARR-023",
+        "PALM-MARR-024",
+        "PALM-MARR-025",
+        "PALM-MARR-026",
+        "PALM-MARR-027",
+        "PALM-MMAR-006",
+        "PALM-MMER-008",
+        "PALM-MMOO-002",
+        "PALM-MMOO-010",
+        "PALM-MMOO-018",
+        "PALM-MSAT-012",
+        "PALM-MSUN-006",
+        "PALM-MVEN-001",
+        "PALM-MVEN-003",
+        "PALM-MVEN-004",
+        "PALM-MVEN-005",
+        "PALM-MVEN-008",
+        "PALM-MVEN-012",
+        "PALM-MVEN-013",
+        "PALM-MVEN-014",
+        "PALM-MVEN-017",
+        "PALM-SIGN-007",
+        "PALM-SIGN-008",
+        "PALM-SIGN-014",
+        "PALM-SUN-006",
+        "PALM-THUMB-010"
+      ]
+    },
+    "sehat": {
+      "feature_roots": [
+        "lines.head",
+        "lines.health",
+        "lines.life",
+        "lines.mars",
+        "lines.quality",
+        "lines.sun",
+        "lines.travel",
+        "mounts.mars_inner",
+        "mounts.mercury",
+        "mounts.saturn",
+        "mounts.venus",
+        "nails.furrow_position",
+        "nails.white_flecks_many",
+        "signs.cross",
+        "signs.island",
+        "signs.spot",
+        "signs.square",
+        "user.birth_window"
+      ],
+      "label_hi_en": "Urja aur Sehat",
+      "polarity_split": {
+        "negative": 14,
+        "neutral": 15,
+        "positive": 14
+      },
+      "rule_ids": [
+        "PALM-HEAD-015",
+        "PALM-HEAD-017",
+        "PALM-HLTH-001",
+        "PALM-HLTH-002",
+        "PALM-HLTH-003",
+        "PALM-HLTH-004",
+        "PALM-HLTH-005",
+        "PALM-LIFE-001",
+        "PALM-LIFE-002",
+        "PALM-LIFE-003",
+        "PALM-LIFE-004",
+        "PALM-LIFE-005",
+        "PALM-LINQ-001",
+        "PALM-LINQ-002",
+        "PALM-LINQ-004",
+        "PALM-LINQ-007",
+        "PALM-LINQ-013",
+        "PALM-MARK-002",
+        "PALM-MARK-009",
+        "PALM-MARS-001",
+        "PALM-MARS-002",
+        "PALM-MJUP-014",
+        "PALM-MMAR-009",
+        "PALM-MMAR-018",
+        "PALM-MMER-011",
+        "PALM-MMER-016",
+        "PALM-MMER-017",
+        "PALM-MMOO-020",
+        "PALM-MSAT-009",
+        "PALM-MSAT-015",
+        "PALM-MSUN-014",
+        "PALM-MVEN-002",
+        "PALM-MVEN-004",
+        "PALM-MVEN-011",
+        "PALM-MVEN-019",
+        "PALM-NAIL-001",
+        "PALM-NAIL-002",
+        "PALM-SIGN-015",
+        "PALM-SIGN-016",
+        "PALM-SIGN-017",
+        "PALM-SIGN-018",
+        "PALM-SUN-010",
+        "PALM-TRVL-006"
+      ]
+    },
+    "swabhav": {
+      "feature_roots": [
+        "fingers.curve",
+        "fingers.joints",
+        "fingers.jupiter_vs_apollo",
+        "fingers.length_vs_palm",
+        "fingers.mercury",
+        "fingers.saturn",
+        "fingers.spacing",
+        "fingers.sun",
+        "geometry.quadrangle_shape",
+        "geometry.triangle_large",
+        "geometry.triangle_upper_angle_acute",
+        "hand.overall_quality",
+        "hand.shape",
+        "hand.shape_detail",
+        "lines.fate",
+        "lines.head",
+        "lines.head_heart_blended_single",
+        "lines.health",
+        "lines.heart",
+        "lines.influence",
+        "lines.intuition",
+        "lines.life",
+        "lines.marriage",
+        "lines.mars",
+        "lines.quality",
+        "lines.sun",
+        "lines.via_lasciva",
+        "mounts.jupiter",
+        "mounts.mars_inner",
+        "mounts.mercury",
+        "mounts.moon",
+        "mounts.overall_prominence",
+        "mounts.saturn",
+        "mounts.sun",
+        "mounts.venus",
+        "signs.bracelets",
+        "signs.croix_mystique",
+        "signs.cross",
+        "signs.girdle_of_venus",
+        "signs.ring_of_saturn",
+        "signs.ring_of_solomon",
+        "signs.star",
+        "thumb.base_phalange_long",
+        "thumb.clubbed",
+        "thumb.joint_middle_supple",
+        "thumb.joint_top",
+        "thumb.nail_phalange_long",
+        "thumb.straight_full",
+        "thumb.waist_like",
+        "thumb.will_phalange",
+        "user.birth_window"
+      ],
+      "label_hi_en": "Swabhav",
+      "polarity_split": {
+        "negative": 40,
+        "neutral": 65,
+        "positive": 64
+      },
+      "rule_ids": [
+        "PALM-FATE-001",
+        "PALM-FATE-012",
+        "PALM-FATE-018",
+        "PALM-FING-003",
+        "PALM-FING-004",
+        "PALM-FING-005",
+        "PALM-FING-006",
+        "PALM-FINGR-003",
+        "PALM-FINGR-004",
+        "PALM-FINGR-007",
+        "PALM-FINGR-008",
+        "PALM-FINGR-009",
+        "PALM-FINGR-010",
+        "PALM-FINGR-011",
+        "PALM-FINGR-013",
+        "PALM-FINGR-014",
+        "PALM-FINGR-015",
+        "PALM-FINGR-016",
+        "PALM-GIRD-001",
+        "PALM-GIRD-002",
+        "PALM-GIRD-003",
+        "PALM-GIRD-004",
+        "PALM-GIRD-005",
+        "PALM-GIRD-006",
+        "PALM-HEAD-001",
+        "PALM-HEAD-002",
+        "PALM-HEAD-003",
+        "PALM-HEAD-004",
+        "PALM-HEAD-005",
+        "PALM-HEAD-006",
+        "PALM-HEAD-008",
+        "PALM-HEAD-009",
+        "PALM-HEAD-010",
+        "PALM-HEAD-012",
+        "PALM-HEAD-013",
+        "PALM-HEAD-015",
+        "PALM-HEAD-016",
+        "PALM-HEAD-017",
+        "PALM-HEART-002",
+        "PALM-HEART-009",
+        "PALM-HEART-011",
+        "PALM-HEART-016",
+        "PALM-HLTH-002",
+        "PALM-HLTH-005",
+        "PALM-HTYPE-001",
+        "PALM-HTYPE-002",
+        "PALM-HTYPE-003",
+        "PALM-HTYPE-005",
+        "PALM-HTYPE-006",
+        "PALM-HTYPE-007",
+        "PALM-HTYPE-010",
+        "PALM-HTYPE-011",
+        "PALM-HTYPE-013",
+        "PALM-HTYPE-014",
+        "PALM-INTU-001",
+        "PALM-INTU-002",
+        "PALM-INTU-003",
+        "PALM-INTU-004",
+        "PALM-LIFE-003",
+        "PALM-LIFE-004",
+        "PALM-LIFE-006",
+        "PALM-LIFE-007",
+        "PALM-LINQ-003",
+        "PALM-LINQ-004",
+        "PALM-LINQ-005",
+        "PALM-LINQ-006",
+        "PALM-LINQ-008",
+        "PALM-LINQ-010",
+        "PALM-LINQ-011",
+        "PALM-LINQ-014",
+        "PALM-MARR-006",
+        "PALM-MARR-027",
+        "PALM-MARS-001",
+        "PALM-MARS-002",
+        "PALM-MARS-003",
+        "PALM-MJUP-001",
+        "PALM-MJUP-002",
+        "PALM-MJUP-003",
+        "PALM-MJUP-004",
+        "PALM-MJUP-005",
+        "PALM-MJUP-006",
+        "PALM-MJUP-008",
+        "PALM-MJUP-009",
+        "PALM-MJUP-010",
+        "PALM-MJUP-011",
+        "PALM-MJUP-013",
+        "PALM-MJUP-014",
+        "PALM-MMAR-002",
+        "PALM-MMAR-004",
+        "PALM-MMAR-005",
+        "PALM-MMAR-007",
+        "PALM-MMAR-008",
+        "PALM-MMAR-010",
+        "PALM-MMAR-011",
+        "PALM-MMAR-015",
+        "PALM-MMAR-016",
+        "PALM-MMAR-017",
+        "PALM-MMER-001",
+        "PALM-MMER-002",
+        "PALM-MMER-003",
+        "PALM-MMER-005",
+        "PALM-MMER-006",
+        "PALM-MMER-009",
+        "PALM-MMER-010",
+        "PALM-MMER-012",
+        "PALM-MMER-013",
+        "PALM-MMER-014",
+        "PALM-MMOO-001",
+        "PALM-MMOO-007",
+        "PALM-MMOO-012",
+        "PALM-MMOO-013",
+        "PALM-MMOO-015",
+        "PALM-MMOO-017",
+        "PALM-MMOO-018",
+        "PALM-MMOO-019",
+        "PALM-MNTG-003",
+        "PALM-MNTG-004",
+        "PALM-MSAT-001",
+        "PALM-MSAT-002",
+        "PALM-MSAT-003",
+        "PALM-MSAT-004",
+        "PALM-MSAT-005",
+        "PALM-MSAT-006",
+        "PALM-MSAT-007",
+        "PALM-MSAT-010",
+        "PALM-MSAT-011",
+        "PALM-MSAT-013",
+        "PALM-MSAT-015",
+        "PALM-MSUN-001",
+        "PALM-MSUN-002",
+        "PALM-MSUN-003",
+        "PALM-MSUN-004",
+        "PALM-MSUN-005",
+        "PALM-MSUN-007",
+        "PALM-MSUN-008",
+        "PALM-MSUN-011",
+        "PALM-MSUN-013",
+        "PALM-MVEN-003",
+        "PALM-MVEN-005",
+        "PALM-MVEN-007",
+        "PALM-MVEN-009",
+        "PALM-MVEN-010",
+        "PALM-MVEN-011",
+        "PALM-MVEN-016",
+        "PALM-MVEN-019",
+        "PALM-MYST-001",
+        "PALM-MYST-002",
+        "PALM-MYST-004",
+        "PALM-MYST-005",
+        "PALM-SIGN-006",
+        "PALM-SIGN-007",
+        "PALM-SIGN-012",
+        "PALM-SIGN-013",
+        "PALM-SUN-001",
+        "PALM-SUN-005",
+        "PALM-SUN-010",
+        "PALM-THUMB-002",
+        "PALM-THUMB-003",
+        "PALM-THUMB-004",
+        "PALM-THUMB-006",
+        "PALM-THUMB-007",
+        "PALM-THUMB-008",
+        "PALM-THUMB-009",
+        "PALM-THUMB-010",
+        "PALM-TRI-001",
+        "PALM-TRI-002",
+        "PALM-TRI-003",
+        "PALM-TRI-004",
+        "PALM-TRI-005"
+      ]
+    }
+  },
+  "meta": {
+    "excluded": 12,
+    "generated_at": "2026-08-20",
+    "kb_version": "0.2.0-cheiro-complete",
+    "map_version": "1.0",
+    "mapped": 342,
+    "rule_count_in": 377,
+    "unmapped": 23
+  },
+  "rules": [
+    {
+      "feature_roots": [
+        "lines.children"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-CHILD-001",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "lines.children"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-CHILD-002",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "lines.children"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-CHILD-003",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.children"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-CHILD-004",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.children"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-CHILD-005",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.children"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-CHILD-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-001",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.fate",
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-003",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "dhan"
+      ],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-FATE-004",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "dhan"
+      ],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-FATE-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-FATE-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-FATE-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-009",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "dhan"
+      ],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-012",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-014",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "rishte"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-FATE-015",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-017",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.fate",
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FATE-018",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "dhan",
+      "rule_id": "PALM-FATE-019",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "dhan",
+      "rule_id": "PALM-FATE-020",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "fingers.jupiter_vs_apollo"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FING-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "fingers.jupiter_vs_apollo",
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "dhan",
+      "rule_id": "PALM-FING-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "fingers.mercury"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FING-003",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "fingers.mercury"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FING-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "fingers.jupiter_vs_apollo"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FING-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "thumb.will_phalange"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FING-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "thumb.set"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "dhan",
+      "rule_id": "PALM-FING-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "fingers.jupiter"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FINGR-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "fingers.jupiter"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-FINGR-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "fingers.saturn"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "fingers.saturn"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "fingers.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FINGR-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "fingers.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "dhan",
+      "rule_id": "PALM-FINGR-006",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "fingers.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "fingers.mercury"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FINGR-008",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "fingers.mercury"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "fingers.mercury",
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-010",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "fingers.length_vs_palm"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "fingers.spacing"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "fingers.curve"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-014",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "fingers.curve"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-015",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "fingers.joints"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-FINGR-016",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "fingers.joints"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-FINGR-017",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "signs.girdle_of_venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-GIRD-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "signs.girdle_of_venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-GIRD-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "signs.girdle_of_venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-GIRD-003",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "signs.girdle_of_venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-GIRD-004",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "signs.ring_of_saturn"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-GIRD-005",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "signs.bracelets"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-GIRD-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-HEAD-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-010",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "dhan",
+      "rule_id": "PALM-HEAD-011",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-012",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-HEAD-015",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEAD-016",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-HEAD-017",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-002",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-009",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-010",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-011",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-012",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-014",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-015",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head_heart_blended_single"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HEART-016",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-017",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-018",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-019",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.heart"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-HEART-020",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.health"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-HLTH-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.health"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-HLTH-002",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.health"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-HLTH-003",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.health"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-HLTH-004",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.health"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-HLTH-005",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "hand.shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-001",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.4
+    },
+    {
+      "feature_roots": [
+        "hand.shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-HTYPE-002",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "hand.shape",
+        "thumb.joint_top",
+        "thumb.nail_phalange_long"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "hand.shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-HTYPE-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "hand.shape_detail"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "hand.shape_detail"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "hand.shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "hand.shape_detail"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-HTYPE-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "hand.shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "dhan",
+      "rule_id": "PALM-HTYPE-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "hand.shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "hand.shape",
+        "hand.shape_detail"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "hand.shape",
+        "hand.shape_detail"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-HTYPE-012",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "hand.shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-013",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "hand.shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-HTYPE-014",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "hand.shape",
+        "lines.head"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-HTYPE-015",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.intuition"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-INTU-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "hand.shape",
+        "lines.intuition"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-INTU-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.intuition"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-INTU-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.via_lasciva"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-INTU-004",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LIFE-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LIFE-002",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LIFE-003",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LIFE-004",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LIFE-005",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LIFE-006",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LIFE-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-LIFE-010",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LINQ-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LINQ-002",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LINQ-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LINQ-004",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LINQ-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LINQ-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LINQ-007",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LINQ-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LINQ-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LINQ-011",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-LINQ-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.quality"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-LINQ-014",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "signs.island"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MARK-002",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "signs.island"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARK-003",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "signs.island"
+      ],
+      "mapped_by": "override",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-MARK-004",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "dhan"
+      ],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "signs.circle"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MARK-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "signs.spot"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MARK-009",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "override",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "override",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-006",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-007",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "override",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-009",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-010",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-011",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-012",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-013",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-014",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "override",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-015",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "dhan"
+      ],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-016",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-017",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-018",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-019",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.marriage"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-020",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.influence",
+        "lines.marriage"
+      ],
+      "mapped_by": "override",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-021",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.influence"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-022",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.influence"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-023",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "override",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-024",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "dhan"
+      ],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.fate"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-025",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.influence"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-026",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.influence"
+      ],
+      "mapped_by": "prefix",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MARR-027",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.mars"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MARS-001",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.life",
+        "lines.mars"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MARS-002",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.mars"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MARS-003",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.jupiter"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-001",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "mounts.jupiter"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "mounts.jupiter"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.jupiter"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.4
+    },
+    {
+      "feature_roots": [
+        "mounts.jupiter",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.jupiter",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "mounts.jupiter",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MJUP-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.jupiter",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-MJUP-008",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.jupiter",
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MJUP-012",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MJUP-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MJUP-014",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "mounts.mars_inner"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-002",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "mounts.mars_inner"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMAR-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "mounts.mars_inner"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.mars_inner"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.mars_inner"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MMAR-006",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "mounts.mars_inner"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "mounts.mars_inner"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "mounts.mars_inner"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MMAR-009",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "mounts.mars_inner",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMAR-012",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMAR-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMAR-014",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-015",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-016",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMAR-017",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MMAR-018",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.45
+    },
+    {
+      "feature_roots": [
+        "mounts.mercury"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "mounts.mercury"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "mounts.mercury"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-003",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.mercury"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.4
+    },
+    {
+      "feature_roots": [
+        "mounts.mercury",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.mercury",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMER-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.mercury",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MMER-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.mercury",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.mercury",
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-010",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "mounts.mercury",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MMER-011",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-012",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-013",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.head",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMER-014",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MMER-016",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MMER-017",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMOO-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MMOO-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMOO-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "dhan",
+      "rule_id": "PALM-MMOO-004",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "dhan",
+      "rule_id": "PALM-MMOO-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMOO-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "tag",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMOO-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMOO-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MMOO-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMOO-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.moon",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMOO-012",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.moon"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMOO-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMOO-014",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMOO-015",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-MMOO-016",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMOO-017",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MMOO-018",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MMOO-019",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MMOO-020",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.overall_prominence"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MNTG-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.overall_prominence"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MNTG-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-003",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn",
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-005",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-006",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn",
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-007",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MSAT-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.saturn",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MSAT-009",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.45
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MSAT-012",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSAT-013",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MSAT-014",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MSAT-015",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "mounts.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.4
+    },
+    {
+      "feature_roots": [
+        "mounts.sun",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "mounts.sun",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-005",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.sun",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MSUN-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.sun",
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-007",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.sun",
+        "user.birth_window"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-008",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.sun",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MSUN-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "dhan",
+      "rule_id": "PALM-MSUN-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-011",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-MSUN-012",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MSUN-013",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MSUN-014",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "mounts.venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "mounts.venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MVEN-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "mounts.venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-003",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-004",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "sehat"
+      ],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "hand.overall_quality",
+        "mounts.venus"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-005",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "mounts.venus",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MVEN-007",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "mounts.venus",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "mounts.venus",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MVEN-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "mounts.venus",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MVEN-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.venus",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MVEN-011",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "mounts.venus",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-012",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "mounts.venus",
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-014",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MVEN-016",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-MVEN-017",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MVEN-018",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-MVEN-019",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "signs.croix_mystique"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MYST-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "signs.croix_mystique"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MYST-002",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "signs.croix_mystique"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-MYST-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "signs.croix_mystique"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MYST-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "signs.ring_of_solomon"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-MYST-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "nails.furrow_position"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "sehat",
+      "rule_id": "PALM-NAIL-001",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "nails.white_flecks_many"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-NAIL-002",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "signs.star"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SIGN-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "signs.star"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "dhan",
+      "rule_id": "PALM-SIGN-002",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm"
+      ],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "signs.star"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SIGN-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "signs.star"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SIGN-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "signs.star"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SIGN-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "signs.star"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SIGN-006",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "signs.star"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-SIGN-007",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "signs.cross"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-SIGN-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "signs.cross"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "dhan",
+      "rule_id": "PALM-SIGN-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "signs.cross"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-SIGN-010",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "signs.cross"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-SIGN-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "signs.cross"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-SIGN-012",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "signs.cross"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-SIGN-013",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "signs.cross"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "rishte",
+      "rule_id": "PALM-SIGN-014",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "signs.cross"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "sehat",
+      "rule_id": "PALM-SIGN-015",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "signs.square"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-SIGN-016",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "signs.square"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-SIGN-017",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "signs.square"
+      ],
+      "mapped_by": "override",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SIGN-018",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "sehat"
+      ],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-001",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-005",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-SUN-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.8
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "tag",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.85
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "sehat",
+      "rule_id": "PALM-SUN-010",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "karm",
+        "swabhav"
+      ],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.sun"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "karm",
+      "rule_id": "PALM-SUN-011",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "thumb.joint_top"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-THUMB-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "thumb.joint_top"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-THUMB-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "thumb.joint_top",
+        "thumb.nail_phalange_long"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-THUMB-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "thumb.cramped_to_palm"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "dhan",
+      "rule_id": "PALM-THUMB-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "thumb.joint_middle_supple"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-THUMB-006",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "thumb.clubbed"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-THUMB-007",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "thumb.waist_like"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-THUMB-008",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "thumb.straight_full"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-THUMB-009",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "thumb.base_phalange_long"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "rishte",
+      "rule_id": "PALM-THUMB-010",
+      "safety_class": "standard",
+      "secondary_areas": [
+        "swabhav"
+      ],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "geometry.triangle_large"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-TRI-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "geometry.triangle_upper_angle_acute"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-TRI-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "geometry.quadrangle_shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "positive",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-TRI-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "geometry.quadrangle_shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-TRI-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "geometry.quadrangle_shape"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "swabhav",
+      "rule_id": "PALM-TRI-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.55
+    },
+    {
+      "feature_roots": [
+        "lines.travel"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-001",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-002",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.75
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-003",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.7
+    },
+    {
+      "feature_roots": [
+        "lines.life"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-004",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.travel"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-005",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "lines.travel"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-006",
+      "safety_class": "sensitive",
+      "secondary_areas": [
+        "sehat"
+      ],
+      "weight": 0.65
+    },
+    {
+      "feature_roots": [
+        "lines.travel"
+      ],
+      "mapped_by": "category",
+      "polarity": "negative",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-007",
+      "safety_class": "standard",
+      "secondary_areas": [],
+      "weight": 0.6
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-008",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-009",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    },
+    {
+      "feature_roots": [
+        "user.birth_window"
+      ],
+      "mapped_by": "category",
+      "polarity": "neutral",
+      "primary_area": "karm",
+      "rule_id": "PALM-TRVL-010",
+      "safety_class": "sensitive",
+      "secondary_areas": [],
+      "weight": 0.5
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "_comment": "Hand-authored area overrides — HIGHEST precedence in scripts/build_area_map.py. A rule_id listed here takes its areas from this file and nothing else is consulted: not the prefix table, not the category table, not the tag table. So `secondary_areas` must be written out in full, because tags will not be read to top it up. Every entry needs a `why` naming the specific thing the automatic route gets wrong. v1 is deliberately small — it covers only the cases where `category` sends a rule somewhere a reader would not look for it. Everything else waits on area-map.report.md.",
+  "overrides": {
+    "PALM-MARR-003": {
+      "primary_area": "rishte",
+      "secondary_areas": [],
+      "why": "category is `timing`, which the map SKIPS, so this rule would vanish entirely. It is a marriage rule about early union — the timing label describes its evidence, not its subject."
+    },
+    "PALM-MARR-004": {
+      "primary_area": "rishte",
+      "secondary_areas": [],
+      "why": "same as MARR-003: category `timing` would drop a late-marriage rule that belongs in rishte."
+    },
+    "PALM-MARR-008": {
+      "primary_area": "rishte",
+      "secondary_areas": [],
+      "why": "category `timing` would drop it. Marriage delay + long-distance is a relationship reading, not a phase reading."
+    },
+    "PALM-MARR-021": {
+      "primary_area": "rishte",
+      "secondary_areas": [],
+      "why": "category `timing` would drop the highest-weight marriage rule in the KB (0.85, tagged engine_method). Recorded explicitly rather than left to the MARR prefix rule, because losing it silently would be expensive."
+    },
+    "PALM-MARR-015": {
+      "primary_area": "rishte",
+      "secondary_areas": ["dhan"],
+      "why": "category is `wealth`, so it would file a MARRIAGE rule under money. Cheiro's claim is about marrying into means: rishte is the subject, dhan is the consequence. Both are recorded rather than one being lost."
+    },
+    "PALM-MARR-024": {
+      "primary_area": "rishte",
+      "secondary_areas": ["dhan"],
+      "why": "same as MARR-015 — sasural_dhan reads as a spouse-luck rule, not a money-management rule."
+    },
+    "PALM-MARK-004": {
+      "primary_area": "karm",
+      "secondary_areas": ["dhan"],
+      "why": "category is `wealth`, but the tags are island / career_setback / conservative_phase — the subject is a career interruption and the money advice is downstream of it. Filing it under dhan buries a career rule."
+    },
+    "PALM-SIGN-018": {
+      "primary_area": "karm",
+      "secondary_areas": ["sehat"],
+      "why": "category is `wealth`, but the tags are square / protection / career_recovery — a protective mark over a career setback. Nothing in it is about money. Note this and MARK-004 both REMOVE rules from dhan; see the thin-area warning in area-map.report.md."
+    }
+  }
+}
