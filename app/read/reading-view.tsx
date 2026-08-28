@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { HoloPalm } from "@/components/holo-palm";
 import { ShareCard } from "@/components/share-card";
+import { DrawerShell } from "@/components/areas/drawer-shell";
+import { AreaGrid } from "@/components/areas/area-grid";
 import type { FeedbackState, PublicRule, ReadingResponse, Verdict } from "./reading-types";
 
 /** Anchored pricing on the upgrade card. Nothing is purchasable yet. */
@@ -32,7 +33,7 @@ const VERDICTS: ReadonlyArray<{ readonly value: Verdict; readonly label: string 
  * `pathLength={1}` normalises the circle so the dash array is just the ratio — no circumference
  * arithmetic to drift if the radius ever changes.
  */
-function DepthMeter({ confidence }: { readonly confidence: number }) {
+export function DepthMeter({ confidence }: { readonly confidence: number }) {
   const uid = useId();
   const value = Math.min(1, Math.max(0, confidence));
   const percent = Math.round(value * 100);
@@ -75,100 +76,51 @@ function DepthMeter({ confidence }: { readonly confidence: number }) {
 
 /* ------------------------------ Source drawer ------------------------------ */
 
-function SourceDrawer({ rule, onClose }: { readonly rule: PublicRule | null; readonly onClose: () => void }) {
-  const reduced = useReducedMotion() ?? false;
-  const closeRef = useRef<HTMLButtonElement | null>(null);
-  const open = rule !== null;
-
-  useEffect(() => {
-    if (!open) return;
-    closeRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
+export function SourceDrawer({ rule, onClose }: { readonly rule: PublicRule | null; readonly onClose: () => void }) {
   return (
-    <AnimatePresence>
+    <DrawerShell
+      open={rule !== null}
+      onClose={onClose}
+      titleId="source-drawer-title"
+      eyebrow="Source"
+      title={rule?.rule_id ?? ""}
+      closeLabel="Source panel band karo"
+    >
       {rule !== null ? (
         <>
-          <motion.div
-            key="backdrop"
-            className="fixed inset-0 z-[60] bg-night/80 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reduced ? 0 : 0.18 }}
-            onClick={onClose}
-            aria-hidden="true"
-          />
-          <motion.aside
-            key="drawer"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="source-drawer-title"
-            className="fixed inset-y-0 right-0 z-[61] flex w-full max-w-md flex-col gap-5 overflow-y-auto border-l border-hairline bg-surface p-6"
-            initial={reduced ? { opacity: 0 } : { x: "100%" }}
-            animate={reduced ? { opacity: 1 } : { x: 0 }}
-            exit={reduced ? { opacity: 0 } : { x: "100%" }}
-            transition={{ duration: reduced ? 0 : 0.28, ease: [0.32, 0.72, 0, 1] }}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex flex-col gap-1">
-                <span className="font-display text-xs uppercase tracking-[0.22em] text-line-glow">Source</span>
-                <h2 id="source-drawer-title" className="font-display text-xl font-semibold tracking-tight text-ink">
-                  {rule.rule_id}
-                </h2>
-              </div>
-              <button
-                ref={closeRef}
-                type="button"
-                onClick={onClose}
-                aria-label="Source panel band karo"
-                className="rounded-full border border-hairline p-2 text-ink transition-colors hover:border-mount-glow hover:text-mount-glow"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round">
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </button>
+          <p className="text-base leading-7 text-ink">{rule.interpretation_hi_en}</p>
+
+          <dl className="flex flex-col gap-4 border-t border-hairline pt-5 text-sm">
+            <div className="flex flex-col gap-1">
+              <dt className="font-display text-xs uppercase tracking-[0.18em] text-muted">Citation</dt>
+              <dd className="text-ink">{rule.source === "" ? "Source recorded nahi hai." : rule.source}</dd>
             </div>
-
-            <p className="text-base leading-7 text-ink">{rule.interpretation_hi_en}</p>
-
-            <dl className="flex flex-col gap-4 border-t border-hairline pt-5 text-sm">
-              <div className="flex flex-col gap-1">
-                <dt className="font-display text-xs uppercase tracking-[0.18em] text-muted">Citation</dt>
-                <dd className="text-ink">{rule.source === "" ? "Source recorded nahi hai." : rule.source}</dd>
-              </div>
-              <div className="flex flex-col gap-1">
-                <dt className="font-display text-xs uppercase tracking-[0.18em] text-muted">Category</dt>
-                <dd className="text-ink">
-                  {rule.category} · {rule.polarity}
+            <div className="flex flex-col gap-1">
+              <dt className="font-display text-xs uppercase tracking-[0.18em] text-muted">Category</dt>
+              <dd className="text-ink">
+                {rule.category} · {rule.polarity}
+              </dd>
+            </div>
+            <div className="flex flex-col gap-1">
+              <dt className="font-display text-xs uppercase tracking-[0.18em] text-muted">Weight</dt>
+              <dd className="tabular-nums text-ink">{rule.weight.toFixed(2)}</dd>
+            </div>
+            {rule.tags.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                <dt className="font-display text-xs uppercase tracking-[0.18em] text-muted">Tags</dt>
+                <dd className="flex flex-wrap gap-2">
+                  {rule.tags.map((tag) => (
+                    <span key={tag} className="rounded-full border border-hairline px-2.5 py-0.5 text-xs text-muted">
+                      {tag}
+                    </span>
+                  ))}
                 </dd>
               </div>
-              <div className="flex flex-col gap-1">
-                <dt className="font-display text-xs uppercase tracking-[0.18em] text-muted">Weight</dt>
-                <dd className="tabular-nums text-ink">{rule.weight.toFixed(2)}</dd>
-              </div>
-              {rule.tags.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  <dt className="font-display text-xs uppercase tracking-[0.18em] text-muted">Tags</dt>
-                  <dd className="flex flex-wrap gap-2">
-                    {rule.tags.map((tag) => (
-                      <span key={tag} className="rounded-full border border-hairline px-2.5 py-0.5 text-xs text-muted">
-                        {tag}
-                      </span>
-                    ))}
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
-          </motion.aside>
+            ) : null}
+          </dl>
         </>
       ) : null}
-    </AnimatePresence>
+    </DrawerShell>
   );
 }
 
@@ -336,6 +288,18 @@ export function ReadingView({
           );
         })}
       </div>
+
+      {/*
+       * Between the narration and the rules list: the areas answer "how does it look for X", which
+       * is the question the narration just gestured at and the flat rules list never organises.
+       *
+       * Guarded because `areas` is an ELEVENTH key added in C3 — a client holding a response from
+       * before it existed renders the rest of the report untouched rather than throwing. The
+       * optional chain is the whole migration story.
+       */}
+      {reading.areas !== undefined && reading.areas.length > 0 ? (
+        <AreaGrid areas={reading.areas} readingId={readingId} />
+      ) : null}
 
       {missingCount > 0 ? (
         <article className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-hairline p-6">

@@ -26,6 +26,27 @@ const FREE_TIER_VISIBLE_RULES = 3;
  * them. Free gets the count and the citations but not the reading — enough to show the evidence is
  * real, not enough to be the product. `lockedEvidenceCount` carries the rest as the upsell number.
  */
+/**
+ * Free-tier citation locus, trimmed to its first clause.
+ *
+ * `sources[].loc` is prose that often carries the finding itself — "Ch.VII — the shorter the Line of
+ * Heart, the less the higher sentiments manifest" hands over the reading the tier is withholding.
+ * Cutting at the first separator keeps the provenance ("Ch.VII", "Part II Ch.XII") and drops the
+ * paraphrase. `text` and `year` are untouched: the book and its date are never the paid part.
+ */
+const FREE_LOC_MAX_CHARS = 40;
+const LOC_SEPARATORS: readonly string[] = [" — ", ", "];
+
+function truncateLoc(loc: string): string {
+  let cut = loc;
+  for (const separator of LOC_SEPARATORS) {
+    const at = cut.indexOf(separator);
+    if (at > 0) cut = cut.slice(0, at);
+  }
+  if (cut.length <= FREE_LOC_MAX_CHARS) return cut === loc ? loc : `${cut}…`;
+  return `${cut.slice(0, FREE_LOC_MAX_CHARS)}…`;
+}
+
 const AREA_EVIDENCE_LIMIT: Readonly<Record<ReadingTier, number>> = {
   free: 2,
   premium: 8,
@@ -124,7 +145,9 @@ export function toPublicAreaVerdict(verdict: AreaVerdict, tier: ReadingTier): Pu
       polarity: item.polarity,
       contribution: item.contribution,
       ...(withText ? { interpretation_hi_en: item.interpretation_hi_en } : {}),
-      sources: item.sources,
+      sources: withText
+        ? item.sources
+        : item.sources.map((source) => ({ ...source, loc: truncateLoc(source.loc) })),
     })),
     lockedEvidenceCount: Math.max(0, verdict.evidence.length - shown.length),
     meta: verdict.meta,

@@ -143,6 +143,19 @@ async function main(): Promise<void> {
       );
       /* But the citation is not — free users see that the evidence is real, just not what it says. */
       assert.ok(Array.isArray(item.sources) && item.sources.length > 0, `${verdict.area}: citation survives`);
+      for (const source of item.sources) {
+        /*
+         * `loc` is prose that often carries the finding itself — "Ch.VII — the shorter the Line of
+         * Heart, the less the higher sentiments manifest" would hand over the very reading the tier
+         * is withholding. Trimmed to its first clause: 40 chars plus the ellipsis.
+         */
+        assert.ok(
+          source.loc.length <= 41,
+          `${verdict.area}/${item.rule_id}: free loc is trimmed (${source.loc.length} chars: ${JSON.stringify(source.loc)})`,
+        );
+        /* The book and its year are never the paid part. */
+        assert.ok(source.text.length > 0, `${item.rule_id}: book name survives`);
+      }
     }
   }
 
@@ -157,6 +170,9 @@ async function main(): Promise<void> {
     );
     assert.equal(verdict.evidence.length + verdict.lockedEvidenceCount, total, `${verdict.area}: nothing vanishes`);
   }
+
+  const trimmed = free.wire.flatMap((v) => v.evidence).flatMap((e) => e.sources).filter((s) => s.loc.endsWith("…"));
+  assert.ok(trimmed.length > 0, "at least one free-tier loc really was shortened, or the cap proves nothing");
 
   const withLocked = free.wire.filter((v) => v.lockedEvidenceCount > 0);
   assert.ok(withLocked.length > 0, "the rich fixture actually has something to lock, or this proves nothing");
@@ -195,6 +211,10 @@ async function main(): Promise<void> {
         assert.ok(source.year === null || typeof source.year === "number", `${item.rule_id}: source.year`);
       }
       assert.equal(typeof item.sources, "object", `${item.rule_id}: sources is NOT a pre-joined string`);
+      /* And deep gets the locus whole — no trimming above the free tier. */
+      for (const source of item.sources) {
+        assert.ok(!source.loc.endsWith("…"), `${item.rule_id}: deep loc is untruncated (${JSON.stringify(source.loc)})`);
+      }
     }
   }
 

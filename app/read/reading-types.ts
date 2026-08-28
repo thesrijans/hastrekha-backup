@@ -53,6 +53,11 @@ export interface PublicAreaEvidence {
   readonly contribution: number;
   /** Absent on the free tier — the citation is shown, the reading is not. */
   readonly interpretation_hi_en?: string;
+  /**
+   * On the free tier `loc` is trimmed to its first clause: the locus often carries the finding
+   * itself ("Ch.VII — the shorter the Line of Heart…"), so the provenance is kept and the
+   * paraphrase dropped. `text` and `year` are never trimmed.
+   */
   readonly sources: readonly AreaSource[];
 }
 
@@ -86,8 +91,14 @@ export interface ReadingResponse {
   readonly narration: Narration;
   readonly rules: readonly PublicRule[];
   readonly clusters: readonly ReadingCluster[];
-  /** Five life-area verdicts. Response-computed, not persisted — see docs/AREA_VERDICTS.md. */
-  readonly areas: readonly PublicAreaVerdict[];
+  /**
+   * Five life-area verdicts. Response-computed, not persisted — see docs/AREA_VERDICTS.md.
+   *
+   * Optional because it is an ELEVENTH key: a client holding a response cached from before C3 has
+   * no `areas`, and the reading view must render everything else rather than throw. Drop the `?`
+   * once no such response can still be in flight.
+   */
+  readonly areas?: readonly PublicAreaVerdict[];
   readonly lockedRuleCount: number;
   readonly confidence: number;
   readonly coverage: {

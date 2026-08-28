@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx test/engine.test.ts && tsx test/sanitize.test.ts && tsx test/scan.test.ts && tsx test/palm-edge.test.ts && tsx test/curve.test.ts && tsx test/facing.test.ts && tsx test/view-transform.test.ts && tsx test/ridge.test.ts && tsx test/pipeline.test.ts && tsx test/frangi.test.ts && tsx test/persistence.test.ts && tsx test/completion.test.ts && tsx test/gate-independence.test.ts && tsx test/reading-session.test.ts && tsx test/browser-path.test.ts && tsx test/flags-identity.test.ts && tsx test/placement.test.ts && tsx test/traces.test.ts && tsx test/area-score.test.ts && tsx test/api-areas.test.ts && tsx test/golden.test.ts && tsx test/real-fixtures.test.ts",
+    "test": "tsx test/engine.test.ts && tsx test/sanitize.test.ts && tsx test/scan.test.ts && tsx test/palm-edge.test.ts && tsx test/curve.test.ts && tsx test/facing.test.ts && tsx test/view-transform.test.ts && tsx test/ridge.test.ts && tsx test/pipeline.test.ts && tsx test/frangi.test.ts && tsx test/persistence.test.ts && tsx test/completion.test.ts && tsx test/gate-independence.test.ts && tsx test/reading-session.test.ts && tsx test/browser-path.test.ts && tsx test/flags-identity.test.ts && tsx test/placement.test.ts && tsx test/traces.test.ts && tsx test/area-score.test.ts && tsx test/api-areas.test.ts && tsx test/area-ui.test.tsx && tsx test/golden.test.ts && tsx test/real-fixtures.test.ts",
     "vendor:mediapipe": "node scripts/vendor-mediapipe.mjs",
     "prebuild": "node scripts/vendor-mediapipe.mjs"
   },
