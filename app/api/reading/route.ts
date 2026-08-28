@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import kbDocument from "@/data/kb/hastrekha_kb.json";
-import { evaluateRules, loadKnowledgeBase, narrateReading, type FiredRule, type KnowledgeBase } from "@/lib/hastrekha";
+import { evaluateRules, loadKnowledgeBase, narrateReading, scoreAreas, type AreaVerdict, type FiredRule, type KbRule, type KnowledgeBase } from "@/lib/hastrekha";
+// Imported by path, not from the barrel: it statically pulls the 111 KB area map and the barrel is
+// in the client graph. See the note in lib/hastrekha/index.ts.
+import { loadAreaMap } from "@/lib/hastrekha/area-map-loader";
 import { sanitizeReadingRequest } from "@/lib/hastrekha/sanitize";
 import { checkRateLimit } from "@/lib/hastrekha/rate-limit";
 import { getSessionUser } from "@/lib/auth/session";
@@ -18,9 +21,25 @@ export const dynamic = "force-dynamic";
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 12;
 const FREE_TIER_VISIBLE_RULES = 3;
+/**
+ * How many evidence rows each tier sees per area, and whether the interpretation text comes with
+ * them. Free gets the count and the citations but not the reading — enough to show the evidence is
+ * real, not enough to be the product. `lockedEvidenceCount` carries the rest as the upsell number.
+ */
+const AREA_EVIDENCE_LIMIT: Readonly<Record<ReadingTier, number>> = {
+  free: 2,
+  premium: 8,
+  deep: Number.POSITIVE_INFINITY,
+};
 
 /** Parsed once per server instance; throws at boot if the KB is malformed (fail fast, not per request). */
 const KB: KnowledgeBase = loadKnowledgeBase(kbDocument);
+/**
+ * Validated against the KB once per server instance. A map that disagrees with the KB takes the
+ * route down at boot rather than quietly scoring areas from stale mappings — the same fail-loud
+ * trade lib/env.ts makes, and right for the same reason: it was already wrong before the request.
+ */
+const AREA_MAP = loadAreaMap(KB);
 
 interface PublicRule {
   readonly rule_id: string;
@@ -42,6 +61,73 @@ function toPublicRule(item: FiredRule): PublicRule {
     weight: Number(item.effectiveWeight.toFixed(3)),
     source: source ? `${source.text} (${source.year}) — ${source.loc}` : "",
     tags: item.rule.tags,
+  };
+}
+
+/**
+ * One row of area evidence as the wire carries it.
+ *
+ * `sources` stays STRUCTURED here, unlike {@link PublicRule.source} which pre-joins to one string
+ * and drops everything after `sources[0]`. That flattening is what makes a citation surface
+ * impossible to build; the old field is left exactly as it is because the current reading UI reads
+ * it, and C4 migrates that. Two shapes for the same data is the cost of not breaking the client.
+ */
+interface PublicAreaEvidence {
+  readonly rule_id: string;
+  readonly role: "primary" | "secondary";
+  readonly polarity: string;
+  readonly contribution: number;
+  /** Absent on the free tier — the citation is shown, the reading is not. */
+  readonly interpretation_hi_en?: string;
+  readonly sources: KbRule["sources"];
+}
+
+interface PublicAreaVerdict {
+  readonly area: string;
+  readonly label_hi_en: string;
+  readonly direction: string | null;
+  readonly strength: number | null;
+  readonly band: string;
+  readonly conflict: number;
+  readonly independence: number;
+  readonly coverage: number;
+  readonly evidence: readonly PublicAreaEvidence[];
+  /** Evidence rows the tier did not receive. The free tier's upsell number. */
+  readonly lockedEvidenceCount: number;
+  readonly meta: AreaVerdict["meta"];
+}
+
+/**
+ * Exported for test/api-areas.test.ts.
+ *
+ * The route module itself cannot be imported by a test — `lib/env.ts` throws at import when the
+ * env contract is unmet, and `POST` would reach Prisma and OpenRouter. So the tier gate is tested
+ * here, at the one place it is decided, and the chain feeding it (sanitize → evaluate → score) is
+ * tested against the real KB alongside.
+ */
+export function toPublicAreaVerdict(verdict: AreaVerdict, tier: ReadingTier): PublicAreaVerdict {
+  const limit = AREA_EVIDENCE_LIMIT[tier];
+  const shown = Number.isFinite(limit) ? verdict.evidence.slice(0, limit) : verdict.evidence;
+  const withText = tier !== "free";
+  return {
+    area: verdict.area,
+    label_hi_en: verdict.label_hi_en,
+    direction: verdict.direction,
+    strength: verdict.strength,
+    band: verdict.band,
+    conflict: Number(verdict.conflict.toFixed(4)),
+    independence: verdict.independence,
+    coverage: Number(verdict.coverage.toFixed(4)),
+    evidence: shown.map((item) => ({
+      rule_id: item.rule_id,
+      role: item.role,
+      polarity: item.polarity,
+      contribution: item.contribution,
+      ...(withText ? { interpretation_hi_en: item.interpretation_hi_en } : {}),
+      sources: item.sources,
+    })),
+    lockedEvidenceCount: Math.max(0, verdict.evidence.length - shown.length),
+    meta: verdict.meta,
   };
 }
 
@@ -149,6 +235,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     categories,
   });
 
+  /*
+   * Scored from `result.fired` — the whole evaluated set — and deliberately BEFORE `visibleRules`
+   * below. The tier truncation is a display decision; scoring an area from three rules because the
+   * caller is on the free tier would make the verdict a function of what they paid, not of their
+   * hand. The tier gate is applied afterwards, to the evidence list only.
+   *
+   * Sensitive rules cannot be resurrected here: `evaluateRules` has already excluded them for the
+   * free tier via `includeSensitive`, and `scoreAreas` reads nothing but `result.fired`.
+   */
+  const areaVerdicts = scoreAreas(
+    { fired: result.fired, providedFeatures: result.coverage.provided },
+    AREA_MAP,
+  );
+
   const narration = await narrateReading(result, {
     tier,
     question,
@@ -186,6 +286,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       agreement: cluster.agreement,
       rule_ids: cluster.rules.map((item) => item.rule.rule_id),
     })),
+    areas: areaVerdicts.map((verdict) => toPublicAreaVerdict(verdict, tier)),
     confidence: result.confidence,
     coverage: result.coverage,
     birthWindows: result.birthWindows,

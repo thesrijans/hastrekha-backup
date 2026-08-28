@@ -239,3 +239,102 @@ Every number above is a judgement call, and all of them are frozen in `area-scor
 three snapshots in `test/fixtures/area-golden/`. Any change that moves a published verdict fails
 that test and has to be re-baselined on purpose with `AREA_GOLDEN_WRITE=1`. There is no auto-write
 on mismatch — a snapshot that updates itself is one that can never fail.
+
+---
+
+## API surface v1
+
+`POST /api/reading` gained an eleventh key. Nothing else about the response changed.
+
+```jsonc
+{
+  "readingId": "...", "tier": "...", "narration": {...}, "rules": [...],
+  "areas": [ /* always 5, in the order dhan · rishte · karm · sehat · swabhav */ ],
+  "lockedRuleCount": 0, "clusters": [...], "confidence": 0.6,
+  "coverage": {...}, "birthWindows": [...], "meta": {...}
+}
+```
+
+One area:
+
+```jsonc
+{
+  "area": "rishte",
+  "label_hi_en": "Pyaar aur Rishte",
+  "direction": "anukool",        // null exactly when band is INSUFFICIENT
+  "strength": 90,                // 0-100, direction-free; null when INSUFFICIENT
+  "band": "HIGH",
+  "conflict": 0.2,               // 4dp
+  "independence": 3,
+  "coverage": 0.8333,            // 4dp, per-area — NOT the response's global coverage.ratio
+  "evidence": [ { "rule_id": "...", "role": "primary", "polarity": "positive",
+                  "contribution": 0.85,
+                  "interpretation_hi_en": "...",     // absent on free
+                  "sources": [ { "text": "...", "loc": "...", "year": 1916 } ] } ],
+  "lockedEvidenceCount": 3,
+  "meta": { "map_version": "1.0", "engine_version": "area-v1.0" }
+}
+```
+
+### Tier gates
+
+| tier | evidence rows per area | `interpretation_hi_en` | `sources` | sensitive rules |
+|---|---|---|---|---|
+| free | top 2 | **withheld** | full | excluded by the engine |
+| premium | top 8 | full | full | included |
+| deep | all | full | full | included |
+
+`lockedEvidenceCount` is the exact number of rows the tier did not receive — the free tier's upsell
+number, and asserted exact rather than decorative.
+
+Free sees the **citation but not the reading**: enough to show the evidence is real, not enough to
+be the product.
+
+### Two positional decisions
+
+**Areas are scored before the tier truncation.** `scoreAreas` is fed `result.fired` — the whole
+evaluated set — not `visibleRules`. Scoring an area from three rules because the caller is on the
+free tier would make the verdict a function of what they paid rather than of their hand. Measured on
+the rich fixture: the free tier scores on 29 evidence rows and displays 9.
+
+**Sensitive rules cannot be resurrected.** `evaluateRules` already excludes them for the free tier
+via `includeSensitive`, and `scoreAreas` reads nothing but `result.fired`, so a rule the engine
+withheld cannot reappear as area evidence. That is true by construction, and measured anyway:
+`PALM-CHILD-001` (sensitive, rishte) is present on premium and absent from every free-tier area.
+
+### Structured citations — where the B5 fix lives
+
+`toPublicRule` pre-joins a rule's sources into one string and keeps only `sources[0]`. That
+flattening is why a citation drawer cannot be built from the current response. Area evidence carries
+`sources` as a structured array instead.
+
+The old field is **deliberately left alone** — the current reading UI parses it, and C4 migrates
+that. Two shapes for the same data is the cost of not breaking the client mid-flight.
+
+### Not persisted
+
+Areas are **response-computed only**. The `Reading` row is written exactly as before and carries no
+area data. Persistence is C5, and it needs a decision first: a stored verdict pins `map_version` and
+`engine_version` at write time, so a re-scored reading and a stored one can disagree. `meta` carries
+both versions on the wire so that disagreement is at least detectable.
+
+### The DOB ceiling is a CTA hook
+
+A birth-date-only reading supplies one feature root, so per-area coverage is pinned at
+`1/12 = 0.0833` and no area can exceed LOW however much fires. That is by design, not a bug to tune
+away: it is the honest statement that a birthday is not a palm. It is also the natural place to put
+the scan prompt — the gap between LOW and what a scan would give is the argument for scanning.
+
+`dhan` is INSUFFICIENT on every DOB-only request on every tier, asserted at both the engine level
+(`test/area-score.test.ts`) and the wire (`test/api-areas.test.ts`).
+
+### Server-only by convention
+
+`lib/hastrekha/area-map-loader.ts` statically imports the 111 KB area map and is **not** re-exported
+from the `lib/hastrekha` barrel, because that barrel is imported by client components
+(`app/scan/scan-client.tsx`, `components/scan/live-ticker.tsx`). Server callers import it by path.
+The TYPE re-export stays: `export type` is erased at build and cannot pull JSON into a bundle.
+
+No `server-only` package is used — this is convention plus a comment at the export site. Measured
+before removing it: the map was not in fact reaching any client chunk (the bundler tree-shook the
+unused loader), but it was one import away from doing so.

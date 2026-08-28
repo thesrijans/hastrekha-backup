@@ -21,10 +21,8 @@ import {
   AREA_IDS,
   AREA_ENGINE_VERSION,
   evaluateRules,
-  loadAreaMap,
   loadKnowledgeBase,
   scoreAreas,
-  AreaMapValidationError,
   type AreaId,
   type AreaMap,
   type AreaVerdict,
@@ -33,6 +31,9 @@ import {
   type KbRule,
   type KnowledgeBase,
 } from "../lib/hastrekha";
+// By path, not from the barrel: the loader statically imports the area map and the barrel is in the
+// client graph. See the note in lib/hastrekha/index.ts.
+import { AreaMapValidationError, loadAreaMap } from "../lib/hastrekha/area-map-loader";
 
 const KB: KnowledgeBase = loadKnowledgeBase(JSON.parse(readFileSync("data/kb/hastrekha_kb.json", "utf8")));
 const MAP: AreaMap = loadAreaMap(KB);
