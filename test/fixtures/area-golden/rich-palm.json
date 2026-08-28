@@ -1,0 +1,520 @@
+{
+  "rulesFired": 20,
+  "verdicts": [
+    {
+      "area": "dhan",
+      "band": "INSUFFICIENT",
+      "conflict": 0,
+      "coverage": 0.25,
+      "direction": null,
+      "evidence": [],
+      "independence": 0,
+      "label_hi_en": "Paisa aur Samriddhi",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": null
+    },
+    {
+      "area": "rishte",
+      "band": "HIGH",
+      "conflict": 0.1967,
+      "coverage": 0.8333,
+      "direction": "anukool",
+      "evidence": [
+        {
+          "contribution": 0.85,
+          "feature_roots": [
+            "lines.heart"
+          ],
+          "interpretation_hi_en": "Hriday rekha Guru parvat ke kendra se uthti hai — Cheiro ke anusaar iski sabse shubh sthiti. Prem mein pakke aur bharosemand, maan-maryada ka ooncha code, aur saathi ko safal dekhne ki mahatvakanksha. Ek baar dil diya toh jeevan bhar ka saath — aise log doosri shaadi ya alagav mein vishwas nahi rakhte.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-HEART-003",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.VII — origin: centre of Mount of Jupiter",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.8,
+          "feature_roots": [
+            "mounts.venus"
+          ],
+          "interpretation_hi_en": "Venus mount accha ubhra hua (par bahut zyada nahi) — pyaar aur saath ki chaah, doosron ko khush karne ki ichha, aur har roop mein sundarta ki kadar. Artists, singers, musicians ke haath mein yeh mount hamesha dikhta hai. Aap warm, lovable insaan ho — yeh aapka sabse bada asset hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MVEN-001",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XII — Mount of Venus well-formed and not too large: desire for love and companionship, desire to please, worship of beauty; artistic emotional temperament; prominent in artists, singers, musicians",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.8,
+          "feature_roots": [
+            "hand.overall_quality",
+            "mounts.venus"
+          ],
+          "interpretation_hi_en": "Venus well-shaped + baaki haath normal = Cheiro ke shabdon mein 'excellent sign': natural magnetism aur attraction. Aapko try nahi karna padta — log khinche chale aate hain. Is charm ko rishte banane mein lagao, sirf impress karne mein nahi.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MVEN-005",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XII — with the rest of the hand normal, a well-shaped Venus is 'an excellent sign': magnetism and attraction of one sex to the other",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": -0.6,
+          "feature_roots": [
+            "lines.heart"
+          ],
+          "interpretation_hi_en": "Hriday rekha chhoti hai — prem ke unche bhaav (romance, samarpan, bhavukta) kam ubharte hain. Vyavharik rishte aapko zyada suit karte hain, par saathi ko express karna conscious habit banana hoga.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-HEART-007",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.VII — the shorter the Line of Heart, the less the higher sentiments manifest",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 3,
+      "label_hi_en": "Pyaar aur Rishte",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": 90
+    },
+    {
+      "area": "karm",
+      "band": "MEDIUM",
+      "conflict": 0,
+      "coverage": 0.75,
+      "direction": "anukool",
+      "evidence": [
+        {
+          "contribution": 0.35,
+          "feature_roots": [
+            "lines.life"
+          ],
+          "interpretation_hi_en": "Jeevan rekha upar Jupiter ki taraf se uthti hai — mahatvakanksha aapke jeevan ki steering hai. Self-control zabardast hai; aap apni zindagi goals ke hisaab se chalate hain, mood ke hisaab se nahi.",
+          "polarity": "positive",
+          "role": "secondary",
+          "rule_id": "PALM-LIFE-006",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.III, Plate IX position 4, p.41",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.35,
+          "feature_roots": [
+            "mounts.jupiter"
+          ],
+          "interpretation_hi_en": "Jupiter mount ubhra hua — aap mein lead karne, organise karne aur ek bade, saaf lakshya ko pura karne ki bhookh hai. Ambition aapka engine hai. Uske liye apologise mat karo; bas usse ek worthy goal do.",
+          "polarity": "positive",
+          "role": "secondary",
+          "rule_id": "PALM-MJUP-001",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — Mount of Jupiter large: desire to dominate, rule, lead, organise, carry out a distinct object",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.275,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Is period mein bahut se writers, composers aur artists paida hote hain. Agar creative kaam aapko bulata hai, toh yeh aapka lane ho sakta hai — side project se hi sahi, aaj shuru karo. Aapki knowledge aur sensitivity creative kaam mein asset hai, liability nahi.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MJUP-012",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — a great number of literary people, composers and artists born in this period",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Cheiro ki parampara ke anusaar aapke janm-samay walon ko paani ke safar (nadi, samundar, boat, cruise) mein thodi extra saavdhani ki salah di jaati hai. Iska matlab darr nahi, bas tayyari: life jacket ka niyam maano, mausam dekh kar niklo, aur water-activity mein safety norms follow karo. Saavdhani hi shubh yatra ka asli tabeez hai.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-TRVL-008",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Ch.XIV — water-travel caution birth windows; rendered as preparedness advice per safety policy",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 3,
+      "label_hi_en": "Career aur Kaam",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": 37
+    },
+    {
+      "area": "sehat",
+      "band": "MEDIUM",
+      "conflict": 0,
+      "coverage": 0.6667,
+      "direction": "anukool",
+      "evidence": [
+        {
+          "contribution": 0.7,
+          "feature_roots": [
+            "mounts.venus"
+          ],
+          "interpretation_hi_en": "Venus mount ke neeche haath ki badi khoon ki nali (palmar arch) hoti hai — Cheiro ke mutabik ubhra Venus = accha blood flow, strong circulation, robust health. Aapke paas natural stamina aur warmth hai; isse regular movement aur neend se maintain karo — yeh reserve khatam bhi ho sakta hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MVEN-002",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XII — Venus covers the 'Great Palmar Arch'; a large Mount indicates plentiful blood supply, strong active circulation, more robust health",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "lines.life"
+          ],
+          "interpretation_hi_en": "Chaudi lekin uthli jeevan rekha — sharirik taakat zyada, lekin dabav mein tikne wali nerve-force thodi kam. Aap mehnat ke ghode hain; bas lambi race ke liye stamina ke saath-saath mansik resilience bhi train karo.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-LIFE-003",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.III, pp.38-39",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "lines.life"
+          ],
+          "interpretation_hi_en": "Jeevan rekha angushtha se sati hui chalti hai — energy reserve seemit hai, isliye aap selective rehte hain ki kisme oorja lagani hai. Yeh smart hai; bas overcommitment se bacho aur recharge time ko non-negotiable rakho.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-LIFE-005",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Ch.III, Plate IX position 2, pp.39-40 (softened per safety policy)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Mood ka neeche jaana, neend ka bigadna, 'sab mujh par hi kyun' wali feeling — yeh aapke patterns ho sakte hain. Cheiro ka prescription: dhoop, khuli hawa, roz movement, aur change of scene ya travel. Climate aap par bahut asar karta hai — seelan bhari, andheri jagah se bacho. Agar low phase lamba chale toh kisi professional se baat karna samajhdaari hai.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MJUP-014",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — despondency, insomnia, feeling of martyrdom; climate has the greatest effect: bright dry atmosphere, air, exercise, change and travel — softened per safety policy (named conditions excluded)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 3,
+      "label_hi_en": "Urja aur Sehat",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": 65
+    },
+    {
+      "area": "swabhav",
+      "band": "HIGH",
+      "conflict": 0.1629,
+      "coverage": 1,
+      "direction": "anukool",
+      "evidence": [
+        {
+          "contribution": 0.85,
+          "feature_roots": [
+            "lines.head",
+            "mounts.jupiter"
+          ],
+          "interpretation_hi_en": "Jupiter strong + Head line lambi aur saaf — Cheiro kehta hai isse behtar koi mount nahi hai. Aapki success kismat se nahi, character aur purpose ki taqat se aayegi. Ek bada lakshya chuno aur usse chipak jao — baaki sab follow karega.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MJUP-002",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — large Jupiter with clear long Line of Head: 'no Mount more excellent', success from sheer strength of character and purpose",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.75,
+          "feature_roots": [
+            "lines.head"
+          ],
+          "interpretation_hi_en": "Mastishk rekha halki si Chandra parvat ki or dhalti hai — kalpana par aapka niyantran hai. Aap imagination ko tool ki tarah use karte hain, uske gulaam nahi bante. Creative professionals ka aadarsh sanket.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-HEAD-009",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.II, Plate II position 1, p.18",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.7,
+          "feature_roots": [
+            "lines.life"
+          ],
+          "interpretation_hi_en": "Jeevan rekha upar Jupiter ki taraf se uthti hai — mahatvakanksha aapke jeevan ki steering hai. Self-control zabardast hai; aap apni zindagi goals ke hisaab se chalate hain, mood ke hisaab se nahi.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-LIFE-006",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.III, Plate IX position 4, p.41",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.7,
+          "feature_roots": [
+            "mounts.jupiter"
+          ],
+          "interpretation_hi_en": "Jupiter mount ubhra hua — aap mein lead karne, organise karne aur ek bade, saaf lakshya ko pura karne ki bhookh hai. Ambition aapka engine hai. Uske liye apologise mat karo; bas usse ek worthy goal do.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MJUP-001",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — Mount of Jupiter large: desire to dominate, rule, lead, organise, carry out a distinct object",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.6,
+          "feature_roots": [
+            "lines.quality"
+          ],
+          "interpretation_hi_en": "Rekhaon ke sire par kaante (forks) hain — Cheiro ke anusaar fork aam taur par SHUBH hota hai: jis rekha par bane, uski quality ko badha deta hai. Aapke haath ki khoobiyaan single-lane nahi, multi-lane hain.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-LINQ-005",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.XVII — forked lines generally good, increase the quality of the indication",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.4,
+          "feature_roots": [
+            "hand.overall_quality",
+            "mounts.venus"
+          ],
+          "interpretation_hi_en": "Venus well-shaped + baaki haath normal = Cheiro ke shabdon mein 'excellent sign': natural magnetism aur attraction. Aapko try nahi karna padta — log khinche chale aate hain. Is charm ko rishte banane mein lagao, sirf impress karne mein nahi.",
+          "polarity": "positive",
+          "role": "secondary",
+          "rule_id": "PALM-MVEN-005",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XII — with the rest of the hand normal, a well-shaped Venus is 'an excellent sign': magnetism and attraction of one sex to the other",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.325,
+          "feature_roots": [
+            "lines.head",
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Jupiter Negative + clear, strong Head line = sensitivity ko will power se jeetne ki capacity. Cheiro kehta hai yahi line tay karti hai ki aapke talents bahar aayenge ya nahi — aur aapke paas hai. Ab bas consistently dikhna shuru karo.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MJUP-013",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — a strong clear Line of Head gives the will power to overcome natural sensitiveness and carry out ambitions",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.3,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Born 19 Feb–20 March (Jupiter Negative) — aapki ambition dimaag ki hai, material nahi. Knowledge aapko khinchti hai: history, cultures, geography, science, nature. Cheezein aapko natural tareeke se samajh aa jaati hain. Aap lifelong learner ho — isse career asset banao.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MJUP-010",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — Jupiter Negative/mental 19 Feb–20 Mar (minor until 28 Mar): mental ambition, natural understanding, wide knowledge",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "lines.life"
+          ],
+          "interpretation_hi_en": "Chaudi lekin uthli jeevan rekha — sharirik taakat zyada, lekin dabav mein tikne wali nerve-force thodi kam. Aap mehnat ke ghode hain; bas lambi race ke liye stamina ke saath-saath mansik resilience bhi train karo.",
+          "polarity": "neutral",
+          "role": "secondary",
+          "rule_id": "PALM-LIFE-003",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.III, pp.38-39",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Mood ka neeche jaana, neend ka bigadna, 'sab mujh par hi kyun' wali feeling — yeh aapke patterns ho sakte hain. Cheiro ka prescription: dhoop, khuli hawa, roz movement, aur change of scene ya travel. Climate aap par bahut asar karta hai — seelan bhari, andheri jagah se bacho. Agar low phase lamba chale toh kisi professional se baat karna samajhdaari hai.",
+          "polarity": "neutral",
+          "role": "secondary",
+          "rule_id": "PALM-MJUP-014",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — despondency, insomnia, feeling of martyrdom; climate has the greatest effect: bright dry atmosphere, air, exercise, change and travel — softened per safety policy (named conditions excluded)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": -0.3,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Plan aapka, credit kisi aur ka — yeh pattern aapko pehchan mein aayega. Reason: sensitivity, self-confidence ki kami, aur public ke saamne aane se jhijhak. Fix: apna kaam khud present karo, chhote stage se shuru karke — team meeting, phir client, phir bada manch. Credit maangna greed nahi, fairness hai.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-MJUP-011",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VII — very sensitive, lacking self-confidence; shrink from the public; others get credit for their plans",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": -0.6,
+          "feature_roots": [
+            "geometry.quadrangle_shape"
+          ],
+          "interpretation_hi_en": "Aapka chaturbhuj bahut sankara hai — soch ke daayre mein kasav ka sanket: apni maanyata par itni pakad ki doosra nazariya ghusne ki jagah nahi paata. Conviction achhi cheez hai, par mahine mein ek baar jaan-boojh kar apne se ulti rai ko poora sunna — yeh exercise aapke chaturbhuj ko andar se chauda karti hai.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-TRI-004",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Ch.XVIII — extremely narrow Quadrangle: narrowness of views; bigotry claim softened to rigidity framing",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 8,
+      "label_hi_en": "Swabhav",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": 100
+    }
+  ]
+}

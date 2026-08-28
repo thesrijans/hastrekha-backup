@@ -5,3 +5,8 @@ export { evaluateRules, getFeature, kbFeatureKeys, BIRTH_DATE_FEATURE, BIRTH_WIN
 export { mergeKnowledgeBases, loadKnowledgeBase, validateRule, KbValidationError } from "./kb-loader";
 export { narrateReading, templateNarration, buildSystemPrompt, buildUserPrompt } from "./narrator";
 export type { Narration, NarrationSection, NarrateOptions, ReadingTier } from "./narrator";
+export * from "./area-types";
+export { loadAreaMap, areaRoots, AreaMapValidationError } from "./area-map-loader";
+export type { AreaMap, AreaMapping, AreaBlock } from "./area-map-loader";
+export { scoreAreas } from "./area-score";
+export type { AreaScoreInput } from "./area-score";

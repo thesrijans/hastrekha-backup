@@ -142,3 +142,100 @@ Full numbers in `data/areas/area-map.report.md`. Two findings that block a clean
 Sharing an area page publicly is out of scope for all of the above until `Reading` gains a share
 token: there is no public/slug/visibility column on any Prisma model today, and the repo has no
 migrations directory, so adding one is a manual Neon SQL Editor step.
+
+---
+
+## Scoring v1
+
+Implemented in `lib/hastrekha/area-score.ts`. Input is `{ fired, providedFeatures }` — never a
+FeatureBag. Re-reading the bag would mean re-deciding what fired, and there would then be two
+answers to that question in the codebase.
+
+### Per area
+
+```text
+  w(rule)  = effectiveWeight × ROLE_WEIGHT[role]      primary 1.0 · secondary 0.5
+  pos      = Σ w over positive rules
+  neg      = Σ w over negative rules
+  neu      = Σ w over neutral rules                   in mass, NOT in direction
+  mass     = pos + neg + neu
+
+  raw      = (pos − neg) / (pos + neg + 1.5)          K = DIRECTION_SOFTENING
+  conflict = (pos+neg) > 0 ? min(pos,neg)/(pos+neg) : 0
+
+  direction   pos + neg == 0               → null         (neutral-only: nothing leans)
+              conflict ≥ 0.30              → mishrit      (the gate wins over the lean)
+              raw ≥ +0.15                  → anukool
+              raw ≤ −0.15                  → sambhalke
+              otherwise                    → mishrit
+
+  independence = distinct feature roots across the fired evidence
+  indepRatio   = min(1, independence / 4)
+  coverage     = min(1, |providedRoots ∩ areaRoots| / min(|areaRoots|, 12))
+
+  confidence = min(1, mass/3.0) × (0.5 + 0.5·indepRatio)
+                                × (0.4 + 0.6·coverage)
+                                × (1 − conflict×0.6)
+
+  band       ≥0.55 HIGH · ≥0.30 MEDIUM · ≥0.12 LOW · else INSUFFICIENT
+  strength   INSUFFICIENT ? null : round(100 × min(1, mass/3.0) × (0.6 + 0.4·indepRatio))
+```
+
+### Three decisions worth defending
+
+**`strength` is direction-free.** It answers "how much signal", never "how good". A single signed
+0–100 renders as a score out of a hundred for someone's marriage — a fixed-fate claim, which is what
+the KB's 69 safety exclusions exist to refuse. `direction` and `strength` are never multiplied.
+
+**Neutral rules add mass, not direction.** A neutral rule is a real observation and belongs in the
+evidence list, but it says nothing about which way things lean. Its `contribution` is therefore
+**0**, not `+w` — rendering it as a positive number would make an explicitly non-committal finding
+read as good news. Sorting by contribution lands positives first, neutral observations in the
+middle, cautions last.
+
+**Neutral-only evidence claims no direction.** An area can reach a real band on neutral rules alone
+— an ordinary bag gives `rishte` five neutral rules and band HIGH. With no directional weight both
+`raw` and `conflict` are 0 and the fallthrough would return `mishrit`, publishing "the hand says both
+things at once" beside `conflict: 0`. The mass is real, so `strength` and the evidence list stay; the
+lean is not, so `direction` is null. Found by adversarial audit after the first implementation, and
+pinned by a regression assertion.
+
+**Conflict is measured, not resolved.** `buildClusters` in `engine.ts` keys on
+`${category}::${polarity}`, so opposing clusters are built independently and neither is told about
+the other. An area verdict faces both at once. v1 reports `conflict`, lets it force `mishrit`, and
+damps confidence — it does not adjudicate. That is C3.
+
+### The DOB-only ceiling
+
+A birth-date-only reading can supply exactly **one** feature root (`user.birth_date`), so its
+coverage is pinned at `1/12 = 0.083` no matter how much fires — a 55% haircut on confidence that no
+amount of DOB evidence can lift. Measured: even 27 fired rules with mass 4.98 in `swabhav` reach
+only LOW.
+
+Firing is also strongly date-dependent, because the 14 birth windows are calendar bands and one date
+hits three or four of them:
+
+| birth date | rules fired | swabhav |
+|---|---:|---|
+| 1990-04-04 | 2 | INSUFFICIENT |
+| 1994-07-10 | 3 | INSUFFICIENT |
+| 1988-09-18 | 6 | INSUFFICIENT |
+| 1994-03-25 | 7 | INSUFFICIENT |
+| 1994-11-05 | 9 | LOW |
+| 1994-01-25 | 27 | LOW |
+
+Both halves are asserted in `test/area-score.test.ts`: a dense date must clear the floor, a sparse
+one must refuse. **`dhan` is INSUFFICIENT on every date tested**, which is the safety guarantee — one
+reachable DOB rule is not a money verdict.
+
+One fix was needed to get here. `kbFeatureKeys` rewrites `user.birth_window` → `user.birth_date`
+before reporting coverage, while the area map keeps the raw condition vocabulary. The two never
+intersected, so DOB coverage measured 0.000 in every area on every date. `rootOf` now applies the
+same rewrite to both sides.
+
+### Pinned constants
+
+Every number above is a judgement call, and all of them are frozen in `area-score.ts` and pinned by
+three snapshots in `test/fixtures/area-golden/`. Any change that moves a published verdict fails
+that test and has to be re-baselined on purpose with `AREA_GOLDEN_WRITE=1`. There is no auto-write
+on mismatch — a snapshot that updates itself is one that can never fail.

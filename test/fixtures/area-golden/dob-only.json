@@ -1,0 +1,668 @@
+{
+  "rulesFired": 27,
+  "verdicts": [
+    {
+      "area": "dhan",
+      "band": "INSUFFICIENT",
+      "conflict": 0,
+      "coverage": 0.0833,
+      "direction": null,
+      "evidence": [
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Born 21 Jan–18 Feb (Sun Negative) — aap doosron ke liye fortune bana dete ho aur khud ke liye bahut kam rakhte ho. Manager, advisor, CFO, fund manager roles mein kamaal — par apni fees, equity aur savings pehle tay karo. Generosity ko structure do, warna woh self-neglect ban jaati hai.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSUN-010",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.IX — Sun Negative 21 Jan–18 Feb (+7 days): far more successful managing for others; excellent in business and finance but for others; make fortunes for others and keep a pittance",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 1,
+      "label_hi_en": "Paisa aur Samriddhi",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": null
+    },
+    {
+      "area": "rishte",
+      "band": "INSUFFICIENT",
+      "conflict": 0,
+      "coverage": 0.0833,
+      "direction": null,
+      "evidence": [
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Dosti mein devoted aur loyal — par jinse pyaar karte ho, unki chhoti si baat bhi gehri chot deti hai. Apne close logon ko batao ki aap sensitive ho; unhe guess mat karne do. Aur chot lage toh 24 ghante mein bol do, 24 din baad nahi.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MMOO-018",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — devoted and loyal friends; extremely sensitive and easily wounded by those they care for",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Dost bane toh zindagi bhar ke — aap unke liye kuch bhi kar jaoge. Par dhokha mile toh maafi bahut mushkil hai aur grudge saalon chalta hai. Yeh energy saamne wale se zyada aapko jalati hai. 'Let go' ko ek skill ki tarah seekho — maaf karna unke liye nahi, apne liye hai.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-012",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — loyal true friends, any sacrifice for a friend; bitter when deceived — softened per safety policy (revenge framing reframed to forgiveness)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 1,
+      "label_hi_en": "Pyaar aur Rishte",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": null
+    },
+    {
+      "area": "karm",
+      "band": "LOW",
+      "conflict": 0.2196,
+      "coverage": 0.0833,
+      "direction": "anukool",
+      "evidence": [
+        {
+          "contribution": 0.52,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Born 21 Jan–20 Feb (Moon Negative) — aap problems ko shaanti se reason karke solve karte ho. Business organisation, government, administration, management — aap department-head material ho aur zimmedaari jaldi sambhal lete ho. Cheiro kehta hai doosron ki bhaari zimmedaari aap par sabse zyada suit karti hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MMOO-014",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — Moon Negative 21 Jan–20 Feb (minor until ~27 Feb): quiet reasoners; organisation of business, government work; splendid heads of departments; heavy responsibility for others suits them best",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.48,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aapki aankhon mein ek shaant control hai — ghabraaye hue, anxious, excitable logon ko aap settle kar dete ho, chahe khud andar se nervous ho. Counselling, healthcare, teaching, crisis management, HR — aise career aapko naturally milte hain. Yeh rare gift hai; iski training lo.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-014",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — quiet controlling power with the eyes; greatest control over excitable and nervous people; fated to meet such cases — softened per safety policy ('insane' wording removed)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.24,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap high-minded ho — pyaar, farz aur samaaj par pakke vichaar, aur dil se kind. Logon ka bhala karna chahte ho, par 'masses' level par — policy, system, community — ek-ek insaan se zyada. Isliye aapka impact scale par hota hai; chhote gestures ko bhi underrate mat karo.",
+          "polarity": "positive",
+          "role": "secondary",
+          "rule_id": "PALM-MMOO-015",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — high-minded, decided views on love, duty and social life; do good to the masses more than to individuals; extremely kind-hearted",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.21,
+          "feature_roots": [
+            "mounts.saturn",
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap deep thinker ho aur buddhimaan logon ki dil se kadar karte ho. Cheiro kehta hai aise log aksar bhaari zimmedaari wali positions par milte hain — jahan akele kathin faisle lene padte hain: judge, surgeon, administrator, founder. Us seat ke liye khud ko taiyaar rakho, aur us bojh ko baantna bhi seekho.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-008",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — deep thinkers, admire intellectual people; often hold positions of great responsibility (destiny-instrument/violence passage excluded per safety policy)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.1137,
+          "feature_roots": [
+            "mounts.saturn",
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Dikhaave se door, aap andar se gehre devotional ho — chahe mandir jaate ho ya nahi. Bina reward ya pehchaan ki umeed ke logon ka bhala karte ho, khaaskar bade level par. Yeh quiet greatness hai. Bas kabhi-kabhi apni mehnat ka credit lena bhi seekho — woh bhi sewa hai.",
+          "polarity": "positive",
+          "role": "secondary",
+          "rule_id": "PALM-MSAT-006",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — deeply devotional nature even when not outwardly religious; do good for the masses without expecting recognition or reward",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Samaaj ke liye time aur paisa dete ho — par apne tareeke se, apni shart par. Bheed, theatre, concerts, public meetings pasand hain, phir bhi sach bolo toh andar akelapan rehta hai. Public good mein ek steady, regular role lo — akelepan ka sabse accha ilaaj purpose hai.",
+          "polarity": "neutral",
+          "role": "secondary",
+          "rule_id": "PALM-MSAT-013",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — active for the public good, give time and money in their own way; keen interest in public meetings, theatres, concerts; yet feel alone",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap underdog ke saath khade hote ho, aur jo bhi takleef mein hai uske liye actively kaam karte ho. Iska price: taqatwar log aapko napasand karte hain. Yeh badge of honour hai — bas lambi ladai ke liye kuch powerful allies bhi banao.",
+          "polarity": "neutral",
+          "role": "secondary",
+          "rule_id": "PALM-MSUN-011",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.IX — active in plans for the relief of distress and the public good; take the part of the 'under dog'; disliked by the richer and more powerful classes",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Government, public leadership, debate, manch — wahan aapki eloquence khilti hai aur aap logon ki awaaz ban jaate ho. Par Cheiro kehta hai aap 'role of the moment' nibhaate ho, phir shaant zindagi mein chale jaate ho. Isliye spotlight ke baad ka 'second act' pehle se plan karo — paisa, skill, aur ek shaant shauk.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSUN-012",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.IX — governmental positions, leaders of party or public opinion; eloquence in debate; love public ceremonies and gatherings; play the role of the moment then retire into private life — softened per safety policy (end-of-days prediction excluded)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Cheiro ki parampara ke anusaar aapke janm-samay walon ko sadak-rail ke safar mein thodi extra saavdhani ki salah di jaati hai. Practical matlab: seatbelt/helmet hamesha, raat ki over-speed drive se bacho, bharosemand transport chuno. Yeh koi bhavishyavani nahi — sirf ek gentle reminder ki safar mein laparwahi ka koi muhurat shubh nahi hota.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-TRVL-009",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Ch.XIV — land-travel caution birth windows; rendered as preparedness advice per safety policy",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Cheiro ki parampara ke anusaar aapke janm-samay walon ko kharab mausam (aandhi, toofan, bijli) mein safar se bachne ki salah di jaati hai. Practical matlab: nikalne se pehle weather check karna aapki aadat honi chahiye, aur monsoon/toofani alerts ko seriously lena. Plan flexible rakho — mausam se panga lene ka koi yog shubh nahi.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-TRVL-010",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Ch.XIV — storm/weather caution birth windows; rendered as preparedness advice per safety policy",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": -0.44,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aapka kaam accha hota hai par dushman bhi ban jaate hain — khaaskar public ya government positions mein, jahan opposition aapko target karta hai. Recognition der se milti hai. Isliye validation ke liye kaam mat karo, legacy ke liye karo — aur apna record khud document karo, taaki credit sahi jagah pahunche.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-MMOO-016",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — knack of making bitter enemies; bitterly attacked by the opposition press in government positions; work seldom recognised until after they leave — softened per safety policy (after-death framing reframed)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 2,
+      "label_hi_en": "Career aur Kaam",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": 80
+    },
+    {
+      "area": "sehat",
+      "band": "LOW",
+      "conflict": 0,
+      "coverage": 0.0833,
+      "direction": "sambhalke",
+      "evidence": [
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "mounts.saturn",
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Cheiro Saturn ke logon ko pair, ghutne aur ankles ka khaas dhyan rakhne ko kehta hai. Practical: sahi joote, exercise se pehle warm-up, seedhiyon aur phisalne wali jagah par extra care, aur joint mobility ko daily routine banao. Chhoti saavdhaani, badi bachat.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-009",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — tendency to accidents to the feet, knees and limbs — softened per safety policy (named diseases excluded; protective nudge only)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Stress seedha pet par lagta hai, haath-pair thande rehte hain, aur aap shayad hi kabhi 'full strong' mehsoos karte ho — phir bhi jab duty ya usool daav par hon, aapka will power sabko hairaan kar deta hai. Us reserve tank ko roz bharo: warm khaana, regular neend, aur stress ko pet tak pahunchne se pehle bol dena.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-015",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — nerves of the stomach, poor circulation, cold hands and feet; seldom feel strong yet enormous power of resistance when will is called on — softened per safety policy (named conditions excluded)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Dhoop aur sookha mausam aapki sabse badi dawa hai — Cheiro ke shabdon mein 'greatest safeguard'. Thand aur seelan se door raho, roz 15-20 minute dhoop lo, haath-pair garm rakho, aur sports mein ghutne aur ankles ko protect karo.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSUN-014",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.IX — very dry climates and plenty of sunlight 'their greatest safeguard'; poor circulation and loss of natural heat; care of limbs, knees and ankles — softened per safety policy (named conditions excluded)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": -0.44,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aapko bimaar koi virus nahi, aapki chinta aur overwork karte hain. Burnout aapka asli risk hai — rest ko calendar mein daalo, 'no' bolna seekho, aur kaam ko ghar ke bistar tak mat le jao. Cheiro ke mutabik pair aur ankles ko bhi sports aur travel mein dhyan se rakho.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-MMOO-020",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — worry themselves into bad health; overwork; accidents to feet and ankles — softened per safety policy (named conditions and drowning-danger claim EXCLUDED)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 2,
+      "label_hi_en": "Urja aur Sehat",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": 38
+    },
+    {
+      "area": "swabhav",
+      "band": "LOW",
+      "conflict": 0.3493,
+      "coverage": 0.0833,
+      "direction": "mishrit",
+      "evidence": [
+        {
+          "contribution": 0.56,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap har mushkil jhel sakte ho — kyunki aapko andar se pata hota hai ki aapne apna farz nibhaaya. Yehi feeling aapko har loss, har attack, har disappointment se upar uthaati hai. Yeh aapka armour hai; isse roz ek accha kaam karke polish karo.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MSUN-013",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.IX — can endure any martyrdom or suffering, sustained by the feeling of having done their duty — softened per safety policy (suicide comparison EXCLUDED)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.48,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap high-minded ho — pyaar, farz aur samaaj par pakke vichaar, aur dil se kind. Logon ka bhala karna chahte ho, par 'masses' level par — policy, system, community — ek-ek insaan se zyada. Isliye aapka impact scale par hota hai; chhote gestures ko bhi underrate mat karo.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MMOO-015",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — high-minded, decided views on love, duty and social life; do good to the masses more than to individuals; extremely kind-hearted",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.2275,
+          "feature_roots": [
+            "mounts.saturn",
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Born 21 Dec–20 Jan (Saturn Positive) aur Saturn ubhra — lohe ki will power aur independent soch. Kisi ka bandhan bardasht nahi. Yeh aapko bada banata hai, bas 'akele hi sab kar lunga' wale trap se bacho — delegate karna bhi strength hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-004",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — Saturn Positive 21 Dec–20 Jan (+7 days fading): strong will force and mentality; independence of thought and action; detest restraint",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.2275,
+          "feature_roots": [
+            "mounts.saturn",
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Dikhaave se door, aap andar se gehre devotional ho — chahe mandir jaate ho ya nahi. Bina reward ya pehchaan ki umeed ke logon ka bhala karte ho, khaaskar bade level par. Yeh quiet greatness hai. Bas kabhi-kabhi apni mehnat ka credit lena bhi seekho — woh bhi sewa hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-006",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — deeply devotional nature even when not outwardly religious; do good for the masses without expecting recognition or reward",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap seedhi, saaf baat karne wale speaker ho — decoration nahi, sach. Aur aap hamesha unpopular cause ya underdog ke saath khade hote ho. Yeh courage hai; bas pick your battles — har ladai aapki nahi hai.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MMOO-017",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — excellent speakers through 'plain speaking'; espouse the unpopular cause, take the part of the under dog",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Dosti mein devoted aur loyal — par jinse pyaar karte ho, unki chhoti si baat bhi gehri chot deti hai. Apne close logon ko batao ki aap sensitive ho; unhe guess mat karne do. Aur chot lage toh 24 ghante mein bol do, 24 din baad nahi.",
+          "polarity": "neutral",
+          "role": "secondary",
+          "rule_id": "PALM-MMOO-018",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — devoted and loyal friends; extremely sensitive and easily wounded by those they care for",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Born 21 Jan–18 Feb (Saturn Negative) — Saturn ki energy aapke dimaag mein hai. Akelaapan vichaaron ka hai: lagta hai koi aapki soch ko sach mein samajhta nahi. Bahut sensitive ho, jaldi chot lagti hai. Apne jaise 2-3 deep log dhoondo — aapko bheed nahi, samajh chahiye.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-010",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — Saturn Negative/mental 21 Jan–18 Feb (+7 days): Saturn qualities felt mentally; lonely in ideas and thoughts; sensitive, easily wounded",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap logon ko ek nazar mein padh lete ho — itna saaf ki kabhi-kabhi yahi khushi kam kar deta hai. Dhokha aapke liye sabse bada aparaadh hai, aur jab lagta hai dhokha hua, aapka reaction logon ko chauka deta hai. Is skill ko hiring, negotiation aur partnerships mein lagao — wahan yeh sona hai.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-011",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — read character instinctively, 'see through' people too easily to be happy; bitterly resent being deceived",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Samaaj ke liye time aur paisa dete ho — par apne tareeke se, apni shart par. Bheed, theatre, concerts, public meetings pasand hain, phir bhi sach bolo toh andar akelapan rehta hai. Public good mein ek steady, regular role lo — akelepan ka sabse accha ilaaj purpose hai.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-013",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — active for the public good, give time and money in their own way; keen interest in public meetings, theatres, concerts; yet feel alone",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Stress seedha pet par lagta hai, haath-pair thande rehte hain, aur aap shayad hi kabhi 'full strong' mehsoos karte ho — phir bhi jab duty ya usool daav par hon, aapka will power sabko hairaan kar deta hai. Us reserve tank ko roz bharo: warm khaana, regular neend, aur stress ko pet tak pahunchne se pehle bol dena.",
+          "polarity": "neutral",
+          "role": "secondary",
+          "rule_id": "PALM-MSAT-015",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — nerves of the stomach, poor circulation, cold hands and feet; seldom feel strong yet enormous power of resistance when will is called on — softened per safety policy (named conditions excluded)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap underdog ke saath khade hote ho, aur jo bhi takleef mein hai uske liye actively kaam karte ho. Iska price: taqatwar log aapko napasand karte hain. Yeh badge of honour hai — bas lambi ladai ke liye kuch powerful allies bhi banao.",
+          "polarity": "neutral",
+          "role": "primary",
+          "rule_id": "PALM-MSUN-011",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Part II Ch.IX — active in plans for the relief of distress and the public good; take the part of the 'under dog'; disliked by the richer and more powerful classes",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": -0.1925,
+          "feature_roots": [
+            "mounts.saturn",
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Dharm, mysticism, occult — yeh aapko bahut khinchte hain, par aap extreme par chale jaate ho, aur apne views mein doosron ki dakhal bardasht nahi karte. Ek practice: jis cheez par sabse pakka yakeen hai, usi par mahine mein ek baar imaandaari se doubt karke dekho. Mazboot aastha sawaalon se darti nahi.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-007",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — religion, mysticism, occultism appeal strongly but taken to extremes; cannot brook interference in views — softened per safety policy (fanaticism reframed)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": -0.21,
+          "feature_roots": [
+            "mounts.saturn",
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aap aksar akela mehsoos karte ho, aur jab koi care de bhi toh yakeen nahi hota. Zimmedaariyon ka bojh zyada mehsoos hota hai, phir aap apne shell mein chale jaate ho. Ek cheez yaad rakho: jo log saath hain, unhe andar aane do — madad lena kamzori nahi hai. Ek insaan chuno jisse aap hafte mein ek baar sach bolte ho.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-MSAT-005",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.VIII — feel lonely and isolated; scarcely believe affection offered; feel responsibilities too heavily and retire into their shell — softened per safety policy (gloom framing reframed)",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": -0.4,
+          "feature_roots": [
+            "user.birth_window"
+          ],
+          "interpretation_hi_en": "Aastha aapke har kaam mein jhalakti hai — accha hai — par virodh hone par aap zidd aur kattarta ki taraf fisal sakte ho, aur tab aapko manage karna mushkil ho jaata hai. Practice: bahas mein jeetne ke bajaye samajhne ka goal rakho. Sabse mazboot belief woh hai jo sawaal se nahi darta.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-MMOO-019",
+          "safety_class": "sensitive",
+          "sources": [
+            {
+              "loc": "Part II Ch.XI (cont.) — religious views brought into all they do; danger of becoming too fanatical; obstinate, dogmatic, hard to manage when opposed — softened per safety policy",
+              "text": "Cheiro — Palmistry for All",
+              "year": 1916
+            }
+          ]
+        }
+      ],
+      "independence": 2,
+      "label_hi_en": "Swabhav",
+      "meta": {
+        "engine_version": "area-v1.0",
+        "map_version": "1.0"
+      },
+      "strength": 80
+    }
+  ]
+}
