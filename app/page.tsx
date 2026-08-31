@@ -97,7 +97,7 @@ export default function Home() {
           <div className="flex flex-col items-start gap-7">
             <span className="flex items-center gap-2 rounded-full border border-hairline px-3 py-1 font-display text-[0.7rem] uppercase tracking-[0.22em] text-mount-glow">
               <span aria-hidden="true" className="hr-glow-chrome h-1.5 w-1.5 rounded-full bg-mount-glow" />
-              377 cited rules
+              548 cited rules
             </span>
 
             <h1 className="font-display text-[2.25rem] font-semibold leading-[1.06] tracking-tight text-ink sm:text-5xl md:text-[3.5rem]">

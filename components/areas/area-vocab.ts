@@ -23,11 +23,11 @@ export const AREA_ORDER: readonly string[] = ["dhan", "rishte", "karm", "sehat",
  * making the scan CTA lie.
  */
 export const AREA_RULE_POOL: Readonly<Record<string, number>> = {
-  dhan: 19,
-  rishte: 82,
-  karm: 87,
-  sehat: 43,
-  swabhav: 169,
+  dhan: 67,
+  rishte: 93,
+  karm: 135,
+  sehat: 57,
+  swabhav: 218,
 };
 
 /**

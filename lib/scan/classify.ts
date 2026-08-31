@@ -59,7 +59,19 @@ export const TRACE_CLASSES: readonly TraceClass[] = [
   "minor_unclassified",
 ];
 
-/** How many KB rules condition on each class. Zero means "drawn, but the reading cannot use it". */
+/**
+ * How many KB rules condition on each class. Zero means "drawn, but the reading cannot use it".
+ *
+ * **Cheiro-era snapshot, taken against the 377-rule KB.** The Dale merge (`0.3.0-dale-merged`,
+ * 548 rules) moved every one of these, and not proportionally — health and bracelets roughly
+ * tripled while head grew by a tenth. They are deliberately NOT refreshed here, because these
+ * numbers set `TRACE_CLASSES` order, and that order decides which class a contested trace is
+ * assigned to. Re-deriving them changes classifier behaviour and re-orders the minor classes
+ * (`intuition` would fall behind `girdle_of_venus`), so it is a scan-behaviour step with its own
+ * fixtures to re-pin — not a bookkeeping edit to fold into a KB merge. `test/traces.test.ts`
+ * pins two of these exactly and asserts the ordering, and it is what will fail if this is
+ * refreshed without re-deriving the order alongside it.
+ */
 export const KB_RULE_COUNT: Readonly<Record<TraceClass, number>> = {
   head: 31,
   marriage: 25,

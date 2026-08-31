@@ -1,6 +1,6 @@
 # Area verdicts — specification
 
-A reading currently arrives as 377 rules' worth of findings sorted by weight. That is honest and
+A reading currently arrives as 548 rules' worth of findings sorted by weight. That is honest and
 almost unusable: a person does not want a ranked list, they want to know how it went for the four
 or five things they actually came to ask about. This is the layer that answers that.
 
@@ -119,15 +119,67 @@ caption says. That tension is not resolved by this document and should not be re
 C2. It needs an explicit decision about what a verdict is allowed to assert, and `sehat` needs the
 tightest wording of the five.
 
-## Known state at C1
+## Known state
 
-Full numbers in `data/areas/area-map.report.md`. Two findings that block a clean C2:
+Full numbers in `data/areas/area-map.report.md`. Rebuilt against KB `0.3.0-dale-merged`
+(548 rules): **492 mapped · 40 unmapped · 16 excluded**.
 
-- **`dhan` is thin: 19 rules** (13 of them primary) against a 20-rule floor. This is structural,
-  not a mapping bug — `category: "wealth"` holds only 15 rules in the whole KB, and two of those
-  are marriage rules that belong in `rishte`. It is not fixable by loosening the tag table without
-  filing non-money rules under money.
-- **16 `timing` rules and 7 `obstacles` rules are unmapped**, by design in both cases.
+### `dhan` is no longer thin — and the floor was never structural
+
+The C1 finding read:
+
+> **`dhan` is thin: 19 rules** (13 of them primary) against a 20-rule floor. This is structural,
+> not a mapping bug — `category: "wealth"` holds only 15 rules in the whole KB […] It is not
+> fixable by loosening the tag table without filing non-money rules under money.
+
+The diagnosis was right and the prognosis was wrong. It was not fixable *from the mapping side* —
+but it was never structural, only **source-limited**. Cheiro's *Palmistry for All* simply has
+little to say about money. Dale's *Indian Palmistry* (1895) has a great deal: 44 of its 171 rules
+are `category: "wealth"`, which takes the KB from 15 wealth rules to 59 and `dhan` from 19 to 67.
+
+| area | pool at C1 | now | primary | feature roots |
+|---|---:|---:|---:|---:|
+| `dhan` | 19 | **67** | 57 | 32 |
+| `rishte` | 82 | 93 | 89 | 24 |
+| `karm` | 87 | 135 | 114 | 34 |
+| `sehat` | 43 | 57 | 54 | 21 |
+| `swabhav` | 169 | 218 | 178 | 54 |
+
+The build report now says **"No area is thin."** The lesson generalises: a thin area is a claim
+about the *library*, not about the map, and the fix is another book rather than a looser tag table.
+
+`dhan` still reads `INSUFFICIENT` on every DOB-only request — that gate is about how much of a hand
+was seen, not how many rules exist, and it is unchanged. What did change is that a scanned palm can
+now produce a money verdict at all: `rich-palm` moved `INSUFFICIENT → LOW/mishrit`.
+
+### Cross-book agreement is live
+
+`buildClusters` pays 15% per additional source book. Until this merge that was dead code — the KB
+cited one volume. Measured on the `rich-palm` bag, 3 of 13 clusters now carry `agreement: 2`.
+Because the bonus keys on the raw source string, a single book under two titles would fake it; the
+Dale batch is normalised to one title for exactly this reason. See
+`test/fixtures/area-golden/REPIN.md`.
+
+### Still unmapped, by design
+
+- **17 `timing` rules and 23 `obstacles` rules are unmapped** (40 total), and 16 `reading_method`
+  rules are excluded outright. `timing` is skipped pending C6;
+  `obstacles` is a modifier that only enters through its tags, and a modifier with no area tag is
+  deliberately left unfiled rather than put somewhere plausible.
+- **`PALM-DALE-001` is over-mapped** into three areas (`dhan` + `karm`, `rishte`). A rule that is
+  evidence everywhere is evidence nowhere; it is a candidate for an explicit override.
+
+### Feature-path convention: `offshoot_to` disagrees with itself
+
+The Dale merge added `lines.heart.offshoot_to`, whose values are mount-prefixed
+(`"mount_jupiter"`) to match its own sibling `lines.heart.origin` (`"mount_jupiter_center"`). But
+the pre-existing `lines.fate.offshoot_to` uses bare names (`"jupiter"`, `"mercury"`, `"sun"`).
+
+Two paths with the same leaf name now take differently-shaped values. Nothing breaks — no consumer
+reads across both, and `merge_kb.py` reports no mixed value types — but it is a trap for whoever
+writes the next mount-valued rule. `lines.fate` is the odd one out and should move to the prefixed
+form. **Backlogged, not done here:** it rewrites live Cheiro rules, so it belongs in a pass that
+can re-pin whatever it touches rather than riding along with a merge.
 
 ## Not yet built
 

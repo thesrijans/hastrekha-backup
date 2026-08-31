@@ -56,10 +56,15 @@ const INDEP_TARGET = 4;
 /**
  * Ceiling on the coverage denominator.
  *
- * Areas differ wildly in how many parts of the hand their rules read — swabhav's union is 51 roots
- * against dhan's 14. Dividing by the raw union would make the largest area permanently look the
- * least covered, which is backwards: it is the best attested. Capping the denominator asks "did we
- * see enough of this area to speak", not "did we see all of it".
+ * Areas differ wildly in how many parts of the hand their rules read — swabhav's union is 54 roots
+ * against dhan's 32 (51 and 14 before the Dale merge). Dividing by the raw union would make the
+ * largest area permanently look the least covered, which is backwards: it is the best attested.
+ * Capping the denominator asks "did we see enough of this area to speak", not "did we see all of
+ * it".
+ *
+ * The cap is also why the Dale merge did not move DOB-only coverage: every area was already past
+ * 12 roots, so the denominator was 12 before and is 12 after, and a birth date still supplies
+ * exactly one root. `test/fixtures/area-golden/dob-only.json` is unchanged across the merge.
  */
 const ROOT_CAP = 12;
 

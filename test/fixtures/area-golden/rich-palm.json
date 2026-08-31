@@ -1,26 +1,63 @@
 {
-  "rulesFired": 20,
+  "rulesFired": 29,
   "verdicts": [
     {
       "area": "dhan",
-      "band": "INSUFFICIENT",
-      "conflict": 0,
-      "coverage": 0.25,
-      "direction": null,
-      "evidence": [],
-      "independence": 0,
+      "band": "LOW",
+      "conflict": 0.4615,
+      "coverage": 0.9167,
+      "direction": "mishrit",
+      "evidence": [
+        {
+          "contribution": 0.7,
+          "feature_roots": [
+            "mounts.jupiter"
+          ],
+          "interpretation_hi_en": "Jab Jupiter ka mount strong aur prominent ho, yeh vyakti mein ambition, generosity aur societal standing paane ki pravritti darshata hai. Aksar aise log prestigious professions mein unnat hote hain aur financial stability bhi aati hai. Yeh ek positive sanket hai long-term wealth aur reputation ke liye.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-DALE-063",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. The Planet Mars. Courage, War — Jupiter mount strong, noble and fortunate traits",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
+            }
+          ]
+        },
+        {
+          "contribution": -0.6,
+          "feature_roots": [
+            "geometry.quadrangle_shape"
+          ],
+          "interpretation_hi_en": "Jab mensa bahut tang aur sankri ho — yaani do rekhaon ke beech ki jagah bahut kam ho — toh yeh sanket deta hai ki paisa aur bhagya thoda seedha nahi chalta. Iska matlab yeh nahi ki sab kuch band hai, lekin is tendency par dhyaan dena aur apni soch ko thoda khula rakhna faydemand ho sakta hai. Yeh sthayi nahi hai — is par kaam kiya ja sakta hai.",
+          "polarity": "negative",
+          "role": "primary",
+          "rule_id": "PALM-DALE-069",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. Mensa. The Part of Fortune — narrow space, slender fortune — source's harsher claim softened per safety policy",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
+            }
+          ]
+        }
+      ],
+      "independence": 2,
       "label_hi_en": "Paisa aur Samriddhi",
       "meta": {
         "engine_version": "area-v1.0",
         "map_version": "1.0"
       },
-      "strength": null
+      "strength": 35
     },
     {
       "area": "rishte",
       "band": "HIGH",
-      "conflict": 0.1967,
-      "coverage": 0.8333,
+      "conflict": 0.1622,
+      "coverage": 0.9167,
       "direction": "anukool",
       "evidence": [
         {
@@ -79,6 +116,24 @@
           ]
         },
         {
+          "contribution": 0.65,
+          "feature_roots": [
+            "mounts.venus"
+          ],
+          "interpretation_hi_en": "Venus mount prominently developed hai — yeh beauty, pleasure aur romance ke liye ek natural love dikhata hai. Aksar yeh log charming hote hain lekin relationships mein consistency banaye rakhna unke liye ek focus area ho sakta hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-DALE-025",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. References to Hand (1/2) — No. 16, Mount of Venus, large — source's harsher claim softened per safety policy",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
+            }
+          ]
+        },
+        {
           "contribution": -0.6,
           "feature_roots": [
             "lines.heart"
@@ -107,11 +162,65 @@
     },
     {
       "area": "karm",
-      "band": "MEDIUM",
+      "band": "HIGH",
       "conflict": 0,
-      "coverage": 0.75,
+      "coverage": 1,
       "direction": "anukool",
       "evidence": [
+        {
+          "contribution": 0.7,
+          "feature_roots": [
+            "mounts.jupiter"
+          ],
+          "interpretation_hi_en": "Prominent Jupiter mount wale log aksar great dignitaries, lawyers, statesmen ya ecclesiastical roles mein safal hote hain. Yeh log bade logon ke saath naturally connect karte hain aur high esteem paate hain. Yeh ek strong sanket hai leadership aur public life mein unnati ka.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-DALE-065",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. The Planet Mars. Courage, War — Jupiter professions: dignitaries, lawyers, statesmen",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
+            }
+          ]
+        },
+        {
+          "contribution": 0.65,
+          "feature_roots": [
+            "mounts.venus"
+          ],
+          "interpretation_hi_en": "Venus ka mount majboot hone par vyakti sangeet, kala, teaching ya creative trades mein zyada safalta pa sakta hai. Yeh sanket deta hai ki inki natural abilities creatively oriented fields mein khilti hain. Agar abhi koi aisa kaam nahi kar rahe, toh is direction mein sochna faydemand ho sakta hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-DALE-152",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. The Rule to Tell the Planets — Venus mount professions: musicians, merchants, teachers",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
+            }
+          ]
+        },
+        {
+          "contribution": 0.35,
+          "feature_roots": [
+            "mounts.jupiter"
+          ],
+          "interpretation_hi_en": "Jab Jupiter ka mount strong aur prominent ho, yeh vyakti mein ambition, generosity aur societal standing paane ki pravritti darshata hai. Aksar aise log prestigious professions mein unnat hote hain aur financial stability bhi aati hai. Yeh ek positive sanket hai long-term wealth aur reputation ke liye.",
+          "polarity": "positive",
+          "role": "secondary",
+          "rule_id": "PALM-DALE-063",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. The Planet Mars. Courage, War — Jupiter mount strong, noble and fortunate traits",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
+            }
+          ]
+        },
         {
           "contribution": 0.35,
           "feature_roots": [
@@ -185,19 +294,19 @@
           ]
         }
       ],
-      "independence": 3,
+      "independence": 4,
       "label_hi_en": "Career aur Kaam",
       "meta": {
         "engine_version": "area-v1.0",
         "map_version": "1.0"
       },
-      "strength": 37
+      "strength": 98
     },
     {
       "area": "sehat",
       "band": "MEDIUM",
       "conflict": 0,
-      "coverage": 0.6667,
+      "coverage": 0.75,
       "direction": "anukool",
       "evidence": [
         {
@@ -284,7 +393,7 @@
     {
       "area": "swabhav",
       "band": "HIGH",
-      "conflict": 0.1629,
+      "conflict": 0.1196,
       "coverage": 1,
       "direction": "anukool",
       "evidence": [
@@ -326,6 +435,24 @@
           ]
         },
         {
+          "contribution": 0.72,
+          "feature_roots": [
+            "mounts.venus"
+          ],
+          "interpretation_hi_en": "Venus ka mount jab ubhra hua aur majboot ho, toh yeh ek khushmijaaj, pyaar karne waala aur kalapremi swabhaav dikhata hai. Aisi logon mein sangeet, sundarata aur mitrata ke liye gehri chahat hoti hai. Yeh ek achha sign hai — dosti aur rishton mein sachchi warmth aksar inhein khaas banati hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-DALE-151",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. The Rule to Tell the Planets — mount of Venus strong and full description",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
+            }
+          ]
+        },
+        {
           "contribution": 0.7,
           "feature_roots": [
             "lines.life"
@@ -358,6 +485,42 @@
               "loc": "Part II Ch.VII — Mount of Jupiter large: desire to dominate, rule, lead, organise, carry out a distinct object",
               "text": "Cheiro — Palmistry for All",
               "year": 1916
+            }
+          ]
+        },
+        {
+          "contribution": 0.68,
+          "feature_roots": [
+            "mounts.jupiter"
+          ],
+          "interpretation_hi_en": "Strong Jupiter mount wale vyakti mein noble, generous aur just prakriti hoti hai — yeh log apne vaadone ke prati wafadaar hote hain aur ek affable, cheerful demeanor rakhte hain. Ek positive aura unhe logon ke beech popular banata hai. Yeh sanket ek well-rounded, honourable character ko darshata hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-DALE-066",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. The Planet Mars. Courage, War — Jupiter strong personality description",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
+            }
+          ]
+        },
+        {
+          "contribution": 0.6,
+          "feature_roots": [
+            "mounts.jupiter"
+          ],
+          "interpretation_hi_en": "Jupiter ke mount ke paas Jupiter ungali ke joint mein seedhi rekhaayein ek khushi-khu, mele-jule swabhav ka sanket deti hain. Aisa vyakti logon ke beech pyaar paata hai aur jeevan mein ek jovial, utsahi nazar rakhta hai. Yeh ek bahut achha lakshan hai.",
+          "polarity": "positive",
+          "role": "primary",
+          "rule_id": "PALM-DALE-116",
+          "safety_class": "standard",
+          "sources": [
+            {
+              "loc": "Sec. The Forefinger or Index Finger — right lines in joint near mount of Jupiter, jovial disposition",
+              "text": "Dale — Indian Palmistry",
+              "year": 1895
             }
           ]
         },

@@ -74,10 +74,10 @@ console.log("top highlight:", full.highlights[0]?.rule.rule_id, "-", full.highli
 console.log("template one-liner:", narration.one_liner.slice(0, 120));
 console.log("ALL ASSERTIONS PASSED");
 
-/* ---- merged KB (377 rules) ---- */
+/* ---- merged KB (548 rules) ---- */
 const mergedDoc: unknown = JSON.parse(readFileSync("data/kb/hastrekha_kb.json", "utf8"));
 const merged = mergeKnowledgeBases([mergedDoc], "merged-test");
-assert.equal(merged.rules.length, 377);
+assert.equal(merged.rules.length, 548);
 const rich = evaluateRules(merged, {
   user: { birth_date: "1994-03-25" },
   hand: { shape: "conic", overall_quality: 0.7 },
