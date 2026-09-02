@@ -17,7 +17,7 @@ export const AREA_ORDER: readonly string[] = ["dhan", "rishte", "karm", "sehat",
 /**
  * How many mapped rules exist per area — the ceiling a full scan could reach.
  *
- * Duplicated from `data/areas/area-map.v1.json` because the client never loads the 111 KB map, and
+ * Duplicated from `data/areas/area-map.v1.json` because the client never loads the 159 KB map, and
  * used ONLY to say "N aur sanket khul sakte hain". `test/area-ui.test.ts` asserts every number
  * against the committed map, so a rebuild that changes the pool fails the suite instead of quietly
  * making the scan CTA lie.

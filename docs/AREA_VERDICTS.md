@@ -40,20 +40,20 @@ highest wins, and once one fires the rest are not consulted.
 ### The three special dispositions
 
 **`obstacles` is a modifier, not an area.** An obstacle says something went wrong; it does not say
-what it went wrong *in*. So these 26 rules have no category route at all and are placed only by
+what it went wrong *in*. So these 43 rules have no category route at all and are placed only by
 their tags — `money` sends one to `dhan`, `reputation` to `karm`, `pride` to `swabhav`. When an obstacles rule's tags name
 more than one area the alphabetically first becomes primary and the rest secondary — arbitrary but
-deterministic, and no rule in the shipped KB reaches it (all 19 tag-routed rules name exactly one
+deterministic, and no rule in the shipped KB reaches it (all 20 tag-routed rules name exactly one
 area). **A rule whose tags name no area is left unmapped.** It is never forced somewhere plausible: filing a
 generic "island means a temporary dip" rule under an arbitrary area would put a warning in front
 of a user about a part of their life the rule never mentioned.
 
-**`reading_method` is excluded.** 12 rules about how to read a hand. They are never a finding about
+**`reading_method` is excluded.** 16 rules about how to read a hand. They are never a finding about
 a life, and they are not counted against coverage.
 
 **`timing` is skipped — deliberately, and this is the one to read carefully.**
 
-The 20 `timing` rules describe *when*: a phase, a period, an age band. There is nowhere to put
+The 21 `timing` rules describe *when*: a phase, a period, an age band. There is nowhere to put
 that. `lib/hastrekha/dob.ts` maps a **calendar birth date** (MM-DD) onto mount birth windows —
 that is astrological-style banding, not a life chronology. **No age-range logic exists anywhere in
 this repo**: there is no life-line age gauge, no date arithmetic beyond a day-of-year index, and no
@@ -63,7 +63,7 @@ app starts making datable predictions it cannot support.
 
 So v1 states nothing about timing rather than guessing. The 4 `PALM-MARR-*` timing rules are the
 exception, and only because the prefix rule and an explicit override rescue them **as relationship
-rules**, on their subject — not on their dates. The remaining 16 are listed in
+rules**, on their subject — not on their dates. The remaining 17 are listed in
 `data/areas/area-map.report.md` under `timing_skipped`, and C6 is where they get considered.
 
 ## Per-rule output
@@ -109,7 +109,7 @@ there would be no way to tell a real change from a re-run. Verified by `cmp`.
 
 ## Safety posture
 
-`meta.safety_exclusions` in the KB records 69 deliberate redactions, with actions like *"not
+`meta.safety_exclusions` in the KB records 160 deliberate redactions, with actions like *"not
 encoded at all"* and *"DEFERRED — too emotionally heavy for automated output"*. The narrator's
 standing instruction is *"agency-preserving. Tendencies and phases, not fixed fate."*
 
@@ -382,7 +382,7 @@ the scan prompt — the gap between LOW and what a scan would give is the argume
 
 ### Server-only by convention
 
-`lib/hastrekha/area-map-loader.ts` statically imports the 111 KB area map and is **not** re-exported
+`lib/hastrekha/area-map-loader.ts` statically imports the 159 KB area map and is **not** re-exported
 from the `lib/hastrekha` barrel, because that barrel is imported by client components
 (`app/scan/scan-client.tsx`, `components/scan/live-ticker.tsx`). Server callers import it by path.
 The TYPE re-export stays: `export type` is erased at build and cannot pull JSON into a bundle.

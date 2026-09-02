@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import kbDocument from "@/data/kb/hastrekha_kb.json";
 import { evaluateRules, loadKnowledgeBase, narrateReading, scoreAreas, type AreaVerdict, type FiredRule, type KbRule, type KnowledgeBase } from "@/lib/hastrekha";
-// Imported by path, not from the barrel: it statically pulls the 111 KB area map and the barrel is
+// Imported by path, not from the barrel: it statically pulls the 159 KB area map and the barrel is
 // in the client graph. See the note in lib/hastrekha/index.ts.
 import { loadAreaMap } from "@/lib/hastrekha/area-map-loader";
 import { sanitizeReadingRequest } from "@/lib/hastrekha/sanitize";

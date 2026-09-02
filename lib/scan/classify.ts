@@ -12,9 +12,10 @@
  *
  * **Order matters and is set by evidence, not by taste.** Where two classes could claim a trace, it
  * goes to the one the knowledge base can actually say something about, because a correct label the
- * KB cannot use is worth less than a slightly-less-likely label it can. Unique rules per class,
- * counted from `data/kb/hastrekha_kb.json`: head 31, marriage 25, fate 23, heart 19, life 15, sun 13,
- * health 5, intuition 4, girdle_of_venus 4, travel 4, bracelets 1.
+ * KB cannot use is worth less than a slightly-less-likely label it can. Unique rules per class, as
+ * counted against the 377-rule Cheiro KB: head 31, marriage 25, fate 23, heart 19, life 15, sun 13,
+ * health 5, intuition 4, girdle_of_venus 4, travel 4, bracelets 1. See the note on `KB_RULE_COUNT`
+ * below — the KB is now 548 rules and these are deliberately not refreshed.
  *
  * Those counts are prefix-sensitive in a way that is easy to get wrong, and getting it wrong the
  * first time is what produced this note: the girdle and the bracelets live under `signs.`, not
@@ -63,6 +64,7 @@ export const TRACE_CLASSES: readonly TraceClass[] = [
  * How many KB rules condition on each class. Zero means "drawn, but the reading cannot use it".
  *
  * **Cheiro-era snapshot, taken against the 377-rule KB.** The Dale merge (`0.3.0-dale-merged`,
+<<<<<<< Updated upstream
  * 548 rules) moved every one of these, and not proportionally — health and bracelets roughly
  * tripled while head grew by a tenth. They are deliberately NOT refreshed here, because these
  * numbers set `TRACE_CLASSES` order, and that order decides which class a contested trace is
@@ -71,6 +73,22 @@ export const TRACE_CLASSES: readonly TraceClass[] = [
  * fixtures to re-pin — not a bookkeeping edit to fold into a KB merge. `test/traces.test.ts`
  * pins two of these exactly and asserts the ordering, and it is what will fail if this is
  * refreshed without re-deriving the order alongside it.
+=======
+ * 548 rules) moved every one of these, and wildly unevenly — health roughly tripled and bracelets
+ * grew tenfold, while head grew by a tenth. They are deliberately NOT refreshed here, because these
+ * numbers set `TRACE_CLASSES` order, and that order decides which class a contested trace is
+ * assigned to. Re-deriving them changes classifier behaviour and re-orders the minor classes
+ * (refreshed, the descending order becomes marriage, sun, health, bracelets, girdle, travel,
+ * intuition — bracelets jumps from last to fourth), so it is a scan-behaviour step with its own
+ * fixtures to re-pin — not a bookkeeping edit to fold into a KB merge. `test/traces.test.ts`
+ * pins two of these exactly and asserts the ordering, and it is what will fail if this is
+ * refreshed without re-deriving the order alongside it.
+ *
+ * Two of the eleven do not reproduce even against the 377-rule KB: `marriage` recounts to 21 and
+ * `intuition` to 3 under the prefix derivation that reproduces the other nine exactly. That drift
+ * predates the Dale merge. Whoever re-derives this table should not assume the old numbers were
+ * exact.
+>>>>>>> Stashed changes
  */
 export const KB_RULE_COUNT: Readonly<Record<TraceClass, number>> = {
   head: 31,

@@ -31,7 +31,11 @@ import { ReadingView } from "@/app/read/reading-view";
 import type { FeedbackState, ReadingResponse, Verdict } from "@/app/read/reading-types";
 
 /**
+<<<<<<< Updated upstream
  * Parsed once per browser session. 106 KB gzipped, and it buys evaluating all 548 rules on-device —
+=======
+ * Parsed once per browser session. 110 KB gzipped, and it buys evaluating all 548 rules on-device —
+>>>>>>> Stashed changes
  * which is what lets the ticker run without a round trip per frame.
  */
 const KB: KnowledgeBase = loadKnowledgeBase(kbDocument);

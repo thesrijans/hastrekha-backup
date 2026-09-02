@@ -8,7 +8,7 @@
  * **Direction is separated from strength, deliberately.** `direction` says which way, `strength`
  * says how loudly, and they are never multiplied together. A single signed 0–100 would render as a
  * score out of a hundred for someone's marriage — a fixed-fate claim, which is the exact thing the
- * KB's 69 documented safety exclusions exist to refuse. Keeping them apart means the UI can show a
+ * KB's 160 documented safety exclusions exist to refuse. Keeping them apart means the UI can show a
  * strong signal that points somewhere difficult without dressing it as a failing grade.
  *
  * **Disagreement is measured, not resolved.** `buildClusters` in engine.ts keys on
