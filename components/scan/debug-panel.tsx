@@ -625,20 +625,24 @@ export function DebugPanel({
             <span className="font-display text-[0.7rem] uppercase tracking-[0.18em] text-muted">
               Fixtures &amp; edge tuning
             </span>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => void exportFrame()}
-                disabled={exportState === "working"}
-                className="rounded-full border border-hairline px-3 py-1.5 text-[0.7rem] text-ink transition-colors hover:border-mount-glow hover:text-mount-glow disabled:opacity-50"
-              >
-                {exportState === "working" ? "Exporting…" : "Export frame"}
-              </button>
-              <span aria-live="polite" className="text-[0.7rem] text-muted">
-                {exportState === "done" ? "Saved PNG + JSON — drop both into test/fixtures/real/" : null}
-                {exportState === "empty" ? "No frame yet — start the camera first." : null}
-              </span>
-            </div>
+            {/* Raw-frame export is a debug affordance; a raw palm frame is biometric data, so the
+                button never ships — same gate as the tuning slider below. */}
+            {process.env.NODE_ENV !== "production" ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void exportFrame()}
+                  disabled={exportState === "working"}
+                  className="rounded-full border border-hairline px-3 py-1.5 text-[0.7rem] text-ink transition-colors hover:border-mount-glow hover:text-mount-glow disabled:opacity-50"
+                >
+                  {exportState === "working" ? "Exporting…" : "Export frame"}
+                </button>
+                <span aria-live="polite" className="text-[0.7rem] text-muted">
+                  {exportState === "done" ? "Saved PNG + JSON — drop both into test/fixtures/real/" : null}
+                  {exportState === "empty" ? "No frame yet — start the camera first." : null}
+                </span>
+              </div>
+            ) : null}
 
             {process.env.NODE_ENV !== "production" ? (
               <div className="flex flex-col gap-1.5">

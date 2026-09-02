@@ -57,6 +57,19 @@ export async function createHandLandmarker(options: LandmarkerOptions = {}): Pro
   const { FilesetResolver, HandLandmarker: Landmarker } = await import("@mediapipe/tasks-vision");
   const fileset = await FilesetResolver.forVisionTasks(wasmPath);
 
+  /*
+   * Known console warning (decision D2, benign — do not "fix" with option changes):
+   * "Using NORM_RECT without IMAGE_DIMENSIONS is only supported for the square ROI. Provide
+   * IMAGE_DIMENSIONS or use PROJECTION_MATRIX." The tasks-vision runner unconditionally feeds the
+   * graph a full-frame NormalizedRect and never supplies IMAGE_DIMENSIONS; on the GPU delegate the
+   * scaler logs this once. With the full-frame rect and rotation 0 the fallback transform is the
+   * identity, so landmark accuracy is unaffected. There is no JS API to supply IMAGE_DIMENSIONS.
+   *
+   * STANDING RULE: never pass regionOfInterest/rotationDegrees into detectForVideo without
+   * re-validating landmark accuracy — that is exactly the configuration under which this warning
+   * stops being cosmetic. Landmarks are the coarse registration base; ROI-induced error would feed
+   * straight into rectification.
+   */
   return Landmarker.createFromOptions(fileset, {
     baseOptions: { modelAssetPath: modelPath, delegate: options.delegate ?? "GPU" },
     numHands: 1,

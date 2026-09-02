@@ -13,3 +13,8 @@ lib/generated/
 # vendored from node_modules by scripts/vendor-mediapipe.mjs (34MB, regenerated on prebuild)
 public/mediapipe/
 public/ort/
+
+# dev capture harness (Phase 0a) — raw palm frames are biometric data and live in the LAB (D5)
+captures/
+scan-sessions/
+*.session.zip

@@ -532,3 +532,64 @@ export function gradeFrame(input: QualityInput | null): QualityVerdict {
     facingReadout,
   };
 }
+
+/* -------------------------------- Sharpness -------------------------------- */
+
+/**
+ * D6 (Phase 0a): optical sharpness via variance of Laplacian, on palm-bbox luma at full
+ * resolution. Everything above measures *geometric* steadiness — `unsteady` is landmark jitter —
+ * so a perfectly still, badly focused frame passes the gate. For the ground-truth capture harness
+ * that is the worst possible still: label-resolution creases live or die on focus.
+ *
+ * Additive only: `gradeFrame` and its thresholds are untouched. The capture harness composes this
+ * with the gate verdict; the live pipeline never calls it.
+ */
+
+/**
+ * Minimum variance of Laplacian for a still to auto-select, on 0–255 luma.
+ *
+ * The classic blur heuristic uses ~100 for photographic 8-bit images; laptop webcams render
+ * noticeably softer than phone cameras even in focus, so the floor starts permissive. Tune against
+ * real captures — it is a named constant precisely so the first session can move it with evidence.
+ */
+export const SHARPNESS_MIN_VARIANCE = 60;
+
+export interface SharpnessReading {
+  /** Variance of the 4-neighbour Laplacian over interior pixels, 0–255 luma scale. */
+  readonly variance: number;
+  /** `variance >= SHARPNESS_MIN_VARIANCE`. */
+  readonly ok: boolean;
+}
+
+/**
+ * Variance of the 4-neighbour Laplacian `4·c − n − s − e − w` over interior pixels.
+ *
+ * `luma` is row-major, `width × height`, values on the 0–255 scale (any ArrayLike — Uint8Clamped
+ * from a canvas or synthetic Float32 in tests). Returns 0 for degenerate sizes.
+ */
+export function varianceOfLaplacian(luma: ArrayLike<number>, width: number, height: number): number {
+  if (width < 3 || height < 3 || luma.length < width * height) return 0;
+  let sum = 0;
+  let sumSq = 0;
+  let count = 0;
+  for (let y = 1; y < height - 1; y += 1) {
+    const row = y * width;
+    for (let x = 1; x < width - 1; x += 1) {
+      const at = row + x;
+      const response =
+        4 * luma[at] - luma[at - 1] - luma[at + 1] - luma[at - width] - luma[at + width];
+      sum += response;
+      sumSq += response * response;
+      count += 1;
+    }
+  }
+  if (count === 0) return 0;
+  const mean = sum / count;
+  return sumSq / count - mean * mean;
+}
+
+/** Convenience wrapper pairing the measurement with its gate. */
+export function assessSharpness(luma: ArrayLike<number>, width: number, height: number): SharpnessReading {
+  const variance = varianceOfLaplacian(luma, width, height);
+  return { variance, ok: variance >= SHARPNESS_MIN_VARIANCE };
+}
