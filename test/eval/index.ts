@@ -11,7 +11,7 @@
  * Read-only over lib/scan/** — this measures the frozen core, it never changes it.
  */
 import path from "node:path";
-import { loadGroundTruth, type EvalCase } from "./gt-adapter";
+import { loadGroundTruthDetailed, type EvalCase } from "./gt-adapter";
 import { EVAL_TOLS, EVAL_TOL_PX_AT_512, EVAL_SIZE, lineMetrics, type LineMetrics, type LineRow } from "./metrics";
 import { RUNGS, runStill, type Rung } from "./run-pipeline";
 import { measureFwhm, type FwhmResult } from "./fwhm";
@@ -78,7 +78,10 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const tols = EVAL_TOLS.includes(args.headlineTol) ? EVAL_TOLS : [...EVAL_TOLS, args.headlineTol].sort((a, b) => a - b);
 
-  const cases = loadGroundTruth(args.root);
+  const { cases, sessionDirs } = loadGroundTruthDetailed(args.root);
+  for (const dir of sessionDirs) {
+    console.log(`gt: session ${dir.id} — ${dir.layout} layout, ${dir.labelCount} label(s)`);
+  }
   const active = cases.filter((c) => c.skip === undefined);
   if (active.length === 0) {
     console.log("no active ground-truth cases found — nothing to evaluate");
@@ -99,6 +102,7 @@ async function main(): Promise<void> {
     tols,
     headlineTol: args.headlineTol,
     cases,
+    sessionDirs,
     runs,
     fwhm,
   };

@@ -102,17 +102,47 @@ function loadLegacy(repoRoot: string): EvalCase[] {
   return cases;
 }
 
-function loadSessions(repoRoot: string, root: string): EvalCase[] {
-  const goldenDir = path.join(repoRoot, root, "golden");
+/** One discovered session directory — surfaces in the eval header even with zero labels. */
+export interface SessionDirInfo {
+  readonly id: string;
+  /** "nested" = <root>/golden/<sessionId>/; "flat" = metadata.json directly in <root>/golden/. */
+  readonly layout: "nested" | "flat";
+  readonly labelCount: number;
+}
+
+function sessionDirsOf(goldenDir: string): { dir: string; layout: "nested" | "flat" }[] {
   if (!existsSync(goldenDir)) return [];
+  // Flat layout: the golden folder IS one exported session (metadata.json at its top level).
+  if (existsSync(path.join(goldenDir, "metadata.json"))) {
+    return [{ dir: goldenDir, layout: "flat" }];
+  }
+  const out: { dir: string; layout: "nested" | "flat" }[] = [];
+  for (const entry of readdirSync(goldenDir).sort()) {
+    const full = path.join(goldenDir, entry);
+    if (statSync(full).isDirectory()) out.push({ dir: full, layout: "nested" });
+  }
+  return out;
+}
+
+function loadSessions(
+  repoRoot: string,
+  root: string,
+  sessionDirs: SessionDirInfo[],
+): EvalCase[] {
+  const goldenDir = path.join(repoRoot, root, "golden");
   const cases: EvalCase[] = [];
-  for (const sessionId of readdirSync(goldenDir).sort()) {
-    const sessionDir = path.join(goldenDir, sessionId);
-    if (!statSync(sessionDir).isDirectory()) continue;
+  for (const { dir: sessionDir, layout } of sessionDirsOf(goldenDir)) {
+    // The directory name is only the id for nested layouts; flat sessions name themselves.
+    let sessionId = path.basename(sessionDir);
+    const metaPathEarly = path.join(sessionDir, "metadata.json");
+    if (layout === "flat" && existsSync(metaPathEarly)) {
+      const metadata = parseSessionMetadata(readFileSync(metaPathEarly, "utf8"));
+      if (metadata !== null) sessionId = metadata.sessionId;
+    }
     const labelsDir = path.join(sessionDir, "labels");
-    if (!existsSync(labelsDir)) continue;
-    for (const entry of readdirSync(labelsDir).sort()) {
-      if (!entry.endsWith(".json")) continue;
+    const labelFiles = existsSync(labelsDir) ? readdirSync(labelsDir).filter((f) => f.endsWith(".json")) : [];
+    sessionDirs.push({ id: sessionId, layout, labelCount: labelFiles.length });
+    for (const entry of labelFiles.sort()) {
       const id = `${sessionId}/${entry.replace(/\.json$/, "")}`;
       const label = parseRekhaLabelFile(readFileSync(path.join(labelsDir, entry), "utf8"));
       if (label === null) {
@@ -171,7 +201,23 @@ function loadSessions(repoRoot: string, root: string): EvalCase[] {
   return cases;
 }
 
-/** Walk both sources. `root` is the session-fixture root (default "fixtures"), repo-relative. */
+export interface GroundTruthLoad {
+  readonly cases: EvalCase[];
+  /** Every session directory discovered, labelled or not — the header shows these. */
+  readonly sessionDirs: readonly SessionDirInfo[];
+}
+
+/** Walk both sources with discovery info. `root` is the session-fixture root, repo-relative. */
+export function loadGroundTruthDetailed(
+  root = "fixtures",
+  repoRoot: string = path.resolve(__dirname, "..", ".."),
+): GroundTruthLoad {
+  const sessionDirs: SessionDirInfo[] = [];
+  const cases = [...loadLegacy(repoRoot), ...loadSessions(repoRoot, root, sessionDirs)];
+  return { cases, sessionDirs };
+}
+
+/** Walk both sources. Kept for callers that only want the cases. */
 export function loadGroundTruth(root = "fixtures", repoRoot: string = path.resolve(__dirname, "..", "..")): EvalCase[] {
-  return [...loadLegacy(repoRoot), ...loadSessions(repoRoot, root)];
+  return loadGroundTruthDetailed(root, repoRoot).cases;
 }

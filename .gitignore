@@ -20,3 +20,10 @@ scan-sessions/
 *.session.zip
 
 diff*.txt
+
+# eval harness output + private eval assets (fp32 model etc.)
+test/eval/out/
+fixtures/private/
+
+fixtures/golden/**/raw/
+fixtures/golden/**/snapshots/

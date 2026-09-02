@@ -6,7 +6,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { LABEL_LINE_IDS } from "../../lib/scan/dev/session-types";
 import { EVAL_TOLS, EVAL_TOL_PX_AT_512, aggregate, type AggregateBucket, type LineRow } from "./metrics";
-import type { EvalCase } from "./gt-adapter";
+import type { EvalCase, SessionDirInfo } from "./gt-adapter";
 import type { FwhmResult } from "./fwhm";
 import type { Rung } from "./run-pipeline";
 
@@ -26,6 +26,8 @@ export interface EvalReport {
   readonly tols: readonly number[];
   readonly headlineTol: number;
   readonly cases: readonly EvalCase[];
+  /** Session directories discovered by the adapter, labelled or not. */
+  readonly sessionDirs?: readonly SessionDirInfo[];
   readonly runs: readonly RungRun[];
   readonly fwhm: Readonly<Record<string, FwhmResult>> | null;
 }
@@ -82,6 +84,14 @@ export function renderMarkdown(report: EvalReport): string {
       `${active.filter((c) => c.source === "session").length} session) · metric space 512 px · ` +
       `headline tolerance ${report.headlineTol}px (curve at ${report.tols.join("/")}px).`,
   );
+  if (report.sessionDirs !== undefined && report.sessionDirs.length > 0) {
+    const labelled = report.sessionDirs.reduce((sum, dir) => sum + dir.labelCount, 0);
+    out.push("");
+    out.push(
+      `${report.sessionDirs.length} session dir(s) discovered (${labelled} labelled still(s)): ` +
+        report.sessionDirs.map((dir) => `${dir.id} [${dir.layout}]`).join(" · "),
+    );
+  }
 
   for (const run of report.runs) {
     out.push("");
