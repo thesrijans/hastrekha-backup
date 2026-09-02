@@ -16,10 +16,14 @@
  */
 import {
   SESSION_DIRS,
+  SESSION_DIR_LABELS,
   SESSION_METADATA_FILE,
   SESSION_SCHEMA_VERSION,
+  isRekhaLabelFile,
   isSessionMetadata,
+  labelFileName,
   type CaptureStillRecord,
+  type RekhaLabelFile,
   type SessionHand,
   type SessionMetadata,
 } from "./session-types";
@@ -27,10 +31,11 @@ import {
 /* --------------------------------- IndexedDB -------------------------------- */
 
 const DB_NAME = "hastrekha-dev-capture";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_SESSIONS = "sessions";
 const STORE_BLOBS = "blobs";
 const STORE_HANDLES = "handles";
+const STORE_LABELS = "labels";
 const HANDLE_KEY_EXPORT_DIR = "exportDir";
 
 function openDb(): Promise<IDBDatabase> {
@@ -41,6 +46,7 @@ function openDb(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE_SESSIONS)) db.createObjectStore(STORE_SESSIONS, { keyPath: "sessionId" });
       if (!db.objectStoreNames.contains(STORE_BLOBS)) db.createObjectStore(STORE_BLOBS);
       if (!db.objectStoreNames.contains(STORE_HANDLES)) db.createObjectStore(STORE_HANDLES);
+      if (!db.objectStoreNames.contains(STORE_LABELS)) db.createObjectStore(STORE_LABELS);
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error("indexedDB open failed"));
@@ -173,12 +179,45 @@ export class SessionStore {
     return value ?? null;
   }
 
+  /* ------------------------------- Labels (0a-ii) ------------------------------- */
+
+  /** Stage one label, keyed by its file name. Overwrite allowed — relabeling is normal. */
+  async addLabel(sessionId: string, stillIndex: number, label: RekhaLabelFile): Promise<void> {
+    if (!isRekhaLabelFile(label)) throw new Error("refusing to stage an invalid label file");
+    await idbPut(this.db, STORE_LABELS, label, blobKey(sessionId, labelFileName(stillIndex)));
+  }
+
+  /** Still indices that have a staged label, ascending — drives the labelled badges. */
+  async listLabels(sessionId: string): Promise<number[]> {
+    const keys = await idbAllKeys(this.db, STORE_LABELS);
+    const prefix = `${sessionId}/label-`;
+    const indices: number[] = [];
+    for (const key of keys) {
+      if (typeof key === "string" && key.startsWith(prefix)) {
+        const index = Number.parseInt(key.slice(prefix.length), 10);
+        if (Number.isFinite(index)) indices.push(index);
+      }
+    }
+    return indices.sort((a, b) => a - b);
+  }
+
+  async getLabel(sessionId: string, stillIndex: number): Promise<RekhaLabelFile | null> {
+    const value = await idbGet<unknown>(this.db, STORE_LABELS, blobKey(sessionId, labelFileName(stillIndex)));
+    return isRekhaLabelFile(value) ? value : null;
+  }
+
   /** Remove a session and its staged blobs (after a confirmed export, or on user request). */
   async deleteSession(sessionId: string): Promise<void> {
     const keys = await idbAllKeys(this.db, STORE_BLOBS);
     for (const key of keys) {
       if (typeof key === "string" && key.startsWith(`${sessionId}/`)) {
         await idbDelete(this.db, STORE_BLOBS, key);
+      }
+    }
+    const labelKeys = await idbAllKeys(this.db, STORE_LABELS);
+    for (const key of labelKeys) {
+      if (typeof key === "string" && key.startsWith(`${sessionId}/`)) {
+        await idbDelete(this.db, STORE_LABELS, key);
       }
     }
     await idbDelete(this.db, STORE_SESSIONS, sessionId);
@@ -232,9 +271,24 @@ export class SessionStore {
       }
     }
 
+    // Labels BEFORE metadata (0a-ii) — metadata.json stays the last write, so its labelCount can
+    // only ever describe files that are already on disk.
+    const labelIndices = await this.listLabels(sessionId);
+    const labelsDir = await dir.getDirectoryHandle(SESSION_DIR_LABELS, { create: true });
+    for (const index of labelIndices) {
+      const label = await this.getLabel(sessionId, index);
+      if (label === null) continue;
+      const file = await labelsDir.getFileHandle(labelFileName(index), { create: true });
+      const writable = await file.createWritable();
+      await writable.write(new Blob([JSON.stringify(label, null, 2)], { type: "application/json" }));
+      await writable.close();
+      written += 1;
+    }
+
+    const withCount: SessionMetadata = { ...session, labelCount: labelIndices.length };
     const metaFile = await dir.getFileHandle(SESSION_METADATA_FILE, { create: true });
     const writable = await metaFile.createWritable();
-    await writable.write(new Blob([JSON.stringify(session, null, 2)], { type: "application/json" }));
+    await writable.write(new Blob([JSON.stringify(withCount, null, 2)], { type: "application/json" }));
     await writable.close();
     return written;
   }

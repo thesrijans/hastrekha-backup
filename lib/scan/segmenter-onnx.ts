@@ -162,11 +162,15 @@ export function createOnnxSegmenter(options: OnnxSegmenterOptions = {}): Segment
       // These buffers are transferred, so hand the worker copies — the caller still owns theirs.
       const rgba = new Uint8ClampedArray(rectified.data).buffer;
       const validity = context?.inside === undefined ? undefined : new Uint8Array(context.inside).buffer;
+      const rgbaFullHand = context?.fullHand === undefined ? undefined : new Uint8ClampedArray(context.fullHand.rgba).buffer;
+      const pqToFullHand = context?.fullHand?.pqToFullHand;
 
       return new Promise<LineMask | null>((resolve, reject) => {
         inFlight = { resolve, reject };
         const transfers: ArrayBuffer[] = [rgba];
         if (validity !== undefined) transfers.push(validity);
+        if (rgbaFullHand !== undefined) transfers.push(rgbaFullHand);
+        if (pqToFullHand !== undefined) transfers.push(pqToFullHand);
         worker?.postMessage(
           {
             type: "infer",
@@ -176,6 +180,8 @@ export function createOnnxSegmenter(options: OnnxSegmenterOptions = {}): Segment
             rgba,
             validity,
             convention: context?.convention ?? 4,
+            rgbaFullHand,
+            pqToFullHand,
           },
           transfers,
         );

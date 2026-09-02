@@ -51,6 +51,39 @@ export const SESSION_METADATA_FILE = "metadata.json";
 /** Schema tag written into every metadata/label file so replays can detect drift. */
 export const SESSION_SCHEMA_VERSION = "0a-1";
 
+/**
+ * Label-file schema versions. 0a-1 files predate the labeler internals (0a-ii) and carry NONE of
+ * the per-line confidence/method/view fields; 0a-2 files must carry all of them. The validator
+ * enforces the split strictly in both directions, so a file can never be half-upgraded.
+ */
+export const LABEL_SCHEMA_VERSIONS = ["0a-1", "0a-2"] as const;
+export type LabelSchemaVersion = (typeof LABEL_SCHEMA_VERSIONS)[number];
+
+/** Grayscale source for the valley operator and the enhanced views (0a-ii). */
+export const GRAY_CHANNELS = ["LUMA", "R", "G", "B"] as const;
+export type GrayChannel = (typeof GRAY_CHANNELS)[number];
+
+/** Display modes for the labeler stage. Display-only: never written back to a stored crop. */
+export const VIEW_MODES = ["NATURAL", "CONTRAST", "CREASE"] as const;
+export type ViewMode = (typeof VIEW_MODES)[number];
+
+/**
+ * Ruling (0a-ii): string confidence, matching the hand-traced ground truth in
+ * test/fixtures/ground-truth/ (`"confidence": "faint"`), not a numeric 1–3 scale.
+ */
+export const LABEL_CONFIDENCES = ["clear", "faint", "uncertain"] as const;
+export type LabelConfidence = (typeof LABEL_CONFIDENCES)[number];
+
+/**
+ * How a line's points were produced. `unet-prelabel-corrected` is RESERVED for the locked
+ * correction mode (growth set, after the eval set freezes) — nothing produces it in 0a.
+ */
+export const LABEL_METHODS = ["livewire", "manual", "unet-prelabel-corrected"] as const;
+export type LabelMethod = (typeof LABEL_METHODS)[number];
+
+/** Version tag for the enhancement stack a label was drawn under. */
+export const ENHANCEMENT_VERSION = "enh-1";
+
 /** File name for a still's full-resolution original inside raw/. */
 export function rawFileName(index: number): string {
   return `still-${String(index).padStart(3, "0")}.png`;
@@ -132,6 +165,8 @@ export interface SessionMetadata {
   /** Canonical crop size the selected/ files were rectified at (D3). */
   readonly canonicalSize: number;
   readonly stills: readonly CaptureStillRecord[];
+  /** Written at export time: how many stills carry a staged label. Absent pre-0a-ii. */
+  readonly labelCount?: number;
 }
 
 /* ---------------------------------- Labels ---------------------------------- */
@@ -146,6 +181,12 @@ export interface RekhaLabelLine {
   /** Polyline as 0–1 fractions of the canonical crop (D4 — golden-run compatible). */
   readonly points: readonly (readonly number[])[];
   readonly absent: boolean;
+  /** 0a-2: required. How sure the human was — string form matches the hand-traced GT. */
+  readonly confidence?: LabelConfidence;
+  /** 0a-2: required. 'livewire' when any segment snapped, else 'manual'. */
+  readonly method?: LabelMethod;
+  /** 0a-2: required. Which view the line was committed under — the bias record. */
+  readonly viewAtCommit?: ViewMode;
 }
 
 export type LabelerMode = "blank_slate" | "correction";
@@ -155,7 +196,7 @@ export type LabelerMode = "blank_slate" | "correction";
  * consumable by `loadGroundTruth` in test/golden-run.ts; everything else is provenance.
  */
 export interface RekhaLabelFile {
-  readonly schemaVersion: string;
+  readonly schemaVersion: LabelSchemaVersion;
   readonly sessionId: string;
   readonly stillIndex: number;
   /** Path to the labeled image — the canonical crop inside selected/. */
@@ -169,6 +210,10 @@ export interface RekhaLabelFile {
   readonly absent: readonly LabelLineId[];
   readonly mode: LabelerMode;
   readonly labeler: string;
+  /** 0a-2: required. Stable id for the person, distinct from the display name above. */
+  readonly labelerId?: string;
+  /** 0a-2: required. Which enhancement stack + gray channel the labeling ran under. */
+  readonly enhancement?: { readonly version: typeof ENHANCEMENT_VERSION; readonly channel: GrayChannel };
   /** ISO timestamps. */
   readonly capturedAt: string;
   readonly labeledAt: string;
@@ -242,6 +287,7 @@ export function isSessionMetadata(value: unknown): value is SessionMetadata {
     (value.hand === "left" || value.hand === "right") &&
     typeof value.createdAt === "string" &&
     isFiniteNumber(value.canonicalSize) &&
+    (value.labelCount === undefined || isFiniteNumber(value.labelCount)) &&
     Array.isArray(value.stills) &&
     value.stills.every(isStillRecord)
   );
@@ -255,7 +301,7 @@ export function isSessionMetadata(value: unknown): value is SessionMetadata {
 export function isRekhaLabelFile(value: unknown): value is RekhaLabelFile {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== SESSION_SCHEMA_VERSION ||
+    !(LABEL_SCHEMA_VERSIONS as readonly string[]).includes(value.schemaVersion as string) ||
     typeof value.sessionId !== "string" ||
     !isFiniteNumber(value.stillIndex) ||
     typeof value.frame !== "string" ||
@@ -271,6 +317,23 @@ export function isRekhaLabelFile(value: unknown): value is RekhaLabelFile {
   ) {
     return false;
   }
+  const isV2 = value.schemaVersion === "0a-2";
+
+  // File-level 0a-2 fields: required and valid on 0a-2, absent on 0a-1 — never half-upgraded.
+  if (isV2) {
+    if (typeof value.labelerId !== "string" || value.labelerId.length === 0) return false;
+    const enh = value.enhancement;
+    if (
+      !isRecord(enh) ||
+      enh.version !== ENHANCEMENT_VERSION ||
+      !(GRAY_CHANNELS as readonly string[]).includes(enh.channel as string)
+    ) {
+      return false;
+    }
+  } else if (value.labelerId !== undefined || value.enhancement !== undefined) {
+    return false;
+  }
+
   const seen = new Set<string>();
   for (const line of value.lines) {
     if (!isRecord(line) || typeof line.id !== "string") return false;
@@ -280,6 +343,13 @@ export function isRekhaLabelFile(value: unknown): value is RekhaLabelFile {
     if (line.absent && line.points.length > 0) return false;
     if (!line.absent && line.points.length < 2) return false;
     if (!line.points.every((p) => p[0] >= 0 && p[0] <= 1 && p[1] >= 0 && p[1] <= 1)) return false;
+    if (isV2) {
+      if (!(LABEL_CONFIDENCES as readonly string[]).includes(line.confidence as string)) return false;
+      if (!(LABEL_METHODS as readonly string[]).includes(line.method as string)) return false;
+      if (!(VIEW_MODES as readonly string[]).includes(line.viewAtCommit as string)) return false;
+    } else if (line.confidence !== undefined || line.method !== undefined || line.viewAtCommit !== undefined) {
+      return false;
+    }
   }
   const flagged = value.lines
     .filter((line): line is RekhaLabelLine => isRecord(line) && line.absent === true)

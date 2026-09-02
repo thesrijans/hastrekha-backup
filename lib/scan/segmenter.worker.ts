@@ -14,6 +14,7 @@
 import { emptyDiagnostics, type SegmenterDiagnostics } from "./segmenter";
 import { combineProbabilities } from "./segmenter";
 import { detectRidges, normalizeResponses, type RidgeTimings } from "./ridge";
+import { UNET_INPUT_SIZE, matrixFromBuffer, remapProbabilitiesInto } from "./fullhand-warp";
 import { detectVessels, sigmasFor } from "./frangi";
 import { normaliseIllumination } from "./illumination";
 import { blendComposite, compositeStack, emptyStack, pushFrame, type FrameStack } from "./stack";
@@ -41,6 +42,10 @@ export interface InferMessage {
   readonly validity?: ArrayBuffer;
   /** Set false to skip the UNet entirely on this frame regardless of its stride. */
   readonly wantUnet?: boolean;
+  /** 256² RGBA full-hand canonical warp. Present only when flags.unetFullHand is on client-side. */
+  readonly rgbaFullHand?: ArrayBuffer;
+  /** Float64Array(9): palm-quad canonical px → full-hand canonical px. Paired with rgbaFullHand. */
+  readonly pqToFullHand?: ArrayBuffer;
 }
 
 export type WorkerRequest = InitMessage | InferMessage;
@@ -231,6 +236,25 @@ const describe = (error: unknown): string =>
 function toNchw(rgba: Uint8ClampedArray, width: number, height: number): Float32Array {
   const plane = width * height;
   const out = new Float32Array(3 * plane);
+  for (let i = 0; i < plane; i += 1) {
+    const at = i * 4;
+    out[i] = rgba[at] / 255;
+    out[plane + i] = rgba[at + 1] / 255;
+    out[2 * plane + i] = rgba[at + 2] / 255;
+  }
+  return out;
+}
+
+/**
+ * Reused planes for the full-hand UNet path (flag unetFullHand): the 256² probability plane and
+ * its NCHW input. Allocated once on first use, exactly like the tier buffers — the per-frame path
+ * must not allocate megabytes.
+ */
+let fullhandProbs: Float32Array | null = null;
+let fullhandNchw: Float32Array | null = null;
+
+/** toNchw into a reused buffer — the allocation-free twin of {@link toNchw} for the hot path. */
+function toNchwInto(rgba: Uint8ClampedArray, plane: number, out: Float32Array): Float32Array {
   for (let i = 0; i < plane; i += 1) {
     const at = i * 4;
     out[i] = rgba[at] / 255;
@@ -444,23 +468,51 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       let unet: Float32Array | null = null;
       let unetMs = 0;
       const wantUnet = message.wantUnet !== false && frameIndex % UNET_STRIDE === 0;
+      let fullhandRemapMs = 0;
       if (wantUnet && session !== null && ortMod !== null) {
         try {
           const tStart = performance.now();
-          const input = new ortMod.Tensor("float32", toNchw(rgba, size, size), [1, 3, size, size]);
-          const output = await session.run({ [INPUT_NAME]: input });
-          const logits = output[OUTPUT_NAME] ?? Object.values(output)[0];
-          const full = sigmoidInPlace(Float32Array.from(logits.data as Float32Array));
-          /*
-           * The model runs at its native size and its answer comes DOWN to the working resolution,
-           * rather than everything else going up to meet it. One resolution downstream is the whole
-           * point: the alternative re-thresholds and re-thins an interpolated field, which loses
-           * detail that interpolation cannot put back.
-           */
-          if (work === size) unet = full;
-          else {
+          if (message.rgbaFullHand !== undefined && message.pqToFullHand !== undefined) {
+            /*
+             * Full-hand framing (flag unetFullHand): infer on the training-shaped 256² warp the
+             * client sent, then pull the probability plane straight into the working grid through
+             * the palm-quad→full-hand matrix — one warp, no intermediate downsample2, so the
+             * answer lands in exactly the space fusion accumulates in. Everything after the `unet`
+             * buffer is byte-for-byte the shipped path.
+             */
+            const fullPlane = UNET_INPUT_SIZE * UNET_INPUT_SIZE;
+            if (fullhandNchw === null) fullhandNchw = new Float32Array(3 * fullPlane);
+            const fullRgba = new Uint8ClampedArray(message.rgbaFullHand);
+            const input = new ortMod.Tensor(
+              "float32",
+              toNchwInto(fullRgba, fullPlane, fullhandNchw),
+              [1, 3, UNET_INPUT_SIZE, UNET_INPUT_SIZE],
+            );
+            const output = await session.run({ [INPUT_NAME]: input });
+            const logits = output[OUTPUT_NAME] ?? Object.values(output)[0];
+            if (fullhandProbs === null) fullhandProbs = new Float32Array(fullPlane);
+            fullhandProbs.set(logits.data as Float32Array);
+            sigmoidInPlace(fullhandProbs);
+            const tRemap = performance.now();
             unet = new Float32Array(work * work);
-            downsample2(full, size, unet);
+            remapProbabilitiesInto(fullhandProbs, UNET_INPUT_SIZE, matrixFromBuffer(message.pqToFullHand), unet, work, size);
+            fullhandRemapMs = performance.now() - tRemap;
+          } else {
+            const input = new ortMod.Tensor("float32", toNchw(rgba, size, size), [1, 3, size, size]);
+            const output = await session.run({ [INPUT_NAME]: input });
+            const logits = output[OUTPUT_NAME] ?? Object.values(output)[0];
+            const full = sigmoidInPlace(Float32Array.from(logits.data as Float32Array));
+            /*
+             * The model runs at its native size and its answer comes DOWN to the working resolution,
+             * rather than everything else going up to meet it. One resolution downstream is the whole
+             * point: the alternative re-thresholds and re-thins an interpolated field, which loses
+             * detail that interpolation cannot put back.
+             */
+            if (work === size) unet = full;
+            else {
+              unet = new Float32Array(work * work);
+              downsample2(full, size, unet);
+            }
           }
           unetMs = performance.now() - tStart;
         } catch (error) {
@@ -490,6 +542,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         // invite tuning against numbers nothing actually measured.
         fast: fastMs,
         unet: unetMs,
+        fullhandRemap: fullhandRemapMs,
         clahe: ridgeTimings?.claheMs ?? 0,
         blackhat: ridgeTimings?.blackhatMs ?? 0,
         gabor: ridgeTimings?.gaborMs ?? 0,

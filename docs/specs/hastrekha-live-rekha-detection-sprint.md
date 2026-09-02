@@ -124,6 +124,62 @@ consumable as a ground-truth fixture. Schema + validators: `lib/scan/dev/session
   - **Blank-slate mode (EVAL):** detector output is NEVER rendered. Labeler sees only the palm. This is the only mode used to build the eval set. (If the labeler only corrects AI proposals, lines the AI never finds never enter the set and precision inflates.)
   - **Correction mode (GROWTH):** shows detector output, human accepts/corrects/rejects. Builds future training data. Build the toggle now, use it AFTER the eval set is locked. Eval set is never used for training.
 
+### 0b-ii. Labeler internals (built in 0a-ii — durable decisions)
+
+**A6 (addendum, now spec-durable):** Labeler upgrade for Phase 0b: livewire/intelligent-scissors
+path snapping — Dijkstra over a ridge-cost image so the labeler clicks endpoints and the polyline
+snaps along the crease. Cost image comes from a generic ridge filter, NOT from our detector output
+(blank-slate rule holds for the eval set).
+
+**D1 (ruling, now spec-durable):** the livewire cost image is NOT frangi.ts. Cost must be
+independent of detector modules: inverted-luma valley response via small LoG (σ ≈ 1.5–3 px at
+labeling resolution) on the canonical crop, normalised, with a cost floor. Free-draw override is
+always available (assist, not gate). `label-client.tsx` and `livewire.ts` import nothing from
+`lib/scan/{segmenter*,ridge,frangi,fusion,stack,completion,lines,quality}` — enforced mechanically
+by `test/import-boundary.test.ts`, which also asserts the reverse direction (no production file
+imports `lib/scan/dev` or `app/dev`).
+
+Implementation: `lib/scan/dev/valley.ts` (VALLEY_SIGMAS [1.5, 2.2, 3.0] @512, positive
+scale-normalised LoG, max-pooled, 99.5th-percentile normalised) · `lib/scan/dev/livewire.ts`
+(COST_FLOOR 0.04, 8-connected Dijkstra, ×√2 diagonals, LIVEWIRE_RADIUS_PX 192 fallback window once
+a full-grid seed measures over budget) · `lib/scan/dev/enhance.ts` (display-only views).
+
+**Three view modes, display-only, never written back:** NATURAL (passthrough) · CONTRAST (own
+CLAHE, 8 tiles / clip 2.5, gamma 0.9) · CREASE (desaturated base at 0.45 + the SAME valley response
+tinted antique gold #C9A24B). **Enhancement is continuous tone only — no thresholding, no thinning,
+no polylines.** The moment an enhanced view draws a line it is proposing labels, and proposals are
+what the blank-slate rule keeps out of the eval set. **HOLD Space flips to NATURAL while held** —
+the bias check: a crease that vanishes in the natural view earns `faint` (also the default
+confidence when a line is committed from CREASE). The label records `viewAtCommit` per line and the
+gray `channel` per file, so any enhancement-induced bias stays measurable afterwards.
+
+**Hotkeys:** 1–4 heart/head/life/fate (nothing on 5–9) · click seed/append · S snap toggle · Z undo
+segment · Enter commit · Esc cancel · A absent · V view cycle · C channel cycle · Space hold =
+natural · L loupe (3×, 120 px) · wheel / + / − zoom 1–8× · Shift+drag pan · Backspace delete
+selected vertex.
+
+**Label schema 0a-2** (validators in `lib/scan/dev/session-types.ts`; 0a-1 files remain valid and
+carry none of the new fields — never half-upgraded):
+
+```json
+{
+  "schemaVersion": "0a-2",
+  "lines": [ { "id": "heart", "points": [[0.141, 0.25]], "absent": false,
+               "confidence": "clear|faint|uncertain",
+               "method": "livewire|manual|unet-prelabel-corrected",
+               "viewAtCommit": "NATURAL|CONTRAST|CREASE" } ],
+  "labelerId": "srijan",
+  "enhancement": { "version": "enh-1", "channel": "LUMA|R|G|B" }
+}
+```
+
+**Confidence is a string enum** (`clear` / `faint` / `uncertain`), not numeric 1–3 — ruling to
+match the hand-traced ground truth in `test/fixtures/ground-truth/` (`"confidence": "faint"`), so
+one convention exists, not two. **`unet-prelabel-corrected` is RESERVED**: it names the locked
+correction-mode flow (growth set, after the eval set freezes) and nothing produces it in 0a — the
+correction toggle renders disabled with “locked until eval set is frozen” and no detector output is
+wired.
+
 ### 0c. Collect + label
 
 - **30–50 palms.** Vary: lighting (daylight/tube-light/dim), skin tone, age, both hands, rings on/off. Family, friends, Dr. Radhika's clinic if convenient.
@@ -216,9 +272,38 @@ The user-facing "live like no other" piece. Implements Section 1 exactly:
 - Overlay canvas over the video. Every rAF: current landmarks → H_t → project evidence-store paths → draw with state-driven styling (Section 1 table). One-Euro filter on projected points to kill projection jitter (reuse existing One-Euro if present in repo lineage; else implement minimal).
 - Status rail (small, scientific, not cartoon): per-line state chips — Searching / Candidate / Tracking / Confirmed / Absent — bound directly to the evidence store. Hinglish microcopy.
 - Guidance strings generated from real state only: low sharpness → "haath thoda sthir rakhein", coverage fail → "poora haath frame me laayein", exposure fail → "roshni ki taraf karein", ABSENT persists → "is angle se [line] nahi dikh rahi — agla pose try karein". No random tips.
+- Consumer hero art note: the home-hero hand must also include जीवन रेखा (life) and मस्तिष्क रेखा (head) — the current art names only graha-keyed lines. Graha labels map to anatomical ids via a table (शनि → fate, हृदय → heart, सूर्य → sun, बुध → health, चंद्र → intuition, शुक्र → girdle_of_venus), never by renaming the ids.
 - Overlay fidelity: draw the **actual extracted polyline**. One-Euro smoothing applies to the projection only; no curve fitting that moves any point more than 1px off the extracted path — a drawn line that drifts off the real crease is a defect. `useReducedMotion()` branch for all fades.
 
 ---
+
+## UNet full-hand framing (flag `unetFullHand`)
+
+**Evidence (H2/H2b):** the palm-lines UNet was trained on full-hand canonical warps; on the hard
+golden frame the palm-quad crop produced a near-black probability map while full-hand framing drew
+continuous crease strokes (6× activated area, max p 0.83→0.92). int8-vs-fp32 divergence also
+concentrates on exactly those marginal pixels (IoU 0.62 on the hard frame).
+
+Port facts, proven in H2b and encoded in `lib/scan/models/canonical-fullhand-21.ts` (reference:
+`docs/specs/canonical-fullhand-21.json`): **aspect scaling cancels** (canonical × W,H then resize
+to 256² ≡ canonical × 256 directly, one pass); **no mirror is applied** — upstream flipped every
+input, but an index-pinned anatomical solve absorbs chirality as a reflection (negative
+determinant accepted, same rule as `rectifyPalm`); **fixed palmar subset** [0, 1, 2, 5, 9, 13, 17]
+instead of upstream's all-21 RANSAC, because upstream kept ~10/21 varying per photo (H2b) and a
+temporally stable palm-plane warp is what a crease model needs — `'all'`/RANSAC exists for eval
+comparison only.
+
+Runtime path (`lib/scan/fullhand-warp.ts`, all behind `ScanFlags.unetFullHand`, default off, HUD
+toggle): client builds the 256² full-hand warp from the RAW 21 landmarks + the palm-quad→full-hand
+matrix on accepted crops; the worker infers on it on its UNet-stride frames and pulls the
+probability plane straight into the 128 working grid (`remapProbabilitiesInto` — one warp, no
+intermediate downsample). Everything from `combineProbabilities` on is byte-for-byte the shipped
+path; flags-off identity holds.
+
+0d rungs: `unet-fullhand-fixed` and `unet-fullhand-ransac` (require `--model`); legacy GT runs the
+4-anchor approximation and is flagged `approximate` in the report.
+
+**The flag defaults on only after 0d shows a framing delta on ≥ 8 session stills.**
 
 ## PHASE 6 — SCREEN-LIGHT PHOTOMETRIC PASS (gated experiment)
 

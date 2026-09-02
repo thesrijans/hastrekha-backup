@@ -136,6 +136,12 @@ export interface SegmentContext {
   readonly convention: number;
   /** Per-pixel 1 where the crop sampled real frame content. */
   readonly inside?: Uint8Array;
+  /**
+   * Full-hand UNet framing (flag unetFullHand): the 256² full-hand canonical RGBA and the
+   * palm-quad→full-hand Matrix3 as a Float64 buffer. Attached by the client on accepted crops
+   * while the flag is on; the worker uses them only on its UNet-stride frames.
+   */
+  readonly fullHand?: { readonly rgba: Uint8ClampedArray; readonly pqToFullHand: ArrayBuffer };
 }
 
 export interface Segmenter {

@@ -29,23 +29,31 @@ export interface ScanFlags {
   readonly photometric: boolean;
   /** Three-frame exposure bracket merged for the detectors. Requires settable exposure. */
   readonly hdrBracket: boolean;
+  /**
+   * UNet sees a full-hand canonical warp (its training framing, H2/H2b) instead of the palm-quad
+   * crop; the probability map is remapped back to palm-quad space before fusion. Classical stages
+   * and the accumulator are untouched either way.
+   */
+  readonly unetFullHand: boolean;
 }
 
 export const DEFAULT_SCAN_FLAGS: ScanFlags = {
   cameraControl: false,
   photometric: false,
   hdrBracket: false,
+  unetFullHand: false,
 };
 
 export type ScanFlagName = keyof ScanFlags;
 
-export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket"];
+export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand"];
 
 /** Human labels for the HUD toggles, in the app's register. */
 export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
   cameraControl: "Camera control",
   photometric: "Gehri scan (flash)",
   hdrBracket: "HDR bracket",
+  unetFullHand: "UNet full-hand framing",
 };
 
 type Listener = (flags: ScanFlags) => void;
