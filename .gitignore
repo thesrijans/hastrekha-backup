@@ -18,3 +18,5 @@ public/ort/
 captures/
 scan-sessions/
 *.session.zip
+
+diff*.txt
