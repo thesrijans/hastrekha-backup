@@ -88,6 +88,8 @@ export interface DebugPanelProps {
   readonly degraded: boolean;
   /** Captures the raw frame plus its derived geometry. Null result means nothing was ready. */
   readonly onExportFrame: () => Promise<{ png: Blob; json: Blob; stamp: string } | null>;
+  /** Lane E: stage the current frame as a labelable eval-case session. Null when unavailable. */
+  readonly onExportEvalCase?: () => Promise<string | null>;
   /** Live PALM_EDGE_PEAK used by the overlay, and its setter. Dev-only tuning. */
   readonly edgePeak: number;
   readonly onEdgePeak: (value: number) => void;
@@ -152,12 +154,14 @@ export function DebugPanel({
   bracketFrames,
   degraded,
   onExportFrame,
+  onExportEvalCase,
   edgePeak,
   onEdgePeak,
 }: DebugPanelProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [view, setView] = useState<MaskView>("crop");
   const [exportState, setExportState] = useState<"idle" | "working" | "done" | "empty">("idle");
+  const [evalCaseNote, setEvalCaseNote] = useState<string | null>(null);
 
   /**
    * Two files per press, not a zip: a zip needs a dependency, and two Blob downloads land in the
@@ -641,6 +645,33 @@ export function DebugPanel({
                   {exportState === "done" ? "Saved PNG + JSON — drop both into test/fixtures/real/" : null}
                   {exportState === "empty" ? "No frame yet — start the camera first." : null}
                 </span>
+                {flags.scanDiagnostics && onExportEvalCase !== undefined ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEvalCaseNote("staging…");
+                      void onExportEvalCase()
+                        .then((sessionId) =>
+                          setEvalCaseNote(
+                            sessionId === null
+                              ? "no frame/hand to stage"
+                              : sessionId + " staged — label it in /dev/label",
+                          ),
+                        )
+                        .catch((error: unknown) =>
+                          setEvalCaseNote(error instanceof Error ? error.message : "staging failed"),
+                        );
+                    }}
+                    className="rounded-full border border-hairline px-3 py-1.5 text-[0.7rem] text-ink transition-colors hover:border-mount-glow hover:text-mount-glow"
+                  >
+                    Export eval case
+                  </button>
+                ) : null}
+                {evalCaseNote !== null ? (
+                  <span aria-live="polite" className="text-[0.7rem] text-muted">
+                    {evalCaseNote}
+                  </span>
+                ) : null}
               </div>
             ) : null}
 

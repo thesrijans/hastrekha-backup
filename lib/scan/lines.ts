@@ -35,8 +35,15 @@ const BREAK_GAP_PX = 6;
 
 /* ---- featureVocabV2 constants (audit §4 fixes; all inert while the flag is off) ---- */
 
-/** Below this depth a broad_shallow heart line reads as the KB's "pale_broad_shallow" — a depth PROXY for a colour claim the camera cannot make directly. */
-export const HEART_PALE_DEPTH_MAX = 0.45;
+/**
+ * At or below this depth a broad_shallow heart line reads as the KB's "pale_broad_shallow" — a
+ * depth PROXY for a colour claim the camera cannot make directly. 0.30 puts the band well under
+ * LINE_THRESHOLD (0.45): through `extractLines`' fixed binarize a skeleton's observed depth can
+ * never sit this far below the threshold, so at the DEFAULT threshold the band is reachable only
+ * by future lower-threshold extraction paths (e.g. the eval sweep's seam) — measured and pinned
+ * in test/feature-vocab.test.ts rather than assumed.
+ */
+export const HEART_PALE_DEPTH_MAX = 0.30;
 /** The existing life-arc excursion split (0.42): at or under it the arc hugs the thumb — the KB's tight_venus_arc. */
 export const LIFE_TIGHT_ARC_MAX_EXCURSION = 0.42;
 /** Fate-start-to-head-line proximity for origin "head_line" — the same 0.06·size band stopped_at already uses. */
@@ -663,13 +670,15 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE,
     heart.length_norm = Number(Math.min(1, polylineLength(heartPoly) / size).toFixed(3));
     if (seen("heart", "end")) heart.origin = nearestZone(HEART_END_ZONES, end, size).value;
     heart.depth =
-      depth > 0.75
-        ? "deep"
-        : depth > 0.55
-          ? "thin"
-          : vocabV2 && depth <= HEART_PALE_DEPTH_MAX
-            ? "pale_broad_shallow" // depth proxy for the KB's colour claim — see HEART_PALE_DEPTH_MAX
-            : "broad_shallow";
+      // Ascending, upper-edge-INCLUSIVE bands: each band owns its upper boundary, so no depth
+      // value can fall between bands (the 0.45-exactly float sliver the first cut of v2 had).
+      vocabV2 && depth <= HEART_PALE_DEPTH_MAX
+        ? "pale_broad_shallow" // depth proxy for the KB's colour claim — see HEART_PALE_DEPTH_MAX
+        : depth <= 0.55
+          ? "broad_shallow"
+          : depth <= 0.75
+            ? "thin"
+            : "deep";
     const breaks = breakCount(heartPoly);
     if (breaks > 0) heart.breaks = breaks;
     // Only claim the classical downward curve when the terminal actually dips below the trace mean.
@@ -724,7 +733,8 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE,
     if (vocabV2 && excursion <= LIFE_TIGHT_ARC_MAX_EXCURSION) life.tight_venus_arc = true;
     const breaks = breakCount(lifePoly);
     if (breaks > 0) life.breaks_count = breaks;
-    life.texture = depth > 0.72 ? "clear_deep" : depth > 0.55 ? "broad_shallow" : "chained";
+    // Same upper-edge-inclusive form as the heart bands — identical partition, no gaps.
+    life.texture = depth <= 0.55 ? "chained" : depth <= 0.72 ? "broad_shallow" : "clear_deep";
     if (seen("life", "start")) life.rise_origin = start.y < 0.3 * size ? "jupiter_side" : "mars_low";
     if (seen("life", "end") && end.x > 0.5 * size) life.sweeps_to_luna = true;
   }

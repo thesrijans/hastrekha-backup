@@ -39,7 +39,13 @@ import {
   advanceStableWindow,
   captureStill,
   emptyStableWindow,
+  findPoseDuplicate,
+  poseSignature,
+  regradeStill,
+  stillVolOfCrop,
   STABLE_WINDOW_MS,
+  STILL_RETRY_MAX,
+  STILL_VOL_FLOOR,
   type StableWindowState,
 } from "@/lib/scan/dev/still-capture";
 import {
@@ -64,7 +70,14 @@ type Status = "idle" | "starting" | "running" | "denied" | "unsupported" | "erro
 interface StagedStillView {
   readonly index: number;
   readonly path: string;
+  /** Preview VoL at trigger time. */
   readonly sharpness: number;
+  /** VoL measured on the STILL's canonical-crop centre (A) - the traceability number. */
+  readonly stillVol: number;
+  /** Capture attempts this still cost (1 = first try); the final attempt is kept even when soft. */
+  readonly attempts: number;
+  /** Index of an earlier still this one near-duplicates in pose (B), if any. */
+  readonly duplicateOf: number | null;
   readonly auto: boolean;
 }
 
@@ -103,6 +116,7 @@ export function CaptureClient() {
   const [session, setSession] = useState<SessionMetadata | null>(null);
   const [sessions, setSessions] = useState<readonly SessionSummary[]>([]);
   const [stills, setStills] = useState<readonly StagedStillView[]>([]);
+  const [rejections, setRejections] = useState<readonly string[]>([]);
   const [exportNote, setExportNote] = useState<string | null>(null);
 
   /* ------------------------------- Measurement ------------------------------- */
@@ -187,29 +201,67 @@ export function CaptureClient() {
       capturingRef.current = true;
       try {
         const track = stream.getVideoTracks()[0];
-        const still = await captureStill(track, video);
+
+        // A: regrade the STILL, not the preview - discard and re-shoot below the floor, up to
+        // STILL_RETRY_MAX attempts; every attempt is logged and every rejection counted.
+        let attempt = 0;
+        let still: Awaited<ReturnType<typeof captureStill>>;
+        let source: ImageData;
+        let anchorSet: NonNullable<ReturnType<typeof palmAnchors>>;
+        let rectified: NonNullable<ReturnType<typeof rectifyPalm>>;
+        let stillVol = 0;
+        for (;;) {
+          attempt += 1;
+          still = await captureStill(track, video);
 
         // Decode the still and rectify a canonical crop at labeling resolution (D3: 512).
-        const bitmap = await createImageBitmap(still.blob);
-        let work = workCanvasRef.current;
-        if (work === null) {
-          work = document.createElement("canvas");
-          workCanvasRef.current = work;
-        }
-        if (work.width !== bitmap.width || work.height !== bitmap.height) {
-          work.width = bitmap.width;
-          work.height = bitmap.height;
-        }
-        const context = work.getContext("2d", { willReadFrequently: true });
-        if (context === null) throw new Error("2d context unavailable");
-        context.drawImage(bitmap, 0, 0);
-        bitmap.close();
-        const source = context.getImageData(0, 0, still.width, still.height);
+          const bitmap = await createImageBitmap(still.blob);
+          let work = workCanvasRef.current;
+          if (work === null) {
+            work = document.createElement("canvas");
+            workCanvasRef.current = work;
+          }
+          if (work.width !== bitmap.width || work.height !== bitmap.height) {
+            work.width = bitmap.width;
+            work.height = bitmap.height;
+          }
+          const context = work.getContext("2d", { willReadFrequently: true });
+          if (context === null) throw new Error("2d context unavailable");
+          context.drawImage(bitmap, 0, 0);
+          bitmap.close();
+          source = context.getImageData(0, 0, still.width, still.height);
 
-        const anchorSet = palmAnchors(observation.landmarks, still.width, still.height);
-        if (anchorSet === null) throw new Error("anchors unavailable — hand moved out during capture");
-        const rectified = rectifyPalm(source, anchorSet.src, CANONICAL_LABEL_SIZE);
-        if (rectified === null) throw new Error("rectification failed on the still");
+          const latest = observationRef.current ?? observation;
+          const anchorsNow = palmAnchors(latest.landmarks, still.width, still.height);
+          if (anchorsNow === null) throw new Error("anchors unavailable — hand moved out during capture");
+          anchorSet = anchorsNow;
+          const warped = rectifyPalm(source, anchorSet.src, CANONICAL_LABEL_SIZE);
+          if (warped === null) throw new Error("rectification failed on the still");
+          rectified = warped;
+
+          stillVol = stillVolOfCrop(rectified.image);
+          const decision = regradeStill(stillVol, attempt);
+          if (decision.accept) break;
+          const rejectedSession = await store.recordStillRejection(sessionRef.current ?? current);
+          sessionRef.current = rejectedSession;
+          if (isMountedRef.current) {
+            setSession(rejectedSession);
+            setRejections((prev) => [
+              ...prev,
+              "attempt " + attempt + "/" + STILL_RETRY_MAX + " rejected - still VoL " + stillVol.toFixed(0) + " < " + STILL_VOL_FLOOR,
+            ]);
+          }
+        }
+
+        // B: pose-diversity guard - mark (never block) near-duplicate poses in this session.
+        const priorSignatures = (sessionRef.current ?? current).stills
+          .filter((s) => s.width === still.width)
+          .map((s) => ({ index: s.index, signature: poseSignature(s.anchors) }));
+        const duplicateOf = findPoseDuplicate(
+          priorSignatures,
+          poseSignature(anchorSet.src.map((p) => [p.x, p.y] as const)),
+          still.width,
+        );
 
         const cropCanvas = document.createElement("canvas");
         cropCanvas.width = CANONICAL_LABEL_SIZE;
@@ -223,7 +275,7 @@ export function CaptureClient() {
 
         const grade = verdictRef.current;
         const sharp = sharpnessRef.current;
-        const index = current.stills.length;
+        const index = (sessionRef.current ?? current).stills.length;
         const chordDx = observation.landmarks[LM.PINKY_MCP].x - observation.landmarks[LM.INDEX_MCP].x;
         const chordDy = observation.landmarks[LM.PINKY_MCP].y - observation.landmarks[LM.INDEX_MCP].y;
         const record: CaptureStillRecord = {
@@ -250,13 +302,19 @@ export function CaptureClient() {
           },
           trackSettings: still.trackSettings,
           capturedAt: new Date().toISOString(),
+          stillVol: Number(stillVol.toFixed(1)),
+          attempts: attempt,
+          ...(duplicateOf !== null ? { duplicateOf } : {}),
         };
 
-        const updated = await store.addStill(current, record, still.blob, cropBlob);
+        const updated = await store.addStill(sessionRef.current ?? current, record, still.blob, cropBlob);
         sessionRef.current = updated;
         if (isMountedRef.current) {
           setSession(updated);
-          setStills((prev) => [...prev, { index, path: still.path, sharpness: sharp.variance, auto }]);
+          setStills((prev) => [
+            ...prev,
+            { index, path: still.path, sharpness: sharp.variance, stillVol, attempts: attempt, duplicateOf, auto },
+          ]);
         }
       } catch (captureError) {
         if (isMountedRef.current) {
@@ -410,6 +468,7 @@ export function CaptureClient() {
     if (isMountedRef.current) {
       setSession(created);
       setStills([]);
+      setRejections([]);
       setSessions(await store.listSessions());
       setExportNote(null);
     }
@@ -541,6 +600,7 @@ export function CaptureClient() {
               {session !== null ? (
                 <span className="text-xs text-muted">
                   {session.sessionId} · {session.stills.length} stills
+                  {(session.rejectedStills ?? 0) > 0 ? " · " + String(session.rejectedStills) + " rejected" : ""}
                 </span>
               ) : (
                 <span className="text-xs text-muted">Koi session nahi — pehle New session.</span>
@@ -549,9 +609,24 @@ export function CaptureClient() {
             {stills.length > 0 ? (
               <ul aria-label="Captured stills" className="flex flex-col gap-1 text-xs text-muted">
                 {stills.map((still) => (
-                  <li key={still.index} className="tabular-nums">
-                    #{still.index} · {still.path} · VoL {still.sharpness.toFixed(0)} ·{" "}
-                    {still.auto ? "auto" : "manual"}
+                  <li
+                    key={still.index}
+                    className={still.duplicateOf !== null ? "tabular-nums opacity-40" : "tabular-nums"}
+                  >
+                    #{still.index} · {still.path} · preview VoL {still.sharpness.toFixed(0)} · still VoL{" "}
+                    {still.stillVol.toFixed(0)}
+                    {still.stillVol < STILL_VOL_FLOOR ? " (soft)" : ""} · {still.attempts} attempt
+                    {still.attempts > 1 ? "s" : ""} · {still.auto ? "auto" : "manual"}
+                    {still.duplicateOf !== null ? " · duplicate of #" + String(still.duplicateOf) : ""}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {rejections.length > 0 ? (
+              <ul aria-label="Rejected attempts" className="flex flex-col gap-1 text-xs text-line-glow">
+                {rejections.map((line, i) => (
+                  <li key={i} className="tabular-nums">
+                    {line}
                   </li>
                 ))}
               </ul>

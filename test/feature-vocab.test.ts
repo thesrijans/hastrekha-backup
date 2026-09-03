@@ -168,10 +168,15 @@ async function main(): Promise<void> {
   {
     const synthetic = new Float32Array(S * S);
     /*
-     * A layered stamp: a 0.451 spine (just over LINE_THRESHOLD after float32 storage — 0.45 itself
-     * rounds DOWN and never binarizes) over 0.40 flanks. Measured: depthProxy lands ≈0.449, inside
-     * the pale band. The margin is ~0.001, which is itself a finding: with HEART_PALE_DEPTH_MAX at
-     * 0.45 against LINE_THRESHOLD 0.45, the pale band is a razor-thin sliver of detectable depths.
+     * The pale band moved DOWN (0.45 → 0.30, upper-edge inclusive). Through `extractLines`' fixed
+     * binarize (LINE_THRESHOLD 0.45, and f32(0.45) itself rounds DOWN so a 0.45 stamp never
+     * binarizes) a skeleton's observed depthProxy cannot sit at 0.30 — the samples ride the
+     * skeleton, which only exists where the field cleared ≈0.45. So at the DEFAULT threshold the
+     * band is structurally INERT and this case pins that: the weakest detectable heart stays
+     * broad_shallow under v2. The band exists for lower-threshold extraction paths (the eval
+     * sweep's seam extracts at 0.15–0.85; a future threshold change would inherit it), where a
+     * genuine ≤0.30 depth is measurable. Same treatment as fix #4: pin the inertness, don't fake
+     * a pass.
      */
     drawPolyline(synthetic, centreline("heart"), 0.4);
     drawPolyline(synthetic, centreline("heart"), 0.451, 0);
@@ -182,9 +187,10 @@ async function main(): Promise<void> {
     ok(on["lines.quality.wavy"] === false, "#1 on: wavy is an explicit false — the KB's `eq false` rules can fire");
     ok(off["lines.heart.depth"] === "broad_shallow", "#3 off: the weakest band is still broad_shallow");
     ok(
-      on["lines.heart.depth"] === "pale_broad_shallow",
-      `#3 on: depth ≤ ${HEART_PALE_DEPTH_MAX} reads pale_broad_shallow (got ${String(on["lines.heart.depth"])})`,
+      on["lines.heart.depth"] === "broad_shallow",
+      `#3 on: at the default threshold no observable depth reaches the ≤${HEART_PALE_DEPTH_MAX} pale band — structurally inert, pinned (got ${String(on["lines.heart.depth"])})`,
     );
+    ok(HEART_PALE_DEPTH_MAX < 0.45, "#3 the pale ceiling sits below LINE_THRESHOLD — the inertness above is why");
   }
 
   /* ------------------------- #7 diverging_open / confused ------------------------- */

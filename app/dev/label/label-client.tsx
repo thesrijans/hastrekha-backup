@@ -20,6 +20,7 @@
  * heart/head/life/fate; drag a vertex to adjust; Backspace deletes the selected vertex.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { computeReveal, type RevealSet } from "@/lib/scan/dev/reveal";
 import {
   CANONICAL_LABEL_SIZE,
   GRAY_CHANNELS,
@@ -46,6 +47,7 @@ import {
   isComplete,
   type LabelerLineState,
   type LabelerState,
+  canReveal,
 } from "@/lib/scan/dev/labeler-file";
 import { toGray, valleyResponse } from "@/lib/scan/dev/valley";
 import { renderView } from "@/lib/scan/dev/enhance";
@@ -64,6 +66,9 @@ const SEED_BUDGET_MS = 60;
 const GOLD = "rgba(201, 162, 75, 1)";
 const GOLD_DIM = "rgba(201, 162, 75, 0.35)";
 /** Hindi display names, matching the app's register (hero art names graha lines; these are the anatomical four). */
+/** Reveal stroke: dim teal - unmistakably NOT the gold label ladder, and never emphasised. */
+const REVEAL_COLOR = "rgba(96, 178, 189, 0.55)";
+
 const LINE_LABEL: Readonly<Record<LabelableLineId, string>> = {
   heart: "हृदय रेखा · Heart",
   head: "मस्तिष्क रेखा · Head",
@@ -129,6 +134,15 @@ export function LabelClient() {
   const [activeId, setActiveId] = useState<LabelableLineId>("heart");
   const [selectedVertex, setSelectedVertex] = useState<number | null>(null);
   const [snapOn, setSnapOn] = useState(true);
+  /*
+   * Lane C: post-commit detector reveal. EVAL mode stays blank-slate; the reveal is mechanically
+   * blocked until the active line is done, and opening it stamps `revealUsed` on that line so the
+   * eval can prove no reveal ever preceded a commit. Cached per still (pure CPU, computed once).
+   */
+  const [revealOn, setRevealOn] = useState(false);
+  const revealOnRef = useRef(false);
+  const revealSetRef = useRef<RevealSet | null>(null);
+  const revealCacheRef = useRef<Map<string, RevealSet>>(new Map());
   const [dirty, setDirty] = useState(false);
   // Lazy read: localStorage is a dev convenience; SSR and blocked storage both fall back to "".
   const [labelerId, setLabelerId] = useState(() => {
@@ -161,6 +175,10 @@ export function LabelClient() {
   }, [lines, minorLines, activeId, view, spaceHeld, channel, snapOn, selectedVertex]);
 
   /** Read one line's working state, major or minor; untouched minors read as empty. */
+  useEffect(() => {
+    revealOnRef.current = revealOn;
+  }, [revealOn]);
+
   const lineState = useCallback((id: LabelableLineId): LabelerLineState => {
     if ((LABEL_LINE_IDS as readonly string[]).includes(id)) return linesRef.current[id as LabelLineId];
     return minorLinesRef.current[id as MinorLineId] ?? emptyLineState();
@@ -250,6 +268,8 @@ export function LabelClient() {
       setMinorLines({});
     }
     setStillIndex(index);
+    setRevealOn(false);
+    revealSetRef.current = null;
     setSelectedVertex(null);
     setDirty(false);
     setSeedCostMs(null);
@@ -342,6 +362,28 @@ export function LabelClient() {
         const line = lineState(id);
         if (line.absent || line.points.length < 2) continue;
         drawPoly(line.points, id === activeIdRef.current, true);
+      }
+
+      // Lane C: post-commit reveal - the detector's polylines for the ACTIVE id, dim + distinct,
+      // read-only, and only when that line's label is already frozen.
+      if (revealOnRef.current) {
+        const revealedLine = lineState(activeIdRef.current);
+        const revealed = revealSetRef.current?.[activeIdRef.current];
+        if (revealedLine.done && revealed !== undefined) {
+          for (const poly of revealed) {
+            if (poly.length < 2) continue;
+            context.beginPath();
+            for (let i = 0; i < poly.length; i += 1) {
+              const px = poly[i][0] * CANONICAL_LABEL_SIZE;
+              const py = poly[i][1] * CANONICAL_LABEL_SIZE;
+              if (i === 0) context.moveTo(px, py);
+              else context.lineTo(px, py);
+            }
+            context.strokeStyle = REVEAL_COLOR;
+            context.lineWidth = 1.5 / scale;
+            context.stroke();
+          }
+        }
       }
 
       // Active line vertices — draggable, selected one filled.
@@ -636,6 +678,33 @@ export function LabelClient() {
     setSelectedVertex(null);
   }, [lineState, updateLine]);
 
+  /** R: reveal what the detector saw for the ACTIVE line - only after its label is frozen. */
+  const toggleReveal = useCallback((): void => {
+    const id = activeIdRef.current;
+    if (!canReveal(lineState(id))) {
+      setNote("Reveal locked — pehle line commit ya absent karo (blank-slate).");
+      return;
+    }
+    setRevealOn((prev) => {
+      const next = !prev;
+      if (next) {
+        const still = stillDataRef.current;
+        const key = `${session?.sessionId ?? ""}/${stillIndex ?? -1}`;
+        if (still !== null) {
+          let set = revealCacheRef.current.get(key);
+          if (set === undefined) {
+            set = computeReveal(still.rgba, CANONICAL_LABEL_SIZE);
+            revealCacheRef.current.set(key, set);
+          }
+          revealSetRef.current = set;
+        }
+        // The audit stamp: this line's label was already frozen when the detector was shown.
+        updateLine(id, { revealUsed: true });
+      }
+      return next;
+    });
+  }, [lineState, session, stillIndex, updateLine]);
+
   /* --------------------------------- Hotkeys --------------------------------- */
 
   useEffect(() => {
@@ -650,6 +719,7 @@ export function LabelClient() {
       // 1–4 majors · 5 sun · 6 health · 7 marriage · 8 bracelets · 9 girdle.
       if (digit >= 1 && digit <= LABELABLE_LINE_IDS.length) {
         setActiveId(LABELABLE_LINE_IDS[digit - 1]);
+        setRevealOn(false);
         discardTrace();
         return;
       }
@@ -674,6 +744,9 @@ export function LabelClient() {
           break;
         case "l":
           setLoupeOn((prev) => !prev);
+          break;
+        case "r":
+          toggleReveal();
           break;
         case "z":
           undoSegment();
@@ -711,7 +784,7 @@ export function LabelClient() {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [applyZoom, commitActive, deleteVertex, discardTrace, openStill, session, stillIndex, toggleAbsent, undoSegment]);
+  }, [applyZoom, commitActive, deleteVertex, discardTrace, openStill, session, stillIndex, toggleAbsent, toggleReveal, undoSegment]);
 
   /* ------------------------------- Save / export ------------------------------- */
 
@@ -867,13 +940,14 @@ export function LabelClient() {
             <div>view <span className="text-ink">{shownView}{spaceHeld ? " (held)" : ""}</span></div>
             <div>channel <span className="text-ink">{channel}</span></div>
             <div>snap <span className="text-ink">{snapOn ? "on" : "off"}</span></div>
+            <div>reveal <span className="text-ink">{revealOn ? "on" : "off"}</span></div>
             <div>seed <span className="tabular-nums text-ink">{seedCostMs === null ? "—" : `${seedCostMs.toFixed(0)} ms`}</span></div>
             <div>lines <span className="tabular-nums text-ink">{LABEL_LINE_IDS.filter((id) => lines[id].done).length}/4</span></div>
             {dirty ? <div className="text-line-glow">unsaved</div> : null}
           </dl>
           <p className="text-[0.7rem] leading-5 text-muted">
             1–4 line · click seed/append · S snap · Z undo · Enter commit · Esc cancel · A absent · V view · C channel ·
-            Space hold = natural · L loupe · wheel/± zoom · Shift+drag pan · Backspace delete vertex
+            Space hold = natural · L loupe · R reveal (post-commit) · wheel/± zoom · Shift+drag pan · Backspace delete vertex
           </p>
         </section>
 
@@ -889,7 +963,14 @@ export function LabelClient() {
                 aria-label={LINE_LABEL[id]}
                 className={`rounded-2xl border p-3 ${id === activeId ? "border-mount-glow" : "border-hairline"}`}
               >
-                <button type="button" onClick={() => setActiveId(id)} className="flex w-full items-baseline justify-between text-left">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveId(id);
+                    setRevealOn(false);
+                  }}
+                  className="flex w-full items-baseline justify-between text-left"
+                >
                   <span className={id === activeId ? "text-mount-glow" : "text-ink"}>
                     {index + 1} · {LINE_LABEL[id]}
                   </span>
@@ -921,6 +1002,7 @@ export function LabelClient() {
                       {line.method} · {line.viewAtCommit}
                     </span>
                   ) : null}
+                  {line.revealUsed === true ? <span className="text-muted">reveal used</span> : null}
                 </div>
               </section>
             );

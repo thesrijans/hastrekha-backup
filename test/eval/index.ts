@@ -50,6 +50,8 @@ interface CliArgs {
   readonly diag: boolean;
   readonly jitter: boolean;
   readonly root: string;
+  /** Score pose-duplicate stills instead of skipping them (capture lane B guard). */
+  readonly includeDuplicates: boolean;
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
@@ -67,6 +69,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     diag: argv.includes("--diag"),
     jitter: argv.includes("--jitter"),
     root: get("root") ?? "fixtures",
+    includeDuplicates: argv.includes("--include-duplicates"),
   };
 }
 
@@ -181,7 +184,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  const { cases, sessionDirs } = loadGroundTruthDetailed(args.root);
+  const { cases, sessionDirs } = loadGroundTruthDetailed(args.root, undefined, {
+    includeDuplicates: args.includeDuplicates,
+  });
   for (const dir of sessionDirs) {
     console.log(`gt: session ${dir.id} — ${dir.layout} layout, ${dir.labelCount} label(s)`);
   }

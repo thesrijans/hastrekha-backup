@@ -128,6 +128,7 @@ function loadSessions(
   repoRoot: string,
   root: string,
   sessionDirs: SessionDirInfo[],
+  includeDuplicates: boolean,
 ): EvalCase[] {
   const goldenDir = path.join(repoRoot, root, "golden");
   const cases: EvalCase[] = [];
@@ -181,6 +182,18 @@ function loadSessions(
           stillAnchors = still.anchors;
         }
       }
+      /*
+       * Pose-diversity guard (capture lane B): a still marked duplicateOf re-shot the same pose,
+       * so scoring it would double-count one hand position. Skipped BY DEFAULT with the reason in
+       * the report; --include-duplicates overrides for deliberate stability studies.
+       */
+      const still = existsSync(metaPath)
+        ? parseSessionMetadata(readFileSync(metaPath, "utf8"))?.stills.find((entry) => entry.index === label.stillIndex)
+        : undefined;
+      const duplicateSkip =
+        !includeDuplicates && still?.duplicateOf !== undefined
+          ? `pose duplicate of still #${still.duplicateOf} — skipped (use --include-duplicates to score)`
+          : undefined;
       cases.push({
         id,
         source: "session",
@@ -189,7 +202,7 @@ function loadSessions(
         canonicalSize: label.canonicalSize,
         anchors: label.anchors,
         lines,
-        skip: existsSync(imagePath) ? undefined : `crop missing: ${label.frame}`,
+        skip: existsSync(imagePath) ? duplicateSkip : `crop missing: ${label.frame}`,
         meta: { subjectKey: label.sessionId, exerciseLabel: label.mode },
         landmarks,
         stillSize,
@@ -207,13 +220,19 @@ export interface GroundTruthLoad {
   readonly sessionDirs: readonly SessionDirInfo[];
 }
 
+export interface LoadOptions {
+  /** Score stills the pose-diversity guard marked as duplicates, instead of skipping them. */
+  readonly includeDuplicates?: boolean;
+}
+
 /** Walk both sources with discovery info. `root` is the session-fixture root, repo-relative. */
 export function loadGroundTruthDetailed(
   root = "fixtures",
   repoRoot: string = path.resolve(__dirname, "..", ".."),
+  options: LoadOptions = {},
 ): GroundTruthLoad {
   const sessionDirs: SessionDirInfo[] = [];
-  const cases = [...loadLegacy(repoRoot), ...loadSessions(repoRoot, root, sessionDirs)];
+  const cases = [...loadLegacy(repoRoot), ...loadSessions(repoRoot, root, sessionDirs, options.includeDuplicates === true)];
   return { cases, sessionDirs };
 }
 

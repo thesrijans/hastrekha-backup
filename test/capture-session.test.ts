@@ -10,9 +10,18 @@ import assert from "node:assert/strict";
 import {
   advanceStableWindow,
   emptyStableWindow,
+  findPoseDuplicate,
+  poseSignature,
+  regradeStill,
+  stillVolOfCrop,
   MAX_TICK_DELTA_MS,
+  POSE_DUP_RADIUS,
+  POSE_DUP_SCALE_TOLERANCE,
   STABLE_WINDOW_MS,
+  STILL_RETRY_MAX,
+  STILL_VOL_FLOOR,
 } from "../lib/scan/dev/still-capture";
+import { DEFAULT_SCAN_FLAGS } from "../lib/scan/flags";
 import {
   CANONICAL_LABEL_SIZE,
   cropFileName,
@@ -239,5 +248,78 @@ console.log(
   const negative = advanceStableWindow(emptyStableWindow(), true, -50);
   ok(negative.state.heldMs === 0, "a negative delta (clock skew) contributes nothing");
 }
+
+/* --------------------- Still regrade (lane A) --------------------- */
+
+{
+  const soft = STILL_VOL_FLOOR - 1;
+  ok(
+    regradeStill(soft, 1).retry && !regradeStill(soft, 1).accept,
+    "below the floor, attempt 1 is discarded and re-shot",
+  );
+  ok(regradeStill(soft, STILL_RETRY_MAX - 1).retry, "still retrying one short of the cap");
+  const last = regradeStill(soft, STILL_RETRY_MAX);
+  ok(last.accept && !last.retry, `attempt ${STILL_RETRY_MAX} is kept even when soft — the trigger is spent, the low stillVol is the mark`);
+  ok(regradeStill(STILL_VOL_FLOOR, 1).accept, "at the floor exactly, accepted first try");
+  ok(STILL_VOL_FLOOR > 60, "the still floor is stricter than the 60 preview floor — a traced still needs margin");
+
+  // stillVolOfCrop: a checkerboard crop is sharp, a flat crop has zero Laplacian variance.
+  const size = 64;
+  const sharp = new Uint8ClampedArray(size * size * 4);
+  const flat = new Uint8ClampedArray(size * size * 4).fill(128);
+  for (let i = 0; i < size * size; i += 1) {
+    const v = (Math.floor(i / size) + (i % size)) % 2 === 0 ? 255 : 0;
+    sharp[i * 4] = v;
+    sharp[i * 4 + 1] = v;
+    sharp[i * 4 + 2] = v;
+    sharp[i * 4 + 3] = 255;
+  }
+  const asImage = (data: Uint8ClampedArray): ImageData => ({ width: size, height: size, data, colorSpace: "srgb" }) as ImageData;
+  ok(stillVolOfCrop(asImage(sharp)) > STILL_VOL_FLOOR, "a checkerboard centre crop clears the floor");
+  ok(stillVolOfCrop(asImage(flat)) === 0, "a flat crop measures zero — nothing to trace");
+}
+
+/* --------------------- Pose-diversity guard (lane B) --------------------- */
+
+{
+  const width = 1920;
+  const anchors = [
+    [960, 900],
+    [700, 820],
+    [640, 400],
+    [1100, 410],
+  ];
+  const base = poseSignature(anchors);
+  ok(Math.abs(base.cx - 850) < 1 && Math.abs(base.cy - 632.5) < 1, "signature centroid is the anchor mean");
+  ok(base.scale > 0, "signature scale is a positive palm size");
+
+  const existing = [{ index: 0, signature: base }];
+  ok(findPoseDuplicate(existing, base, width) === 0, "the identical pose is marked duplicate of #0");
+
+  const nudged = poseSignature(anchors.map(([x, y]) => [x + POSE_DUP_RADIUS * width * 0.5, y]));
+  ok(findPoseDuplicate(existing, nudged, width) === 0, "inside the radius at matched scale → duplicate");
+
+  const shifted = poseSignature(anchors.map(([x, y]) => [x + POSE_DUP_RADIUS * width * 1.5, y]));
+  ok(findPoseDuplicate(existing, shifted, width) === null, "outside the centroid radius → a new pose");
+
+  const rescaled = poseSignature(anchors.map(([x, y]) => [850 + (x - 850) * (1 + POSE_DUP_SCALE_TOLERANCE * 2), 632.5 + (y - 632.5) * (1 + POSE_DUP_SCALE_TOLERANCE * 2)]));
+  ok(findPoseDuplicate(existing, rescaled, width) === null, "same centroid but the palm grew past the scale tolerance → a new pose (moved closer, not re-shot)");
+}
+
+/* ------------- Additive-optional still fields (0a-2 stays 0a-2) ------------- */
+
+{
+  const withNew = {
+    ...session,
+    rejectedStills: 2,
+    stills: [{ ...still, stillVol: 88.5, attempts: 3, duplicateOf: 0 }],
+  };
+  ok(isSessionMetadata(withNew), "stillVol/attempts/duplicateOf + rejectedStills validate");
+  ok(isSessionMetadata({ ...session, stills: [still] }), "records WITHOUT the new fields still validate — additive-optional");
+  ok(!isSessionMetadata({ ...session, stills: [{ ...still, stillVol: "high" }] }), "a non-numeric stillVol is rejected");
+  ok(!isSessionMetadata({ ...session, rejectedStills: "two" }), "a non-numeric rejection count is rejected");
+}
+
+ok(DEFAULT_SCAN_FLAGS.scanDiagnostics === false, "scanDiagnostics defaults OFF");
 
 console.log(`CAPTURE SESSION ASSERTIONS PASSED (${assertions})`);

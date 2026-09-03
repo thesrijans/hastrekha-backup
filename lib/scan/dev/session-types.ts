@@ -153,6 +153,16 @@ export interface CaptureStillRecord {
   readonly trackSettings: Readonly<Record<string, string | number | boolean>>;
   /** ISO timestamp. */
   readonly capturedAt: string;
+  /**
+   * Additive-optional (0a-2): VoL measured on the STILL's canonical-crop centre — the number that
+   * decides whether the still is traceable, as opposed to `quality.sharpness` which graded the
+   * PREVIEW. Absent on pre-regrade files.
+   */
+  readonly stillVol?: number;
+  /** How many captures it took to clear STILL_VOL_FLOOR (1 = first try). Absent pre-regrade. */
+  readonly attempts?: number;
+  /** Pose-diversity guard: index of an earlier accepted still this one near-duplicates. */
+  readonly duplicateOf?: number;
 }
 
 /** The metadata.json document — one per session. */
@@ -167,6 +177,8 @@ export interface SessionMetadata {
   readonly stills: readonly CaptureStillRecord[];
   /** Written at export time: how many stills carry a staged label. Absent pre-0a-ii. */
   readonly labelCount?: number;
+  /** Stills discarded by the still-VoL regrade before one was accepted. Absent pre-regrade. */
+  readonly rejectedStills?: number;
 }
 
 /* ---------------------------------- Labels ---------------------------------- */
@@ -198,6 +210,12 @@ export interface RekhaLabelLine {
   readonly method?: LabelMethod;
   /** 0a-2: required. Which view the line was committed under — the bias record. */
   readonly viewAtCommit?: ViewMode;
+  /**
+   * Additive-OPTIONAL on 0a-2: true when the post-commit detector reveal was opened for this
+   * line. The reveal is mechanically blocked until the line is committed, so this flag proves a
+   * reveal never preceded the label — the eval's blank-slate receipt.
+   */
+  readonly revealUsed?: boolean;
 }
 
 export type LabelerMode = "blank_slate" | "correction";
@@ -281,6 +299,9 @@ function isStillRecord(value: unknown): value is CaptureStillRecord {
     isLandmarkArray(value.landmarks) &&
     isPointArray(value.anchors) &&
     isStillQuality(value.quality) &&
+    (value.stillVol === undefined || isFiniteNumber(value.stillVol)) &&
+    (value.attempts === undefined || isFiniteNumber(value.attempts)) &&
+    (value.duplicateOf === undefined || isFiniteNumber(value.duplicateOf)) &&
     isRecord(value.poseAngle) &&
     isFiniteNumber((value.poseAngle as Record<string, unknown>).rollDeg) &&
     isRecord(value.trackSettings) &&
@@ -299,6 +320,7 @@ export function isSessionMetadata(value: unknown): value is SessionMetadata {
     typeof value.createdAt === "string" &&
     isFiniteNumber(value.canonicalSize) &&
     (value.labelCount === undefined || isFiniteNumber(value.labelCount)) &&
+    (value.rejectedStills === undefined || isFiniteNumber(value.rejectedStills)) &&
     Array.isArray(value.stills) &&
     value.stills.every(isStillRecord)
   );
@@ -358,7 +380,13 @@ export function isRekhaLabelFile(value: unknown): value is RekhaLabelFile {
       if (!(LABEL_CONFIDENCES as readonly string[]).includes(line.confidence as string)) return false;
       if (!(LABEL_METHODS as readonly string[]).includes(line.method as string)) return false;
       if (!(VIEW_MODES as readonly string[]).includes(line.viewAtCommit as string)) return false;
-    } else if (line.confidence !== undefined || line.method !== undefined || line.viewAtCommit !== undefined) {
+      if (line.revealUsed !== undefined && typeof line.revealUsed !== "boolean") return false;
+    } else if (
+      line.confidence !== undefined ||
+      line.method !== undefined ||
+      line.viewAtCommit !== undefined ||
+      line.revealUsed !== undefined
+    ) {
       return false;
     }
   }

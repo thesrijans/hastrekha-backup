@@ -14,6 +14,7 @@
  * Also home to the pure stable-window trigger (spec Phase 0a "auto-capture when the gate holds"),
  * kept free of DOM so `test/capture-session.test.ts` can drive it with a synthetic clock.
  */
+import { varianceOfLaplacian } from "../quality";
 import type { StillCapturePath } from "./session-types";
 
 /* ------------------------------ Stable window ------------------------------ */
@@ -64,6 +65,112 @@ export function advanceStableWindow(
     state: { heldMs, armed: state.armed && !shouldFire },
     trigger: shouldFire,
   };
+}
+
+/* ----------------------------- Still regrade (A) ----------------------------- */
+
+/**
+ * VoL floor for the STILL's canonical-crop centre. Deliberately above the preview's 60: the
+ * preview VoL only has to pass a gate, but the still is what gets traced — it needs margin.
+ */
+export const STILL_VOL_FLOOR = 100;
+
+/** How many capture attempts one trigger may burn before the last still is kept regardless. */
+export const STILL_RETRY_MAX = 3;
+
+/** Central fraction of the canonical crop the still VoL is measured on — palm centre, not edges. */
+export const STILL_VOL_CENTRE_FRACTION = 0.6;
+
+/**
+ * VoL of the centre {@link STILL_VOL_CENTRE_FRACTION} of a canonical palm crop — the number that
+ * decides whether a still is sharp enough to trace. Same operator as the preview gate
+ * (quality.ts's variance of Laplacian), different subject: the STILL, not the preview frame.
+ */
+export function stillVolOfCrop(crop: ImageData): number {
+  const margin = Math.floor((crop.width * (1 - STILL_VOL_CENTRE_FRACTION)) / 2);
+  const side = crop.width - 2 * margin;
+  if (side < 3) return 0;
+  const luma = new Float32Array(side * side);
+  for (let y = 0; y < side; y += 1) {
+    for (let x = 0; x < side; x += 1) {
+      const at = ((y + margin) * crop.width + x + margin) * 4;
+      luma[y * side + x] = 0.2126 * crop.data[at] + 0.7152 * crop.data[at + 1] + 0.0722 * crop.data[at + 2];
+    }
+  }
+  return varianceOfLaplacian(luma, side, side);
+}
+
+export interface RegradeDecision {
+  /** Keep this still (records `stillVol` + `attempts` either way). */
+  readonly accept: boolean;
+  /** Capture another attempt right away. */
+  readonly retry: boolean;
+}
+
+/**
+ * Accept/retry decision for one capture attempt (1-based). Below the floor the still is discarded
+ * and re-shot, up to {@link STILL_RETRY_MAX} attempts total — the FINAL attempt is kept even when
+ * soft, because dropping it would consume the stable-window trigger and leave nothing; its low
+ * recorded `stillVol` is the honest mark, and the session list flags it.
+ */
+export function regradeStill(stillVol: number, attempt: number): RegradeDecision {
+  if (stillVol >= STILL_VOL_FLOOR) return { accept: true, retry: false };
+  if (attempt >= STILL_RETRY_MAX) return { accept: true, retry: false };
+  return { accept: false, retry: true };
+}
+
+/* ---------------------------- Pose diversity (B) ---------------------------- */
+
+/** Centroid distance under this fraction of the still width counts as the same pose… */
+export const POSE_DUP_RADIUS = 0.04;
+
+/** …when the palm scale also matches within this relative tolerance. */
+export const POSE_DUP_SCALE_TOLERANCE = 0.05;
+
+export interface PoseSignature {
+  /** Anchor centroid, still px. */
+  readonly cx: number;
+  readonly cy: number;
+  /** Mean anchor distance from the centroid — the palm's apparent size, still px. */
+  readonly scale: number;
+}
+
+/** Pose signature of one still's crop anchors (`[x, y]` pairs in still px). */
+export function poseSignature(anchors: readonly (readonly number[])[]): PoseSignature {
+  let cx = 0;
+  let cy = 0;
+  for (const [x, y] of anchors) {
+    cx += x;
+    cy += y;
+  }
+  cx /= anchors.length;
+  cy /= anchors.length;
+  let scale = 0;
+  for (const [x, y] of anchors) scale += Math.hypot(x - cx, y - cy);
+  return { cx, cy, scale: scale / anchors.length };
+}
+
+/**
+ * Index of the first accepted still the candidate near-duplicates, or null. Near-duplicate =
+ * centroid within {@link POSE_DUP_RADIUS} of the still width AND scale within
+ * {@link POSE_DUP_SCALE_TOLERANCE} relative — one hand held in one pose, re-shot. Duplicates are
+ * MARKED, never blocked: the labeler and eval need to know, the person capturing does not need to
+ * be interrupted.
+ */
+export function findPoseDuplicate(
+  existing: readonly { readonly index: number; readonly signature: PoseSignature }[],
+  candidate: PoseSignature,
+  stillWidth: number,
+): number | null {
+  for (const prior of existing) {
+    const centroidPx = Math.hypot(candidate.cx - prior.signature.cx, candidate.cy - prior.signature.cy);
+    const scaleBase = Math.max(prior.signature.scale, 1e-6);
+    const scaleDelta = Math.abs(candidate.scale - prior.signature.scale) / scaleBase;
+    if (centroidPx <= POSE_DUP_RADIUS * stillWidth && scaleDelta <= POSE_DUP_SCALE_TOLERANCE) {
+      return prior.index;
+    }
+  }
+  return null;
 }
 
 /* ------------------------------ Still capture ------------------------------ */

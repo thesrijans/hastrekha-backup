@@ -32,6 +32,8 @@ export interface LabelerLineState {
   readonly viewAtCommit: ViewMode;
   /** True once the line was explicitly committed (Enter) or marked absent. */
   readonly done: boolean;
+  /** True if the post-commit detector reveal was opened for this line (lane C). */
+  readonly revealUsed?: boolean;
 }
 
 /** The whole labeler working state that matters to the exported file. */
@@ -41,6 +43,14 @@ export interface LabelerState {
   readonly minorLines?: Partial<Record<(typeof MINOR_LINE_IDS)[number], LabelerLineState>>;
   readonly mode: LabelerMode;
   readonly channel: GrayChannel;
+}
+
+/**
+ * Lane C's gate, as a pure predicate the client and the tests share: the detector reveal may open
+ * for a line only once its label is frozen — committed with points, or explicitly marked absent.
+ */
+export function canReveal(line: LabelerLineState): boolean {
+  return line.done;
 }
 
 export function emptyLineState(): LabelerLineState {
@@ -92,6 +102,7 @@ export function buildLabelFile(
     confidence: line.confidence,
     method: line.method,
     viewAtCommit: line.viewAtCommit,
+    ...(line.revealUsed === true ? { revealUsed: true } : {}),
   });
   const lines: RekhaLabelLine[] = LABEL_LINE_IDS.map((id) => toEntry(id, state.lines[id]));
   for (const id of MINOR_LINE_IDS) {

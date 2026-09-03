@@ -17,7 +17,7 @@ import {
   type RekhaLabelFile,
   type SessionMetadata,
 } from "../lib/scan/dev/session-types";
-import { buildLabelFile, emptyLabelerState, isComplete, type LabelerState } from "../lib/scan/dev/labeler-file";
+import { buildLabelFile, canReveal, emptyLabelerState, emptyLineState, isComplete, type LabelerState } from "../lib/scan/dev/labeler-file";
 import { openSessionStore } from "../lib/scan/dev/session-store";
 
 let assertions = 0;
@@ -267,6 +267,54 @@ await assert.rejects(
   "an invalid label refuses to stage",
 );
 assertions += 1;
+
+/* ----------------------- 3c. Post-commit reveal (lane C) ----------------------- */
+
+{
+  // The gate is the shared predicate the client calls — blocked pre-commit, open post-commit.
+  ok(!canReveal(emptyLineState()), "reveal is blocked on an untouched line");
+  ok(
+    !canReveal({ ...emptyLineState(), points: [[0.1, 0.1], [0.5, 0.5]] }),
+    "reveal is blocked mid-trace — points alone are not a commit",
+  );
+  ok(canReveal(completeState().lines.heart), "reveal opens once the line is committed");
+  ok(canReveal(completeState().lines.head), "reveal opens on an absent-marked line too — that label is equally frozen");
+
+  // revealUsed is recorded per line, and ONLY changes that field — the label itself is untouched.
+  const withReveal: LabelerState = {
+    ...completeState(),
+    lines: { ...completeState().lines, heart: { ...completeState().lines.heart, revealUsed: true } },
+  };
+  const plain = buildLabelFile(completeState(), session, 0, "srijan", "2026-09-02T00:10:00.000Z");
+  const revealed = buildLabelFile(withReveal, session, 0, "srijan", "2026-09-02T00:10:00.000Z");
+  const heartLine = revealed.lines.find((line) => line.id === "heart");
+  ok(heartLine?.revealUsed === true, "revealUsed lands on the line it was opened for");
+  ok(
+    revealed.lines.filter((line) => line.id !== "heart").every((line) => !("revealUsed" in line)),
+    "no other line carries the key",
+  );
+  ok(plain.lines.every((line) => !("revealUsed" in line)), "without a reveal the key does not exist — old files stay byte-identical");
+  const withoutReveal = (line: (typeof revealed.lines)[number]): Omit<(typeof revealed.lines)[number], "revealUsed"> => {
+    const { revealUsed, ...rest } = line;
+    void revealUsed;
+    return rest;
+  };
+  assert.deepEqual(
+    revealed.lines.map(withoutReveal),
+    plain.lines.map(withoutReveal),
+    "reveal changes NOTHING about the label but the audit field — points, absent, confidence all identical",
+  );
+  assertions += 1;
+  ok(parseRekhaLabelFile(JSON.stringify(revealed)) !== null, "a revealUsed-bearing 0a-2 file validates");
+  ok(
+    parseRekhaLabelFile(JSON.stringify({ ...v1, lines: (v1.lines as unknown[]).map((line, i) => (i === 0 ? { ...(line as object), revealUsed: true } : line)) })) === null,
+    "revealUsed on a 0a-1 file is rejected — the field is 0a-2-only",
+  );
+  ok(
+    parseRekhaLabelFile(JSON.stringify({ ...revealed, lines: revealed.lines.map((line, i) => (i === 0 ? { ...line, revealUsed: "yes" } : line)) })) === null,
+    "a non-boolean revealUsed is rejected",
+  );
+}
 
 /* --------------------------- 4. Export order contract --------------------------- */
 

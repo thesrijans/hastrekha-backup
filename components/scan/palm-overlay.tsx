@@ -12,7 +12,9 @@ import { palmBoundary } from "@/lib/scan/landmarks";
 import { catmullRomSegments } from "@/lib/scan/curve";
 import { HAND_BONES, LM } from "@/lib/scan/landmark-index";
 import { coverTransform, videoNormToCanvas, videoPxToCanvas, type CoverTransform } from "@/lib/scan/view-transform";
-import type { Poly } from "@/lib/scan/lines";
+import { LINE_THRESHOLD, type ClassifiedTrace, type Poly } from "@/lib/scan/lines";
+import { MIN_CLASS_SCORE } from "@/lib/scan/classify";
+import { scanFlags, SCAN_FLAG_NAMES } from "@/lib/scan/flags";
 import { MASK_SIZE, type Landmark3, type Point2 } from "@/lib/scan/types";
 
 const LINE_GLOW = "#ff9a3c";
@@ -78,6 +80,71 @@ const DEPTH_FULL = 0.6;
 
 const ANCHOR_SET = new Set<number>(PALM_ANCHORS);
 
+/*
+ * ── Diagnostic layers (dev harness lane D, flag `scanDiagnostics`) ─────────────────────────────
+ *
+ * "O" cycles NONE → FIELD → RIDGE → TRACES → LINES. LINES is the shipped overlay, untouched.
+ * FIELD/RIDGE render the canonical 128 map as a corner PIP rather than warped onto the hand:
+ * canvas 2D has no perspective drawImage, and the PIP answers the actual question — "what did the
+ * detector see" — without a per-pixel software warp at frame rate. TRACES projects every
+ * classified trace with its class + score. A corner readout (field p99/mean, LINE_THRESHOLD,
+ * trace counts around MIN_CLASS_SCORE, flags on) renders on every layer while the flag is on.
+ */
+const DIAG_LAYERS = ["NONE", "FIELD", "RIDGE", "TRACES", "LINES"] as const;
+type DiagLayer = (typeof DIAG_LAYERS)[number];
+const DIAG_PIP_SIZE = 160;
+const DIAG_TEXT = "rgba(232, 226, 214, 0.92)";
+const DIAG_BACK = "rgba(13, 11, 9, 0.72)";
+
+interface DiagnosticsData {
+  readonly field: Float32Array | null;
+  readonly ridge: Float32Array | null;
+  readonly classified: readonly ClassifiedTrace[];
+}
+
+/** p99/mean of a field, cached by array identity — sorting 16k floats per frame would be silly. */
+function fieldStats(
+  cache: { field: Float32Array | null; p99: number; mean: number },
+  field: Float32Array,
+): { p99: number; mean: number } {
+  if (cache.field !== field) {
+    const sorted = Float32Array.from(field).sort();
+    let total = 0;
+    for (let i = 0; i < field.length; i += 1) total += field[i];
+    cache.field = field;
+    cache.p99 = sorted[Math.min(sorted.length - 1, Math.floor(0.99 * sorted.length))];
+    cache.mean = total / field.length;
+  }
+  return { p99: cache.p99, mean: cache.mean };
+}
+
+/** Tint one canonical map into the PIP canvas (value → warm alpha) and blit it top-right. */
+function drawPip(
+  context: CanvasRenderingContext2D,
+  pip: HTMLCanvasElement,
+  plane: Float32Array,
+  width: number,
+): void {
+  const pipContext = pip.getContext("2d");
+  if (pipContext === null) return;
+  const image = pipContext.createImageData(MASK_SIZE, MASK_SIZE);
+  for (let i = 0; i < plane.length; i += 1) {
+    const v = Math.min(1, Math.max(0, plane[i]));
+    const at = i * 4;
+    image.data[at] = 255;
+    image.data[at + 1] = 154;
+    image.data[at + 2] = 60;
+    image.data[at + 3] = Math.round(v * 255);
+  }
+  pipContext.putImageData(image, 0, 0);
+  context.save();
+  context.fillStyle = DIAG_BACK;
+  context.fillRect(width - DIAG_PIP_SIZE - 12, 12, DIAG_PIP_SIZE + 4, DIAG_PIP_SIZE + 4);
+  context.imageSmoothingEnabled = false;
+  context.drawImage(pip, width - DIAG_PIP_SIZE - 10, 14, DIAG_PIP_SIZE, DIAG_PIP_SIZE);
+  context.restore();
+}
+
 export interface PalmOverlayProps {
   /** Live landmarks; the overlay re-projects onto these every frame. */
   readonly landmarks: readonly Landmark3[] | null;
@@ -139,6 +206,8 @@ export interface PalmOverlayProps {
   readonly mirrored: boolean;
   /** Dev tuning override for PALM_EDGE_PEAK; undefined uses the shipped constant. */
   readonly edgePeak?: number;
+  /** Lane D diagnostic data; only read while the `scanDiagnostics` flag is on. */
+  readonly diagnostics?: DiagnosticsData | null;
   readonly className?: string;
 }
 
@@ -200,6 +269,7 @@ export function PalmOverlay({
   evidenceAtMs,
   mirrored,
   edgePeak,
+  diagnostics = null,
   className,
 }: PalmOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -222,7 +292,29 @@ export function PalmOverlay({
     evidenceAtMs,
     mirrored,
     edgePeak,
+    diagnostics,
   });
+  const diagLayerRef = useRef<DiagLayer>("LINES");
+  const pipCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const diagStatsRef = useRef<{ field: Float32Array | null; p99: number; mean: number }>({
+    field: null,
+    p99: 0,
+    mean: 0,
+  });
+
+  // Lane D: "O" cycles the diagnostic layer — only while the flag is on, so the shipped overlay
+  // has zero new key behavior with flags off.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key.toLowerCase() !== "o") return;
+      if (!scanFlags.snapshot().scanDiagnostics) return;
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
+      diagLayerRef.current = DIAG_LAYERS[(DIAG_LAYERS.indexOf(diagLayerRef.current) + 1) % DIAG_LAYERS.length];
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   useEffect(() => {
     stateRef.current = {
       landmarks,
@@ -238,8 +330,9 @@ export function PalmOverlay({
       evidenceAtMs,
       mirrored,
       edgePeak,
+      diagnostics,
     };
-  }, [landmarks, videoSize, polys, segments, confidence, gatePassing, tracesNamed, projection, liveProjection, minorTraces, evidenceAtMs, mirrored, edgePeak]);
+  }, [landmarks, videoSize, polys, segments, confidence, gatePassing, tracesNamed, projection, liveProjection, minorTraces, evidenceAtMs, mirrored, edgePeak, diagnostics]);
 
   /*
    * Sampled on a timer, not pushed from the draw loop: calling back at 60fps would re-render the
@@ -276,7 +369,11 @@ export function PalmOverlay({
         evidenceAtMs: evidenceAt,
         mirrored: flip,
         edgePeak: peakOverride,
+        diagnostics: diag,
       } = stateRef.current;
+      const flagsNow = scanFlags.snapshot();
+      const diagOn = flagsNow.scanDiagnostics;
+      const layer: DiagLayer = diagOn ? diagLayerRef.current : "LINES";
 
       const parent = canvas.parentElement;
       const width = parent?.clientWidth ?? canvas.width;
@@ -289,6 +386,50 @@ export function PalmOverlay({
 
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
       context.clearRect(0, 0, width, height);
+
+      /* ------------------------- Diagnostics (lane D) -------------------------- */
+      // Drawn BEFORE the transform guards: the readout must work precisely when nothing else does
+      // ("why is it not picking up rekha" usually means a null transform or an empty field).
+      if (diagOn) {
+        if (layer === "FIELD" && diag?.field != null) {
+          let pip = pipCanvasRef.current;
+          if (pip === null) {
+            pip = document.createElement("canvas");
+            pip.width = MASK_SIZE;
+            pip.height = MASK_SIZE;
+            pipCanvasRef.current = pip;
+          }
+          drawPip(context, pip, diag.field, width);
+        } else if (layer === "RIDGE" && diag?.ridge != null) {
+          let pip = pipCanvasRef.current;
+          if (pip === null) {
+            pip = document.createElement("canvas");
+            pip.width = MASK_SIZE;
+            pip.height = MASK_SIZE;
+            pipCanvasRef.current = pip;
+          }
+          drawPip(context, pip, diag.ridge, width);
+        }
+        const stats = diag?.field != null ? fieldStats(diagStatsRef.current, diag.field) : null;
+        const above = diag?.classified.filter((t) => t.classScore >= MIN_CLASS_SCORE).length ?? 0;
+        const below = (diag?.classified.length ?? 0) - above;
+        const flagsOn = SCAN_FLAG_NAMES.filter((name) => flagsNow[name]).join(" ") || "none";
+        const lines = [
+          `diag ${layer} (O cycles)`,
+          stats === null ? "field: none" : `field p99 ${stats.p99.toFixed(3)} mean ${stats.mean.toFixed(4)}`,
+          `thr ${LINE_THRESHOLD} | traces >=${MIN_CLASS_SCORE}: ${above} below: ${below}`,
+          `flags: ${flagsOn}`,
+        ];
+        context.save();
+        context.font = "11px ui-monospace, monospace";
+        context.textBaseline = "top";
+        const boxWidth = Math.max(...lines.map((l) => context.measureText(l).width)) + 16;
+        context.fillStyle = DIAG_BACK;
+        context.fillRect(8, height - 8 - lines.length * 15 - 10, boxWidth, lines.length * 15 + 10);
+        context.fillStyle = DIAG_TEXT;
+        lines.forEach((l, i) => context.fillText(l, 16, height - 8 - lines.length * 15 - 4 + i * 15));
+        context.restore();
+      }
 
       const transform: CoverTransform | null =
         video === null || marks === null || marks.length < 21
@@ -444,7 +585,7 @@ export function PalmOverlay({
        * honesty the depth feature carries into the reading — the overlay should not make a shallow
        * mark look like a deep one any more than the feature bag should.
        */
-      if (minor !== undefined && minor.length > 0) {
+      if (layer === "LINES" && minor !== undefined && minor.length > 0) {
         context.save();
         context.strokeStyle = LINE_GLOW;
         context.lineCap = "round";
@@ -471,7 +612,39 @@ export function PalmOverlay({
         context.restore();
       }
 
-      if (!warming) {
+      // Lane D TRACES layer: every classified trace, projected, with class + score.
+      if (layer === "TRACES" && diag !== null && diag !== undefined) {
+        context.save();
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.font = "10px ui-monospace, monospace";
+        for (const trace of diag.classified) {
+          if (trace.points.length < 2) continue;
+          context.strokeStyle = trace.classScore >= MIN_CLASS_SCORE ? LINE_GLOW : "rgba(160,160,160,0.7)";
+          context.lineWidth = 1.25;
+          context.globalAlpha = 0.9;
+          context.beginPath();
+          let started = false;
+          for (const point of trace.points) {
+            const projected = project(point);
+            if (projected === null) continue;
+            if (started) context.lineTo(projected.x, projected.y);
+            else {
+              context.moveTo(projected.x, projected.y);
+              started = true;
+            }
+          }
+          context.stroke();
+          const mid = project(trace.points[Math.floor(trace.points.length / 2)]);
+          if (mid !== null) {
+            context.fillStyle = DIAG_TEXT;
+            context.fillText(`${trace.class} ${trace.classScore.toFixed(2)}`, mid.x + 4, mid.y - 4);
+          }
+        }
+        context.restore();
+      }
+
+      if (layer === "LINES" && !warming) {
         /*
          * Stroked run by run rather than poly by poly, so an inferred stretch can carry its own
          * alpha. Each run overlaps its neighbour by one point, which is what keeps the joins
@@ -522,7 +695,7 @@ export function PalmOverlay({
         context.restore();
         // Reported from inside the draw, after the transform and the alpha have had their say.
         drawnRef.current = traceAlpha > 0.01 ? strokedThisFrame : 0;
-      } else if (boundaryCanvas !== null) {
+      } else if (layer === "LINES" && boundaryCanvas !== null) {
         /*
          * Warming up: sweep the palm so the feed never looks dead while detection ramps.
          *

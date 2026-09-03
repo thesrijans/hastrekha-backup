@@ -173,6 +173,16 @@ export class SessionStore {
     return updated;
   }
 
+  /**
+   * Count one still discarded by the still-VoL regrade (A). The counter lives on the session
+   * metadata so exported sessions report how hard the floor worked.
+   */
+  async recordStillRejection(session: SessionMetadata): Promise<SessionMetadata> {
+    const updated: SessionMetadata = { ...session, rejectedStills: (session.rejectedStills ?? 0) + 1 };
+    await idbPut(this.db, STORE_SESSIONS, updated);
+    return updated;
+  }
+
   /** Staged crop blob for the labeler (0a-ii) and export. */
   async getBlob(sessionId: string, relativePath: string): Promise<Blob | null> {
     const value = await idbGet<Blob>(this.db, STORE_BLOBS, blobKey(sessionId, relativePath));

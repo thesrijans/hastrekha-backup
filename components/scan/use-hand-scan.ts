@@ -71,6 +71,7 @@ import {
   type FusionState,
 } from "@/lib/scan/fusion";
 import { extractAllTraces, extractLines, type ClassifiedTrace, type LineExtraction, type Poly } from "@/lib/scan/lines";
+import { fateDoubleOverride, minorLineFeatures } from "@/lib/scan/minor-lines";
 import {
   commitCapture,
   currentPose,
@@ -834,7 +835,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               const at = performance.now();
               if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS) {
                 lastExtractAtRef.current = at;
-                const found = extractLines(fusionRef.current.ema, fusionRef.current.size);
+                const vocabV2 = scanFlags.snapshot().featureVocabV2;
+                const found = extractLines(fusionRef.current.ema, fusionRef.current.size, vocabV2);
                 /*
                  * Everything else on the palm. The four completed lines are the headline, but a
                  * reader looks at the minor creases too, and dropping them was throwing away most of
@@ -845,6 +847,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   fusionRef.current.ema,
                   fusionRef.current.size,
                   fusionRef.current.faintHits,
+                  vocabV2, // demotion tracking only feeds the v2 fate-double check
                 );
                 setTraces(all.traces);
                 recordStage(telemetryRef.current, "tracesExtracted", at, all.faintCount);
@@ -864,6 +867,33 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                  * they are simply unnamed, and the overlay draws them at reduced weight to say so.
                  * Showing the evidence unlabelled is more honest than showing nothing.
                  */
+                /*
+                 * Minor-line emission (flag emitMinorLines): the classifier's qualifying sun /
+                 * health / marriage / bracelet / girdle traces become KB features, deep-merged
+                 * into the extraction's bag. featureVocabV2 additionally lets a demoted second
+                 * fate claimant override structure to the KB's "double". Both flags off ⇒ the
+                 * callback receives `found` untouched, byte for byte.
+                 */
+                let forFeatures = found;
+                if (scanFlags.snapshot().emitMinorLines) {
+                  const minor = minorLineFeatures(all, { lifePoly: found.completion.lines.life?.points }, fusionRef.current.size);
+                  const baseLines = (found.features.lines ?? {}) as Record<string, unknown>;
+                  const baseSigns = (found.features.signs ?? {}) as Record<string, unknown>;
+                  const minorLines = (minor.lines ?? {}) as Record<string, unknown>;
+                  const minorSigns = (minor.signs ?? {}) as Record<string, unknown>;
+                  const mergedLines: Record<string, unknown> = { ...minorLines, ...baseLines };
+                  if (vocabV2 && fateDoubleOverride(all)) {
+                    mergedLines.fate = { ...(mergedLines.fate as Record<string, unknown> | undefined), structure: "double" };
+                  }
+                  forFeatures = {
+                    ...found,
+                    features: {
+                      ...found.features,
+                      ...(Object.keys(mergedLines).length > 0 ? { lines: mergedLines } : {}),
+                      ...(Object.keys(minorSigns).length > 0 ? { signs: { ...minorSigns, ...baseSigns } } : {}),
+                    } as typeof found.features,
+                  };
+                }
                 const named = found.polys.length > 0;
                 const drawable = named ? found.polys : found.fragments;
                 if (drawable.length > 0) {
@@ -871,7 +901,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   // evidence is a measurement rather than a claim about pose quality.
                   // Refused while the hand is clipped: the crop was fitted to extrapolated
                   // landmarks, so any line placed from it is a claim about guessed geometry.
-                  if (named && !degradedRef.current) onLineFeatures?.(found, at);
+                  if (named && !degradedRef.current) onLineFeatures?.(forFeatures, at);
                   setExtraction(found);
                   setPolys(drawable);
                   setPolySegments(
@@ -1170,6 +1200,29 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     };
   }, [mirrored]);
 
+  /**
+   * Lane E (flag `scanDiagnostics`): stage the current frame as a one-still capture session so a
+   * bad reading in the wild becomes a labelable eval fixture immediately. The dev module is
+   * loaded dynamically behind the flag — the one allowlisted production→dev edge (see
+   * test/import-boundary.test.ts); with the flag off nothing is imported and nothing runs.
+   */
+  const exportEvalCase = useCallback(async (): Promise<string | null> => {
+    if (!scanFlags.snapshot().scanDiagnostics) return null;
+    const video = videoRef.current;
+    if (video === null || video.videoWidth === 0 || video.videoHeight === 0) return null;
+    const { observation: obs, quality: verdict } = latestRef.current;
+    if (obs === null) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    if (context === null) return null;
+    context.drawImage(video, 0, 0);
+    const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+    const { stageEvalCase } = await import("@/lib/scan/dev/eval-export");
+    return stageEvalCase({ frame, observation: obs, quality: verdict });
+  }, []);
+
   const restartCapture = useCallback(() => {
     captureRef.current = emptyCapture();
     setCapture(captureRef.current);
@@ -1231,5 +1284,6 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     stop,
     restartCapture,
     exportFrame,
+    exportEvalCase,
   };
 }
