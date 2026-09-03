@@ -1,28 +1,50 @@
 /**
- * Eval harness CLI (sprint Phase 0d) — the scoreboard every future core change reports against.
+ * Eval harness CLI (sprint Phase 0d) — composable operating points.
  *
  * ```
- * npm run eval                                            # baseline on all GT
- * npm run eval -- --rung=baseline,enhancer,enhancer-ridge --fwhm
- * npm run eval -- --model=fixtures/private/models/palm-lines.fp32.onnx
- * npm run eval -- --tol=6 --root=fixtures
+ * npm run eval                                              # baseline alias
+ * npm run eval -- --rung=classical+fused,fullhand-fixed+enhancer --model=…
+ * npm run eval -- --matrix --model=fixtures/private/models/palm-lines.fp32.onnx
+ * npm run eval -- --diag                                    # field-stats dump (item 3)
+ * npm run eval -- --jitter                                  # H12 anchor jitter (item 4)
  * ```
  *
- * Read-only over lib/scan/** — this measures the frozen core, it never changes it.
+ * Rungs compose as FRAMING+POST; the legacy aliases still work:
+ *   baseline            → (model? palmquad : classical)+fused
+ *   enhancer            → (model? palmquad : classical)+enhancer
+ *   enhancer-ridge      → (model? palmquad : classical)+enhancer-ridge
+ *   unet-fullhand-fixed → fullhand-fixed+fused · unet-fullhand-ransac → fullhand-ransac+fused
+ * Every rung is swept over the extraction threshold (LINE_THRESHOLD's binarize seam), 0.15…0.85.
  */
 import path from "node:path";
 import { loadGroundTruthDetailed, type EvalCase } from "./gt-adapter";
 import { EVAL_TOLS, EVAL_TOL_PX_AT_512, EVAL_SIZE, lineMetrics, type LineMetrics, type LineRow } from "./metrics";
-import { RUNGS, runStill, type Rung } from "./run-pipeline";
+import {
+  FRAMINGS,
+  POSTS,
+  SWEEP_THRESHOLDS,
+  computeField,
+  diagnoseFields,
+  extractAtThreshold,
+  rungId,
+  type ComposedRung,
+  type Framing,
+  type Post,
+  type RunOptions,
+} from "./run-pipeline";
 import { measureFwhm, type FwhmResult } from "./fwhm";
-import { renderMarkdown, writeJson, type EvalReport, type RungRun } from "./report";
+import { measureJitter } from "./jitter";
+import { renderMarkdown, writeJson, type EvalReport, type RungSweep } from "./report";
 import { LABEL_LINE_IDS } from "../../lib/scan/dev/session-types";
 
 interface CliArgs {
-  readonly rungs: readonly Rung[];
+  readonly rungSpecs: readonly string[];
+  readonly matrix: boolean;
   readonly modelPath?: string;
   readonly headlineTol: number;
   readonly fwhm: boolean;
+  readonly diag: boolean;
+  readonly jitter: boolean;
   readonly root: string;
 }
 
@@ -31,52 +53,127 @@ function parseArgs(argv: readonly string[]): CliArgs {
     const hit = argv.find((arg) => arg.startsWith(`--${name}=`));
     return hit?.slice(name.length + 3);
   };
-  const rungArg = get("rung");
-  const rungs =
-    rungArg === undefined
-      ? (["baseline"] as Rung[])
-      : rungArg.split(",").map((r) => {
-          if (!(RUNGS as readonly string[]).includes(r)) throw new Error(`unknown rung "${r}" — expected ${RUNGS.join("|")}`);
-          return r as Rung;
-        });
   const tolArg = get("tol");
   return {
-    rungs,
+    rungSpecs: (get("rung") ?? "baseline").split(","),
+    matrix: argv.includes("--matrix"),
     modelPath: get("model"),
     headlineTol: tolArg === undefined ? EVAL_TOL_PX_AT_512 : Number(tolArg),
     fwhm: argv.includes("--fwhm"),
+    diag: argv.includes("--diag"),
+    jitter: argv.includes("--jitter"),
     root: get("root") ?? "fixtures",
   };
 }
 
-async function scoreRung(cases: readonly EvalCase[], rung: Rung, args: CliArgs, tols: readonly number[]): Promise<RungRun> {
-  const rows: LineRow[] = [];
+interface ResolvedRung extends ComposedRung {
+  readonly aliasOf?: string;
+}
+
+function resolveRungs(args: CliArgs): ResolvedRung[] {
+  const autoFraming: Framing = args.modelPath === undefined ? "classical" : "palmquad";
+  if (args.matrix) {
+    const framings: Framing[] = args.modelPath === undefined ? ["classical"] : [...FRAMINGS];
+    const grid: ResolvedRung[] = [];
+    for (const framing of framings) {
+      for (const post of POSTS) {
+        grid.push({ framing, post, aliasOf: framing === autoFraming && post === "fused" ? "baseline" : undefined });
+      }
+    }
+    return grid;
+  }
+  const aliases: Record<string, ResolvedRung> = {
+    baseline: { framing: autoFraming, post: "fused", aliasOf: "baseline" },
+    enhancer: { framing: autoFraming, post: "enhancer", aliasOf: "enhancer" },
+    "enhancer-ridge": { framing: autoFraming, post: "enhancer-ridge", aliasOf: "enhancer-ridge" },
+    "unet-fullhand-fixed": { framing: "fullhand-fixed", post: "fused", aliasOf: "unet-fullhand-fixed" },
+    "unet-fullhand-ransac": { framing: "fullhand-ransac", post: "fused", aliasOf: "unet-fullhand-ransac" },
+  };
+  return args.rungSpecs.map((spec) => {
+    const alias = aliases[spec];
+    if (alias !== undefined) return alias;
+    const [framing, post] = spec.split("+");
+    if (!(FRAMINGS as readonly string[]).includes(framing) || !(POSTS as readonly string[]).includes(post)) {
+      throw new Error(
+        `unknown rung "${spec}" — use an alias or <framing>+<post> from ${FRAMINGS.join("|")} × ${POSTS.join("|")}`,
+      );
+    }
+    return { framing: framing as Framing, post: post as Post };
+  });
+}
+
+async function scoreSweep(
+  cases: readonly EvalCase[],
+  rung: ResolvedRung,
+  opts: RunOptions,
+  tols: readonly number[],
+): Promise<RungSweep> {
+  const rowsByThreshold: Record<string, LineRow[]> = {};
+  for (const t of SWEEP_THRESHOLDS) rowsByThreshold[t.toFixed(2)] = [];
   const errors: Record<string, string> = {};
   const notes = new Set<string>();
   let approximateCases = 0;
+
   for (const evalCase of cases) {
-    const detected = await runStill(evalCase, rung, { modelPath: args.modelPath });
-    for (const note of detected.notes) notes.add(note);
-    if (detected.approximate === true) approximateCases += 1;
-    if (detected.error !== undefined) {
-      errors[evalCase.id] = detected.error;
+    const caseField = await computeField(evalCase, rung, opts);
+    for (const note of caseField.notes) notes.add(note);
+    if (caseField.approximate === true) approximateCases += 1;
+    if (caseField.field === null) {
+      errors[evalCase.id] = caseField.error ?? "no field";
       continue;
     }
-    for (const id of LABEL_LINE_IDS) {
-      const gtLine = evalCase.lines[id];
-      if (gtLine === undefined) continue; // unlabeled ≠ absent — excluded from scoring entirely
-      const gt = gtLine.absent ? null : gtLine.points;
-      const byTol: Record<number, LineMetrics> = {};
-      for (const tol of tols) byTol[tol] = lineMetrics(detected.lines[id], gt, EVAL_SIZE, tol);
-      rows.push({ caseId: evalCase.id, source: evalCase.source, hand: evalCase.hand, lineId: id, byTol });
+    for (const t of SWEEP_THRESHOLDS) {
+      const detected = extractAtThreshold(caseField.field, t);
+      for (const id of LABEL_LINE_IDS) {
+        const gtLine = evalCase.lines[id];
+        if (gtLine === undefined) continue; // unlabeled ≠ absent
+        const gt = gtLine.absent ? null : gtLine.points;
+        const byTol: Record<number, LineMetrics> = {};
+        for (const tol of tols) byTol[tol] = lineMetrics(detected.lines[id], gt, EVAL_SIZE, tol);
+        rowsByThreshold[t.toFixed(2)].push({
+          caseId: evalCase.id,
+          source: evalCase.source,
+          hand: evalCase.hand,
+          lineId: id,
+          byTol,
+        });
+      }
     }
   }
-  return { rung, rows, errors, notes: [...notes], approximateCases };
+  return {
+    id: rungId(rung),
+    framing: rung.framing,
+    post: rung.post,
+    aliasOf: rung.aliasOf,
+    rowsByThreshold,
+    errors,
+    notes: [...notes],
+    approximateCases,
+  };
 }
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const tols = EVAL_TOLS.includes(args.headlineTol) ? EVAL_TOLS : [...EVAL_TOLS, args.headlineTol].sort((a, b) => a - b);
+
+  if (args.jitter) {
+    const sessions = measureJitter(args.root);
+    if (sessions.length === 0) {
+      console.log("no session with ≥5 landmark-bearing stills found — H12 needs more captures");
+      return;
+    }
+    console.log(
+      "# H12 anchor jitter (discrete captures — an UPPER BOUND on tracking jitter; the hand repositions between stills)\n",
+    );
+    for (const s of sessions) {
+      console.log(`session ${s.sessionId} — ${s.stills} stills`);
+      console.log("| anchor | std still px | std canonical px |");
+      console.log("|---|--:|--:|");
+      for (const a of s.anchors) console.log(`| ${a.name} | ${a.stdStillPx.toFixed(1)} | ${a.stdCanonicalPx.toFixed(1)} |`);
+      console.log(`| **mean** | **${s.meanStillPx.toFixed(1)}** | **${s.meanCanonicalPx.toFixed(1)}** |`);
+    }
+    return;
+  }
 
   const { cases, sessionDirs } = loadGroundTruthDetailed(args.root);
   for (const dir of sessionDirs) {
@@ -88,8 +185,30 @@ async function main(): Promise<void> {
     return;
   }
 
-  const runs: RungRun[] = [];
-  for (const rung of args.rungs) runs.push(await scoreRung(active, rung, args, tols));
+  if (args.diag) {
+    const target = active.find((c) => c.source === "legacy") ?? active[0];
+    console.log(`# field diagnostics — ${target.id} (item 3)\n`);
+    console.log("| framing | map | p99 | mean | max |");
+    console.log("|---|---|--:|--:|--:|");
+    const framings: Framing[] = args.modelPath === undefined ? ["classical"] : ["classical", "palmquad"];
+    for (const framing of framings) {
+      const result = await diagnoseFields(target, framing, {
+        modelPath: framing === "classical" ? undefined : args.modelPath,
+      });
+      if (typeof result === "string") {
+        console.log(`| ${framing} | (error: ${result}) | — | — | — |`);
+        continue;
+      }
+      for (const row of result) {
+        console.log(`| ${framing} | ${row.label} | ${row.p99.toFixed(3)} | ${row.mean.toFixed(4)} | ${row.max.toFixed(3)} |`);
+      }
+    }
+    return;
+  }
+
+  const rungs = resolveRungs(args);
+  const runs: RungSweep[] = [];
+  for (const rung of rungs) runs.push(await scoreSweep(active, rung, { modelPath: args.modelPath }, tols));
 
   let fwhm: Record<string, FwhmResult> | null = null;
   if (args.fwhm) {
@@ -106,7 +225,6 @@ async function main(): Promise<void> {
     runs,
     fwhm,
   };
-
   console.log(renderMarkdown(report));
   const jsonPath = writeJson(report);
   console.log(`\nJSON: ${path.relative(process.cwd(), jsonPath)}`);

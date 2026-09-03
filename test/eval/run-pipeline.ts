@@ -1,24 +1,23 @@
 /**
- * Offline pipeline runner for the eval harness (Phase 0d).
+ * Offline pipeline runner for the eval harness (Phase 0d) — composable operating points.
  *
  * **Reuses the exact chain of `runFrame` in test/golden-run.ts** — sharp → RGBA → `rectifyPalm`
  * at RECTIFIED_SIZE → box downsample to MASK_SIZE → six ticks of illumination / stack / Frangi /
- * Gabor ridge / `combineProbabilities` / `fuse` → `extractLines` — because that chain is the
- * browser-equivalent one the goldens pin ("an offline shortcut here would pin a pipeline nobody
- * runs"). The only difference: this returns per-line polyline GEOMETRY (mapped back to 0–1
- * fractions), which runFrame's snapshot deliberately drops.
+ * Gabor ridge / `combineProbabilities` / `fuse` — and then, unlike runFrame, replays the
+ * extraction GEOMETRY path (`thin(binarize(field, t))` → `tracePolylines` → `completeLines`,
+ * mirroring lines.ts:570-586 where completion runs on the RAW fragments) so the binarisation
+ * threshold can be swept WITHOUT editing lib/scan: `LINE_THRESHOLD` (lines.ts:28, shipped 0.45)
+ * is `binarize`'s default parameter, and `binarize` is exported with the threshold injectable.
+ * The field itself is untouched, so completion's energy/observed gates stay authentic.
  *
- * Ablation rungs hook in AFTER fusion, before extraction:
- *   baseline        — extract from fusion.ema, exactly as shipped
- *   enhancer        — RekhaEnhancer(128).process(gray128, fused, 1) ONCE, extract from .enhanced
- *   enhancer-ridge  — same call, extract from .ridge (oriented-NMS thin map)
- * NOTE: stills exercise the enhancer's SPATIAL stages only — one process() call builds no
- * temporal state, so its evidence/probability channels are not what a live session would see.
- * The report must carry that caveat.
- *
- * `--model` plumbs an ONNX path (e.g. the git-ignored fp32 file) into the tick loop via
- * onnxruntime-web's wasm backend; if the runtime cannot initialise under node, the error is
- * recorded on the result and the run continues classical-only — never aborts.
+ * A rung is FRAMING + POST:
+ *   framing (what the UNet sees):  classical (no model) · palmquad (--model, shipped crop) ·
+ *                                  fullhand-fixed · fullhand-ransac (H2 framing path)
+ *   post (what extraction reads):  fused (fusion.ema) · enhancer (.enhanced) ·
+ *                                  enhancer-ridge (.ridge) — RekhaEnhancer, ONE process() call:
+ *                                  spatial stages only, no temporal state (stills).
+ * Legacy aliases (baseline, enhancer, enhancer-ridge, unet-fullhand-*) resolve in index.ts.
+ * The expensive field is computed once per (case, framing, post); thresholds reuse it.
  */
 import sharp from "sharp";
 import path from "node:path";
@@ -29,8 +28,9 @@ import { normaliseIllumination } from "../../lib/scan/illumination";
 import { blendComposite, compositeStack, emptyStack, pushFrame } from "../../lib/scan/stack";
 import { combineProbabilities, sigmoidInPlace, ONNX_INPUT_NAME } from "../../lib/scan/segmenter";
 import { alignFusion, emptyFusion, fuse, type FusionState } from "../../lib/scan/fusion";
-import { extractLines } from "../../lib/scan/lines";
-import { MASK_SIZE, RECTIFIED_SIZE, type Point2 } from "../../lib/scan/types";
+import { LINE_THRESHOLD, binarize, thin, tracePolylines } from "../../lib/scan/lines";
+import { completeLines } from "../../lib/scan/completion";
+import { MASK_SIZE, RECTIFIED_SIZE, type ActiveLineId, type Point2 } from "../../lib/scan/types";
 import { canonicalAnchors, solveHomography, type Matrix3 } from "../../lib/scan/rectify";
 import { RekhaEnhancer } from "../../lib/scan/enhance/rekha-enhancer";
 import { CANONICAL_FULLHAND_21 } from "../../lib/scan/models/canonical-fullhand-21";
@@ -47,26 +47,37 @@ import type { EvalCase } from "./gt-adapter";
 const WORK = MASK_SIZE;
 const TICKS = 6;
 
-export const RUNGS = ["baseline", "enhancer", "enhancer-ridge", "unet-fullhand-fixed", "unet-fullhand-ransac"] as const;
-export type Rung = (typeof RUNGS)[number];
+export const FRAMINGS = ["classical", "palmquad", "fullhand-fixed", "fullhand-ransac"] as const;
+export type Framing = (typeof FRAMINGS)[number];
+export const POSTS = ["fused", "enhancer", "enhancer-ridge"] as const;
+export type Post = (typeof POSTS)[number];
+
+export interface ComposedRung {
+  readonly framing: Framing;
+  readonly post: Post;
+}
+export const rungId = (rung: ComposedRung): string => `${rung.framing}+${rung.post}`;
+
+/** The threshold LINE_THRESHOLD (lines.ts:28) is swept over — shipped value included exactly. */
+export const SHIPPED_THRESHOLD = LINE_THRESHOLD;
+export const SWEEP_THRESHOLDS: readonly number[] = Array.from({ length: 15 }, (_, i) =>
+  Number((0.15 + i * 0.05).toFixed(2)),
+);
 
 export interface RunOptions {
-  /** ONNX model path override; undefined = classical-only, as the shipped offline chain runs. */
   readonly modelPath?: string;
 }
 
-export interface DetectedLines {
-  /** 0–1 canonical fractions per line; null = not detected. */
-  readonly lines: Readonly<Record<LabelLineId, readonly (readonly number[])[] | null>>;
-  /** Fatal per-case error — the rung ran but produced nothing usable. */
+export interface CaseField {
+  /** The map extraction reads for this (case, framing, post) — threshold-independent. */
+  readonly field: Float32Array | null;
   readonly error?: string;
-  /** Non-fatal notes (e.g. the UNet could not initialise and the run fell back to classical). */
   readonly notes: readonly string[];
-  /**
-   * Full-hand rungs on legacy cases only: the warp came from the 4-anchor approximation (H2b),
-   * not 21 landmarks - the case is scored but flagged, and the report shows the count.
-   */
   readonly approximate?: boolean;
+}
+
+export interface DetectedLines {
+  readonly lines: Readonly<Record<LabelLineId, readonly (readonly number[])[] | null>>;
 }
 
 const makeImageData = (w: number, h: number): ImageData =>
@@ -87,8 +98,7 @@ function downsample2(src: Float32Array, size: number, dst: Float32Array): void {
 /* ------------------------------ Optional UNet ------------------------------ */
 
 interface UnetSession {
-  run(rgba: Uint8ClampedArray): Promise<Float32Array>; // 128-space probabilities (palm-quad path)
-  probs256(rgba: Uint8ClampedArray): Promise<Float32Array>; // 256-square probabilities, no downsample
+  probs256(rgba: Uint8ClampedArray): Promise<Float32Array>;
 }
 
 let unetCache: { path: string; session: UnetSession | null; error?: string } | null = null;
@@ -99,61 +109,60 @@ async function loadUnet(modelPath: string): Promise<{ session: UnetSession | nul
     const ort = await import("onnxruntime-web");
     ort.env.wasm.numThreads = 1;
     const session = await ort.InferenceSession.create(modelPath, { executionProviders: ["wasm"] });
-    const probs256 = async (rgba: Uint8ClampedArray): Promise<Float32Array> => {
-      const plane = RECTIFIED_SIZE * RECTIFIED_SIZE;
-      const nchw = new Float32Array(3 * plane);
-      for (let i = 0; i < plane; i += 1) {
-        const at = i * 4;
-        nchw[i] = rgba[at] / 255;
-        nchw[plane + i] = rgba[at + 1] / 255;
-        nchw[2 * plane + i] = rgba[at + 2] / 255;
-      }
-      const feeds = { [ONNX_INPUT_NAME]: new ort.Tensor("float32", nchw, [1, 3, RECTIFIED_SIZE, RECTIFIED_SIZE]) };
-      const outputs = await session.run(feeds);
-      const logits = outputs[session.outputNames[0]].data as Float32Array;
-      const probabilities = Float32Array.from(logits);
-      sigmoidInPlace(probabilities);
-      return probabilities;
-    };
-    const wrapped: UnetSession = {
-      probs256,
-      async run(rgba: Uint8ClampedArray): Promise<Float32Array> {
-        const probabilities = await probs256(rgba);
-        const small = new Float32Array(WORK * WORK);
-        downsample2(probabilities, RECTIFIED_SIZE, small);
-        return small;
+    unetCache = {
+      path: modelPath,
+      session: {
+        async probs256(rgba: Uint8ClampedArray): Promise<Float32Array> {
+          const plane = RECTIFIED_SIZE * RECTIFIED_SIZE;
+          const nchw = new Float32Array(3 * plane);
+          for (let i = 0; i < plane; i += 1) {
+            const at = i * 4;
+            nchw[i] = rgba[at] / 255;
+            nchw[plane + i] = rgba[at + 1] / 255;
+            nchw[2 * plane + i] = rgba[at + 2] / 255;
+          }
+          const feeds = { [ONNX_INPUT_NAME]: new ort.Tensor("float32", nchw, [1, 3, RECTIFIED_SIZE, RECTIFIED_SIZE]) };
+          const outputs = await session.run(feeds);
+          const probabilities = Float32Array.from(outputs[session.outputNames[0]].data as Float32Array);
+          sigmoidInPlace(probabilities);
+          return probabilities;
+        },
       },
     };
-    unetCache = { path: modelPath, session: wrapped };
   } catch (error) {
     unetCache = {
       path: modelPath,
       session: null,
-      error: `UNet unavailable offline (${error instanceof Error ? error.message : String(error)}) — ran classical-only`,
+      error: `UNet unavailable offline (${error instanceof Error ? error.message : String(error)})`,
     };
   }
   return unetCache;
 }
 
-/* --------------------------------- The run --------------------------------- */
+/* ------------------------------ Field computation ------------------------------ */
 
-/** Run one still through one rung. Never throws — errors land on the result. */
-export async function runStill(evalCase: EvalCase, rung: Rung, opts: RunOptions = {}): Promise<DetectedLines> {
-  const empty: Record<LabelLineId, readonly (readonly number[])[] | null> = {
-    heart: null,
-    head: null,
-    life: null,
-    fate: null,
-  };
+interface Prepared {
+  readonly ema: Float32Array;
+  readonly small: Float32Array;
+  readonly notes: string[];
+  readonly approximate?: boolean;
+}
+
+const fieldCache = new Map<string, Prepared | { error: string }>();
+
+async function prepare(evalCase: EvalCase, framing: Framing, opts: RunOptions): Promise<Prepared | { error: string }> {
+  const key = `${evalCase.id}|${framing}|${opts.modelPath ?? ""}`;
+  const cached = fieldCache.get(key);
+  if (cached !== undefined) return cached;
   const notes: string[] = [];
+  let approximate: boolean | undefined;
   try {
     const { data, info } = await sharp(path.resolve(evalCase.imagePath)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     const source = { width: info.width, height: info.height, data: new Uint8ClampedArray(data) } as ImageData;
     const anchors: Point2[] = evalCase.anchors.map((a) => ({ x: a[0], y: a[1] }));
-
     const size = RECTIFIED_SIZE;
     const warped = rectifyPalm(source, anchors, size, makeImageData);
-    if (warped === null) return { lines: empty, error: "rectifyPalm returned null", notes };
+    if (warped === null) throw new Error("rectifyPalm returned null");
 
     const plane = size * size;
     const workPlane = WORK * WORK;
@@ -176,72 +185,55 @@ export async function runStill(evalCase: EvalCase, rung: Rung, opts: RunOptions 
       }
     }
 
+    // The UNet plane, per framing.
     let unetPlane: Float32Array | null = null;
-    let approximate: boolean | undefined;
-    const isFullHand = rung === "unet-fullhand-fixed" || rung === "unet-fullhand-ransac";
-    if (isFullHand) {
-      // The framing rungs are meaningless without the model - record and skip, never fake.
-      if (opts.modelPath === undefined) {
-        return { lines: empty, error: `--model required for rung ${rung} - case skipped`, notes };
-      }
+    if (framing !== "classical") {
+      if (opts.modelPath === undefined) throw new Error(`--model required for framing "${framing}"`);
       const loaded = await loadUnet(opts.modelPath);
-      if (loaded.session === null) {
-        return { lines: empty, error: loaded.error ?? "UNet unavailable", notes };
-      }
-      /*
-       * Full-hand geometry per source kind. Session: the RAW still (fingers in frame; the 512
-       * crop is already palm-quad and unusable for this) + 21 landmarks scaled by still size,
-       * in the rung's fit mode. Legacy: the H2b 4-correspondence approximation - GT anchors
-       * are landmarks 0/1/5/17, pinned to the same indices of the canonical pose; both fit
-       * modes collapse to the same 4-point solve there, and the case is flagged approximate.
-       */
-      let fullSource = source;
-      let toCropFullHand: Matrix3 | null = null;
-      let quadAnchorsPx: Point2[] = anchors;
-      if (
-        evalCase.source === "session" &&
-        evalCase.rawImagePath !== undefined &&
-        evalCase.landmarks !== undefined &&
-        evalCase.stillSize !== undefined &&
-        evalCase.stillAnchors !== undefined
-      ) {
-        const raw = await sharp(path.resolve(evalCase.rawImagePath)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-        fullSource = { width: raw.info.width, height: raw.info.height, data: new Uint8ClampedArray(raw.data) } as ImageData;
-        toCropFullHand = solveFullHandHomography(
-          evalCase.landmarks,
-          evalCase.stillSize.width,
-          evalCase.stillSize.height,
-          rung === "unet-fullhand-fixed" ? "fixed" : "all",
-        );
-        quadAnchorsPx = evalCase.stillAnchors.map((a) => ({ x: a[0], y: a[1] }));
+      if (loaded.session === null) throw new Error(loaded.error ?? "UNet unavailable");
+      if (framing === "palmquad") {
+        const probabilities = await loaded.session.probs256(warped.image.data);
+        unetPlane = new Float32Array(workPlane);
+        downsample2(probabilities, RECTIFIED_SIZE, unetPlane);
       } else {
-        approximate = true;
-        const targets = [0, 1, 5, 17].map((i) => ({
-          x: CANONICAL_FULLHAND_21[i][0] * UNET_INPUT_SIZE,
-          y: CANONICAL_FULLHAND_21[i][1] * UNET_INPUT_SIZE,
-        }));
-        toCropFullHand = solveHomography(anchors, targets);
-      }
-      const quadTargets = canonicalAnchors(quadAnchorsPx.length, RECTIFIED_SIZE);
-      const toCropQuad = quadTargets === null ? null : solveHomography(quadAnchorsPx, quadTargets);
-      const pqToFull = toCropFullHand === null || toCropQuad === null ? null : palmQuadToFullHand(toCropQuad, toCropFullHand);
-      const fullImage = toCropFullHand === null ? null : warpFullHand(fullSource, toCropFullHand, UNET_INPUT_SIZE, makeImageData);
-      if (fullImage === null || pqToFull === null) {
-        return { lines: empty, error: "full-hand warp unavailable (degenerate geometry)", notes, approximate };
-      }
-      const fullProbs = await loaded.session.probs256(fullImage.data);
-      unetPlane = new Float32Array(WORK * WORK);
-      remapProbabilitiesInto(fullProbs, UNET_INPUT_SIZE, pqToFull, unetPlane, WORK, RECTIFIED_SIZE);
-    } else if (opts.modelPath !== undefined) {
-      const loaded = await loadUnet(opts.modelPath);
-      if (loaded.session === null) {
-        if (loaded.error !== undefined) notes.push(loaded.error);
-      } else {
-        unetPlane = await loaded.session.run(warped.image.data);
+        let fullSource = source;
+        let toCropFullHand: Matrix3 | null = null;
+        let quadAnchorsPx: Point2[] = anchors;
+        if (
+          evalCase.source === "session" &&
+          evalCase.rawImagePath !== undefined &&
+          evalCase.landmarks !== undefined &&
+          evalCase.stillSize !== undefined &&
+          evalCase.stillAnchors !== undefined
+        ) {
+          const raw = await sharp(path.resolve(evalCase.rawImagePath)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+          fullSource = { width: raw.info.width, height: raw.info.height, data: new Uint8ClampedArray(raw.data) } as ImageData;
+          toCropFullHand = solveFullHandHomography(
+            evalCase.landmarks,
+            evalCase.stillSize.width,
+            evalCase.stillSize.height,
+            framing === "fullhand-fixed" ? "fixed" : "all",
+          );
+          quadAnchorsPx = evalCase.stillAnchors.map((a) => ({ x: a[0], y: a[1] }));
+        } else {
+          approximate = true;
+          const targets = [0, 1, 5, 17].map((i) => ({
+            x: CANONICAL_FULLHAND_21[i][0] * UNET_INPUT_SIZE,
+            y: CANONICAL_FULLHAND_21[i][1] * UNET_INPUT_SIZE,
+          }));
+          toCropFullHand = solveHomography(anchors, targets);
+        }
+        const quadTargets = canonicalAnchors(quadAnchorsPx.length, RECTIFIED_SIZE);
+        const toCropQuad = quadTargets === null ? null : solveHomography(quadAnchorsPx, quadTargets);
+        const pqToFull = toCropFullHand === null || toCropQuad === null ? null : palmQuadToFullHand(toCropQuad, toCropFullHand);
+        const fullImage = toCropFullHand === null ? null : warpFullHand(fullSource, toCropFullHand, UNET_INPUT_SIZE, makeImageData);
+        if (fullImage === null || pqToFull === null) throw new Error("full-hand warp unavailable (degenerate geometry)");
+        const fullProbs = await loaded.session.probs256(fullImage.data);
+        unetPlane = new Float32Array(workPlane);
+        remapProbabilitiesInto(fullProbs, UNET_INPUT_SIZE, pqToFull, unetPlane, WORK, RECTIFIED_SIZE);
       }
     }
 
-    // Six ticks, exactly as runFrame does — the browser-equivalent accumulation.
     const stack = emptyStack(WORK);
     let fusion: FusionState = emptyFusion(MASK_SIZE);
     for (let tick = 0; tick < TICKS; tick += 1) {
@@ -255,7 +247,6 @@ export async function runStill(evalCase: EvalCase, rung: Rung, opts: RunOptions 
       detectVessels(detectorInput, WORK, sigmasFor(WORK), frangi);
       normalizeResponses(frangi);
       const ridge = Float32Array.from(detectRidges(small, WORK).probability);
-
       const classical = new Float32Array(workPlane);
       for (let i = 0; i < workPlane; i += 1) classical[i] = ridge[i] > frangi[i] ? ridge[i] : frangi[i];
 
@@ -268,30 +259,94 @@ export async function runStill(evalCase: EvalCase, rung: Rung, opts: RunOptions 
           all: combineProbabilities(unetPlane, classical),
           resolves: [],
           inferenceMs: 0,
-          backend: unetPlane === null ? "classical" : "eval-unet",
+          backend: unetPlane === null ? "classical" : `eval-${framing}`,
           stages: { unet: unetPlane, ridge, frangi, median: null, photometric: null },
         },
         1000 + tick * 200,
       );
     }
-
-    // Rung hook: what the extractor reads. Enhancer buffers are OWNED and REUSED — copy them.
-    let field = fusion.ema;
-    if (rung === "enhancer" || rung === "enhancer-ridge") {
-      const enhancer = new RekhaEnhancer(WORK);
-      const result = enhancer.process(small, fusion.ema, 1);
-      field = Float32Array.from(rung === "enhancer" ? result.enhanced : result.ridge);
-      notes.push("enhancer rung: single process() call — spatial stages only, temporal state not exercised");
-    }
-
-    const found = extractLines(field, WORK);
-    const lines: Record<LabelLineId, readonly (readonly number[])[] | null> = { ...empty };
-    for (const id of LABEL_LINE_IDS) {
-      const traced = found.lines[id];
-      lines[id] = traced === undefined ? null : traced.points.map((p) => [p[0] / WORK, p[1] / WORK]);
-    }
-    return { lines, notes, approximate };
+    const prepared: Prepared = { ema: fusion.ema, small, notes, approximate };
+    fieldCache.set(key, prepared);
+    return prepared;
   } catch (error) {
-    return { lines: empty, error: error instanceof Error ? error.message : String(error), notes };
+    const failed = { error: error instanceof Error ? error.message : String(error) };
+    fieldCache.set(key, failed);
+    return failed;
   }
+}
+
+/** The map extraction reads for one (case, framing, post). Cached per case+framing. */
+export async function computeField(evalCase: EvalCase, rung: ComposedRung, opts: RunOptions = {}): Promise<CaseField> {
+  const prepared = await prepare(evalCase, rung.framing, opts);
+  if ("error" in prepared) return { field: null, error: prepared.error, notes: [] };
+  const notes = [...prepared.notes];
+  let field = prepared.ema;
+  if (rung.post !== "fused") {
+    const enhancer = new RekhaEnhancer(WORK);
+    const result = enhancer.process(prepared.small, prepared.ema, 1);
+    field = Float32Array.from(rung.post === "enhancer" ? result.enhanced : result.ridge);
+    notes.push("enhancer post: single process() call — spatial stages only, temporal state not exercised");
+  }
+  return { field, notes, approximate: prepared.approximate };
+}
+
+/**
+ * Extraction at an injected threshold — the geometry path of lines.ts extractLines (:570-586)
+ * replayed verbatim: binarize at `threshold` instead of the default, thin, trace, and hand the
+ * RAW fragments to completeLines against the untouched field.
+ */
+export function extractAtThreshold(field: Float32Array, threshold: number): DetectedLines {
+  const skeleton = thin(binarize(field, threshold), WORK);
+  const { polys } = tracePolylines(skeleton, WORK);
+  const completion = completeLines(polys, field, WORK);
+  const lines: Record<LabelLineId, readonly (readonly number[])[] | null> = {
+    heart: null,
+    head: null,
+    life: null,
+    fate: null,
+  };
+  for (const id of LABEL_LINE_IDS) {
+    const fitted = completion.lines[id as ActiveLineId];
+    lines[id] = fitted === undefined ? null : fitted.points.map((p) => [p.x / WORK, p.y / WORK]);
+  }
+  return { lines };
+}
+
+/* ------------------------------ Diagnostics (item 3) ------------------------------ */
+
+export interface FieldStats {
+  readonly label: string;
+  readonly p99: number;
+  readonly mean: number;
+  readonly max: number;
+}
+
+function stats(label: string, plane: Float32Array): FieldStats {
+  const sorted = Float32Array.from(plane).sort();
+  let sum = 0;
+  for (let i = 0; i < plane.length; i += 1) sum += plane[i];
+  return {
+    label,
+    p99: sorted[Math.floor(sorted.length * 0.99)],
+    mean: sum / plane.length,
+    max: sorted[sorted.length - 1],
+  };
+}
+
+/** p99/mean/max of fused, enhanced and ridge maps for one case under one framing. */
+export async function diagnoseFields(evalCase: EvalCase, framing: Framing, opts: RunOptions = {}): Promise<FieldStats[] | string> {
+  const prepared = await prepare(evalCase, framing, opts);
+  if ("error" in prepared) return prepared.error;
+  const enhancer = new RekhaEnhancer(WORK);
+  const result = enhancer.process(prepared.small, prepared.ema, 1);
+  return [
+    stats("fused (fusion.ema)", prepared.ema),
+    stats("enhanced", Float32Array.from(result.enhanced)),
+    stats("ridge (oriented NMS)", Float32Array.from(result.ridge)),
+  ];
+}
+
+/** Clear the per-run cache (tests). */
+export function resetFieldCache(): void {
+  fieldCache.clear();
 }
