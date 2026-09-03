@@ -7,7 +7,7 @@
  * is evaluated in one fixed metric space ({@link EVAL_SIZE}), so cases labeled at 256 and at 512
  * score on the same scale.
  */
-import type { LabelLineId } from "../../lib/scan/dev/session-types";
+import type { LabelableLineId } from "../../lib/scan/dev/session-types";
 
 /** The common metric space every case is scored in, regardless of its native label resolution. */
 export const EVAL_SIZE = 512;
@@ -40,7 +40,7 @@ export interface LineRow {
   readonly caseId: string;
   readonly source: "legacy" | "session";
   readonly hand: "left" | "right" | "unknown";
-  readonly lineId: LabelLineId;
+  readonly lineId: LabelableLineId;
   /** Metrics per tolerance, keyed by the tol value. */
   readonly byTol: Readonly<Record<number, LineMetrics>>;
 }

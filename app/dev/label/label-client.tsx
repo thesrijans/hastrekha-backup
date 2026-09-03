@@ -25,12 +25,16 @@ import {
   GRAY_CHANNELS,
   LABEL_CONFIDENCES,
   LABEL_LINE_IDS,
+  LABELABLE_LINE_IDS,
+  MINOR_LINE_IDS,
   VIEW_MODES,
   cropFileName,
   parseRekhaLabelFile,
   type GrayChannel,
   type LabelConfidence,
   type LabelLineId,
+  type LabelableLineId,
+  type MinorLineId,
   type SessionMetadata,
   type ViewMode,
 } from "@/lib/scan/dev/session-types";
@@ -60,11 +64,16 @@ const SEED_BUDGET_MS = 60;
 const GOLD = "rgba(201, 162, 75, 1)";
 const GOLD_DIM = "rgba(201, 162, 75, 0.35)";
 /** Hindi display names, matching the app's register (hero art names graha lines; these are the anatomical four). */
-const LINE_LABEL: Readonly<Record<LabelLineId, string>> = {
+const LINE_LABEL: Readonly<Record<LabelableLineId, string>> = {
   heart: "हृदय रेखा · Heart",
   head: "मस्तिष्क रेखा · Head",
   life: "जीवन रेखा · Life",
   fate: "शनि रेखा · Fate",
+  sun: "सूर्य रेखा · Sun",
+  health: "बुध रेखा · Health",
+  marriage: "विवाह रेखा · Marriage",
+  bracelets: "मणिबंध रेखा · Bracelets",
+  girdle: "शुक्र मेखला · Girdle",
 };
 
 interface TraceInProgress {
@@ -116,7 +125,8 @@ export function LabelClient() {
 
   /* -------------------------------- Labeling -------------------------------- */
   const [lines, setLines] = useState<Readonly<Record<LabelLineId, LabelerLineState>>>(emptyLabelerState().lines);
-  const [activeId, setActiveId] = useState<LabelLineId>("heart");
+  const [minorLines, setMinorLines] = useState<Partial<Record<MinorLineId, LabelerLineState>>>({});
+  const [activeId, setActiveId] = useState<LabelableLineId>("heart");
   const [selectedVertex, setSelectedVertex] = useState<number | null>(null);
   const [snapOn, setSnapOn] = useState(true);
   const [dirty, setDirty] = useState(false);
@@ -131,6 +141,7 @@ export function LabelClient() {
   const traceRef = useRef<TraceInProgress>(EMPTY_TRACE);
   const livePathRef = useRef<number[]>([]);
   const linesRef = useRef(lines);
+  const minorLinesRef = useRef(minorLines);
   const activeIdRef = useRef(activeId);
   const viewRef = useRef(view);
   const spaceHeldRef = useRef(spaceHeld);
@@ -140,13 +151,20 @@ export function LabelClient() {
   // The rAF draw loop reads through refs so it never closes over stale state; synced post-render.
   useEffect(() => {
     linesRef.current = lines;
+    minorLinesRef.current = minorLines;
     activeIdRef.current = activeId;
     viewRef.current = view;
     spaceHeldRef.current = spaceHeld;
     channelRef.current = channel;
     snapRef.current = snapOn;
     selectedVertexRef.current = selectedVertex;
-  }, [lines, activeId, view, spaceHeld, channel, snapOn, selectedVertex]);
+  }, [lines, minorLines, activeId, view, spaceHeld, channel, snapOn, selectedVertex]);
+
+  /** Read one line's working state, major or minor; untouched minors read as empty. */
+  const lineState = useCallback((id: LabelableLineId): LabelerLineState => {
+    if ((LABEL_LINE_IDS as readonly string[]).includes(id)) return linesRef.current[id as LabelLineId];
+    return minorLinesRef.current[id as MinorLineId] ?? emptyLineState();
+  }, []);
 
   /* ------------------------------ Store lifecycle ------------------------------ */
 
@@ -212,8 +230,9 @@ export function LabelClient() {
         life: emptyLineState(),
         fate: emptyLineState(),
       };
+      const restoredMinor: Partial<Record<MinorLineId, LabelerLineState>> = {};
       for (const line of existing.lines) {
-        restored[line.id] = {
+        const state: LabelerLineState = {
           points: line.points,
           absent: line.absent,
           confidence: line.confidence ?? "clear",
@@ -221,10 +240,14 @@ export function LabelClient() {
           viewAtCommit: line.viewAtCommit ?? "NATURAL",
           done: true,
         };
+        if ((LABEL_LINE_IDS as readonly string[]).includes(line.id)) restored[line.id as LabelLineId] = state;
+        else restoredMinor[line.id as MinorLineId] = state;
       }
       setLines(restored);
+      setMinorLines(restoredMinor);
     } else {
       setLines(emptyLabelerState().lines);
+      setMinorLines({});
     }
     setStillIndex(index);
     setSelectedVertex(null);
@@ -315,15 +338,14 @@ export function LabelClient() {
         context.shadowBlur = 0;
       };
 
-      const state = linesRef.current;
-      for (const id of LABEL_LINE_IDS) {
-        const line = state[id];
+      for (const id of LABELABLE_LINE_IDS) {
+        const line = lineState(id);
         if (line.absent || line.points.length < 2) continue;
         drawPoly(line.points, id === activeIdRef.current, true);
       }
 
       // Active line vertices — draggable, selected one filled.
-      const active = state[activeIdRef.current];
+      const active = lineState(activeIdRef.current);
       if (!active.absent && active.points.length > 0) {
         for (let i = 0; i < active.points.length; i += 1) {
           const px = active.points[i][0] * CANONICAL_LABEL_SIZE;
@@ -385,7 +407,7 @@ export function LabelClient() {
     }
 
     rafRef.current = requestAnimationFrame(() => loopRef.current?.());
-  }, [currentViewImage, loupeOn]);
+  }, [currentViewImage, lineState, loupeOn]);
 
   useEffect(() => {
     loopRef.current = draw;
@@ -421,8 +443,12 @@ export function LabelClient() {
     setSeedCostMs(still.livewire.seedCostMs);
   }, []);
 
-  const updateLine = useCallback((id: LabelLineId, patch: Partial<LabelerLineState>): void => {
-    setLines((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  const updateLine = useCallback((id: LabelableLineId, patch: Partial<LabelerLineState>): void => {
+    if ((LABEL_LINE_IDS as readonly string[]).includes(id)) {
+      setLines((prev) => ({ ...prev, [id]: { ...prev[id as LabelLineId], ...patch } }));
+    } else {
+      setMinorLines((prev) => ({ ...prev, [id]: { ...(prev[id as MinorLineId] ?? emptyLineState()), ...patch } }));
+    }
     setDirty(true);
   }, []);
 
@@ -435,7 +461,7 @@ export function LabelClient() {
         return;
       }
       // Vertex grab on the active committed line first.
-      const active = linesRef.current[activeIdRef.current];
+      const active = lineState(activeIdRef.current);
       if (!active.absent && active.points.length > 0 && traceRef.current.seed === null) {
         const scale = zoomRef.current;
         for (let i = 0; i < active.points.length; i += 1) {
@@ -478,7 +504,7 @@ export function LabelClient() {
       }
       livePathRef.current = [];
     },
-    [reseed, toImage],
+    [lineState, reseed, toImage],
   );
 
   const handlePointerMove = useCallback(
@@ -501,7 +527,7 @@ export function LabelClient() {
       const dragging = draggingVertexRef.current;
       if (dragging !== null) {
         const id = activeIdRef.current;
-        const points = linesRef.current[id].points.map((p, i) =>
+        const points = lineState(id).points.map((p, i) =>
           i === dragging ? [point.x / CANONICAL_LABEL_SIZE, point.y / CANONICAL_LABEL_SIZE] : p,
         );
         updateLine(id, { points });
@@ -517,7 +543,7 @@ export function LabelClient() {
         }
       }
     },
-    [toImage, updateLine],
+    [lineState, toImage, updateLine],
   );
 
   const handlePointerUp = useCallback((): void => {
@@ -594,21 +620,21 @@ export function LabelClient() {
     if (traceRef.current.seed !== null) reseed(traceRef.current.seed[0], traceRef.current.seed[1]);
   }, [reseed]);
 
-  const toggleAbsent = useCallback((id: LabelLineId): void => {
-    const line = linesRef.current[id];
+  const toggleAbsent = useCallback((id: LabelableLineId): void => {
+    const line = lineState(id);
     if (line.absent) updateLine(id, { absent: false, done: false });
     else updateLine(id, { absent: true, points: [], done: true });
     discardTrace();
-  }, [discardTrace, updateLine]);
+  }, [discardTrace, lineState, updateLine]);
 
   const deleteVertex = useCallback((): void => {
     const at = selectedVertexRef.current;
     const id = activeIdRef.current;
-    const line = linesRef.current[id];
+    const line = lineState(id);
     if (at === null || line.points.length <= 2) return;
     updateLine(id, { points: line.points.filter((_, i) => i !== at) });
     setSelectedVertex(null);
-  }, [updateLine]);
+  }, [lineState, updateLine]);
 
   /* --------------------------------- Hotkeys --------------------------------- */
 
@@ -621,8 +647,9 @@ export function LabelClient() {
         return;
       }
       const digit = Number.parseInt(event.key, 10);
-      if (digit >= 1 && digit <= 4) {
-        setActiveId(LABEL_LINE_IDS[digit - 1]);
+      // 1–4 majors · 5 sun · 6 health · 7 marriage · 8 bracelets · 9 girdle.
+      if (digit >= 1 && digit <= LABELABLE_LINE_IDS.length) {
+        setActiveId(LABELABLE_LINE_IDS[digit - 1]);
         discardTrace();
         return;
       }
@@ -695,7 +722,17 @@ export function LabelClient() {
     const meta = session;
     if (store === null || meta === null || stillIndex === null || labelerId.length === 0) return;
     try {
-      const state: LabelerState = { lines: linesRef.current, mode: "blank_slate", channel: channelRef.current };
+      const minorDone: Partial<Record<MinorLineId, LabelerLineState>> = {};
+      for (const id of MINOR_LINE_IDS) {
+        const entry = minorLinesRef.current[id];
+        if (entry !== undefined && entry.done) minorDone[id] = entry;
+      }
+      const state: LabelerState = {
+        lines: linesRef.current,
+        minorLines: minorDone,
+        mode: "blank_slate",
+        channel: channelRef.current,
+      };
       const file = buildLabelFile(state, meta, stillIndex, labelerId, new Date().toISOString());
       // The client never trusts its own construction: the same validator the loader uses gates it.
       if (parseRekhaLabelFile(JSON.stringify(file)) === null) throw new Error("built label failed validation");
@@ -842,8 +879,10 @@ export function LabelClient() {
 
         {/* Right: line panel. */}
         <aside className="flex flex-col gap-2" aria-label="Lines">
-          {LABEL_LINE_IDS.map((id, index) => {
-            const line = lines[id];
+          {LABELABLE_LINE_IDS.map((id, index) => {
+            const line = (LABEL_LINE_IDS as readonly string[]).includes(id)
+              ? lines[id as LabelLineId]
+              : (minorLines[id as MinorLineId] ?? emptyLineState());
             return (
               <section
                 key={id}

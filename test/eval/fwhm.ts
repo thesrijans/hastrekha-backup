@@ -9,7 +9,7 @@
 import sharp from "sharp";
 import path from "node:path";
 import { rectifyPalm } from "../../lib/scan/rectify";
-import { LABEL_LINE_IDS, type LabelLineId } from "../../lib/scan/dev/session-types";
+import { LABELABLE_LINE_IDS, type LabelableLineId } from "../../lib/scan/dev/session-types";
 import type { Point2 } from "../../lib/scan/types";
 import type { EvalCase } from "./gt-adapter";
 
@@ -22,7 +22,7 @@ export interface FwhmLine {
   readonly n128: number;
 }
 
-export type FwhmResult = Partial<Record<LabelLineId, FwhmLine>>;
+export type FwhmResult = Partial<Record<LabelableLineId, FwhmLine>>;
 
 const makeImageData = (w: number, h: number): ImageData =>
   ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4), colorSpace: "srgb" }) as ImageData;
@@ -117,7 +117,7 @@ export async function measureFwhm(evalCase: EvalCase): Promise<FwhmResult> {
     currentSize >>= 1;
   }
 
-  for (const id of LABEL_LINE_IDS) {
+  for (const id of LABELABLE_LINE_IDS) {
     const line = evalCase.lines[id];
     if (line === undefined || line.absent || line.points.length < 2) continue;
     const native = widthsAlong(

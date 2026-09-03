@@ -28,7 +28,8 @@ import { normaliseIllumination } from "../../lib/scan/illumination";
 import { blendComposite, compositeStack, emptyStack, pushFrame } from "../../lib/scan/stack";
 import { combineProbabilities, sigmoidInPlace, ONNX_INPUT_NAME } from "../../lib/scan/segmenter";
 import { alignFusion, emptyFusion, fuse, type FusionState } from "../../lib/scan/fusion";
-import { LINE_THRESHOLD, binarize, thin, tracePolylines } from "../../lib/scan/lines";
+import { LINE_THRESHOLD, binarize, extractAllTraces, extractLines, thin, tracePolylines } from "../../lib/scan/lines";
+import { minorLineFeatures } from "../../lib/scan/minor-lines";
 import { completeLines } from "../../lib/scan/completion";
 import { MASK_SIZE, RECTIFIED_SIZE, type ActiveLineId, type Point2 } from "../../lib/scan/types";
 import { canonicalAnchors, solveHomography, type Matrix3 } from "../../lib/scan/rectify";
@@ -344,6 +345,57 @@ export async function diagnoseFields(evalCase: EvalCase, framing: Framing, opts:
     stats("enhanced", Float32Array.from(result.enhanced)),
     stats("ridge (oriented NMS)", Float32Array.from(result.ridge)),
   ];
+}
+
+/* ------------------------- Minor emission + vocab diff ------------------------- */
+
+/** The five minor classes the emission-vs-GT table scores, keyed by their labeler id. */
+export const MINOR_EMISSION_CLASSES = ["sun", "health", "marriage", "bracelets", "girdle"] as const;
+export type MinorEmissionClass = (typeof MINOR_EMISSION_CLASSES)[number];
+
+/**
+ * Whether each minor class would EMIT on this field at the flag's thresholds — the same
+ * extractAllTraces + minorLineFeatures path the live flag runs (stability null offline, which
+ * skips the faint tier; MINOR_EMIT_REQUIRE_STRONG makes that equivalent anyway).
+ */
+export function minorEmissionOn(field: Float32Array): Record<MinorEmissionClass, boolean> {
+  const traces = extractAllTraces(field, WORK, null);
+  const found = extractLines(field, WORK);
+  const bag = minorLineFeatures(traces, { lifePoly: found.completion.lines.life?.points }, WORK) as {
+    lines?: { sun?: unknown; health?: unknown; marriage?: unknown };
+    signs?: { bracelets?: { count?: number }; girdle_of_venus?: unknown };
+  };
+  return {
+    sun: bag.lines?.sun !== undefined,
+    health: bag.lines?.health !== undefined,
+    marriage: bag.lines?.marriage !== undefined,
+    bracelets: (bag.signs?.bracelets?.count ?? 0) >= 1,
+    girdle: bag.signs?.girdle_of_venus !== undefined,
+  };
+}
+
+function flattenBag(value: unknown, prefix = ""): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (typeof value !== "object" || value === null) return out;
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    const at = prefix === "" ? key : `${prefix}.${key}`;
+    if (typeof child === "object" && child !== null && !Array.isArray(child)) Object.assign(out, flattenBag(child, at));
+    else out[at] = child;
+  }
+  return out;
+}
+
+/** featureVocabV2 off-vs-on feature-bag diff on one field — keys added/changed only. */
+export function vocabDiff(field: Float32Array): { added: string[]; changed: string[] } {
+  const off = flattenBag(extractLines(field, WORK, false).features);
+  const on = flattenBag(extractLines(field, WORK, true).features);
+  const added: string[] = [];
+  const changed: string[] = [];
+  for (const key of Object.keys(on).sort()) {
+    if (!(key in off)) added.push(`${key}=${String(on[key])}`);
+    else if (String(on[key]) !== String(off[key])) changed.push(`${key}: ${String(off[key])} → ${String(on[key])}`);
+  }
+  return { added, changed };
 }
 
 /** Clear the per-run cache (tests). */

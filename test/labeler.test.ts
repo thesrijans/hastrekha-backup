@@ -128,6 +128,32 @@ ok(!isRekhaLabelFile(asV2((f) => { f.enhancement = { version: "enh-1", channel: 
 ok(!isRekhaLabelFile(asV2((f) => { (f.lines as Record<string, unknown>[])[1].points = [[0.5, 0.5], [0.6, 0.6]]; })), "absent-with-points still rejected on 0a-2");
 ok(!isRekhaLabelFile(asV2((f) => { f.absent = ["head"]; })), "absent-list mismatch still rejected on 0a-2");
 
+/* --------------------- 2b. Minor line ids (sun/health/marriage/bracelets/girdle) --------------------- */
+
+ok(
+  isRekhaLabelFile(asV2((f) => {
+    (f.lines as Record<string, unknown>[]).push({ id: "sun", points: [[0.6, 0.3], [0.62, 0.6]], absent: false, confidence: "clear", method: "manual", viewAtCommit: "NATURAL" });
+  })),
+  "a minor-line entry (sun) is accepted alongside the majors",
+);
+ok(
+  !isRekhaLabelFile(asV2((f) => {
+    (f.lines as Record<string, unknown>[]).push({ id: "rascette", points: [[0.6, 0.3], [0.62, 0.6]], absent: false, confidence: "clear", method: "manual", viewAtCommit: "NATURAL" });
+  })),
+  "an unknown line id is still rejected",
+);
+{
+  // A 9-line 0a-2 file roundtrips; the original 4-line `file` remains the still-valid baseline.
+  const nine = JSON.parse(JSON.stringify(file)) as Record<string, unknown>;
+  const nineLines = nine.lines as Record<string, unknown>[];
+  for (const id of ["sun", "health", "marriage", "bracelets", "girdle"]) {
+    nineLines.push({ id, points: [], absent: true, confidence: "clear", method: "manual", viewAtCommit: "NATURAL" });
+  }
+  nine.absent = [...(nine.absent as string[]), "sun", "health", "marriage", "bracelets", "girdle"];
+  ok(parseRekhaLabelFile(JSON.stringify(nine)) !== null, "a 9-line file roundtrips");
+  ok(parseRekhaLabelFile(JSON.stringify(file)) !== null, "a 4-line file still validates");
+}
+
 /* ------------------------- 3. Staging roundtrip (IDB shim) ------------------------- */
 
 /** Minimal in-memory IndexedDB — exactly the surface session-store uses, callbacks deferred. */

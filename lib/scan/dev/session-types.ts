@@ -175,9 +175,20 @@ export interface SessionMetadata {
 export const LABEL_LINE_IDS = ["heart", "head", "life", "fate"] as const;
 export type LabelLineId = (typeof LABEL_LINE_IDS)[number];
 
+/**
+ * Minor lines the labeler can additionally trace (0d scores them per class once labelled).
+ * Deliberately a SEPARATE list: LABEL_LINE_IDS stays the mandatory four — isComplete requires
+ * majors only, golden-run GroundTruth compatibility is untouched, and every existing 4-line
+ * label file remains valid byte-for-byte. Schema stays 0a-2: minor entries are additive-optional.
+ */
+export const MINOR_LINE_IDS = ["sun", "health", "marriage", "bracelets", "girdle"] as const;
+export type MinorLineId = (typeof MINOR_LINE_IDS)[number];
+export const LABELABLE_LINE_IDS = [...LABEL_LINE_IDS, ...MINOR_LINE_IDS] as const;
+export type LabelableLineId = (typeof LABELABLE_LINE_IDS)[number];
+
 /** One labeled line. `absent: true` is a valid observation, not a failure — points then empty. */
 export interface RekhaLabelLine {
-  readonly id: LabelLineId;
+  readonly id: LabelableLineId;
   /** Polyline as 0–1 fractions of the canonical crop (D4 — golden-run compatible). */
   readonly points: readonly (readonly number[])[];
   readonly absent: boolean;
@@ -207,7 +218,7 @@ export interface RekhaLabelFile {
   readonly hand: SessionHand;
   readonly lines: readonly RekhaLabelLine[];
   /** Ids of absent lines, duplicated from the per-line flags for ground-truth parity. */
-  readonly absent: readonly LabelLineId[];
+  readonly absent: readonly LabelableLineId[];
   readonly mode: LabelerMode;
   readonly labeler: string;
   /** 0a-2: required. Stable id for the person, distinct from the display name above. */
@@ -337,7 +348,7 @@ export function isRekhaLabelFile(value: unknown): value is RekhaLabelFile {
   const seen = new Set<string>();
   for (const line of value.lines) {
     if (!isRecord(line) || typeof line.id !== "string") return false;
-    if (!(LABEL_LINE_IDS as readonly string[]).includes(line.id) || seen.has(line.id)) return false;
+    if (!(LABELABLE_LINE_IDS as readonly string[]).includes(line.id) || seen.has(line.id)) return false;
     seen.add(line.id);
     if (typeof line.absent !== "boolean" || !isPointArray(line.points)) return false;
     if (line.absent && line.points.length > 0) return false;

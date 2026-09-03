@@ -109,6 +109,7 @@ Hand leaves frame → lines fade (real state loss). Hand returns → session ide
     { "id": "life",  "points": [[0.313, 0.281], [0.391, 0.469]], "absent": false },
     { "id": "fate",  "points": [], "absent": true }
   ],
+  "//": "lines[].id ∈ heart|head|life|fate (mandatory four) ∪ sun|health|marriage|bracelets|girdle (optional minors, 0a-iii)",
   "absent": ["head", "fate"],
   "mode": "blank_slate|correction",
   "labeler": "srijan",
@@ -153,7 +154,7 @@ the bias check: a crease that vanishes in the natural view earns `faint` (also t
 confidence when a line is committed from CREASE). The label records `viewAtCommit` per line and the
 gray `channel` per file, so any enhancement-induced bias stays measurable afterwards.
 
-**Hotkeys:** 1–4 heart/head/life/fate (nothing on 5–9) · click seed/append · S snap toggle · Z undo
+**Hotkeys:** 1–4 heart/head/life/fate · 5 sun · 6 health · 7 marriage · 8 bracelets · 9 girdle (minor lines, optional — Save requires the majors only) · click seed/append · S snap toggle · Z undo
 segment · Enter commit · Esc cancel · A absent · V view cycle · C channel cycle · Space hold =
 natural · L loupe (3×, 120 px) · wheel / + / − zoom 1–8× · Shift+drag pan · Backspace delete
 selected vertex.

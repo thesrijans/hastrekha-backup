@@ -35,6 +35,10 @@ export interface ScanFlags {
    * and the accumulator are untouched either way.
    */
   readonly unetFullHand: boolean;
+  /** Emit KB features for classifier-named minor lines (sun/health/marriage/bracelets/girdle). */
+  readonly emitMinorLines: boolean;
+  /** Audit-§4 vocabulary fixes: pale band, tight arc, head-line fate origin, quadrangle v2, explicit wavy=false, fate double. */
+  readonly featureVocabV2: boolean;
 }
 
 export const DEFAULT_SCAN_FLAGS: ScanFlags = {
@@ -42,11 +46,13 @@ export const DEFAULT_SCAN_FLAGS: ScanFlags = {
   photometric: false,
   hdrBracket: false,
   unetFullHand: false,
+  emitMinorLines: false,
+  featureVocabV2: false,
 };
 
 export type ScanFlagName = keyof ScanFlags;
 
-export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand"];
+export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2"];
 
 /** Human labels for the HUD toggles, in the app's register. */
 export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
@@ -54,6 +60,8 @@ export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
   photometric: "Gehri scan (flash)",
   hdrBracket: "HDR bracket",
   unetFullHand: "UNet full-hand framing",
+  emitMinorLines: "Minor-line features",
+  featureVocabV2: "Vocabulary v2",
 };
 
 type Listener = (flags: ScanFlags) => void;

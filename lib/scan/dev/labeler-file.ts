@@ -7,6 +7,7 @@ import {
   CANONICAL_LABEL_SIZE,
   ENHANCEMENT_VERSION,
   LABEL_LINE_IDS,
+  MINOR_LINE_IDS,
   cropFileName,
   type GrayChannel,
   type LabelConfidence,
@@ -36,6 +37,8 @@ export interface LabelerLineState {
 /** The whole labeler working state that matters to the exported file. */
 export interface LabelerState {
   readonly lines: Readonly<Record<LabelLineId, LabelerLineState>>;
+  /** Optional minor-line records — included in the file only when explicitly done or absent-marked. */
+  readonly minorLines?: Partial<Record<(typeof MINOR_LINE_IDS)[number], LabelerLineState>>;
   readonly mode: LabelerMode;
   readonly channel: GrayChannel;
 }
@@ -52,7 +55,7 @@ export function emptyLabelerState(channel: GrayChannel = "LUMA"): LabelerState {
   };
 }
 
-/** True when every line is either committed with points or marked absent — Save's gate. */
+/** True when every MAJOR line is committed or absent — Save's gate. Minor lines are optional. */
 export function isComplete(state: LabelerState): boolean {
   return LABEL_LINE_IDS.every((id) => {
     const line = state.lines[id];
@@ -82,17 +85,19 @@ export function buildLabelFile(
   const anchors = canonicalAnchors(4, CANONICAL_LABEL_SIZE);
   if (anchors === null) throw new Error("canonical anchors unavailable");
 
-  const lines: RekhaLabelLine[] = LABEL_LINE_IDS.map((id) => {
-    const line = state.lines[id];
-    return {
-      id,
-      points: line.absent ? [] : line.points.map((p) => [Number(p[0].toFixed(4)), Number(p[1].toFixed(4))]),
-      absent: line.absent,
-      confidence: line.confidence,
-      method: line.method,
-      viewAtCommit: line.viewAtCommit,
-    };
+  const toEntry = (id: RekhaLabelLine["id"], line: LabelerLineState): RekhaLabelLine => ({
+    id,
+    points: line.absent ? [] : line.points.map((p) => [Number(p[0].toFixed(4)), Number(p[1].toFixed(4))]),
+    absent: line.absent,
+    confidence: line.confidence,
+    method: line.method,
+    viewAtCommit: line.viewAtCommit,
   });
+  const lines: RekhaLabelLine[] = LABEL_LINE_IDS.map((id) => toEntry(id, state.lines[id]));
+  for (const id of MINOR_LINE_IDS) {
+    const minor = state.minorLines?.[id];
+    if (minor !== undefined && minor.done) lines.push(toEntry(id, minor));
+  }
 
   return {
     schemaVersion: "0a-2",

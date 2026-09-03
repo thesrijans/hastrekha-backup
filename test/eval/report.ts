@@ -5,7 +5,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { LABEL_LINE_IDS } from "../../lib/scan/dev/session-types";
+import { LABEL_LINE_IDS, LABELABLE_LINE_IDS } from "../../lib/scan/dev/session-types";
 import { EVAL_TOLS, EVAL_TOL_PX_AT_512, aggregate, type AggregateBucket, type LineRow } from "./metrics";
 import type { EvalCase, SessionDirInfo } from "./gt-adapter";
 import type { FwhmResult } from "./fwhm";
@@ -32,6 +32,13 @@ export interface EvalReport {
   readonly sessionDirs?: readonly SessionDirInfo[];
   readonly runs: readonly RungSweep[];
   readonly fwhm: Readonly<Record<string, FwhmResult>> | null;
+  /** Minor-class emission confusion vs GT, on the first rung's field. */
+  readonly minorEmission?: {
+    readonly rungId: string;
+    readonly rows: Readonly<Record<string, { readonly tp: number; readonly fp: number; readonly fn: number; readonly tn: number }>>;
+  };
+  /** featureVocabV2 off→on bag diffs per case — the freeze-lift commit's receipts. */
+  readonly vocabDiffs?: Readonly<Record<string, { readonly added: readonly string[]; readonly changed: readonly string[] }>>;
 }
 
 const fmt = (value: number, digits = 2): string => (Number.isFinite(value) ? value.toFixed(digits) : "—");
@@ -219,13 +226,42 @@ export function renderMarkdown(report: EvalReport): string {
     out.push("| case | line | median @native px | n | median @128 px | n |");
     out.push("|---|---|--:|--:|--:|--:|");
     for (const [caseId, result] of Object.entries(report.fwhm)) {
-      for (const id of LABEL_LINE_IDS) {
+      for (const id of LABELABLE_LINE_IDS) {
         const line = result[id];
         if (line === undefined) continue;
         out.push(
           `| ${caseId} | ${id} | ${fmt(line.medianAtNativePx)} | ${line.nNative} | ${fmt(line.medianAt128Px)} | ${line.n128} |`,
         );
       }
+    }
+  }
+
+  if (report.minorEmission !== undefined) {
+    out.push("");
+    out.push(`## minor-line emission vs GT (field: ${report.minorEmission.rungId}, flag thresholds)`);
+    out.push("");
+    out.push("| class | n | TP | FP | FN | TN | precision |");
+    out.push("|---|--:|--:|--:|--:|--:|--:|");
+    let any = false;
+    for (const [cls, r] of Object.entries(report.minorEmission.rows)) {
+      const n = r.tp + r.fp + r.fn + r.tn;
+      if (n === 0) continue;
+      any = true;
+      const precision = r.tp + r.fp === 0 ? NaN : r.tp / (r.tp + r.fp);
+      out.push(`| ${cls} | ${n} | ${r.tp} | ${r.fp} | ${r.fn} | ${r.tn} | ${fmt(precision)} |`);
+    }
+    if (!any) out.push("| (no minor-class labels in the current GT — label sun/health/marriage/bracelets/girdle in /dev/label to populate) | | | | | | |");
+  }
+
+  if (report.vocabDiffs !== undefined) {
+    out.push("");
+    out.push("## featureVocabV2 off → on (keys added/changed only)");
+    for (const [caseId, diff] of Object.entries(report.vocabDiffs)) {
+      out.push("");
+      out.push(`- **${caseId}**`);
+      if (diff.added.length === 0 && diff.changed.length === 0) out.push("  - (no change on this field)");
+      for (const add of diff.added) out.push(`  - added: \`${add}\``);
+      for (const change of diff.changed) out.push(`  - changed: \`${change}\``);
     }
   }
 

@@ -325,6 +325,13 @@ export interface ClassMatch {
   readonly score: number;
   /** True when the trace runs opposite to the spec's from→to; callers may reverse it for reporting. */
   readonly reversed: boolean;
+  /**
+   * Set only under `classifyAll(..., { trackDemotions: true })`: the principal class this trace
+   * matched before losing the slot to a better claimant. A demoted "fate" beside the principal
+   * fate is a sister line — the KB's `structure: "double"`. Absent by default, so every existing
+   * call site and assertion sees the exact object it always saw.
+   */
+  readonly demotedFrom?: TraceClass;
 }
 
 /**
@@ -396,6 +403,7 @@ export const PRINCIPAL_CLASSES: readonly TraceClass[] = ["heart", "head", "life"
 export function classifyAll(
   polys: readonly (readonly Point2[])[],
   size: number,
+  options?: { readonly trackDemotions?: boolean },
 ): readonly ClassMatch[] {
   const scored = polys.map((poly, index) => ({ index, match: classifyTrace(poly, size) }));
   // Strongest first, so a principal slot goes to the best claimant rather than the first seen.
@@ -410,7 +418,10 @@ export function classifyAll(
 
   for (const { index, match } of scored) {
     if (PRINCIPAL_CLASSES.includes(match.id) && taken.has(match.id)) {
-      out[index] = { id: "minor_unclassified", score: match.score, reversed: match.reversed };
+      out[index] =
+        options?.trackDemotions === true
+          ? { id: "minor_unclassified", score: match.score, reversed: match.reversed, demotedFrom: match.id }
+          : { id: "minor_unclassified", score: match.score, reversed: match.reversed };
       continue;
     }
     if (PRINCIPAL_CLASSES.includes(match.id)) taken.add(match.id);

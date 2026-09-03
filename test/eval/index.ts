@@ -26,7 +26,11 @@ import {
   computeField,
   diagnoseFields,
   extractAtThreshold,
+  minorEmissionOn,
   rungId,
+  vocabDiff,
+  MINOR_EMISSION_CLASSES,
+  type MinorEmissionClass,
   type ComposedRung,
   type Framing,
   type Post,
@@ -124,6 +128,8 @@ async function scoreSweep(
     }
     for (const t of SWEEP_THRESHOLDS) {
       const detected = extractAtThreshold(caseField.field, t);
+      // Polyline metrics cover the four completion lines only — extractAtThreshold has no minor
+      // channel; minor classes are scored by the emission-vs-GT section instead.
       for (const id of LABEL_LINE_IDS) {
         const gtLine = evalCase.lines[id];
         if (gtLine === undefined) continue; // unlabeled ≠ absent
@@ -210,6 +216,34 @@ async function main(): Promise<void> {
   const runs: RungSweep[] = [];
   for (const rung of rungs) runs.push(await scoreSweep(active, rung, { modelPath: args.modelPath }, tols));
 
+  /*
+   * Minor-line emission vs GT (on the FIRST rung's field) + the featureVocabV2 off/on bag diff —
+   * both per case, both from the exact functions the live flags run.
+   */
+  const emissionRows: Record<MinorEmissionClass, { tp: number; fp: number; fn: number; tn: number }> = {
+    sun: { tp: 0, fp: 0, fn: 0, tn: 0 },
+    health: { tp: 0, fp: 0, fn: 0, tn: 0 },
+    marriage: { tp: 0, fp: 0, fn: 0, tn: 0 },
+    bracelets: { tp: 0, fp: 0, fn: 0, tn: 0 },
+    girdle: { tp: 0, fp: 0, fn: 0, tn: 0 },
+  };
+  const vocabDiffs: Record<string, { added: string[]; changed: string[] }> = {};
+  for (const evalCase of active) {
+    const caseField = await computeField(evalCase, rungs[0], { modelPath: args.modelPath });
+    if (caseField.field === null) continue;
+    const emitted = minorEmissionOn(caseField.field);
+    for (const cls of MINOR_EMISSION_CLASSES) {
+      const gtLine = evalCase.lines[cls === "girdle" ? "girdle" : cls];
+      if (gtLine === undefined) continue; // no minor label for this class ⇒ excluded, not absent
+      const present = !gtLine.absent;
+      if (emitted[cls] && present) emissionRows[cls].tp += 1;
+      else if (emitted[cls] && !present) emissionRows[cls].fp += 1;
+      else if (!emitted[cls] && present) emissionRows[cls].fn += 1;
+      else emissionRows[cls].tn += 1;
+    }
+    vocabDiffs[evalCase.id] = vocabDiff(caseField.field);
+  }
+
   let fwhm: Record<string, FwhmResult> | null = null;
   if (args.fwhm) {
     fwhm = {};
@@ -224,6 +258,8 @@ async function main(): Promise<void> {
     sessionDirs,
     runs,
     fwhm,
+    minorEmission: { rungId: runs[0]?.id ?? "-", rows: emissionRows },
+    vocabDiffs,
   };
   console.log(renderMarkdown(report));
   const jsonPath = writeJson(report);

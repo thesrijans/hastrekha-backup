@@ -14,11 +14,11 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import {
-  LABEL_LINE_IDS,
+  LABELABLE_LINE_IDS,
   parseRekhaLabelFile,
   parseSessionMetadata,
   type LabelConfidence,
-  type LabelLineId,
+  type LabelableLineId,
 } from "../../lib/scan/dev/session-types";
 import { RECTIFIED_SIZE, type Landmark3 } from "../../lib/scan/types";
 
@@ -39,7 +39,7 @@ export interface EvalCase {
   /** Rectification anchors in imagePath pixel space. */
   readonly anchors: readonly (readonly number[])[];
   /** Only labeled ids appear; an id neither traced nor marked absent is unlabeled, not absent. */
-  readonly lines: Partial<Record<LabelLineId, EvalLine>>;
+  readonly lines: Partial<Record<LabelableLineId, EvalLine>>;
   readonly skip?: string;
   readonly meta: { readonly subjectKey?: string; readonly exerciseLabel?: string; readonly notes?: string };
   /**
@@ -63,7 +63,7 @@ interface LegacyGt {
   readonly absent?: readonly string[];
 }
 
-const LINE_ID_SET = new Set<string>(LABEL_LINE_IDS);
+const LINE_ID_SET = new Set<string>(LABELABLE_LINE_IDS);
 
 function loadLegacy(repoRoot: string): EvalCase[] {
   const dir = path.join(repoRoot, "test", "fixtures", "ground-truth");
@@ -72,14 +72,14 @@ function loadLegacy(repoRoot: string): EvalCase[] {
   for (const entry of readdirSync(dir).sort()) {
     if (!entry.endsWith(".json")) continue;
     const gt = JSON.parse(readFileSync(path.join(dir, entry), "utf8")) as LegacyGt;
-    const lines: Partial<Record<LabelLineId, EvalLine>> = {};
+    const lines: Partial<Record<LabelableLineId, EvalLine>> = {};
     for (const line of gt.lines) {
       if (LINE_ID_SET.has(line.id)) {
-        lines[line.id as LabelLineId] = { points: line.points, absent: false, confidence: line.confidence };
+        lines[line.id as LabelableLineId] = { points: line.points, absent: false, confidence: line.confidence };
       }
     }
     for (const id of gt.absent ?? []) {
-      if (LINE_ID_SET.has(id)) lines[id as LabelLineId] = { points: [], absent: true };
+      if (LINE_ID_SET.has(id)) lines[id as LabelableLineId] = { points: [], absent: true };
     }
     const skip =
       gt.geometryValid === false
@@ -160,7 +160,7 @@ function loadSessions(
         continue;
       }
       const imagePath = path.join(sessionDir, label.frame);
-      const lines: Partial<Record<LabelLineId, EvalLine>> = {};
+      const lines: Partial<Record<LabelableLineId, EvalLine>> = {};
       for (const line of label.lines) {
         lines[line.id] = { points: line.points, absent: line.absent, confidence: line.confidence };
       }

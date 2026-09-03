@@ -33,6 +33,21 @@ const SIMPLIFY_EPSILON = 1.6;
 /** A gap in the skeleton wider than this counts as a break in the line. */
 const BREAK_GAP_PX = 6;
 
+/* ---- featureVocabV2 constants (audit §4 fixes; all inert while the flag is off) ---- */
+
+/** Below this depth a broad_shallow heart line reads as the KB's "pale_broad_shallow" — a depth PROXY for a colour claim the camera cannot make directly. */
+export const HEART_PALE_DEPTH_MAX = 0.45;
+/** The existing life-arc excursion split (0.42): at or under it the arc hugs the thumb — the KB's tight_venus_arc. */
+export const LIFE_TIGHT_ARC_MAX_EXCURSION = 0.42;
+/** Fate-start-to-head-line proximity for origin "head_line" — the same 0.06·size band stopped_at already uses. */
+export const FATE_ORIGIN_HEAD_BAND = 0.06;
+/** Branch points at or above this, with both quadrangle walls present, read as "confused_lines". Global count — branch POSITIONS are not kept by tracePolylines, so this is a density proxy. */
+export const QUADRANGLE_CONFUSED_MIN_BRANCHES = 3;
+/** Ulnar-minus-radial head–heart gap (fraction of size) above which the quadrangle is "diverging_open". */
+export const QUADRANGLE_DIVERGE_MIN_GAP_FRACTION = 0.08;
+/** Waviness the quality.wavy flag switches on — hoisted so v2's explicit-false emission shares it. */
+export const WAVY_MIN_WAVINESS = 0.55;
+
 export type Poly = readonly Point2[];
 
 /* ------------------------------- Morphology ------------------------------- */
@@ -476,6 +491,8 @@ export interface ClassifiedTrace {
   readonly depth: number;
   readonly class: TraceClass;
   readonly classScore: number;
+  /** Principal class this trace lost a slot for — present only under trackDemotions. */
+  readonly demotedFrom?: TraceClass;
 }
 
 export interface TraceSet {
@@ -520,6 +537,7 @@ export function extractAllTraces(
   field: Float32Array,
   size: number = RECTIFIED_SIZE,
   stability: Uint16Array | null = null,
+  trackDemotions = false,
 ): TraceSet {
   const strongSkeleton = thin(binarize(field, LINE_THRESHOLD), size);
   const strong = tracePolylines(strongSkeleton, size).polys.map((poly) => simplify(poly));
@@ -545,7 +563,7 @@ export function extractAllTraces(
   }
 
   const all = [...strong, ...faint];
-  const classes = classifyAll(all, size);
+  const classes = classifyAll(all, size, { trackDemotions });
   return {
     traces: all.map((points, index) => ({
       points,
@@ -553,6 +571,8 @@ export function extractAllTraces(
       depth: depthProxy(field, points, size),
       class: classes[index].id,
       classScore: classes[index].score,
+      // Spread conditionally: a `demotedFrom: undefined` property would change deepEqual shapes.
+      ...(classes[index].demotedFrom !== undefined ? { demotedFrom: classes[index].demotedFrom } : {}),
     })),
     strongCount: strong.length,
     faintCount: faint.length,
@@ -567,7 +587,7 @@ function overlaps(a: Poly, b: Poly, size: number): boolean {
   return Math.hypot(am.x - bm.x, am.y - bm.y) < size * 0.06;
 }
 
-export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE): LineExtraction {
+export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE, vocabV2 = false): LineExtraction {
   const skeleton = thin(binarize(field), size);
   const { polys: rawPolys, stats } = tracePolylines(skeleton, size);
   const polys = rawPolys.map((poly) => simplify(poly));
@@ -642,7 +662,14 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
     heart.present = true;
     heart.length_norm = Number(Math.min(1, polylineLength(heartPoly) / size).toFixed(3));
     if (seen("heart", "end")) heart.origin = nearestZone(HEART_END_ZONES, end, size).value;
-    heart.depth = depth > 0.75 ? "deep" : depth > 0.55 ? "thin" : "broad_shallow";
+    heart.depth =
+      depth > 0.75
+        ? "deep"
+        : depth > 0.55
+          ? "thin"
+          : vocabV2 && depth <= HEART_PALE_DEPTH_MAX
+            ? "pale_broad_shallow" // depth proxy for the KB's colour claim — see HEART_PALE_DEPTH_MAX
+            : "broad_shallow";
     const breaks = breakCount(heartPoly);
     if (breaks > 0) heart.breaks = breaks;
     // Only claim the classical downward curve when the terminal actually dips below the trace mean.
@@ -694,6 +721,7 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
     // How far the arc bulges into the palm from the thumb edge.
     const excursion = Math.max(...lifePoly.map((p) => p.x)) / size;
     life.arc = excursion > 0.42 ? "wide_into_palm" : "narrow_hugging_thumb";
+    if (vocabV2 && excursion <= LIFE_TIGHT_ARC_MAX_EXCURSION) life.tight_venus_arc = true;
     const breaks = breakCount(lifePoly);
     if (breaks > 0) life.breaks_count = breaks;
     life.texture = depth > 0.72 ? "clear_deep" : depth > 0.55 ? "broad_shallow" : "chained";
@@ -713,7 +741,13 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
       { value: "mount_luna", cx: 0.76, cy: 0.66 },
       { value: "life_line", cx: 0.3, cy: 0.72 },
     ];
-    if (seen("fate", "start")) fate.origin = nearestZone(origins, start, size).value;
+    if (seen("fate", "start")) {
+      const nearHead =
+        vocabV2 &&
+        headPoly !== undefined &&
+        headPoly.some((p) => Math.hypot(p.x - start.x, p.y - start.y) < FATE_ORIGIN_HEAD_BAND * size);
+      fate.origin = nearHead ? "head_line" : nearestZone(origins, start, size).value;
+    }
 
     if (seen("fate", "end") && (headPoly !== undefined || heartPoly !== undefined)) {
       const headY = headPoly === undefined ? Infinity : headPoly.reduce((s, p) => s + p.y, 0) / headPoly.length;
@@ -737,10 +771,43 @@ export function extractLines(field: Float32Array, size: number = RECTIFIED_SIZE)
     const headY = headPoly.reduce((sum, p) => sum + p.y, 0) / headPoly.length;
     const heartY = heartPoly.reduce((sum, p) => sum + p.y, 0) / heartPoly.length;
     const gap = Math.abs(headY - heartY) / size;
-    geometry.quadrangle_shape = gap < 0.1 ? "very_narrow" : gap > 0.22 ? "very_wide" : "even";
+    /** Mean y of the poly points in an x-band, or null when the band is empty. */
+    const bandY = (poly: Poly, x0: number, x1: number): number | null => {
+      let sum = 0;
+      let count = 0;
+      for (const p of poly) {
+        if (p.x >= x0 * size && p.x <= x1 * size) {
+          sum += p.y;
+          count += 1;
+        }
+      }
+      return count === 0 ? null : sum / count;
+    };
+    let v2Shape: string | null = null;
+    if (vocabV2) {
+      if (stats.branchPoints >= QUADRANGLE_CONFUSED_MIN_BRANCHES) {
+        v2Shape = "confused_lines";
+      } else {
+        const headRadial = bandY(headPoly, 0.15, 0.35);
+        const headUlnar = bandY(headPoly, 0.65, 0.85);
+        const heartRadial = bandY(heartPoly, 0.15, 0.35);
+        const heartUlnar = bandY(heartPoly, 0.65, 0.85);
+        if (headRadial !== null && headUlnar !== null && heartRadial !== null && heartUlnar !== null) {
+          const divergence = (Math.abs(headUlnar - heartUlnar) - Math.abs(headRadial - heartRadial)) / size;
+          if (divergence > QUADRANGLE_DIVERGE_MIN_GAP_FRACTION) v2Shape = "diverging_open";
+        }
+      }
+    }
+    geometry.quadrangle_shape =
+      v2Shape ?? (gap < 0.1 ? "very_narrow" : gap > 0.22 ? "very_wide" : "even");
   }
 
-  if (maxWaviness > 0.55) quality.wavy = true;
+  if (vocabV2) {
+    // Explicit false: the KB has `wavy eq false` rules, and to the engine absent ≠ false.
+    quality.wavy = maxWaviness > WAVY_MIN_WAVINESS;
+  } else if (maxWaviness > 0.55) {
+    quality.wavy = true;
+  }
   if (stats.branchPoints > 0) quality.forked_lines_general = true;
   if (headPoly !== undefined && stats.branchPoints > 0) {
     // A fork specifically at the head line's terminal is its own rule.
