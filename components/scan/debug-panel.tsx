@@ -32,7 +32,7 @@ const VIEWS: ReadonlyArray<{ readonly id: MaskView; readonly label: string }> = 
 ];
 
 /** Displayed per-stage timing keys, in pipeline order. */
-const TIMING_KEYS: readonly string[] = ["fast", "clahe", "blackhat", "gabor", "unet", "total"];
+const TIMING_KEYS: readonly string[] = ["fast", "clahe", "blackhat", "gabor", "unet", "fullhandWarp", "fullhandRemap", "total"];
 
 export interface DebugPanelProps {
   readonly rectified: RectifyResult | null;

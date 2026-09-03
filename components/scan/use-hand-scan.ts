@@ -18,6 +18,7 @@ import { canonicalAnchors, palmAnchors, rectifyPalm, solveHomography, type Recti
 import { derivePalmEdge } from "@/lib/scan/landmarks";
 import { emptyStabiliser, resetStabiliser, stabiliseAnchors, type AnchorStabiliser } from "@/lib/scan/stabilise";
 import { scanFlags } from "@/lib/scan/flags";
+import { matrixToBuffer, palmQuadToFullHand, solveFullHandHomography, warpFullHand } from "@/lib/scan/fullhand-warp";
 import {
   applyPhotometricEvidence,
   mergeBracket,
@@ -323,6 +324,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     photometric: Float32Array | null;
   } | null>(null);
   const [stageTimings, setStageTimings] = useState<Readonly<Record<string, number>> | null>(null);
+  /** Last client-side full-hand warp cost (flag unetFullHand); merged into the HUD timings row. */
+  const fullhandWarpMsRef = useRef(-1);
   /** Intrinsic camera dimensions — the space landmarks are normalised to; the overlay maps through it. */
   const [videoSize, setVideoSize] = useState<{ width: number; height: number } | null>(null);
   const [polys, setPolys] = useState<readonly Poly[]>([]);
@@ -731,8 +734,32 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               cropData === warped.image.data
                 ? warped.image
                 : ({ width: warped.image.width, height: warped.image.height, data: cropData } as ImageData);
+            /*
+             * Full-hand UNet framing (flag unetFullHand, default off): build the training-shaped
+             * 256² warp from the RAW landmarks (no stabiliser — the 21-point solve is its own
+             * average) plus the palm-quad→full-hand matrix, and attach both. The crop homography
+             * is `warped.toCrop` — the very matrix this crop was rectified through, so the remap
+             * is exact by construction. Attached on every accepted crop rather than "UNet frames
+             * only": the worker owns the UNet stride (`frameIndex % UNET_STRIDE`, worker-side
+             * counter) and the client cannot see it — the worker simply ignores these fields on
+             * non-UNet frames. Any null along the way falls back to the unchanged message.
+             */
+            let fullHand: { rgba: Uint8ClampedArray; pqToFullHand: ArrayBuffer } | undefined;
+            if (scanFlags.snapshot().unetFullHand) {
+              const tFullhand = performance.now();
+              const toCropFullHand = solveFullHandHomography(next.landmarks, source.width, source.height, "fixed");
+              const pqToFull = toCropFullHand === null ? null : palmQuadToFullHand(warped.toCrop, toCropFullHand);
+              const fullHandImage =
+                toCropFullHand === null || pqToFull === null ? null : warpFullHand(source, toCropFullHand);
+              if (fullHandImage !== null && pqToFull !== null) {
+                fullHand = { rgba: fullHandImage.data, pqToFullHand: matrixToBuffer(pqToFull) };
+                fullhandWarpMsRef.current = performance.now() - tFullhand;
+              }
+            } else {
+              fullhandWarpMsRef.current = -1;
+            }
             void segmenterRef.current
-              ?.segment(cropForWorker, { convention, inside: warped.inside })
+              ?.segment(cropForWorker, { convention, inside: warped.inside, fullHand })
               .then((mask) => {
               if (mask === null || !runningRef.current) return;
               recordStage(telemetryRef.current, "workerReplies", performance.now());
@@ -789,7 +816,13 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   ? null
                   : { ...mask.stages, photometric: photometricFieldRef.current },
               );
-              setStageTimings(mask.timings ?? null);
+              setStageTimings(
+                mask.timings === undefined || mask.timings === null
+                  ? null
+                  : fullhandWarpMsRef.current >= 0
+                    ? { ...mask.timings, fullhandWarp: fullhandWarpMsRef.current }
+                    : mask.timings,
+              );
               // Read-only measurement over a field the worker already produced — it cannot alter the
               // pipeline, which is why it is safe to compute with the flags off and compare against.
               if (mask.stages?.frangi != null) {

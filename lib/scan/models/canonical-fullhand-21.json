@@ -1,0 +1,102 @@
+{
+  "source": "palmistry-main/code/rectification.py:12-33 (pts_target_normalized), :44-48 (fit+warp)",
+  "size": 256,
+  "pointSpace": "0-1 of the canonical frame; upstream scales x by image_width and y by image_height (rectification.py:45), so the pose stretches with the source aspect ratio, then the warped native-size image is NEAREST-resized to 256 (detection.py:7)",
+  "flipForLeftHand": false,
+  "flipAppliedUnconditionally": true,
+  "flipSource": "rectification.py:36 \u2014 cv2.flip(cv2.imread(path), 1) on EVERY input, regardless of hand",
+  "points": [
+    [
+      0.5179689527,
+      0.9063420296
+    ],
+    [
+      0.3956378698,
+      0.8119394183
+    ],
+    [
+      0.3236767054,
+      0.6790258884
+    ],
+    [
+      0.2659285665,
+      0.5716733932
+    ],
+    [
+      0.2103527784,
+      0.5098430514
+    ],
+    [
+      0.4344319701,
+      0.5117031932
+    ],
+    [
+      0.4020606279,
+      0.3657564819
+    ],
+    [
+      0.3864668608,
+      0.2713503838
+    ],
+    [
+      0.3803516626,
+      0.1925111115
+    ],
+    [
+      0.5071190298,
+      0.498259306
+    ],
+    [
+      0.5100136399,
+      0.3213786781
+    ],
+    [
+      0.5105343163,
+      0.212831676
+    ],
+    [
+      0.5166501701,
+      0.1290027499
+    ],
+    [
+      0.5741184652,
+      0.5180916786
+    ],
+    [
+      0.5966537893,
+      0.3581996262
+    ],
+    [
+      0.6061854959,
+      0.2616880536
+    ],
+    [
+      0.613912791,
+      0.1775170863
+    ],
+    [
+      0.6363133788,
+      0.5642163157
+    ],
+    [
+      0.6644682884,
+      0.4473730326
+    ],
+    [
+      0.6790897846,
+      0.3749568462
+    ],
+    [
+      0.6878631711,
+      0.3026996851
+    ]
+  ],
+  "landmarksUsed": "all 21 (pts_index = list(range(21)), rectification.py:11), no per-landmark weights",
+  "ransacMethod": "cv2.findHomography(pts, pts_target, cv2.RANSAC, 5.0) \u2014 rectification.py:47",
+  "ransacReprojThresholdPx": 5.0,
+  "ransacMaxIters": 2000,
+  "ransacConfidence": 0.995,
+  "ransacDefaultsNote": "only the 5.0 threshold is explicit; maxIters and confidence are OpenCV defaults",
+  "warpBorderMode": "BORDER_REPLICATE (rectification.py:48)",
+  "resizeToModelInput": "NEAREST to 256 (detection.py:7)"
+}
