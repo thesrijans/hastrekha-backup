@@ -69,12 +69,24 @@ export interface RidgeTimings {
   readonly blackhatMs: number;
   readonly gaborMs: number;
   readonly totalMs: number;
+  /** Cost of the optional pre-CLAHE raw-depth pass (H9 contract). Absent when not requested. */
+  readonly contractMs?: number;
 }
 
 export interface RidgeResult {
   /** 0–1 ridge probability, row-major, size×size. A fresh buffer on every call. */
   readonly probability: Float32Array;
   readonly timings: RidgeTimings;
+}
+
+/**
+ * Optional out-param for the field contract (H9): when passed to {@link detectRidges}, `depth` is
+ * filled with a black-hat response computed on the PRE-CLAHE input — raw luma units, the one
+ * plane whose absolute scale CLAHE has not equalised away. Requested only under the contract
+ * flags; when absent, detectRidges is byte-identical in behaviour and output.
+ */
+export interface RawDepthOut {
+  readonly depth: Float32Array;
 }
 
 const now = (): number => performance.now();
@@ -450,7 +462,7 @@ export function normalizeResponses(resp: Float32Array): Float32Array {
 /* -------------------------------- Pipeline ---------------------------------- */
 
 /** The full chain: CLAHE → multi-scale black-hat → sparse Gabor bank → 0–1 probability. */
-export function detectRidges(gray: Float32Array, size: number): RidgeResult {
+export function detectRidges(gray: Float32Array, size: number, raw?: RawDepthOut): RidgeResult {
   const t0 = now();
   const equalised = clahe(gray, size);
   const t1 = now();
@@ -459,6 +471,16 @@ export function detectRidges(gray: Float32Array, size: number): RidgeResult {
   const support = buildSupport(creases, size);
   const probability = normalizeResponses(gaborBank(creases, size, support));
   const t3 = now();
+
+  if (raw !== undefined) {
+    // H9 contract anchor: black-hat on the PRE-CLAHE input — same operator, un-equalised units.
+    raw.depth.set(blackHatMulti(gray, size));
+    const t4 = now();
+    return {
+      probability,
+      timings: { claheMs: t1 - t0, blackhatMs: t2 - t1, gaborMs: t3 - t2, totalMs: t4 - t0, contractMs: t4 - t3 },
+    };
+  }
 
   return {
     probability,

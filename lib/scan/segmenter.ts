@@ -142,6 +142,8 @@ export interface SegmentContext {
    * while the flag is on; the worker uses them only on its UNet-stride frames.
    */
   readonly fullHand?: { readonly rgba: Uint8ClampedArray; readonly pqToFullHand: ArrayBuffer };
+  /** H9: ask the worker for the contract plane too (flags fieldContract / corridorSearch). */
+  readonly wantContract?: boolean;
 }
 
 export interface Segmenter {

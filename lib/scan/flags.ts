@@ -41,6 +41,10 @@ export interface ScanFlags {
   readonly featureVocabV2: boolean;
   /** /scan diagnostic overlay (dev harness lane D): layer cycling + field readout on the overlay. */
   readonly scanDiagnostics: boolean;
+  /** H9 field contract: extraction reads the calibrated P(crease) plane instead of the legacy field. */
+  readonly fieldContract: boolean;
+  /** Corridor minimal-path fill-in for a missing fate line and un-emitted minor classes. */
+  readonly corridorSearch: boolean;
 }
 
 export const DEFAULT_SCAN_FLAGS: ScanFlags = {
@@ -51,11 +55,13 @@ export const DEFAULT_SCAN_FLAGS: ScanFlags = {
   emitMinorLines: false,
   featureVocabV2: false,
   scanDiagnostics: false,
+  fieldContract: false,
+  corridorSearch: false,
 };
 
 export type ScanFlagName = keyof ScanFlags;
 
-export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics"];
+export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch"];
 
 /** Human labels for the HUD toggles, in the app's register. */
 export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
@@ -66,6 +72,8 @@ export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
   emitMinorLines: "Minor-line features",
   featureVocabV2: "Vocabulary v2",
   scanDiagnostics: "Diagnostics overlay",
+  fieldContract: "Field contract",
+  corridorSearch: "Corridor search",
 };
 
 type Listener = (flags: ScanFlags) => void;

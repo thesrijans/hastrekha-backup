@@ -17,6 +17,8 @@ export interface RungSweep {
   readonly framing: Framing;
   readonly post: Post;
   readonly aliasOf?: string;
+  /** H9 contract columns: mean-across-cases centreline median and background p99 of THIS rung's field. */
+  readonly contract?: { readonly centrelineMedian: number | null; readonly backgroundP99: number | null };
   /** Scored rows per swept threshold, keyed by t.toFixed(2). */
   readonly rowsByThreshold: Readonly<Record<string, readonly LineRow[]>>;
   readonly errors: Readonly<Record<string, string>>;
@@ -31,6 +33,8 @@ export interface EvalReport {
   readonly cases: readonly EvalCase[];
   readonly sessionDirs?: readonly SessionDirInfo[];
   readonly runs: readonly RungSweep[];
+  /** H9 phantom-fate check: corridor search on fate-ABSENT cases; the acceptance target is 0. */
+  readonly falseFate?: { readonly checked: number; readonly found: number };
   readonly fwhm: Readonly<Record<string, FwhmResult>> | null;
   /** Minor-class emission confusion vs GT, on the first rung's field. */
   readonly minorEmission?: {
@@ -150,23 +154,33 @@ export function renderMarkdown(report: EvalReport): string {
   out.push("## operating points (overall, headline tolerance)");
   out.push("");
   out.push(
-    `| rung | alias | best t (pairs-F1) | F1 / detect @best | bal. t | F1 / detect @bal | F1 / detect @shipped |`,
+    `| rung | alias | best t (pairs-F1) | F1 / detect @best | bal. t | F1 / detect @bal | F1 / detect @shipped | ctr median | bg p99 |`,
   );
-  out.push("|---|---|--:|--:|--:|--:|--:|");
+  out.push("|---|---|--:|--:|--:|--:|--:|--:|--:|");
   for (const run of report.runs) {
     const best = bestThreshold(run, report.headlineTol);
     const balanced = bestBalancedThreshold(run, report.headlineTol);
     const b1 = bucketFor(rowsAt(run, best), "ALL", report.headlineTol);
     const b2 = bucketFor(rowsAt(run, balanced), "ALL", report.headlineTol);
     const shipped = bucketFor(rowsAt(run, SHIPPED_THRESHOLD), "ALL", report.headlineTol);
+    const ctr = run.contract?.centrelineMedian ?? null;
+    const bg = run.contract?.backgroundP99 ?? null;
     out.push(
-      `| ${run.id} | ${run.aliasOf ?? "—"} | ${best.toFixed(2)} | ${fmt(b1.meanF1)} / ${pct(b1.detectRate)} | ${balanced.toFixed(2)} | ${fmt(b2.meanF1)} / ${pct(b2.detectRate)} | ${fmt(shipped.meanF1)} / ${pct(shipped.detectRate)} |`,
+      `| ${run.id} | ${run.aliasOf ?? "—"} | ${best.toFixed(2)} | ${fmt(b1.meanF1)} / ${pct(b1.detectRate)} | ${balanced.toFixed(2)} | ${fmt(b2.meanF1)} / ${pct(b2.detectRate)} | ${fmt(shipped.meanF1)} / ${pct(shipped.detectRate)} | ${ctr === null ? "—" : ctr.toFixed(3)} | ${bg === null ? "—" : bg.toFixed(3)} |`,
     );
   }
   out.push("");
   out.push(
     "> best t maximises pairs-only F1 (can reward finding ONE line well); bal. t maximises F1 with missed lines counted as 0 — the own-best deltas use bal. t.",
   );
+  if (report.falseFate !== undefined) {
+    out.push("");
+    out.push(
+      `## phantom-fate check: ${report.falseFate.found}/${report.falseFate.checked} fate-ABSENT case(s) produced a corridor fate — false-fate rate ${
+        report.falseFate.checked === 0 ? "n/a (no fate-absent GT)" : (report.falseFate.found / report.falseFate.checked).toFixed(2)
+      } (target 0)`,
+    );
+  }
 
   for (const run of report.runs) {
     out.push("");

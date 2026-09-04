@@ -104,6 +104,7 @@ export function createOnnxSegmenter(options: OnnxSegmenterOptions = {}): Segment
           width: message.size,
           height: message.size,
           all: new Float32Array(message.fused),
+          ...(message.contract === undefined ? {} : { contract: new Float32Array(message.contract) }),
           resolves: [], // neither detector names lines; the geometry classifier does.
           inferenceMs: lastInferenceMs,
           backend,
@@ -182,6 +183,7 @@ export function createOnnxSegmenter(options: OnnxSegmenterOptions = {}): Segment
             convention: context?.convention ?? 4,
             rgbaFullHand,
             pqToFullHand,
+            wantContract: context?.wantContract,
           },
           transfers,
         );

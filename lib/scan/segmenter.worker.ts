@@ -14,6 +14,7 @@
 import { emptyDiagnostics, type SegmenterDiagnostics } from "./segmenter";
 import { combineProbabilities } from "./segmenter";
 import { detectRidges, normalizeResponses, type RidgeTimings } from "./ridge";
+import { contractFrameInto, CONTRACT_DEPTH_DEFAULTS } from "./contract";
 import { UNET_INPUT_SIZE, matrixFromBuffer, remapProbabilitiesInto } from "./fullhand-warp";
 import { detectVessels, sigmasFor } from "./frangi";
 import { normaliseIllumination } from "./illumination";
@@ -46,6 +47,8 @@ export interface InferMessage {
   readonly rgbaFullHand?: ArrayBuffer;
   /** Float64Array(9): palm-quad canonical px → full-hand canonical px. Paired with rgbaFullHand. */
   readonly pqToFullHand?: ArrayBuffer;
+  /** H9: also compute the contract plane (raw-depth anchor × shape gate, noisy-OR with the UNet). */
+  readonly wantContract?: boolean;
 }
 
 export type WorkerRequest = InitMessage | InferMessage;
@@ -66,6 +69,8 @@ export type WorkerResponse =
       readonly frangi: ArrayBuffer;
       /** The temporal low-order composite, or null while the stack is still empty. */
       readonly median: ArrayBuffer | null;
+      /** H9 contract plane. Present ONLY when the request set wantContract. */
+      readonly contract?: ArrayBuffer;
       readonly size: number;
       /** Anchor convention the crop was rectified with, echoed back for the overlay. */
       readonly convention: number;
@@ -137,6 +142,8 @@ interface Tier {
   readonly detectorInput: Float32Array;
   readonly workFrangi: Float32Array;
   readonly workRidge: Float32Array;
+  /** H9: pre-CLAHE raw depth, refreshed on classical-stride frames when the contract is wanted. */
+  readonly contractDepth: Float32Array;
   readonly workValidity: Uint8Array;
   readonly classical: Float32Array;
   readonly stack: FrameStack;
@@ -167,6 +174,7 @@ function tierFor(size: number): Tier {
     detectorInput: new Float32Array(workPlane),
     workFrangi: new Float32Array(workPlane),
     workRidge: new Float32Array(workPlane),
+    contractDepth: new Float32Array(workPlane),
     workValidity: new Uint8Array(workPlane),
     classical: new Float32Array(workPlane),
     stack: emptyStack(work),
@@ -455,9 +463,14 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
 
       /* -------- Classical tier: same detector family, several times the cost -------- */
       const wantClassical = frameIndex % tier.classicalStride === 0 || tier.ridgeFrames === 0;
+      const wantContract = message.wantContract === true;
       let ridgeTimings = tier.lastRidgeTimings;
       if (wantClassical) {
-        const measured = detectRidges(workGray, work);
+        // H9: the raw pre-CLAHE depth plane is produced by the SAME detectRidges call, only when
+        // asked — with wantContract false this call is byte-identical to the shipped path.
+        const measured = wantContract
+          ? detectRidges(workGray, work, { depth: tier.contractDepth })
+          : detectRidges(workGray, work);
         tier.workRidge.set(measured.probability);
         ridgeTimings = measured.timings;
         tier.lastRidgeTimings = measured.timings;
@@ -536,6 +549,20 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       }
       const fused = combineProbabilities(unet, classical);
 
+      /*
+       * H9 contract plane. gabor (tier.workRidge) and frangi (tier.workFrangi) enter SEPARATELY —
+       * their max is taken inside contractFrameInto as the shape gate, not here — and the raw
+       * depth plane is the absolute anchor. Nothing below this block reads contractPlane.
+       */
+      let contractPlane: Float32Array | null = null;
+      let contractMs = 0;
+      if (wantContract) {
+        const tContract = performance.now();
+        contractPlane = new Float32Array(work * work);
+        contractFrameInto(tier.contractDepth, tier.workRidge, tier.workFrangi, unet, CONTRACT_DEPTH_DEFAULTS, contractPlane);
+        contractMs = (ridgeTimings?.contractMs ?? 0) + (performance.now() - tContract);
+      }
+
       const timings: Record<string, number> = {
         // One number for the whole every-frame tier — illumination, stack and Frangi are measured
         // together because they are scheduled together, and reporting a fabricated split would
@@ -546,6 +573,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         clahe: ridgeTimings?.claheMs ?? 0,
         blackhat: ridgeTimings?.blackhatMs ?? 0,
         gabor: ridgeTimings?.gaborMs ?? 0,
+        contract: contractMs,
         total: performance.now() - t0,
       };
 
@@ -571,6 +599,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       ];
       if (unet !== null) transfers.push(unet.buffer as ArrayBuffer);
       if (medianOut !== null) transfers.push(medianOut.buffer as ArrayBuffer);
+      if (contractPlane !== null) transfers.push(contractPlane.buffer as ArrayBuffer);
       self.postMessage(
         {
           type: "result",
@@ -580,6 +609,9 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           ridge: ridgeOut.buffer as ArrayBuffer,
           frangi: frangiOut.buffer as ArrayBuffer,
           median: medianOut === null ? null : (medianOut.buffer as ArrayBuffer),
+          // H9: present ONLY when wantContract was true — with it false the result keys are
+          // byte-identical to the shipped shape (worker-shape test pins this).
+          ...(contractPlane === null ? {} : { contract: contractPlane.buffer as ArrayBuffer }),
           // The size EVERY field in this message is expressed at — the working size, not the crop's.
           size: work,
           // Echoed so the overlay can project through the SAME convention the crop was built in.

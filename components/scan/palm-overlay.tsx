@@ -15,6 +15,7 @@ import { coverTransform, videoNormToCanvas, videoPxToCanvas, type CoverTransform
 import { LINE_THRESHOLD, type ClassifiedTrace, type Poly } from "@/lib/scan/lines";
 import { MIN_CLASS_SCORE } from "@/lib/scan/classify";
 import { scanFlags, SCAN_FLAG_NAMES } from "@/lib/scan/flags";
+import { contractStats } from "@/lib/scan/contract";
 import { MASK_SIZE, type Landmark3, type Point2 } from "@/lib/scan/types";
 
 const LINE_GLOW = "#ff9a3c";
@@ -90,7 +91,7 @@ const ANCHOR_SET = new Set<number>(PALM_ANCHORS);
  * classified trace with its class + score. A corner readout (field p99/mean, LINE_THRESHOLD,
  * trace counts around MIN_CLASS_SCORE, flags on) renders on every layer while the flag is on.
  */
-const DIAG_LAYERS = ["NONE", "FIELD", "RIDGE", "TRACES", "LINES"] as const;
+const DIAG_LAYERS = ["NONE", "FIELD", "CONTRACT", "RIDGE", "TRACES", "LINES"] as const;
 type DiagLayer = (typeof DIAG_LAYERS)[number];
 const DIAG_PIP_SIZE = 160;
 const DIAG_TEXT = "rgba(232, 226, 214, 0.92)";
@@ -100,6 +101,10 @@ interface DiagnosticsData {
   readonly field: Float32Array | null;
   readonly ridge: Float32Array | null;
   readonly classified: readonly ClassifiedTrace[];
+  /** H9 contract EMA (flag fieldContract/corridorSearch); drawn by the CONTRACT layer. */
+  readonly contract?: Float32Array | null;
+  /** Last corridor attempts (flag corridorSearch): class, accepted, mean field. */
+  readonly corridor?: readonly { readonly cls: string; readonly accepted: boolean; readonly meanField: number | null }[];
 }
 
 /** p99/mean of a field, cached by array identity — sorting 16k floats per frame would be silly. */
@@ -400,6 +405,15 @@ export function PalmOverlay({
             pipCanvasRef.current = pip;
           }
           drawPip(context, pip, diag.field, width);
+        } else if (layer === "CONTRACT" && diag?.contract != null) {
+          let pip = pipCanvasRef.current;
+          if (pip === null) {
+            pip = document.createElement("canvas");
+            pip.width = MASK_SIZE;
+            pip.height = MASK_SIZE;
+            pipCanvasRef.current = pip;
+          }
+          drawPip(context, pip, diag.contract, width);
         } else if (layer === "RIDGE" && diag?.ridge != null) {
           let pip = pipCanvasRef.current;
           if (pip === null) {
@@ -420,6 +434,19 @@ export function PalmOverlay({
           `thr ${LINE_THRESHOLD} | traces >=${MIN_CLASS_SCORE}: ${above} below: ${below}`,
           `flags: ${flagsOn}`,
         ];
+        // H9 readout: the contract plane's live stats (contractStats without GT masks yields the
+        // mean; the two GT-anchored numbers live in the eval, where centrelines exist).
+        if (diag?.contract != null) {
+          const cStats = contractStats(diag.contract, MASK_SIZE);
+          lines.push(`contract mean ${cStats.mean.toFixed(4)}`);
+        }
+        for (const attempt of diag?.corridor ?? []) {
+          lines.push(
+            `corridor ${attempt.cls}: ${attempt.accepted ? "accepted" : "rejected"}${
+              attempt.meanField === null ? "" : ` mean ${attempt.meanField.toFixed(3)}`
+            }`,
+          );
+        }
         context.save();
         context.font = "11px ui-monospace, monospace";
         context.textBaseline = "top";

@@ -23,6 +23,7 @@ import sharp from "sharp";
 import path from "node:path";
 import { rectifyPalm } from "../../lib/scan/rectify";
 import { detectRidges, normalizeResponses } from "../../lib/scan/ridge";
+import { contractFrameInto, CONTRACT_DEPTH_DEFAULTS, type ContractParams } from "../../lib/scan/contract";
 import { detectVessels, sigmasFor } from "../../lib/scan/frangi";
 import { normaliseIllumination } from "../../lib/scan/illumination";
 import { blendComposite, compositeStack, emptyStack, pushFrame } from "../../lib/scan/stack";
@@ -50,14 +51,19 @@ const TICKS = 6;
 
 export const FRAMINGS = ["classical", "palmquad", "fullhand-fixed", "fullhand-ransac"] as const;
 export type Framing = (typeof FRAMINGS)[number];
-export const POSTS = ["fused", "enhancer", "enhancer-ridge"] as const;
+export const POSTS = ["fused", "enhancer", "enhancer-ridge", "corridor"] as const;
 export type Post = (typeof POSTS)[number];
+export const FIELDS = ["legacy", "contract"] as const;
+export type FieldKind = (typeof FIELDS)[number];
 
 export interface ComposedRung {
   readonly framing: Framing;
   readonly post: Post;
+  /** Which plane extraction reads: the legacy percentile field (default) or the H9 contract. */
+  readonly field?: FieldKind;
 }
-export const rungId = (rung: ComposedRung): string => `${rung.framing}+${rung.post}`;
+export const rungId = (rung: ComposedRung): string =>
+  `${rung.field === "contract" ? "contract:" : ""}${rung.framing}+${rung.post}`;
 
 /** The threshold LINE_THRESHOLD (lines.ts:28) is swept over — shipped value included exactly. */
 export const SHIPPED_THRESHOLD = LINE_THRESHOLD;
@@ -144,6 +150,15 @@ async function loadUnet(modelPath: string): Promise<{ session: UnetSession | nul
 
 interface Prepared {
   readonly ema: Float32Array;
+  /** H9 contract EMA, built in the same tick loop from the same raw planes (sections 1–3 mirror). */
+  readonly emaContract: Float32Array;
+  /** Pre-CLAHE black-hat depth, raw luma units — the calibration's measurement plane. */
+  readonly depthRaw: Float32Array;
+  /** Last tick's percentile-normalised gabor / frangi planes, kept separate for calibration. */
+  readonly gabor: Float32Array;
+  readonly frangi: Float32Array;
+  /** Last framing UNet plane (null for classical) — calibration's noisy-OR input. */
+  readonly unet: Float32Array | null;
   readonly small: Float32Array;
   readonly notes: string[];
   readonly approximate?: boolean;
@@ -237,6 +252,10 @@ async function prepare(evalCase: EvalCase, framing: Framing, opts: RunOptions): 
 
     const stack = emptyStack(WORK);
     let fusion: FusionState = emptyFusion(MASK_SIZE);
+    let fusionContract: FusionState = emptyFusion(MASK_SIZE);
+    const depthRaw = new Float32Array(workPlane);
+    let gaborPlane = new Float32Array(workPlane);
+    let frangiPlane = new Float32Array(workPlane);
     for (let tick = 0; tick < TICKS; tick += 1) {
       const normalised = new Float32Array(workPlane);
       const illumination = normaliseIllumination(small, WORK, normalised, validity);
@@ -247,11 +266,20 @@ async function prepare(evalCase: EvalCase, framing: Framing, opts: RunOptions): 
       const frangi = new Float32Array(workPlane);
       detectVessels(detectorInput, WORK, sigmasFor(WORK), frangi);
       normalizeResponses(frangi);
-      const ridge = Float32Array.from(detectRidges(small, WORK).probability);
+      // Same call the worker makes under wantContract: the raw pre-CLAHE depth rides along.
+      const ridge = Float32Array.from(detectRidges(small, WORK, { depth: depthRaw }).probability);
       const classical = new Float32Array(workPlane);
       for (let i = 0; i < workPlane; i += 1) classical[i] = ridge[i] > frangi[i] ? ridge[i] : frangi[i];
 
+      // H9 mirror of the worker's contract block: separate gabor/frangi, raw depth anchor,
+      // noisy-OR with the framing's UNet plane, then the SAME align/fuse handling side by side.
+      const contractPlane = new Float32Array(workPlane);
+      contractFrameInto(depthRaw, ridge, frangi, unetPlane, CONTRACT_DEPTH_DEFAULTS, contractPlane);
+      gaborPlane = ridge;
+      frangiPlane = frangi;
+
       fusion = alignFusion(fusion, warped.toCrop, anchors.length).state;
+      fusionContract = alignFusion(fusionContract, warped.toCrop, anchors.length).state;
       fusion = fuse(
         fusion,
         {
@@ -265,8 +293,31 @@ async function prepare(evalCase: EvalCase, framing: Framing, opts: RunOptions): 
         },
         1000 + tick * 200,
       );
+      fusionContract = fuse(
+        fusionContract,
+        {
+          width: WORK,
+          height: WORK,
+          all: contractPlane,
+          resolves: [],
+          inferenceMs: 0,
+          backend: "contract",
+          stages: { unet: unetPlane, ridge, frangi, median: null, photometric: null },
+        },
+        1000 + tick * 200,
+      );
     }
-    const prepared: Prepared = { ema: fusion.ema, small, notes, approximate };
+    const prepared: Prepared = {
+      ema: fusion.ema,
+      emaContract: fusionContract.ema,
+      depthRaw,
+      gabor: gaborPlane,
+      frangi: frangiPlane,
+      unet: unetPlane,
+      small,
+      notes,
+      approximate,
+    };
     fieldCache.set(key, prepared);
     return prepared;
   } catch (error) {
@@ -281,13 +332,16 @@ export async function computeField(evalCase: EvalCase, rung: ComposedRung, opts:
   const prepared = await prepare(evalCase, rung.framing, opts);
   if ("error" in prepared) return { field: null, error: prepared.error, notes: [] };
   const notes = [...prepared.notes];
-  let field = prepared.ema;
-  if (rung.post !== "fused") {
+  const base = rung.field === "contract" ? prepared.emaContract : prepared.ema;
+  let field = base;
+  if (rung.post === "enhancer" || rung.post === "enhancer-ridge") {
     const enhancer = new RekhaEnhancer(WORK);
-    const result = enhancer.process(prepared.small, prepared.ema, 1);
+    const result = enhancer.process(prepared.small, base, 1);
     field = Float32Array.from(rung.post === "enhancer" ? result.enhanced : result.ridge);
     notes.push("enhancer post: single process() call — spatial stages only, temporal state not exercised");
   }
+  // post "corridor": the field is the fused base; the fate fill-in happens at scoring time
+  // (index.ts) because it needs the CONTRACT plane regardless of the rung's own field.
   return { field, notes, approximate: prepared.approximate };
 }
 
@@ -358,6 +412,39 @@ export type MinorEmissionClass = (typeof MINOR_EMISSION_CLASSES)[number];
  * extractAllTraces + minorLineFeatures path the live flag runs (stability null offline, which
  * skips the faint tier; MINOR_EMIT_REQUIRE_STRONG makes that equivalent anyway).
  */
+/** Calibration access: the raw planes (classical framing) one case yields. */
+export async function rawPlanesOf(
+  evalCase: EvalCase,
+  opts: RunOptions = {},
+): Promise<{ depthRaw: Float32Array; gabor: Float32Array; frangi: Float32Array } | null> {
+  const prepared = await prepare(evalCase, "classical", opts);
+  if ("error" in prepared) return null;
+  return { depthRaw: prepared.depthRaw, gabor: prepared.gabor, frangi: prepared.frangi };
+}
+
+/** Calibration access: a single-frame contract plane under explicit params (classical, no UNet). */
+export async function contractPlaneOf(
+  evalCase: EvalCase,
+  params: ContractParams,
+  opts: RunOptions = {},
+): Promise<Float32Array | null> {
+  const planes = await rawPlanesOf(evalCase, opts);
+  if (planes === null) return null;
+  const out = new Float32Array(planes.depthRaw.length);
+  contractFrameInto(planes.depthRaw, planes.gabor, planes.frangi, null, params, out);
+  return out;
+}
+
+/** The contract EMA one case yields under a framing — the phantom-fate check searches this. */
+export async function contractFieldOf(
+  evalCase: EvalCase,
+  framing: Framing,
+  opts: RunOptions = {},
+): Promise<Float32Array | null> {
+  const prepared = await prepare(evalCase, framing, opts);
+  return "error" in prepared ? null : prepared.emaContract;
+}
+
 export function minorEmissionOn(field: Float32Array): Record<MinorEmissionClass, boolean> {
   const traces = extractAllTraces(field, WORK, null);
   const found = extractLines(field, WORK);

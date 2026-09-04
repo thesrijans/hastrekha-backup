@@ -111,6 +111,8 @@ export interface LineMask {
   readonly inferenceMs?: number;
   /** Which execution provider produced this, e.g. "webgpu", "wasm" or "ridge-only". */
   readonly backend?: string;
+  /** H9 contract plane for this frame. Present only when the request asked for it. */
+  readonly contract?: Float32Array;
   /**
    * How many anchor correspondences the crop this mask came from was rectified with.
    *

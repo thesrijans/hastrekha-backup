@@ -377,7 +377,7 @@ export function assignLines(polys: readonly Poly[], size: number = RECTIFIED_SIZ
  *
  * `segments` must index into `poly`; the two come from the same {@link FittedLine}.
  */
-function depthProxy(field: Float32Array, poly: Poly, size: number, segments?: readonly LineSegment[]): number {
+export function depthProxy(field: Float32Array, poly: Poly, size: number, segments?: readonly LineSegment[]): number {
   let sum = 0;
   let n = 0;
   for (let i = 0; i < poly.length; i += 1) {
@@ -500,6 +500,9 @@ export interface ClassifiedTrace {
   readonly classScore: number;
   /** Principal class this trace lost a slot for — present only under trackDemotions. */
   readonly demotedFrom?: TraceClass;
+  /** How the trace was found. Absent = the binarize→thin skeleton path; "corridor" = minimal-path
+   * fill-in over the contract field (flag corridorSearch). Additive — the demotedFrom precedent. */
+  readonly source?: "corridor";
 }
 
 export interface TraceSet {

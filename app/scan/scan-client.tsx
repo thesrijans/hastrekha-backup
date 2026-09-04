@@ -351,6 +351,8 @@ export function ScanClient() {
     photometric,
     fusedConfidence,
     fusedField,
+    contractField,
+    corridorAttempts,
     stageMasks,
     stageTimings,
     videoSize,
@@ -495,6 +497,13 @@ export function ScanClient() {
                   evidenceAtMs={traceEvidenceAtMs}
                   mirrored={mirrored}
                   edgePeak={edgePeak}
+                  diagnostics={{
+                    field: fusedField,
+                    ridge: stageMasks?.ridge ?? null,
+                    classified: traces,
+                    contract: contractField,
+                    corridor: corridorAttempts,
+                  }}
                 />
                 <ScanHud quality={quality} />
                 {pose !== null ? (
@@ -628,6 +637,7 @@ export function ScanClient() {
         traceCount={polys.length}
         branchPoints={extraction?.branchPoints ?? 0}
         onExportFrame={scan.exportFrame}
+        onExportEvalCase={scan.exportEvalCase}
         edgePeak={edgePeak}
         onEdgePeak={setEdgePeak}
       />

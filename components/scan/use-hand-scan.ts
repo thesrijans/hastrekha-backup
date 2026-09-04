@@ -72,6 +72,7 @@ import {
 } from "@/lib/scan/fusion";
 import { extractAllTraces, extractLines, type ClassifiedTrace, type LineExtraction, type Poly } from "@/lib/scan/lines";
 import { fateDoubleOverride, minorLineFeatures } from "@/lib/scan/minor-lines";
+import { corridorFateFeatures, corridorTraces, type CorridorAttempt } from "@/lib/scan/corridor-traces";
 import {
   commitCapture,
   currentPose,
@@ -175,6 +176,14 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   // Sized to the resolution the worker actually returns — see MASK_SIZE. A mismatch here makes
   // `fuse()` return early and SILENTLY, which is exactly how the overlay went blank once before.
   const fusionRef = useRef<FusionState>(emptyFusion(MASK_SIZE));
+  /**
+   * H9: the contract plane's OWN accumulator — same class, same size, mirrored at every touch
+   * point of `fusionRef` (markHandSeen / reset / alignFusion / fuse; each mirror sits directly
+   * under its legacy line so the symmetry is inspectable). It only ever accumulates when the
+   * worker was asked for the contract plane; with both contract flags off it stays empty and
+   * nothing reads it.
+   */
+  const fusionContractRef = useRef<FusionState>(emptyFusion(MASK_SIZE));
   /**
    * Landmark jitter slides the same skin a few crop pixels between frames — more than a crease is
    * wide — which is what smears the accumulated mask into an unthinnable band. Filtering the anchors
@@ -316,6 +325,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const [fusedConfidence, setFusedConfidence] = useState(0);
   /** The EMA buffer itself, for the debug mask view. Mutated in place; redraws key off confidence. */
   const [fusedField, setFusedField] = useState<Float32Array | null>(null);
+  /** H9 contract EMA for the diagnostics overlay; null until a contract-carrying result fused. */
+  const [contractField, setContractField] = useState<Float32Array | null>(null);
+  /** Last corridor attempts (flag corridorSearch) for the diagnostics readout. */
+  const [corridorAttempts, setCorridorAttempts] = useState<readonly CorridorAttempt[]>([]);
   /** Raw per-detector fields from the last inference, for the debug HUD's three-way mask toggle. */
   const [stageMasks, setStageMasks] = useState<{
     unet: Float32Array | null;
@@ -467,11 +480,13 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       lastPoseRef.current = pose?.pose ?? "done";
 
       if (next !== null) fusionRef.current = markHandSeen(fusionRef.current, now, next.handedness);
+      if (next !== null) fusionContractRef.current = markHandSeen(fusionContractRef.current, now, next.handedness);
 
       if (shouldReset(fusionRef.current, { handPresent: next !== null, handedness: next?.handedness ?? null, nowMs: now })) {
         // The other hand is a different palm; its traces are wrong immediately, not merely stale.
         const otherHand = next !== null && fusionRef.current.handedness !== null && next.handedness !== fusionRef.current.handedness;
         fusionRef.current = { ...resetFusion(fusionRef.current), handedness: next?.handedness ?? null };
+        fusionContractRef.current = { ...resetFusion(fusionContractRef.current), handedness: next?.handedness ?? null };
         resetStabiliser(stabiliserRef.current);
         if (otherHand) {
           resetPhotometric(photometricRef.current);
@@ -715,6 +730,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                 : null;
             const aligned = alignFusion(fusionRef.current, warped.toCrop, convention, underPrevious);
             fusionRef.current = aligned.state;
+            fusionContractRef.current = alignFusion(fusionContractRef.current, warped.toCrop, convention, underPrevious).state;
             setAlignment({
               outcome: aligned.outcome,
               displacement: aligned.displacement,
@@ -760,7 +776,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               fullhandWarpMsRef.current = -1;
             }
             void segmenterRef.current
-              ?.segment(cropForWorker, { convention, inside: warped.inside, fullHand })
+              ?.segment(cropForWorker, {
+                convention,
+                inside: warped.inside,
+                fullHand,
+                wantContract: scanFlags.snapshot().fieldContract || scanFlags.snapshot().corridorSearch,
+              })
               .then((mask) => {
               if (mask === null || !runningRef.current) return;
               recordStage(telemetryRef.current, "workerReplies", performance.now());
@@ -807,10 +828,23 @@ export function useHandScan(options: UseHandScanOptions = {}) {
 
               const framesBefore = fusionRef.current.frames;
               fusionRef.current = fuse(fusionRef.current, mask, performance.now());
+              if (mask.contract !== undefined) {
+                /*
+                 * The photometric/flash boosts above mutated mask.all only — the contract plane
+                 * fuses un-boosted, because those boosts are calibrated to the legacy field's
+                 * scale and would break the P(crease) meaning.
+                 */
+                fusionContractRef.current = fuse(fusionContractRef.current, { ...mask, all: mask.contract }, performance.now());
+                setContractField(fusionContractRef.current.ema);
+              }
               if (fusionRef.current.frames > framesBefore) {
                 recordStage(telemetryRef.current, "fusionFrames", performance.now());
               }
-              setFusedConfidence(fusionRef.current.confidence);
+              setFusedConfidence(
+                scanFlags.snapshot().fieldContract && mask.contract !== undefined
+                  ? fusionContractRef.current.confidence
+                  : fusionRef.current.confidence,
+              );
               setFusedField(fusionRef.current.ema);
               setStageMasks(
                 mask.stages === undefined
@@ -835,8 +869,15 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               const at = performance.now();
               if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS) {
                 lastExtractAtRef.current = at;
-                const vocabV2 = scanFlags.snapshot().featureVocabV2;
-                const found = extractLines(fusionRef.current.ema, fusionRef.current.size, vocabV2);
+                const flagsAtExtract = scanFlags.snapshot();
+                const vocabV2 = flagsAtExtract.featureVocabV2;
+                /*
+                 * H9: with fieldContract on, extraction reads the contract EMA — same size, same
+                 * accumulator class. Everything downstream (completion, classifier, features,
+                 * overlay) is field-agnostic; the flag decides which plane is "the field".
+                 */
+                const activeFusion = flagsAtExtract.fieldContract ? fusionContractRef.current : fusionRef.current;
+                const found = extractLines(activeFusion.ema, activeFusion.size, vocabV2);
                 /*
                  * Everything else on the palm. The four completed lines are the headline, but a
                  * reader looks at the minor creases too, and dropping them was throwing away most of
@@ -844,12 +885,25 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                  * own persistence counter, so a shallow trace has to have been there a while.
                  */
                 const all = extractAllTraces(
-                  fusionRef.current.ema,
-                  fusionRef.current.size,
-                  fusionRef.current.faintHits,
+                  activeFusion.ema,
+                  activeFusion.size,
+                  activeFusion.faintHits,
                   vocabV2, // demotion tracking only feeds the v2 fate-double check
                 );
-                setTraces(all.traces);
+                /*
+                 * Corridor fill-in (flag corridorSearch): searched over the CONTRACT plane — the
+                 * acceptance floors are probability statements — and only for lines the skeleton
+                 * path did not produce. Accepted paths join the trace set as source:"corridor".
+                 */
+                let allTraces = all;
+                let corridorFound: ReturnType<typeof corridorTraces> = [];
+                if (flagsAtExtract.corridorSearch && fusionContractRef.current.frames > 0) {
+                  const attempts: CorridorAttempt[] = [];
+                  corridorFound = corridorTraces(fusionContractRef.current.ema, fusionContractRef.current.size, found, all, attempts);
+                  setCorridorAttempts(attempts);
+                  if (corridorFound.length > 0) allTraces = { ...all, traces: [...all.traces, ...corridorFound] };
+                }
+                setTraces(allTraces.traces);
                 recordStage(telemetryRef.current, "tracesExtracted", at, all.faintCount);
                 recordStage(telemetryRef.current, "tracesExtracted", at, found.fragments.length);
                 recordStage(telemetryRef.current, "polylinesAfterCompletion", at, found.polys.length);
@@ -875,8 +929,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                  * callback receives `found` untouched, byte for byte.
                  */
                 let forFeatures = found;
-                if (scanFlags.snapshot().emitMinorLines) {
-                  const minor = minorLineFeatures(all, { lifePoly: found.completion.lines.life?.points }, fusionRef.current.size);
+                if (flagsAtExtract.emitMinorLines) {
+                  // Corridor-found minors flow through the SAME emitter — it is source-agnostic.
+                  const minor = minorLineFeatures(allTraces, { lifePoly: found.completion.lines.life?.points }, activeFusion.size);
                   const baseLines = (found.features.lines ?? {}) as Record<string, unknown>;
                   const baseSigns = (found.features.signs ?? {}) as Record<string, unknown>;
                   const minorLines = (minor.lines ?? {}) as Record<string, unknown>;
@@ -893,6 +948,24 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                       ...(Object.keys(minorSigns).length > 0 ? { signs: { ...minorSigns, ...baseSigns } } : {}),
                     } as typeof found.features,
                   };
+                }
+                if (flagsAtExtract.corridorSearch) {
+                  const fateAdd = corridorFateFeatures(corridorFound);
+                  if (fateAdd.lines !== undefined) {
+                    const baseLines = (forFeatures.features.lines ?? {}) as Record<string, unknown>;
+                    forFeatures = {
+                      ...forFeatures,
+                      features: {
+                        ...forFeatures.features,
+                        lines: {
+                          ...baseLines,
+                          // A corridor fate is a FAINT fate by definition — presence and the KB's
+                          // faint structure, nothing else claimed.
+                          fate: { ...(baseLines.fate as Record<string, unknown> | undefined), present: true, structure: "faint" },
+                        },
+                      } as typeof found.features,
+                    };
+                  }
                 }
                 const named = found.polys.length > 0;
                 const drawable = named ? found.polys : found.fragments;
@@ -999,6 +1072,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
 
         // Each pose starts from a clean average; the merged mask is assembled at the end.
         fusionRef.current = resetFusion(fusionRef.current);
+        fusionContractRef.current = resetFusion(fusionContractRef.current);
         fusionEpochRef.current += 1;
         setFusedConfidence(0);
         if (committed.done) onCaptureComplete?.(committed);
@@ -1227,6 +1301,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     captureRef.current = emptyCapture();
     setCapture(captureRef.current);
     fusionRef.current = resetFusion(fusionRef.current);
+    fusionContractRef.current = resetFusion(fusionContractRef.current);
     fusionEpochRef.current += 1;
     setFusedConfidence(0);
     setPolys([]);
@@ -1267,6 +1342,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     photometric,
     fusedConfidence,
     fusedField,
+    contractField,
+    corridorAttempts,
     stageMasks,
     stageTimings,
     videoSize,
