@@ -15,15 +15,20 @@
  * (dev routes are NODE_ENV-gated).
  */
 import {
+  SEQUENCE_MANIFEST_FILE,
   SESSION_DIRS,
   SESSION_DIR_LABELS,
+  SESSION_DIR_SEQUENCES,
   SESSION_METADATA_FILE,
   SESSION_SCHEMA_VERSION,
   isRekhaLabelFile,
+  isSequenceManifest,
   isSessionMetadata,
   labelFileName,
+  sequenceDirName,
   type CaptureStillRecord,
   type RekhaLabelFile,
+  type SequenceManifest,
   type SessionHand,
   type SessionMetadata,
 } from "./session-types";
@@ -183,6 +188,27 @@ export class SessionStore {
     return updated;
   }
 
+  /**
+   * Stage one torch sequence (measured-reading §2.3): the manifest joins the session metadata
+   * (additive-optional — pre-sequence files stay valid) and each frame's blobs land under
+   * sequences/seq-NNN/. The manifest is validated with the same check export and tests use.
+   */
+  async addSequence(
+    session: SessionMetadata,
+    manifest: SequenceManifest,
+    frames: readonly { readonly file: string; readonly blob: Blob; readonly cropFile: string; readonly cropBlob: Blob }[],
+  ): Promise<SessionMetadata> {
+    if (!isSequenceManifest(manifest)) throw new Error("refusing to stage an invalid sequence manifest");
+    const dir = `${SESSION_DIR_SEQUENCES}/${sequenceDirName(manifest.sequenceIndex)}`;
+    for (const frame of frames) {
+      await idbPut(this.db, STORE_BLOBS, frame.blob, blobKey(session.sessionId, `${dir}/${frame.file}`));
+      await idbPut(this.db, STORE_BLOBS, frame.cropBlob, blobKey(session.sessionId, `${dir}/${frame.cropFile}`));
+    }
+    const updated: SessionMetadata = { ...session, sequences: [...(session.sequences ?? []), manifest] };
+    await idbPut(this.db, STORE_SESSIONS, updated);
+    return updated;
+  }
+
   /** Staged crop blob for the labeler (0a-ii) and export. */
   async getBlob(sessionId: string, relativePath: string): Promise<Blob | null> {
     const value = await idbGet<Blob>(this.db, STORE_BLOBS, blobKey(sessionId, relativePath));
@@ -279,6 +305,29 @@ export class SessionStore {
         await writable.close();
         written += 1;
       }
+    }
+
+    // Sequences before metadata too — the manifest inside metadata.json only ever describes
+    // frame files already written. Each sequence gets seq-NNN/{frames…, sequence.json}.
+    for (const manifest of session.sequences ?? []) {
+      const sequencesRoot = await dir.getDirectoryHandle(SESSION_DIR_SEQUENCES, { create: true });
+      const seqDir = await sequencesRoot.getDirectoryHandle(sequenceDirName(manifest.sequenceIndex), { create: true });
+      for (const frame of manifest.frames) {
+        for (const name of [frame.file, frame.cropFile]) {
+          const blob = await this.getBlob(sessionId, `${SESSION_DIR_SEQUENCES}/${sequenceDirName(manifest.sequenceIndex)}/${name}`);
+          if (blob === null) continue;
+          const file = await seqDir.getFileHandle(name, { create: true });
+          const writable = await file.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          written += 1;
+        }
+      }
+      const manifestFile = await seqDir.getFileHandle(SEQUENCE_MANIFEST_FILE, { create: true });
+      const writable = await manifestFile.createWritable();
+      await writable.write(new Blob([JSON.stringify(manifest, null, 2)], { type: "application/json" }));
+      await writable.close();
+      written += 1;
     }
 
     // Labels BEFORE metadata (0a-ii) — metadata.json stays the last write, so its labelCount can

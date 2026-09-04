@@ -173,6 +173,32 @@ export function findPoseDuplicate(
   return null;
 }
 
+/* --------------------------- Torch control (§2.3) --------------------------- */
+
+/** Structural view of the torch capability/constraint — a Chromium extension, absent from TS lib. */
+interface TorchCapableTrack {
+  getCapabilities?(): { torch?: boolean };
+  applyConstraints(constraints: { advanced?: { torch?: boolean }[] }): Promise<void>;
+}
+
+/**
+ * Turn the track's torch on or off. Returns whether the request was actually applied — false
+ * means the camera has no torch (or refused), and the sequence records `torchSupported: false`
+ * so the offline solve knows these frames are ambient-only. Never throws: an unsupported torch
+ * is a recorded fact, not an error.
+ */
+export async function setTorch(track: MediaStreamTrack, on: boolean): Promise<boolean> {
+  const capable = track as unknown as TorchCapableTrack;
+  const capabilities = capable.getCapabilities?.();
+  if (capabilities?.torch !== true) return false;
+  try {
+    await capable.applyConstraints({ advanced: [{ torch: on }] });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /* ------------------------------ Still capture ------------------------------ */
 
 export interface CapturedStill {

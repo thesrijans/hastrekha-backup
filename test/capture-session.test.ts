@@ -26,19 +26,29 @@ import {
   CANONICAL_LABEL_SIZE,
   cropFileName,
   isRekhaLabelFile,
+  isSequenceManifest,
   isSessionMetadata,
   labelFileName,
   parseRekhaLabelFile,
+  parseSequenceManifest,
   parseSessionMetadata,
   rawFileName,
+  sequenceCropName,
+  sequenceDirName,
+  sequenceFrameName,
+  SEQUENCE_AMBIENT_POSE_INDEX,
+  SEQUENCE_POSE_COUNT,
+  SEQUENCE_SCHEMA_VERSION,
   SESSION_DIRS,
   SESSION_METADATA_FILE,
   SESSION_SCHEMA_VERSION,
   type CaptureStillRecord,
   type RekhaLabelFile,
+  type SequenceFrameRecord,
+  type SequenceManifest,
   type SessionMetadata,
 } from "../lib/scan/dev/session-types";
-import { SHARPNESS_MIN_VARIANCE, assessSharpness, varianceOfLaplacian } from "../lib/scan/quality";
+import { CAPTURE_POSES, SHARPNESS_MIN_VARIANCE, assessSharpness, varianceOfLaplacian } from "../lib/scan/quality";
 
 let assertions = 0;
 const ok = (condition: boolean, message: string): void => {
@@ -51,8 +61,8 @@ const ok = (condition: boolean, message: string): void => {
 ok(CANONICAL_LABEL_SIZE === 512, "labeling resolution is 512 (D3)");
 assert.deepEqual(
   SESSION_DIRS,
-  ["raw", "selected", "aligned", "snapshots", "labels"],
-  "A4 replay layout: raw/ selected/ aligned/ snapshots/ labels/",
+  ["raw", "selected", "aligned", "snapshots", "labels", "sequences"],
+  "A4 replay layout: raw/ selected/ aligned/ snapshots/ labels/ + sequences/ (§2.3)",
 );
 assertions += 1;
 ok(SESSION_METADATA_FILE === "metadata.json", "metadata file name is fixed");
@@ -321,5 +331,77 @@ console.log(
 }
 
 ok(DEFAULT_SCAN_FLAGS.scanDiagnostics === false, "scanDiagnostics defaults OFF");
+
+/* ------------------- Torch sequences (measured-reading §2.3) ------------------- */
+
+{
+  ok(SEQUENCE_POSE_COUNT === CAPTURE_POSES.length, "the pinned pose count IS the scan's choreography length");
+  ok(sequenceDirName(2) === "seq-002" && sequenceFrameName(0) === "frame-000.png" && sequenceCropName(4) === "frame-crop-004.png", "sequence file names are zero-padded and stable");
+
+  const frame = (order: number, poseIndex: number, torch: boolean): SequenceFrameRecord => ({
+    order,
+    poseIndex,
+    pose: CAPTURE_POSES[poseIndex].pose,
+    torch,
+    file: sequenceFrameName(order),
+    cropFile: sequenceCropName(order),
+    homography: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    landmarks: still.landmarks,
+    width: 1920,
+    height: 1080,
+    stillVol: 140,
+    attempts: 1,
+    trackSettings: { exposureTime: 10000, iso: 400 },
+    capturedAt: "2026-09-03T01:00:00.000Z",
+  });
+  // The choreography in capture order: poses 0,1,2 torch → ambient at pose 2 → poses 3,4 torch.
+  const frames = [
+    frame(0, 0, true),
+    frame(1, 1, true),
+    frame(2, 2, true),
+    frame(3, SEQUENCE_AMBIENT_POSE_INDEX, false),
+    frame(4, 3, true),
+    frame(5, 4, true),
+  ];
+  const manifest: SequenceManifest = {
+    schemaVersion: SEQUENCE_SCHEMA_VERSION,
+    sessionId: session.sessionId,
+    sequenceIndex: 0,
+    hand: "left",
+    torchSupported: true,
+    frames,
+    ambientFrameIndex: 3,
+    createdAt: "2026-09-03T01:01:00.000Z",
+  };
+
+  ok(isSequenceManifest(manifest), "a full choreography + ambient reference validates");
+  ok(parseSequenceManifest(JSON.stringify(manifest)) !== null, "the manifest survives a JSON roundtrip — what export writes is what tools read");
+
+  // Torch-off frame REQUIRED — §2.3 subtracts it; a sequence without it is invalid, not lesser.
+  const noAmbient = { ...manifest, frames: frames.filter((f) => f.torch), ambientFrameIndex: 2 };
+  ok(!isSequenceManifest(noAmbient), "five torch frames with no ambient reference are rejected");
+  ok(
+    !isSequenceManifest({ ...manifest, frames: frames.map((f, i) => (i === 3 ? { ...f, poseIndex: 0, pose: CAPTURE_POSES[0].pose } : f)) }),
+    `the ambient frame must sit at pose ${SEQUENCE_AMBIENT_POSE_INDEX + 1} (the choreography's "3/5")`,
+  );
+
+  // Pose count = 5, exactly and distinctly.
+  ok(!isSequenceManifest({ ...manifest, frames: frames.slice(0, 5) }), "four poses are rejected — the solve needs the full tilt sweep");
+  ok(
+    !isSequenceManifest({ ...manifest, frames: frames.map((f, i) => (i === 5 ? { ...f, poseIndex: 3, pose: CAPTURE_POSES[3].pose } : f)) }),
+    "a repeated pose is rejected — five DISTINCT orientations, not five stills",
+  );
+
+  // Torch honesty: unsupported cameras record ambient-only, and cannot claim lit frames.
+  const unsupported = { ...manifest, torchSupported: false, frames: frames.map((f) => ({ ...f, torch: false })) };
+  ok(isSequenceManifest(unsupported), "torchSupported: false with every frame unlit validates (ambient-only sequence)");
+  ok(!isSequenceManifest({ ...unsupported, frames: unsupported.frames.map((f, i) => (i === 0 ? { ...f, torch: true } : f)) }), "an unsupported torch cannot claim a lit frame");
+  ok(!isSequenceManifest({ ...manifest, frames: frames.map((f, i) => (i === 1 ? { ...f, torch: false } : f)) }), "with torch support, every pose frame must be lit");
+
+  // Metadata stays 0a-2: sequences are additive-optional.
+  ok(isSessionMetadata({ ...session, sequences: [manifest] }), "metadata with a staged sequence validates");
+  ok(isSessionMetadata(session), "metadata WITHOUT sequences still validates — pre-sequence files untouched");
+  ok(!isSessionMetadata({ ...session, sequences: [{ ...manifest, frames: frames.slice(0, 2) }] }), "an invalid manifest poisons the metadata — no half-staged sequences");
+}
 
 console.log(`CAPTURE SESSION ASSERTIONS PASSED (${assertions})`);

@@ -27,11 +27,13 @@ import {
   gradeFrame,
   landmarkJitter,
   palmSpan,
+  CAPTURE_POSES,
   SHARPNESS_MIN_VARIANCE,
   SPAN_HISTORY_FRAMES,
   type QualityInput,
   type SharpnessReading,
 } from "@/lib/scan/quality";
+import type { Handedness } from "@/lib/scan/types";
 import { palmAnchors, rectifyPalm } from "@/lib/scan/rectify";
 import { LM } from "@/lib/scan/landmark-index";
 import type { HandObservation, Landmark3, QualityVerdict } from "@/lib/scan/types";
@@ -42,6 +44,7 @@ import {
   findPoseDuplicate,
   poseSignature,
   regradeStill,
+  setTorch,
   stillVolOfCrop,
   STABLE_WINDOW_MS,
   STILL_RETRY_MAX,
@@ -52,7 +55,14 @@ import {
   CANONICAL_LABEL_SIZE,
   cropFileName,
   rawFileName,
+  sequenceCropName,
+  sequenceFrameName,
+  SEQUENCE_AMBIENT_POSE_INDEX,
+  SEQUENCE_POSE_COUNT,
+  SEQUENCE_SCHEMA_VERSION,
   type CaptureStillRecord,
+  type SequenceFrameRecord,
+  type SequenceManifest,
   type SessionHand,
   type SessionMetadata,
 } from "@/lib/scan/dev/session-types";
@@ -117,6 +127,24 @@ export function CaptureClient() {
   const [sessions, setSessions] = useState<readonly SessionSummary[]>([]);
   const [stills, setStills] = useState<readonly StagedStillView[]>([]);
   const [rejections, setRejections] = useState<readonly string[]>([]);
+
+  /*
+   * Torch-sequence mode (measured-reading §2.3): walks the scan's five-pose tilt choreography
+   * with the torch on, keeping the sharpest still per pose through the SAME regrade loop, plus
+   * one torch-OFF ambient reference at the choreography's "3/5". State the frame loop reads
+   * lives in refs; React state mirrors it for the panel.
+   */
+  const seqActiveRef = useRef(false);
+  const seqStepRef = useRef(0);
+  const seqAmbientPendingRef = useRef(false);
+  const seqBaselineRef = useRef<Handedness | null>(null);
+  const seqTorchSupportedRef = useRef(false);
+  const torchOnRef = useRef(false);
+  const seqFramesRef = useRef<{ record: SequenceFrameRecord; blob: Blob; cropBlob: Blob }[]>([]);
+  const [seqActive, setSeqActive] = useState(false);
+  const [seqStep, setSeqStep] = useState(0);
+  const [seqAmbientPending, setSeqAmbientPending] = useState(false);
+  const [torchState, setTorchState] = useState<"off" | "on" | "unsupported">("off");
   const [exportNote, setExportNote] = useState<string | null>(null);
 
   /* ------------------------------- Measurement ------------------------------- */
@@ -187,6 +215,149 @@ export function CaptureClient() {
     return assessSharpness(luma, sw, sh);
   }, []);
 
+  /* ----------------------- Torch sequence (§2.3) ----------------------- */
+
+  /** Fold one accepted still into the sequence and advance the choreography. */
+  const recordSequenceFrame = useCallback(
+    async (
+      still: { blob: Blob; width: number; height: number; trackSettings: Readonly<Record<string, string | number | boolean>> },
+      cropBlob: Blob,
+      homography: readonly number[],
+      stillVol: number,
+      attempts: number,
+    ): Promise<void> => {
+      const observation = observationRef.current;
+      if (observation === null) return;
+      const isAmbient = seqAmbientPendingRef.current;
+      const order = seqFramesRef.current.length;
+      const poseIndex = seqStepRef.current;
+      const record: SequenceFrameRecord = {
+        order,
+        poseIndex,
+        pose: CAPTURE_POSES[poseIndex].pose,
+        torch: isAmbient ? false : torchOnRef.current,
+        file: sequenceFrameName(order),
+        cropFile: sequenceCropName(order),
+        homography: Array.from(homography),
+        landmarks: observation.landmarks,
+        width: still.width,
+        height: still.height,
+        stillVol: Number(stillVol.toFixed(1)),
+        attempts,
+        trackSettings: still.trackSettings,
+        capturedAt: new Date().toISOString(),
+      };
+      seqFramesRef.current.push({ record, blob: still.blob, cropBlob });
+
+      const track = streamRef.current?.getVideoTracks()[0];
+      if (isAmbient) {
+        // Ambient reference in the can — torch back on (where it exists) and move to the next pose.
+        seqAmbientPendingRef.current = false;
+        setSeqAmbientPending(false);
+        if (seqTorchSupportedRef.current && track !== undefined) {
+          torchOnRef.current = await setTorch(track, true);
+          setTorchState(torchOnRef.current ? "on" : "unsupported");
+        }
+        advanceSequence();
+      } else if (poseIndex === SEQUENCE_AMBIENT_POSE_INDEX) {
+        // §2.3's ambient-subtraction reference: same pose, torch off, one more still.
+        seqAmbientPendingRef.current = true;
+        setSeqAmbientPending(true);
+        if (seqTorchSupportedRef.current && track !== undefined) {
+          await setTorch(track, false);
+          torchOnRef.current = false;
+          setTorchState("off");
+        }
+      } else {
+        advanceSequence();
+      }
+    },
+    // advanceSequence is a stable callback defined below; the linter sees it via the deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const advanceSequence = useCallback((): void => {
+    const next = seqStepRef.current + 1;
+    if (next < SEQUENCE_POSE_COUNT) {
+      seqStepRef.current = next;
+      setSeqStep(next);
+      return;
+    }
+    void finishSequence();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const finishSequence = useCallback(async (): Promise<void> => {
+    const store = storeRef.current;
+    const current = sessionRef.current;
+    seqActiveRef.current = false;
+    setSeqActive(false);
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (track !== undefined) void setTorch(track, false);
+    torchOnRef.current = false;
+    if (store === null || current === null) return;
+    const frames = seqFramesRef.current;
+    const ambientFrameIndex = frames.findIndex((f) => !f.record.torch && f.record.poseIndex === SEQUENCE_AMBIENT_POSE_INDEX);
+    const manifest: SequenceManifest = {
+      schemaVersion: SEQUENCE_SCHEMA_VERSION,
+      sessionId: current.sessionId,
+      sequenceIndex: current.sequences?.length ?? 0,
+      hand: current.hand,
+      torchSupported: seqTorchSupportedRef.current,
+      frames: frames.map((f) => f.record),
+      ambientFrameIndex,
+      createdAt: new Date().toISOString(),
+    };
+    try {
+      const updated = await store.addSequence(
+        current,
+        manifest,
+        frames.map((f) => ({ file: f.record.file, blob: f.blob, cropFile: f.record.cropFile, cropBlob: f.cropBlob })),
+      );
+      sessionRef.current = updated;
+      if (isMountedRef.current) {
+        setSession(updated);
+        setExportNote(`sequence ${manifest.sequenceIndex} staged — ${frames.length} frames (${manifest.torchSupported ? "torch" : "ambient-only"})`);
+      }
+    } catch (sequenceError) {
+      if (isMountedRef.current) setError(sequenceError instanceof Error ? sequenceError.message : "sequence staging failed");
+    } finally {
+      seqFramesRef.current = [];
+    }
+  }, []);
+
+  const startSequence = useCallback(async (): Promise<void> => {
+    const stream = streamRef.current;
+    const observation = observationRef.current;
+    if (stream === null || sessionRef.current === null) return;
+    const track = stream.getVideoTracks()[0];
+    const torchOk = await setTorch(track, true);
+    seqTorchSupportedRef.current = torchOk;
+    torchOnRef.current = torchOk;
+    setTorchState(torchOk ? "on" : "unsupported");
+    seqBaselineRef.current = observation?.handedness ?? null;
+    seqFramesRef.current = [];
+    seqStepRef.current = 0;
+    seqAmbientPendingRef.current = false;
+    setSeqStep(0);
+    setSeqAmbientPending(false);
+    seqActiveRef.current = true;
+    setSeqActive(true);
+  }, []);
+
+  const cancelSequence = useCallback((): void => {
+    seqActiveRef.current = false;
+    seqAmbientPendingRef.current = false;
+    seqFramesRef.current = [];
+    setSeqActive(false);
+    setSeqAmbientPending(false);
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (track !== undefined) void setTorch(track, false);
+    torchOnRef.current = false;
+    setTorchState("off");
+  }, []);
+
   /* --------------------------------- Capture --------------------------------- */
 
   const captureNow = useCallback(
@@ -251,6 +422,21 @@ export function CaptureClient() {
               "attempt " + attempt + "/" + STILL_RETRY_MAX + " rejected - still VoL " + stillVol.toFixed(0) + " < " + STILL_VOL_FLOOR,
             ]);
           }
+        }
+
+        // Sequence mode: the accepted still becomes a sequence frame, not a session still.
+        if (seqActiveRef.current) {
+          const cropCanvasSeq = document.createElement("canvas");
+          cropCanvasSeq.width = CANONICAL_LABEL_SIZE;
+          cropCanvasSeq.height = CANONICAL_LABEL_SIZE;
+          const cropContextSeq = cropCanvasSeq.getContext("2d");
+          if (cropContextSeq === null) throw new Error("2d context unavailable");
+          cropContextSeq.putImageData(rectified.image, 0, 0);
+          const cropBlobSeq = await new Promise<Blob>((resolve, reject) => {
+            cropCanvasSeq.toBlob((b) => (b !== null ? resolve(b) : reject(new Error("toBlob null"))), "image/png");
+          });
+          await recordSequenceFrame(still, cropBlobSeq, rectified.toCrop, stillVol, attempt);
+          return;
         }
 
         // B: pose-diversity guard - mark (never block) near-duplicate poses in this session.
@@ -324,7 +510,7 @@ export function CaptureClient() {
         capturingRef.current = false;
       }
     },
-    [],
+    [recordSequenceFrame],
   );
 
   /* -------------------------------- Frame loop -------------------------------- */
@@ -369,6 +555,10 @@ export function CaptureClient() {
           jitter,
           score: observation.score,
           spanHistory: history,
+          // Sequence mode gates each still on its choreography pose — the same profiles /scan uses.
+          ...(seqActiveRef.current
+            ? { pose: CAPTURE_POSES[seqStepRef.current], baselineHandedness: seqBaselineRef.current }
+            : {}),
         };
         grade = gradeFrame(input);
 
@@ -627,6 +817,60 @@ export function CaptureClient() {
                 {rejections.map((line, i) => (
                   <li key={i} className="tabular-nums">
                     {line}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+
+          {/* Torch sequence (measured-reading §2.3). */}
+          <section aria-label="Torch sequence" className="flex flex-col gap-2 rounded-2xl border border-hairline p-4">
+            <h2 className="font-display text-xs uppercase tracking-[0.18em] text-muted">Sequence (torch)</h2>
+            {!seqActive ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void startSequence()}
+                  disabled={status !== "running" || session === null}
+                  className="rounded-full border border-hairline px-4 py-2 text-sm text-ink transition-colors hover:border-mount-glow hover:text-mount-glow disabled:opacity-40"
+                >
+                  Sequence shuru karo
+                </button>
+                <span className="text-xs text-muted">
+                  Kamra dim karo — 5 poses torch ke saath + 1 ambient reference.
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 text-xs">
+                <p aria-live="polite" className="text-sm text-ink">
+                  {seqAmbientPending
+                    ? `Ambient reference — torch OFF, pose ${SEQUENCE_AMBIENT_POSE_INDEX + 1} hold karo`
+                    : `Pose ${seqStep + 1}/${SEQUENCE_POSE_COUNT} · ${CAPTURE_POSES[seqStep].label} — ${CAPTURE_POSES[seqStep].instruction}`}
+                </p>
+                <p className={torchState === "unsupported" ? "text-line-glow" : "text-muted"}>
+                  torch:{" "}
+                  {torchState === "on"
+                    ? "on"
+                    : torchState === "unsupported"
+                      ? "unsupported — is camera par torch nahi; frames ambient-only record honge"
+                      : "off (ambient reference)"}
+                  {" "}· frames {seqFramesRef.current.length}
+                </p>
+                <button
+                  type="button"
+                  onClick={cancelSequence}
+                  className="w-fit rounded-full border border-hairline px-3 py-1 text-xs text-ink transition-colors hover:border-line-glow hover:text-line-glow"
+                >
+                  Cancel sequence
+                </button>
+              </div>
+            )}
+            {session !== null && (session.sequences?.length ?? 0) > 0 ? (
+              <ul aria-label="Staged sequences" className="flex flex-col gap-1 text-xs text-muted">
+                {(session.sequences ?? []).map((seq) => (
+                  <li key={seq.sequenceIndex} className="tabular-nums">
+                    seq-{seq.sequenceIndex} · {seq.frames.length} frames ·{" "}
+                    {seq.torchSupported ? "torch" : "ambient-only"}
                   </li>
                 ))}
               </ul>

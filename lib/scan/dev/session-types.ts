@@ -38,6 +38,7 @@ export const SESSION_DIR_SELECTED = "selected";
 export const SESSION_DIR_ALIGNED = "aligned";
 export const SESSION_DIR_SNAPSHOTS = "snapshots";
 export const SESSION_DIR_LABELS = "labels";
+export const SESSION_DIR_SEQUENCES = "sequences";
 /** Every directory a session export creates, in creation order. aligned/ + snapshots/ stay empty in 0a. */
 export const SESSION_DIRS: readonly string[] = [
   SESSION_DIR_RAW,
@@ -45,6 +46,7 @@ export const SESSION_DIRS: readonly string[] = [
   SESSION_DIR_ALIGNED,
   SESSION_DIR_SNAPSHOTS,
   SESSION_DIR_LABELS,
+  SESSION_DIR_SEQUENCES,
 ];
 export const SESSION_METADATA_FILE = "metadata.json";
 
@@ -98,6 +100,24 @@ export function cropFileName(index: number): string {
 export function labelFileName(index: number): string {
   return `label-${String(index).padStart(3, "0")}.json`;
 }
+
+/** Directory name for one torch sequence inside sequences/. */
+export function sequenceDirName(index: number): string {
+  return `seq-${String(index).padStart(3, "0")}`;
+}
+
+/** File name for one sequence frame's full still, keyed by capture order within the sequence. */
+export function sequenceFrameName(order: number): string {
+  return `frame-${String(order).padStart(3, "0")}.png`;
+}
+
+/** File name for one sequence frame's canonical crop. */
+export function sequenceCropName(order: number): string {
+  return `frame-crop-${String(order).padStart(3, "0")}.png`;
+}
+
+/** The manifest written beside a sequence's frames. */
+export const SEQUENCE_MANIFEST_FILE = "sequence.json";
 
 /* --------------------------------- Capture --------------------------------- */
 
@@ -179,6 +199,8 @@ export interface SessionMetadata {
   readonly labelCount?: number;
   /** Stills discarded by the still-VoL regrade before one was accepted. Absent pre-regrade. */
   readonly rejectedStills?: number;
+  /** Staged torch sequences (measured-reading §2.3). Absent on pre-sequence files. */
+  readonly sequences?: readonly SequenceManifest[];
 }
 
 /* ---------------------------------- Labels ---------------------------------- */
@@ -249,6 +271,65 @@ export interface RekhaLabelFile {
 }
 
 /* -------------------------------- Validators -------------------------------- */
+
+/* ------------------------ Torch sequences (measured-reading §2.3) ------------------------ */
+
+export const SEQUENCE_SCHEMA_VERSION = "seq-1";
+
+/**
+ * The tilt choreography the sequence walks is the scan's own CAPTURE_POSES — five poses. The
+ * count is pinned here (and cross-checked against CAPTURE_POSES in the tests) rather than
+ * imported, so this schema module stays free of detector-side imports.
+ */
+export const SEQUENCE_POSE_COUNT = 5;
+
+/**
+ * Which pose the torch-OFF ambient reference is shot at: 0-based index 2 — the choreography's
+ * "3/5" (TILT_RIGHT) in the HUD's own 1-based numbering, which is what the step spec's "pose 3"
+ * refers to. §2.3 uses it to subtract ambient light from the torch frames.
+ */
+export const SEQUENCE_AMBIENT_POSE_INDEX = 2;
+
+/**
+ * One frame of a torch sequence. Everything §2.3's offline solve needs, verbatim from capture:
+ * the palm homography (frame→crop, row-major Matrix3) gives the palm plane's orientation, the
+ * landmarks give scale (torch-falloff normalisation), trackSettings carries whatever exposure/ISO
+ * the platform exposed, and `torch` says which light model the frame belongs to.
+ */
+export interface SequenceFrameRecord {
+  /** Capture order within the sequence — also the frame file's key. */
+  readonly order: number;
+  /** 0-based index into the tilt choreography (CAPTURE_POSES). */
+  readonly poseIndex: number;
+  /** The pose's id string, denormalised so the manifest reads without the app. */
+  readonly pose: string;
+  readonly torch: boolean;
+  readonly file: string;
+  readonly cropFile: string;
+  /** Frame→crop palm homography, row-major, 9 numbers. */
+  readonly homography: readonly number[];
+  readonly landmarks: readonly Landmark3[];
+  readonly width: number;
+  readonly height: number;
+  readonly stillVol: number;
+  readonly attempts: number;
+  readonly trackSettings: Readonly<Record<string, string | number | boolean>>;
+  readonly capturedAt: string;
+}
+
+export interface SequenceManifest {
+  readonly schemaVersion: typeof SEQUENCE_SCHEMA_VERSION;
+  readonly sessionId: string;
+  /** 0-based index of this sequence within the session — names its sequences/seq-NNN/ dir. */
+  readonly sequenceIndex: number;
+  readonly hand: SessionHand;
+  /** False when applyConstraints could not turn the torch on — the frames are ambient-only. */
+  readonly torchSupported: boolean;
+  readonly frames: readonly SequenceFrameRecord[];
+  /** Index into `frames` of the torch-OFF ambient reference. */
+  readonly ambientFrameIndex: number;
+  readonly createdAt: string;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -321,9 +402,84 @@ export function isSessionMetadata(value: unknown): value is SessionMetadata {
     isFiniteNumber(value.canonicalSize) &&
     (value.labelCount === undefined || isFiniteNumber(value.labelCount)) &&
     (value.rejectedStills === undefined || isFiniteNumber(value.rejectedStills)) &&
+    (value.sequences === undefined || (Array.isArray(value.sequences) && value.sequences.every(isSequenceManifest))) &&
     Array.isArray(value.stills) &&
     value.stills.every(isStillRecord)
   );
+}
+
+function isSequenceFrame(value: unknown): value is SequenceFrameRecord {
+  return (
+    isRecord(value) &&
+    isFiniteNumber(value.order) &&
+    isFiniteNumber(value.poseIndex) &&
+    value.poseIndex >= 0 &&
+    value.poseIndex < SEQUENCE_POSE_COUNT &&
+    typeof value.pose === "string" &&
+    typeof value.torch === "boolean" &&
+    typeof value.file === "string" &&
+    typeof value.cropFile === "string" &&
+    Array.isArray(value.homography) &&
+    value.homography.length === 9 &&
+    value.homography.every(isFiniteNumber) &&
+    isLandmarkArray(value.landmarks) &&
+    isFiniteNumber(value.width) &&
+    isFiniteNumber(value.height) &&
+    isFiniteNumber(value.stillVol) &&
+    isFiniteNumber(value.attempts) &&
+    isRecord(value.trackSettings) &&
+    typeof value.capturedAt === "string"
+  );
+}
+
+/**
+ * A valid sequence carries EXACTLY the choreography: one torch frame per pose (all
+ * {@link SEQUENCE_POSE_COUNT} poses, no repeats) plus exactly one torch-OFF ambient reference at
+ * {@link SEQUENCE_AMBIENT_POSE_INDEX}, pointed at by `ambientFrameIndex`. §2.3's solve needs the
+ * ambient frame to subtract — a sequence without it is not a lesser sequence, it is invalid.
+ * `torchSupported: false` relaxes only the torch FLAGS (every frame ambient), never the shape.
+ */
+export function isSequenceManifest(value: unknown): value is SequenceManifest {
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== SEQUENCE_SCHEMA_VERSION ||
+    typeof value.sessionId !== "string" ||
+    value.sessionId.length === 0 ||
+    !isFiniteNumber(value.sequenceIndex) ||
+    (value.hand !== "left" && value.hand !== "right") ||
+    typeof value.torchSupported !== "boolean" ||
+    typeof value.createdAt !== "string" ||
+    !Array.isArray(value.frames) ||
+    !value.frames.every(isSequenceFrame) ||
+    !isFiniteNumber(value.ambientFrameIndex)
+  ) {
+    return false;
+  }
+  const frames = value.frames as readonly SequenceFrameRecord[];
+  const ambient = frames[value.ambientFrameIndex as number];
+  if (ambient === undefined || ambient.torch) return false;
+  if (ambient.poseIndex !== SEQUENCE_AMBIENT_POSE_INDEX) return false;
+  const poseFrames = frames.filter((f) => f !== ambient);
+  if (poseFrames.length !== SEQUENCE_POSE_COUNT) return false;
+  if (new Set(poseFrames.map((f) => f.poseIndex)).size !== SEQUENCE_POSE_COUNT) return false;
+  if (value.torchSupported) {
+    // Torch mode proper: every pose frame lit, and the ambient reference is the ONE unlit frame.
+    if (poseFrames.some((f) => !f.torch)) return false;
+    if (frames.filter((f) => !f.torch).length !== 1) return false;
+  } else if (frames.some((f) => f.torch)) {
+    // No torch on this camera: nothing can claim to be lit.
+    return false;
+  }
+  return true;
+}
+
+export function parseSequenceManifest(json: string): SequenceManifest | null {
+  try {
+    const value: unknown = JSON.parse(json);
+    return isSequenceManifest(value) ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
