@@ -122,6 +122,52 @@ const asV2 = (mutate: (f: Record<string, unknown>) => void): unknown => {
 };
 ok(!isRekhaLabelFile(asV2((f) => { (f.lines as Record<string, unknown>[])[0].confidence = "sure"; })), "bad confidence rejected");
 ok(!isRekhaLabelFile(asV2((f) => { (f.lines as Record<string, unknown>[])[0].method = "guessed"; })), "bad method rejected");
+ok(
+  isRekhaLabelFile(asV2((f) => { (f.lines as Record<string, unknown>[])[0].method = "prelabel-corrected"; })),
+  "prelabel-corrected is a valid method (CORRECTION mode, growth sessions)",
+);
+ok(isRekhaLabelFile(asV2((f) => { f.mode = "correction"; })), "mode correction validates");
+{
+  /*
+   * CORRECTION mode (growth sessions) — Save's gate covers all NINE classes, because the
+   * calibration census only admits complete labels. A majors-only state that IS saveable in EVAL
+   * must be refused here, and the accepted file must carry its provenance through the roundtrip.
+   */
+  const base = completeState();
+  const majorsOnly: LabelerState = {
+    ...base,
+    mode: "correction",
+    lines: { ...base.lines, heart: { ...base.lines.heart, method: "prelabel-corrected" } },
+  };
+  ok(isComplete({ ...majorsOnly, mode: "blank_slate" }), "majors-only IS complete in blank-slate mode — EVAL is unchanged");
+  ok(!isComplete(majorsOnly), "…and is NOT complete in correction mode: an unlabelled minor is a crease left in the background mask");
+  assert.throws(() => buildLabelFile(majorsOnly, session, 0, "srijan", "2026-09-02T00:10:00.000Z"), "and it refuses to build");
+  assertions += 1;
+
+  const absentMinor = { points: [], absent: true, confidence: "clear" as const, method: "manual" as const, viewAtCommit: "NATURAL" as const, done: true };
+  const corrected: LabelerState = {
+    ...majorsOnly,
+    minorLines: { sun: absentMinor, health: absentMinor, marriage: absentMinor, bracelets: absentMinor, girdle: absentMinor },
+  };
+  ok(isComplete(corrected), "all nine traced-or-absent is complete in correction mode");
+  const built = buildLabelFile(corrected, session, 0, "srijan", "2026-09-02T00:10:00.000Z");
+  ok(
+    built.mode === "correction" && built.lines.find((line) => line.id === "heart")?.method === "prelabel-corrected",
+    "correction mode + prelabel-corrected method are written",
+  );
+  ok(built.lines.length === 9, `all nine classes reach the file (${built.lines.length})`);
+  ok(parseRekhaLabelFile(JSON.stringify(built)) !== null, "and the file validates");
+
+  // A rejected prelabel keeps its points in STATE so A-then-A restores them; the FILE never sees them.
+  const rejectedPrelabel: LabelerState = {
+    ...corrected,
+    minorLines: { ...corrected.minorLines, sun: { ...absentMinor, points: [[0.6, 0.3], [0.62, 0.6]] } },
+  };
+  ok(isComplete(rejectedPrelabel), "an absent line with retained points is still complete");
+  const rejectedFile = buildLabelFile(rejectedPrelabel, session, 0, "srijan", "2026-09-02T00:10:00.000Z");
+  ok(rejectedFile.lines.find((line) => line.id === "sun")?.points.length === 0, "and the absent line is written with no points");
+  ok(parseRekhaLabelFile(JSON.stringify(rejectedFile)) !== null, "so the D4 invariant (absent ⇒ no points) holds in the file");
+}
 ok(!isRekhaLabelFile(asV2((f) => { (f.lines as Record<string, unknown>[])[0].viewAtCommit = "XRAY"; })), "bad viewAtCommit rejected");
 ok(!isRekhaLabelFile(asV2((f) => { delete f.labelerId; })), "0a-2 without labelerId rejected");
 ok(!isRekhaLabelFile(asV2((f) => { f.enhancement = { version: "enh-1", channel: "UV" }; })), "bad enhancement channel rejected");

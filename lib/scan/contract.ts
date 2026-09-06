@@ -12,11 +12,15 @@
  * crease or bare skin (measured: background p99 0.74–1.0 on the two GT hands). And CLAHE is
  * adaptive per-tile amplification, so anything sampled after it has already had its absolute scale
  * equalised away. The only plane that still carries absolute units is the PRE-CLAHE black-hat
- * depth response on the illumination-normalised luma: a crease of physical depth A produces a
- * response proportional to A in raw luma units, whether or not it is the brightest thing in frame.
- * That plane (ridge.ts `detectRidges`' optional `raw` out-param) is the contract's anchor; the
- * percentile-normalised gabor/frangi maps survive only as a SHAPE gate that can reduce, never
- * raise.
+ * depth response, taken on the RAW box-downsampled luma: both the worker and the eval hand
+ * `detectRidges` the 128 working-grid luma exactly as sampled from the crop (`workGray` / `small`),
+ * NOT the illumination-normalised plane the Frangi stage reads, and the optional `raw` out-param
+ * returns the black-hat of that input before CLAHE touches it. A crease of physical depth A then
+ * produces a response proportional to A in raw luma units, whether or not it is the brightest thing
+ * in frame — but also modulated by whatever illumination ramp the crop carries. That plane is the
+ * contract's anchor; the percentile-normalised gabor/frangi maps survive only as a SHAPE gate that
+ * can reduce, never raise.
+ * TODO: measure the illumination-normalised variant (`detectRidges` on `illumination.out`) against the same GT census before switching the anchor.
  *
  * Deliberately out of scope here: completion.ts's gate constants (ACCEPT_ENERGY 0.3,
  * OBSERVED_ENERGY_FLOOR 0.405, MIN_BIN_WEIGHT 0.9, …) were derived from the LEGACY field's
@@ -35,9 +39,9 @@ export interface ContractParams {
 
 /**
  * PROVISIONAL — written by `npm run eval -- --calibrate-contract` (two-pass: measure the raw
- * depth-plane distribution on GT, then grid-search d0/s maximising centreline-vs-background
- * separation subject to background p99 <= 0.15). The JSDoc below is refreshed by that command
- * with the GT census, date, and measured margins.
+ * depth-plane distribution on complete-label GT — all nine classes traced or marked absent — then
+ * grid-search d0/s maximising centreline-vs-background separation subject to background p90 <=
+ * 0.15). The JSDoc below is refreshed by that command with the GT census, date, and measured margins.
  *
  * Calibration 2026-09-04 (PROVISIONAL): GT census lines-current-02, lines-missing-tilt-03; centre median 0.000, worst bg p99 0.933 (target <= 0.15).
  */
@@ -92,6 +96,8 @@ export interface ContractStats {
   readonly centrelineMedian: number | null;
   /** p99 of the field on background-mask pixels; null when no mask (or an empty one) is given. */
   readonly backgroundP99: number | null;
+  /** p90 of the same background pixels — the calibration's feasibility constraint reads this one. */
+  readonly backgroundP90: number | null;
   readonly mean: number;
 }
 
@@ -124,6 +130,7 @@ export function contractStats(
   return {
     centrelineMedian: centre.length === 0 ? null : quantileOf(centre, 0.5),
     backgroundP99: background.length === 0 ? null : quantileOf(background, 0.99),
+    backgroundP90: background.length === 0 ? null : quantileOf(background, 0.9),
     mean: sum / field.length,
   };
 }

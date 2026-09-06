@@ -65,12 +65,28 @@ export function emptyLabelerState(channel: GrayChannel = "LUMA"): LabelerState {
   };
 }
 
-/** True when every MAJOR line is committed or absent — Save's gate. Minor lines are optional. */
+/**
+ * Save's gate.
+ *
+ * `blank_slate` (EVAL): every MAJOR line committed or absent; minor lines stay optional, because a
+ * blank-slate labeler tracing nine classes from scratch is a different job from the four the eval
+ * set is built on.
+ *
+ * `correction` (GROWTH): all NINE labelable classes, because the point of a growth session is a
+ * COMPLETE label — the calibration census (`--calibrate-contract`) admits only cases where every
+ * class was traced or explicitly marked absent, and an unlabelled class leaves a real crease
+ * sitting in the background mask. Every class is pre-filled or empty on arrival, so this asks the
+ * human to accept, edit or reject each one rather than to draw nine lines.
+ *
+ * An absent line is complete whatever its state points hold: `buildLabelFile` writes `[]` for it,
+ * so keeping the rejected prelabel in memory (to un-reject) cannot leak into the file.
+ */
 export function isComplete(state: LabelerState): boolean {
-  return LABEL_LINE_IDS.every((id) => {
-    const line = state.lines[id];
-    return line.done && (line.absent ? line.points.length === 0 : line.points.length >= 2);
-  });
+  const done = (line: LabelerLineState | undefined): boolean =>
+    line !== undefined && line.done && (line.absent || line.points.length >= 2);
+  if (!LABEL_LINE_IDS.every((id) => done(state.lines[id]))) return false;
+  if (state.mode !== "correction") return true;
+  return MINOR_LINE_IDS.every((id) => done(state.minorLines?.[id]));
 }
 
 /**

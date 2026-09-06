@@ -15,14 +15,13 @@
  */
 import { CORRIDORS } from "./completion";
 import { MINOR_CORRIDORS } from "./corridors-minor";
-import { searchCorridor } from "./corridor-path";
+import { CORRIDOR_GATES, searchCorridor, type CorridorClass } from "./corridor-path";
 import { depthProxy, type ClassifiedTrace, type LineExtraction, type TraceSet } from "./lines";
 import type { TraceClass } from "./classify";
 import { MINOR_EMIT_MIN_DEPTH, MINOR_EMIT_MIN_SCORE, MINOR_EMIT_REQUIRE_STRONG } from "./minor-lines";
 
-/** The classes the corridor search may fill in. */
-export const CORRIDOR_CLASSES = ["fate", "sun", "health", "marriage"] as const;
-export type CorridorClass = (typeof CORRIDOR_CLASSES)[number];
+/** The classes the corridor search may fill in — defined beside their gates in corridor-path.ts. */
+export { CORRIDOR_CLASSES, type CorridorClass } from "./corridor-path";
 
 /** Same qualification the minor emitter uses — a class BELOW these gates counts as "not emitted". */
 function minorEmitted(all: TraceSet, cls: TraceClass): boolean {
@@ -59,7 +58,7 @@ export function corridorTraces(
 
   const emit = (cls: CorridorClass): void => {
     const corridor = cls === "fate" ? CORRIDORS.fate : MINOR_CORRIDORS[cls];
-    const result = searchCorridor(field, size, corridor);
+    const result = searchCorridor(field, size, corridor, CORRIDOR_GATES[cls]);
     report?.push({ cls, accepted: result !== null, meanField: result?.meanField ?? null });
     if (result === null) return;
     const points = result.points.map((p) => ({ x: p.x, y: p.y }));

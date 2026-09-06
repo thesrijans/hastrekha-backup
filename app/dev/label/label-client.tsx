@@ -7,7 +7,10 @@
  * detector code — no segmenter, no ridge/Frangi, no fusion, no extraction (D1, enforced by
  * test/import-boundary.test.ts). What the human sees is the crop plus display-only enhancement
  * (enhance.ts); what the livewire snaps to is the same valley response the CREASE view tints
- * (valley.ts). The CORRECTION mode toggle exists but is locked until the eval set is frozen.
+ * (valley.ts). CORRECTION mode unlocks only for sessions captured with `purpose: "growth"`: every
+ * class is pre-filled from the app's corridor + contract pipeline through the sanctioned reveal
+ * window (reveal.ts), and the human accepts (Enter), edits (drag) or rejects (A) each line, with
+ * `method: "prelabel-corrected"` recording the provenance. EVAL sessions behave exactly as before.
  *
  * Views: V cycles NATURAL → CONTRAST → CREASE · C cycles the gray channel · HOLD Space flips to
  * NATURAL while held (the sanity check against enhancement bias — a crease that vanishes in the
@@ -20,7 +23,7 @@
  * heart/head/life/fate; drag a vertex to adjust; Backspace deletes the selected vertex.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { computeReveal, type RevealSet } from "@/lib/scan/dev/reveal";
+import { computePrelabel, computeReveal, type RevealSet } from "@/lib/scan/dev/reveal";
 import {
   CANONICAL_LABEL_SIZE,
   GRAY_CHANNELS,
@@ -143,6 +146,8 @@ export function LabelClient() {
   const revealOnRef = useRef(false);
   const revealSetRef = useRef<RevealSet | null>(null);
   const revealCacheRef = useRef<Map<string, RevealSet>>(new Map());
+  /** CORRECTION mode: the prelabel per still, computed once (the C hotkey re-opens the still). */
+  const prelabelCacheRef = useRef<Map<string, RevealSet>>(new Map());
   const [dirty, setDirty] = useState(false);
   // Lazy read: localStorage is a dev convenience; SSR and blocked storage both fall back to "".
   const [labelerId, setLabelerId] = useState(() => {
@@ -263,6 +268,43 @@ export function LabelClient() {
       }
       setLines(restored);
       setMinorLines(restoredMinor);
+    } else if (meta.purpose === "growth") {
+      /*
+       * CORRECTION mode (growth sessions): pre-fill every class the app's corridor + contract
+       * pipeline claims. Nothing is committed on the human's behalf — each pre-filled line starts
+       * NOT done (Enter accepts it as drawn, dragging a vertex edits it, A rejects it) and carries
+       * `prelabel-corrected` so the file says where its points came from. Classes the pipeline did
+       * not claim stay empty and are traced or marked absent exactly as in EVAL.
+       */
+      const prelabelKey = `${meta.sessionId}/${index}`;
+      let prelabel = prelabelCacheRef.current.get(prelabelKey);
+      if (prelabel === undefined) {
+        prelabel = computePrelabel(rgba, CANONICAL_LABEL_SIZE);
+        prelabelCacheRef.current.set(prelabelKey, prelabel);
+      }
+      const prefilled: Record<LabelLineId, LabelerLineState> = {
+        heart: emptyLineState(),
+        head: emptyLineState(),
+        life: emptyLineState(),
+        fate: emptyLineState(),
+      };
+      const prefilledMinor: Partial<Record<MinorLineId, LabelerLineState>> = {};
+      for (const id of LABELABLE_LINE_IDS) {
+        const best = prelabel[id]?.[0];
+        if (best === undefined || best.length < 2) continue;
+        const state: LabelerLineState = {
+          points: best,
+          absent: false,
+          confidence: "uncertain",
+          method: "prelabel-corrected",
+          viewAtCommit: "NATURAL",
+          done: false,
+        };
+        if ((LABEL_LINE_IDS as readonly string[]).includes(id)) prefilled[id as LabelLineId] = state;
+        else prefilledMinor[id as MinorLineId] = state;
+      }
+      setLines(prefilled);
+      setMinorLines(prefilledMinor);
     } else {
       setLines(emptyLabelerState().lines);
       setMinorLines({});
@@ -361,7 +403,15 @@ export function LabelClient() {
       for (const id of LABELABLE_LINE_IDS) {
         const line = lineState(id);
         if (line.absent || line.points.length < 2) continue;
+        /*
+         * A machine prelabel the human has not accepted yet is drawn DASHED. Solid means "a person
+         * stands behind this"; a pending prelabel drawn in the committed style would let a whole
+         * palm be saved as ground truth without anyone ever having looked at a single line.
+         */
+        const pending = !line.done;
+        if (pending) context.setLineDash([6 / scale, 5 / scale]);
         drawPoly(line.points, id === activeIdRef.current, true);
+        if (pending) context.setLineDash([]);
       }
 
       // Lane C: post-commit reveal - the detector's polylines for the ACTIVE id, dim + distinct,
@@ -619,7 +669,19 @@ export function LabelClient() {
 
   const commitActive = useCallback((): void => {
     const trace = traceRef.current;
-    if (trace.seed === null || trace.segments.length === 0) return;
+    if (trace.seed === null || trace.segments.length === 0) {
+      /*
+       * CORRECTION mode: Enter with no trace in progress on a pre-filled, not-yet-accepted line
+       * accepts it as drawn. In EVAL a line never holds points before it is done (commit and
+       * un-absent are the only writers), so this branch cannot fire there.
+       */
+      const id = activeIdRef.current;
+      const pending = lineState(id);
+      if (trace.seed === null && !pending.done && !pending.absent && pending.points.length >= 2) {
+        updateLine(id, { done: true, viewAtCommit: viewRef.current });
+      }
+      return;
+    }
     const merged: number[][] = [];
     for (const segment of trace.segments) {
       for (const p of segment) {
@@ -636,13 +698,14 @@ export function LabelClient() {
       // CREASE-committed lines default to 'faint': the enhanced view shows what the natural view
       // may not support, and the Space-flip check is exactly for upgrading this by eye.
       confidence: committedView === "CREASE" ? "faint" : "clear",
-      method: trace.snapped.some(Boolean) ? "livewire" : "manual",
+      // A redrawn prelabel is still a corrected prelabel — the mode's provenance outranks the tool.
+      method: lineState(id).method === "prelabel-corrected" ? "prelabel-corrected" : trace.snapped.some(Boolean) ? "livewire" : "manual",
       viewAtCommit: committedView,
       done: true,
     });
     traceRef.current = EMPTY_TRACE;
     livePathRef.current = [];
-  }, [updateLine]);
+  }, [lineState, updateLine]);
 
   const discardTrace = useCallback((): void => {
     traceRef.current = EMPTY_TRACE;
@@ -664,8 +727,15 @@ export function LabelClient() {
 
   const toggleAbsent = useCallback((id: LabelableLineId): void => {
     const line = lineState(id);
+    /*
+     * Marking absent KEEPS the points in state so A-then-A restores them — in CORRECTION mode they
+     * are a prelabel that cost a pipeline run and cannot otherwise be recovered without re-opening
+     * the still (which discards every other unsaved edit). Nothing leaks: `buildLabelFile` writes
+     * `[]` for an absent line, the draw loop skips absent lines, and `isComplete` ignores points on
+     * one. In EVAL an absent line has no points to keep, so this is a no-op there.
+     */
     if (line.absent) updateLine(id, { absent: false, done: false });
-    else updateLine(id, { absent: true, points: [], done: true });
+    else updateLine(id, { absent: true, done: true });
     discardTrace();
   }, [discardTrace, lineState, updateLine]);
 
@@ -788,7 +858,9 @@ export function LabelClient() {
 
   /* ------------------------------- Save / export ------------------------------- */
 
-  const complete = isComplete({ lines, mode: "blank_slate", channel });
+  /** CORRECTION is a property of the SESSION (metadata purpose), never a toggle the labeler flips. */
+  const correction = session?.purpose === "growth";
+  const complete = isComplete({ lines, mode: correction ? "correction" : "blank_slate", channel });
 
   const save = useCallback(async (): Promise<void> => {
     const store = storeRef.current;
@@ -803,7 +875,7 @@ export function LabelClient() {
       const state: LabelerState = {
         lines: linesRef.current,
         minorLines: minorDone,
-        mode: "blank_slate",
+        mode: meta.purpose === "growth" ? "correction" : "blank_slate",
         channel: channelRef.current,
       };
       const file = buildLabelFile(state, meta, stillIndex, labelerId, new Date().toISOString());
@@ -846,15 +918,24 @@ export function LabelClient() {
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <h1 className="font-display text-2xl text-ink">Labeler</h1>
-          <p className="text-sm text-muted">Blank-slate ground truth — detector output yahan kabhi render nahi hota.</p>
+          <p className="text-sm text-muted">
+            {correction
+              ? "Correction — growth session: har line app ke corridor + contract prelabel se bhari hai; Enter accept, drag edit, A reject."
+              : "Blank-slate ground truth — detector output yahan kabhi render nahi hota."}
+          </p>
         </div>
         <div className="flex items-center gap-3 text-xs" role="radiogroup" aria-label="Labeler mode">
-          <label className="flex items-center gap-1.5 text-ink">
-            <input type="radio" name="mode" checked readOnly /> EVAL (blank slate)
+          <label className={`flex items-center gap-1.5 ${correction ? "text-muted" : "text-ink"}`}>
+            <input type="radio" name="mode" checked={!correction} readOnly /> EVAL (blank slate)
           </label>
-          <label className="flex items-center gap-1.5 text-muted" title="locked until eval set is frozen">
-            <input type="radio" name="mode" disabled /> CORRECTION{" "}
-            <span className="rounded-full border border-hairline px-2 py-0.5">locked until eval set is frozen</span>
+          <label
+            className={`flex items-center gap-1.5 ${correction ? "text-ink" : "text-muted"}`}
+            title={correction ? "unlocked by this session's purpose: growth" : "unlocks for sessions captured with purpose GROWTH"}
+          >
+            <input type="radio" name="mode" checked={correction} disabled={!correction} readOnly /> CORRECTION{" "}
+            <span className="rounded-full border border-hairline px-2 py-0.5">
+              {correction ? "growth session" : "growth sessions only"}
+            </span>
           </label>
         </div>
       </header>
@@ -884,6 +965,7 @@ export function LabelClient() {
                   {summary.sessionId}
                   <span className="block text-muted">
                     {summary.hand} · {summary.stillCount} stills
+                    {summary.purpose === "growth" ? " · growth" : ""}
                   </span>
                 </button>
               </li>
@@ -948,6 +1030,7 @@ export function LabelClient() {
           <p className="text-[0.7rem] leading-5 text-muted">
             1–4 line · click seed/append · S snap · Z undo · Enter commit · Esc cancel · A absent · V view · C channel ·
             Space hold = natural · L loupe · R reveal (post-commit) · wheel/± zoom · Shift+drag pan · Backspace delete vertex
+            {correction ? " · Enter on a pre-filled line = accept" : ""}
           </p>
         </section>
 

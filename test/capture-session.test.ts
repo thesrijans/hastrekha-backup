@@ -105,6 +105,11 @@ ok(parseSessionMetadata(JSON.stringify(session)) !== null, "session survives a J
 ok(!isSessionMetadata({ ...session, schemaVersion: "other" }), "wrong schemaVersion is rejected");
 ok(!isSessionMetadata({ ...session, hand: "both" }), "invalid hand is rejected");
 ok(
+  isSessionMetadata({ ...session, purpose: "growth" }) && isSessionMetadata({ ...session, purpose: "eval" }),
+  "purpose eval/growth validates — and its absence (the session above) means eval",
+);
+ok(!isSessionMetadata({ ...session, purpose: "training" }), "an unknown purpose is rejected");
+ok(
   !isSessionMetadata({ ...session, stills: [{ ...still, landmarks: still.landmarks.slice(0, 20) }] }),
   "20 landmarks is not a hand — 21 required",
 );

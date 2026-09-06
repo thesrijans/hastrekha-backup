@@ -31,6 +31,7 @@ import {
   type SequenceManifest,
   type SessionHand,
   type SessionMetadata,
+  type SessionPurpose,
 } from "./session-types";
 
 /* --------------------------------- IndexedDB -------------------------------- */
@@ -123,6 +124,8 @@ export interface SessionSummary {
   readonly hand: SessionHand;
   readonly createdAt: string;
   readonly stillCount: number;
+  /** `eval` unless the session was captured as GROWTH. */
+  readonly purpose: SessionPurpose;
 }
 
 /**
@@ -136,8 +139,11 @@ export class SessionStore {
     return new SessionStore(await openDb());
   }
 
-  /** Create and stage a fresh session document. */
-  async createSession(hand: SessionHand, canonicalSize: number): Promise<SessionMetadata> {
+  /**
+   * Create and stage a fresh session document. `purpose` is written only when it is `growth`, so
+   * an EVAL session's metadata.json stays byte-identical to what shipped before purposes existed.
+   */
+  async createSession(hand: SessionHand, canonicalSize: number, purpose: SessionPurpose = "eval"): Promise<SessionMetadata> {
     const now = new Date();
     const metadata: SessionMetadata = {
       schemaVersion: SESSION_SCHEMA_VERSION,
@@ -146,6 +152,7 @@ export class SessionStore {
       createdAt: now.toISOString(),
       canonicalSize,
       stills: [],
+      ...(purpose === "growth" ? { purpose } : {}),
     };
     await idbPut(this.db, STORE_SESSIONS, metadata);
     return metadata;
@@ -160,7 +167,13 @@ export class SessionStore {
     const all = await idbAll<unknown>(this.db, STORE_SESSIONS);
     return all
       .filter(isSessionMetadata)
-      .map((s) => ({ sessionId: s.sessionId, hand: s.hand, createdAt: s.createdAt, stillCount: s.stills.length }))
+      .map((s) => ({
+        sessionId: s.sessionId,
+        hand: s.hand,
+        createdAt: s.createdAt,
+        stillCount: s.stills.length,
+        purpose: s.purpose ?? "eval",
+      }))
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }
 

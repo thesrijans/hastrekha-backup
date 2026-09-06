@@ -34,31 +34,57 @@ export const COST_FLOOR = 0.04;
 /** Radius (0–1 crop fraction) each corridor END may roam to find its best seed pixel. */
 export const CORRIDOR_END_SEARCH_R = 0.04;
 
-/**
- * Mean contract field the accepted path must reach. UNCALIBRATED placeholder — written by
- * `--calibrate-contract` as the fate-corridor p95 across fate-ABSENT hands plus a stated margin,
- * so a path has to be brighter than anything an absent hand offers.
- */
-export const CORRIDOR_ACCEPT_MEAN = 0.159;
+/* ------------------------------ Acceptance gates ------------------------------ */
+
+/** The classes the corridor search may fill in: fate from completion.ts, the rest from corridors-minor.ts. */
+export const CORRIDOR_CLASSES = ["fate", "sun", "health", "marriage"] as const;
+export type CorridorClass = (typeof CORRIDOR_CLASSES)[number];
+
+/** Acceptance gates for one class. Every number is a statement about the CONTRACT field. */
+export interface CorridorGates {
+  /** Mean contract field the accepted path must reach. */
+  readonly acceptMean: number;
+  /**
+   * p10 of the field along the path — the DIM end of the line must still look like crease, or the
+   * path is a bright-bead chain strung through gaps.
+   */
+  readonly acceptP10: number;
+  /**
+   * Fraction of path points that must lie inside the corridor mask. With relaxation restricted to
+   * the mask this is 1.0 by construction; the gate stays as defence-in-depth against end-refinement
+   * drift, exactly because a constraint that is load-bearing should also be asserted.
+   */
+  readonly minInsideFraction: number;
+  /**
+   * Longest contiguous run of path points below `acceptP10`, as a fraction of path length. A real
+   * line may fade briefly; a chained phantom is mostly gap. (There is deliberately NO length gate —
+   * with knot-pinned endpoints the path length is always ~the corridor's and would gate nothing.)
+   */
+  readonly maxGapFraction: number;
+}
 
 /**
- * p10 of the field along the path — the DIM end of the line must still look like crease, or the
- * path is a bright-bead chain strung through gaps.
+ * Per-class gates.
+ *
+ * FATE's `acceptMean` is the one calibrated number in this file: `--calibrate-contract` measures
+ * the fate-corridor p95 across fate-ABSENT hands, adds a stated margin, and rewrites it here, so a
+ * path has to be brighter than anything an absent hand offers. That command stamps the census and
+ * date it used into `CONTRACT_DEPTH_DEFAULTS`' JSDoc in contract.ts — the provenance for this
+ * number lives there rather than being duplicated (and going stale) here. Fate's other three gates
+ * are authored.
+ *
+ * The minor classes start at fate's values. That is a prior, not a measurement: fate is the only
+ * class with an absent-hand census, so these three say UNCALIBRATED until one exists for them.
  */
-export const CORRIDOR_ACCEPT_P10 = 0.12;
-
-/** Fraction of path points that must lie inside the corridor mask. With relaxation restricted to
- * the mask this is 1.0 by construction; the gate stays as defence-in-depth against end-refinement
- * drift, exactly because a constraint that is load-bearing should also be asserted. */
-export const CORRIDOR_MIN_INSIDE_FRACTION = 0.9;
-
-/**
- * Longest contiguous run of path points below {@link CORRIDOR_ACCEPT_P10}, as a fraction of path
- * length. A real line may fade briefly; a chained phantom is mostly gap. (There is deliberately
- * NO length gate — with knot-pinned endpoints the path length is always ~the corridor's and would
- * gate nothing.)
- */
-export const CORRIDOR_MAX_GAP_FRACTION = 0.15;
+export const CORRIDOR_GATES: Readonly<Record<CorridorClass, CorridorGates>> = {
+  fate: { acceptMean: 0.159, acceptP10: 0.12, minInsideFraction: 0.9, maxGapFraction: 0.15 },
+  /** UNCALIBRATED — set by calibration. */
+  sun: { acceptMean: 0.159, acceptP10: 0.12, minInsideFraction: 0.9, maxGapFraction: 0.15 },
+  /** UNCALIBRATED — set by calibration. */
+  health: { acceptMean: 0.159, acceptP10: 0.12, minInsideFraction: 0.9, maxGapFraction: 0.15 },
+  /** UNCALIBRATED — set by calibration. */
+  marriage: { acceptMean: 0.159, acceptP10: 0.12, minInsideFraction: 0.9, maxGapFraction: 0.15 },
+};
 
 /** Douglas-Peucker tolerance in px — matches skeleton-trace point density (lines.ts simplify). */
 export const CORRIDOR_SIMPLIFY_EPSILON_PX = 1.6;
@@ -327,8 +353,14 @@ function refineEnd(field: Float32Array, mask: Uint8Array, size: number, at: Poin
  * seed, the ends were mutually unreachable inside the mask, or the path failed an acceptance
  * gate. The gates make the null honest — a corridor search that always returns SOMETHING is a
  * phantom-line machine (measured pre-contract: fate-corridor p90 ≈ 0.8 on fate-ABSENT hands).
+ * `gates` defaults to fate's; callers searching another class pass {@link CORRIDOR_GATES}[class].
  */
-export function searchCorridor(field: Float32Array, size: number, corridor: CorridorShape): CorridorResult | null {
+export function searchCorridor(
+  field: Float32Array,
+  size: number,
+  corridor: CorridorShape,
+  gates: CorridorGates = CORRIDOR_GATES.fate,
+): CorridorResult | null {
   const { inside, centreline } = buildCorridorMask(corridor, size);
   const seedA = refineEnd(field, inside, size, centreline[0]);
   const seedB = refineEnd(field, inside, size, centreline[centreline.length - 1]);
@@ -353,7 +385,7 @@ export function searchCorridor(field: Float32Array, size: number, corridor: Corr
     values[i] = value;
     sum += value;
     if (inside[node] === 1) insideCount += 1;
-    if (value < CORRIDOR_ACCEPT_P10) {
+    if (value < gates.acceptP10) {
       gapRun += 1;
       if (gapRun > worstGap) worstGap = gapRun;
     } else {
@@ -370,9 +402,9 @@ export function searchCorridor(field: Float32Array, size: number, corridor: Corr
     insideFraction: insideCount / count,
     maxGapFraction: worstGap / count,
   };
-  if (result.meanField < CORRIDOR_ACCEPT_MEAN) return null;
-  if (result.p10Field < CORRIDOR_ACCEPT_P10) return null;
-  if (result.insideFraction < CORRIDOR_MIN_INSIDE_FRACTION) return null;
-  if (result.maxGapFraction >= CORRIDOR_MAX_GAP_FRACTION) return null;
+  if (result.meanField < gates.acceptMean) return null;
+  if (result.p10Field < gates.acceptP10) return null;
+  if (result.insideFraction < gates.minInsideFraction) return null;
+  if (result.maxGapFraction >= gates.maxGapFraction) return null;
   return result;
 }

@@ -22,8 +22,8 @@ import {
   type CaptureStillRecord,
   type SessionMetadata,
 } from "../lib/scan/dev/session-types";
-import { buildLabelFile, emptyLabelerState, type LabelerState } from "../lib/scan/dev/labeler-file";
-import { loadGroundTruthDetailed } from "./eval/gt-adapter";
+import { buildLabelFile, emptyLabelerState, type LabelerLineState, type LabelerState } from "../lib/scan/dev/labeler-file";
+import { hasCompleteLabel, loadGroundTruthDetailed } from "./eval/gt-adapter";
 
 let assertions = 0;
 const ok = (condition: boolean, message: string): void => {
@@ -108,6 +108,44 @@ try {
     included.every((c) => c.skip === undefined),
     "--include-duplicates scores the duplicate too",
   );
+
+  /* ---------------- Growth sessions: excluded from scoring by default, usable by calibration ---------------- */
+
+  const growthMeta: SessionMetadata = { ...metadata, sessionId: "session-growth-test", purpose: "growth", stills: [makeStill(0)] };
+  ok(isSessionMetadata(growthMeta), "a growth session validates");
+  const absentMinor: LabelerLineState = { points: [], absent: true, confidence: "clear", method: "manual", viewAtCommit: "NATURAL", done: true };
+  // A COMPLETE label: the four majors plus every minor class explicitly marked absent.
+  const completeState: LabelerState = {
+    ...labelState,
+    mode: "correction",
+    minorLines: { sun: absentMinor, health: absentMinor, marriage: absentMinor, bracelets: absentMinor, girdle: absentMinor },
+  };
+  const growthDir = path.join(repoRoot, "fixtures", "golden", growthMeta.sessionId);
+  mkdirSync(path.join(growthDir, "labels"), { recursive: true });
+  mkdirSync(path.join(growthDir, "selected"), { recursive: true });
+  writeFileSync(path.join(growthDir, "metadata.json"), JSON.stringify(growthMeta, null, 2));
+  writeFileSync(
+    path.join(growthDir, "labels", labelFileName(0)),
+    JSON.stringify(buildLabelFile(completeState, growthMeta, 0, "srijan", "2026-09-03T00:20:00.000Z"), null, 2),
+  );
+  writeFileSync(path.join(growthDir, "selected", cropFileName(0)), "png-stub");
+
+  const byDefaultAll = loadGroundTruthDetailed("fixtures", repoRoot);
+  const growthDefault = byDefaultAll.cases.find((c) => c.id.startsWith("session-growth-test/"));
+  ok(growthDefault !== undefined, "the growth session's label surfaces as a case");
+  ok(
+    growthDefault?.skip !== undefined && growthDefault.skip.includes("growth") && growthDefault.skip.includes("--include-growth"),
+    `a growth label is a SKIP case by default, naming the override (got: ${growthDefault?.skip ?? "none"})`,
+  );
+  ok(growthDefault?.purpose === "growth", "the case carries its session's purpose");
+  ok(byDefaultAll.sessionDirs.find((dir) => dir.id === growthMeta.sessionId)?.purpose === "growth", "the header info carries it too");
+  ok(byDefaultAll.sessionDirs.find((dir) => dir.id === metadata.sessionId)?.purpose === "eval", "a session without a purpose reads as eval");
+  const growthIncluded = loadGroundTruthDetailed("fixtures", repoRoot, { includeGrowth: true }).cases.find((c) =>
+    c.id.startsWith("session-growth-test/"),
+  );
+  ok(growthIncluded?.skip === undefined, "--include-growth scores it");
+  ok(original !== undefined && !hasCompleteLabel(original), "a four-line label is NOT complete — the minors are unlabelled, not absent");
+  ok(growthIncluded !== undefined && hasCompleteLabel(growthIncluded), "nine classes traced-or-absent IS complete — calibration's census filter");
 } finally {
   rmSync(repoRoot, { recursive: true, force: true });
 }

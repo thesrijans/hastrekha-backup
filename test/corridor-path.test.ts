@@ -6,13 +6,7 @@
  * the search agree pixel-for-pixel on where the corridor is.
  * ========================================================================== */
 import assert from "node:assert/strict";
-import {
-  buildCorridorMask,
-  searchCorridor,
-  CORRIDOR_ACCEPT_MEAN,
-  CORRIDOR_ACCEPT_P10,
-  CORRIDOR_MAX_GAP_FRACTION,
-} from "../lib/scan/corridor-path";
+import { buildCorridorMask, searchCorridor, CORRIDOR_CLASSES, CORRIDOR_GATES } from "../lib/scan/corridor-path";
 import { CORRIDORS } from "../lib/scan/completion";
 
 let assertions = 0;
@@ -64,7 +58,7 @@ const noiseField = (amplitude: number): Float32Array => {
   if (result !== null) {
     ok(result.insideFraction >= 0.9, `insideFraction ${result.insideFraction.toFixed(2)} >= 0.9`);
     ok(Math.abs(result.meanField - 0.5) < 0.12, `meanField ${result.meanField.toFixed(3)} ~ the drawn 0.5`);
-    ok(result.maxGapFraction < CORRIDOR_MAX_GAP_FRACTION, "no gap on a continuous line");
+    ok(result.maxGapFraction < CORRIDOR_GATES.fate.maxGapFraction, "no gap on a continuous line");
     // Simplified, bounded, deterministic.
     ok(result.points.length >= 2 && result.points.length <= 40, `simplified point count bounded (${result.points.length})`);
     const again = searchCorridor(field, S, FATE);
@@ -96,14 +90,34 @@ const noiseField = (amplitude: number): Float32Array => {
   drawCentreline(field, 0, 0.35, 0.5);
   drawCentreline(field, 0.75, 1, 0.5);
   // The 0.35–0.75 stretch stays at 0.02 — a 40% hole. Finding: the p10 gate mathematically
-  // DOMINATES the maxGap gate as authored (p10 >= CORRIDOR_ACCEPT_P10 caps below-threshold
+  // DOMINATES the maxGap gate as authored (p10 >= gates.acceptP10 caps below-threshold
   // samples at 10%, and a contiguous 10% can never reach the 15% gap limit), so this path is
   // rejected by p10 first; maxGap stands as defence-in-depth should calibration ever relax p10.
   ok(searchCorridor(field, S, FATE) === null, "a mostly-gap path is rejected — a chained phantom does not pass");
 }
 
-/* -------------------------- 5. Constants sanity -------------------------- */
+/* -------------------------- 5. Gates per class -------------------------- */
 
-ok(CORRIDOR_ACCEPT_MEAN > CORRIDOR_ACCEPT_P10, "the mean floor sits above the p10 floor");
+{
+  const fate = CORRIDOR_GATES.fate;
+  ok(fate.acceptMean > fate.acceptP10, "fate's mean floor sits above its p10 floor");
+  ok(
+    fate.acceptMean === 0.159 && fate.acceptP10 === 0.12 && fate.minInsideFraction === 0.9 && fate.maxGapFraction === 0.15,
+    "fate keeps its calibrated values",
+  );
+  assert.deepEqual([...CORRIDOR_CLASSES], ["fate", "sun", "health", "marriage"], "every corridor class has an entry");
+  assertions += 1;
+  for (const cls of CORRIDOR_CLASSES) {
+    if (cls === "fate") continue;
+    assert.deepEqual(CORRIDOR_GATES[cls], fate, `${cls} starts at fate's values — UNCALIBRATED until calibration sets it`);
+    assertions += 1;
+  }
+  // The gates a caller passes are the gates that decide: the faint line that passes fate's floor
+  // is refused by a stricter per-class mean floor.
+  const field = new Float32Array(PLANE).fill(0.02);
+  drawCentreline(field, 0, 1, 0.5);
+  ok(searchCorridor(field, S, FATE) !== null, "the faint line passes the default (fate) gates");
+  ok(searchCorridor(field, S, FATE, { ...fate, acceptMean: 0.9 }) === null, "and is refused by a stricter per-class mean floor");
+}
 
 console.log(`CORRIDOR PATH ASSERTIONS PASSED (${assertions})`);

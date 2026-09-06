@@ -60,11 +60,13 @@ import {
   SEQUENCE_AMBIENT_POSE_INDEX,
   SEQUENCE_POSE_COUNT,
   SEQUENCE_SCHEMA_VERSION,
+  SESSION_PURPOSES,
   type CaptureStillRecord,
   type SequenceFrameRecord,
   type SequenceManifest,
   type SessionHand,
   type SessionMetadata,
+  type SessionPurpose,
 } from "@/lib/scan/dev/session-types";
 import { openSessionStore, type SessionStore, type SessionSummary } from "@/lib/scan/dev/session-store";
 
@@ -120,6 +122,8 @@ export function CaptureClient() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [hand, setHand] = useState<SessionHand>("right");
+  /** EVAL (default): blank-slate labels that score the detector. GROWTH: correction-mode prelabels. */
+  const [purpose, setPurpose] = useState<SessionPurpose>("eval");
   const [verdict, setVerdict] = useState<QualityVerdict | null>(null);
   const [heldMs, setHeldMs] = useState(0);
   const [sharpness, setSharpness] = useState<SharpnessReading>({ variance: 0, ok: false });
@@ -653,7 +657,7 @@ export function CaptureClient() {
   const newSession = useCallback(async (): Promise<void> => {
     const store = storeRef.current;
     if (store === null) return;
-    const created = await store.createSession(hand, CANONICAL_LABEL_SIZE);
+    const created = await store.createSession(hand, CANONICAL_LABEL_SIZE, purpose);
     sessionRef.current = created;
     if (isMountedRef.current) {
       setSession(created);
@@ -662,7 +666,7 @@ export function CaptureClient() {
       setSessions(await store.listSessions());
       setExportNote(null);
     }
-  }, [hand]);
+  }, [hand, purpose]);
 
   const exportSession = useCallback(async (sessionId: string): Promise<void> => {
     const store = storeRef.current;
@@ -779,6 +783,21 @@ export function CaptureClient() {
                 </label>
               ))}
             </div>
+            {/* Purpose is fixed at New session and travels in metadata.json: EVAL stays blank-slate. */}
+            <div role="radiogroup" aria-label="Session purpose" className="flex items-center gap-3 text-sm">
+              {SESSION_PURPOSES.map((kind) => (
+                <label key={kind} className="flex items-center gap-1.5 text-ink">
+                  <input
+                    type="radio"
+                    name="purpose"
+                    value={kind}
+                    checked={purpose === kind}
+                    onChange={() => setPurpose(kind)}
+                  />
+                  {kind === "eval" ? "EVAL (blank slate)" : "GROWTH (correction)"}
+                </label>
+              ))}
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
@@ -791,6 +810,7 @@ export function CaptureClient() {
                 <span className="text-xs text-muted">
                   {session.sessionId} · {session.stills.length} stills
                   {(session.rejectedStills ?? 0) > 0 ? " · " + String(session.rejectedStills) + " rejected" : ""}
+                  {session.purpose === "growth" ? " · growth" : ""}
                 </span>
               ) : (
                 <span className="text-xs text-muted">Koi session nahi — pehle New session.</span>
@@ -886,6 +906,7 @@ export function CaptureClient() {
                 <li key={summary.sessionId} className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="text-ink">
                     {summary.sessionId} · {summary.hand} · {summary.stillCount} stills
+                    {summary.purpose === "growth" ? " · growth" : ""}
                   </span>
                   <button
                     type="button"

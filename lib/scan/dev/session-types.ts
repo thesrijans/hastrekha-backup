@@ -77,10 +77,11 @@ export const LABEL_CONFIDENCES = ["clear", "faint", "uncertain"] as const;
 export type LabelConfidence = (typeof LABEL_CONFIDENCES)[number];
 
 /**
- * How a line's points were produced. `unet-prelabel-corrected` is RESERVED for the locked
- * correction mode (growth set, after the eval set freezes) — nothing produces it in 0a.
+ * How a line's points were produced. `prelabel-corrected` is written by CORRECTION mode (growth
+ * sessions, `purpose: "growth"`): the app's corridor + contract prelabel, then accepted, edited or
+ * redrawn by a human. `unet-prelabel-corrected` stays RESERVED — nothing produces it.
  */
-export const LABEL_METHODS = ["livewire", "manual", "unet-prelabel-corrected"] as const;
+export const LABEL_METHODS = ["livewire", "manual", "prelabel-corrected", "unet-prelabel-corrected"] as const;
 export type LabelMethod = (typeof LABEL_METHODS)[number];
 
 /** Version tag for the enhancement stack a label was drawn under. */
@@ -125,6 +126,10 @@ export const SEQUENCE_MANIFEST_FILE = "sequence.json";
 export type StillCapturePath = "image-capture" | "canvas-fallback";
 
 export type SessionHand = "left" | "right";
+
+/** What a session is for — see `SessionMetadata.purpose`. Absent on a metadata document means `eval`. */
+export const SESSION_PURPOSES = ["eval", "growth"] as const;
+export type SessionPurpose = (typeof SESSION_PURPOSES)[number];
 
 /** Quality measurements frozen at the moment of capture, including D6 sharpness. */
 export interface StillQuality {
@@ -201,6 +206,12 @@ export interface SessionMetadata {
   readonly rejectedStills?: number;
   /** Staged torch sequences (measured-reading §2.3). Absent on pre-sequence files. */
   readonly sequences?: readonly SequenceManifest[];
+  /**
+   * What the session is for. Absent means `eval`: blank-slate labels that score the detector.
+   * `growth` unlocks the labeler's CORRECTION mode (prelabels accepted/edited by a human); the eval
+   * adapter excludes growth sessions from scoring by default, calibration may use them.
+   */
+  readonly purpose?: SessionPurpose;
 }
 
 /* ---------------------------------- Labels ---------------------------------- */
@@ -403,6 +414,7 @@ export function isSessionMetadata(value: unknown): value is SessionMetadata {
     (value.labelCount === undefined || isFiniteNumber(value.labelCount)) &&
     (value.rejectedStills === undefined || isFiniteNumber(value.rejectedStills)) &&
     (value.sequences === undefined || (Array.isArray(value.sequences) && value.sequences.every(isSequenceManifest))) &&
+    (value.purpose === undefined || (SESSION_PURPOSES as readonly string[]).includes(value.purpose as string)) &&
     Array.isArray(value.stills) &&
     value.stills.every(isStillRecord)
   );

@@ -19,6 +19,7 @@ import {
   parseSessionMetadata,
   type LabelConfidence,
   type LabelableLineId,
+  type SessionPurpose,
 } from "../../lib/scan/dev/session-types";
 import { RECTIFIED_SIZE, type Landmark3 } from "../../lib/scan/types";
 
@@ -58,6 +59,20 @@ export interface EvalCase {
    */
   readonly sessionDir?: string;
   readonly stillIndex?: number;
+  /** Session cases only: the session's purpose (`eval` when the metadata carries none). */
+  readonly purpose?: SessionPurpose;
+}
+
+/**
+ * A label is COMPLETE when every one of the nine labelable classes was either traced or explicitly
+ * marked absent. Only complete labels may enter the contract calibration: an unlabelled class is a
+ * crease that lands in the background mask and inflates its quantiles.
+ */
+export function hasCompleteLabel(evalCase: EvalCase): boolean {
+  return LABELABLE_LINE_IDS.every((id) => {
+    const line = evalCase.lines[id];
+    return line !== undefined && (line.absent || line.points.length >= 2);
+  });
 }
 
 interface LegacyGt {
@@ -114,6 +129,8 @@ export interface SessionDirInfo {
   /** "nested" = <root>/golden/<sessionId>/; "flat" = metadata.json directly in <root>/golden/. */
   readonly layout: "nested" | "flat";
   readonly labelCount: number;
+  /** From metadata.json; `eval` when absent or unreadable. */
+  readonly purpose: SessionPurpose;
 }
 
 function sessionDirsOf(goldenDir: string): { dir: string; layout: "nested" | "flat" }[] {
@@ -135,6 +152,7 @@ function loadSessions(
   root: string,
   sessionDirs: SessionDirInfo[],
   includeDuplicates: boolean,
+  includeGrowth: boolean,
 ): EvalCase[] {
   const goldenDir = path.join(repoRoot, root, "golden");
   const cases: EvalCase[] = [];
@@ -142,13 +160,12 @@ function loadSessions(
     // The directory name is only the id for nested layouts; flat sessions name themselves.
     let sessionId = path.basename(sessionDir);
     const metaPathEarly = path.join(sessionDir, "metadata.json");
-    if (layout === "flat" && existsSync(metaPathEarly)) {
-      const metadata = parseSessionMetadata(readFileSync(metaPathEarly, "utf8"));
-      if (metadata !== null) sessionId = metadata.sessionId;
-    }
+    const sessionMeta = existsSync(metaPathEarly) ? parseSessionMetadata(readFileSync(metaPathEarly, "utf8")) : null;
+    if (layout === "flat" && sessionMeta !== null) sessionId = sessionMeta.sessionId;
+    const purpose: SessionPurpose = sessionMeta?.purpose ?? "eval";
     const labelsDir = path.join(sessionDir, "labels");
     const labelFiles = existsSync(labelsDir) ? readdirSync(labelsDir).filter((f) => f.endsWith(".json")) : [];
-    sessionDirs.push({ id: sessionId, layout, labelCount: labelFiles.length });
+    sessionDirs.push({ id: sessionId, layout, labelCount: labelFiles.length, purpose });
     for (const entry of labelFiles.sort()) {
       const id = `${sessionId}/${entry.replace(/\.json$/, "")}`;
       const label = parseRekhaLabelFile(readFileSync(path.join(labelsDir, entry), "utf8"));
@@ -171,34 +188,40 @@ function loadSessions(
       for (const line of label.lines) {
         lines[line.id] = { points: line.points, absent: line.absent, confidence: line.confidence };
       }
-      // metadata.json sits beside labels/ — exportSession writes it last, so it is present in any
-      // complete export. Its still record carries the landmarks the full-hand rungs need.
+      /*
+       * metadata.json sits beside labels/ — exportSession writes it last, so it is present in any
+       * complete export. Its still record carries the landmarks the full-hand rungs need. Parsed
+       * ONCE per session above (`sessionMeta`); this used to re-read and re-parse the file twice
+       * per label file for the same document.
+       */
       let landmarks: readonly Landmark3[] | undefined;
       let stillSize: { width: number; height: number } | undefined;
       let rawImagePath: string | undefined;
       let stillAnchors: readonly (readonly number[])[] | undefined;
-      const metaPath = path.join(sessionDir, "metadata.json");
-      if (existsSync(metaPath)) {
-        const metadata = parseSessionMetadata(readFileSync(metaPath, "utf8"));
-        const still = metadata?.stills.find((entry) => entry.index === label.stillIndex);
-        if (still !== undefined) {
-          landmarks = still.landmarks; // validated 21-exactly by isSessionMetadata's isLandmarkArray
-          stillSize = { width: still.width, height: still.height };
-          rawImagePath = path.join(sessionDir, "raw", still.rawFile);
-          stillAnchors = still.anchors;
-        }
+      const still = sessionMeta?.stills.find((entry) => entry.index === label.stillIndex);
+      if (still !== undefined) {
+        landmarks = still.landmarks; // validated 21-exactly by isSessionMetadata's isLandmarkArray
+        stillSize = { width: still.width, height: still.height };
+        rawImagePath = path.join(sessionDir, "raw", still.rawFile);
+        stillAnchors = still.anchors;
       }
       /*
        * Pose-diversity guard (capture lane B): a still marked duplicateOf re-shot the same pose,
        * so scoring it would double-count one hand position. Skipped BY DEFAULT with the reason in
        * the report; --include-duplicates overrides for deliberate stability studies.
        */
-      const still = existsSync(metaPath)
-        ? parseSessionMetadata(readFileSync(metaPath, "utf8"))?.stills.find((entry) => entry.index === label.stillIndex)
-        : undefined;
       const duplicateSkip =
         !includeDuplicates && still?.duplicateOf !== undefined
           ? `pose duplicate of still #${still.duplicateOf} — skipped (use --include-duplicates to score)`
+          : undefined;
+      /*
+       * Growth sessions hold CORRECTION-mode labels — the app's own prelabels, accepted or edited
+       * by a human. Scoring the detector against them is circular, so they are excluded BY DEFAULT
+       * with the reason visible; --include-growth overrides, and calibration reads them regardless.
+       */
+      const growthSkip =
+        !includeGrowth && purpose === "growth"
+          ? 'growth session (purpose "growth") — correction-mode labels are excluded from scoring by default (use --include-growth; calibration uses them)'
           : undefined;
       cases.push({
         id,
@@ -208,7 +231,7 @@ function loadSessions(
         canonicalSize: label.canonicalSize,
         anchors: label.anchors,
         lines,
-        skip: existsSync(imagePath) ? duplicateSkip : `crop missing: ${label.frame}`,
+        skip: existsSync(imagePath) ? (growthSkip ?? duplicateSkip) : `crop missing: ${label.frame}`,
         meta: { subjectKey: label.sessionId, exerciseLabel: label.mode },
         landmarks,
         stillSize,
@@ -216,6 +239,7 @@ function loadSessions(
         stillAnchors,
         sessionDir,
         stillIndex: label.stillIndex,
+        purpose,
       });
     }
   }
@@ -231,6 +255,8 @@ export interface GroundTruthLoad {
 export interface LoadOptions {
   /** Score stills the pose-diversity guard marked as duplicates, instead of skipping them. */
   readonly includeDuplicates?: boolean;
+  /** Score growth (correction-mode) sessions too, instead of skipping them. */
+  readonly includeGrowth?: boolean;
 }
 
 /** Walk both sources with discovery info. `root` is the session-fixture root, repo-relative. */
@@ -240,7 +266,10 @@ export function loadGroundTruthDetailed(
   options: LoadOptions = {},
 ): GroundTruthLoad {
   const sessionDirs: SessionDirInfo[] = [];
-  const cases = [...loadLegacy(repoRoot), ...loadSessions(repoRoot, root, sessionDirs, options.includeDuplicates === true)];
+  const cases = [
+    ...loadLegacy(repoRoot),
+    ...loadSessions(repoRoot, root, sessionDirs, options.includeDuplicates === true, options.includeGrowth === true),
+  ];
   return { cases, sessionDirs };
 }
 

@@ -17,7 +17,7 @@
  * Every rung is swept over the extraction threshold (LINE_THRESHOLD's binarize seam), 0.15…0.85.
  */
 import path from "node:path";
-import { loadGroundTruthDetailed, type EvalCase } from "./gt-adapter";
+import { hasCompleteLabel, loadGroundTruthDetailed, type EvalCase } from "./gt-adapter";
 import { EVAL_TOLS, EVAL_TOL_PX_AT_512, EVAL_SIZE, aggregate, lineMetrics, type LineMetrics, type LineRow } from "./metrics";
 import {
   FIELDS,
@@ -63,6 +63,8 @@ interface CliArgs {
   readonly root: string;
   /** Score pose-duplicate stills instead of skipping them (capture lane B guard). */
   readonly includeDuplicates: boolean;
+  /** Score growth (correction-mode) sessions instead of skipping them. Calibration reads them regardless. */
+  readonly includeGrowth: boolean;
   /** H9: two-pass calibration of CONTRACT_DEPTH_DEFAULTS from the GT raw-depth census. */
   readonly calibrateContract: boolean;
 }
@@ -83,6 +85,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     jitter: argv.includes("--jitter"),
     root: get("root") ?? "fixtures",
     includeDuplicates: argv.includes("--include-duplicates"),
+    includeGrowth: argv.includes("--include-growth"),
     calibrateContract: argv.includes("--calibrate-contract"),
   };
 }
@@ -300,18 +303,34 @@ async function main(): Promise<void> {
 
   const { cases, sessionDirs } = loadGroundTruthDetailed(args.root, undefined, {
     includeDuplicates: args.includeDuplicates,
+    includeGrowth: args.includeGrowth,
   });
   for (const dir of sessionDirs) {
-    console.log(`gt: session ${dir.id} — ${dir.layout} layout, ${dir.labelCount} label(s)`);
+    console.log(
+      `gt: session ${dir.id} — ${dir.layout} layout, ${dir.labelCount} label(s)${dir.purpose === "growth" ? ", purpose growth" : ""}`,
+    );
   }
-  const active = cases.filter((c) => c.skip === undefined);
-  if (active.length === 0) {
-    console.log("no active ground-truth cases found — nothing to evaluate");
+  /*
+   * Calibration runs BEFORE the "nothing to evaluate" check and on its own case set: growth
+   * (correction-mode) labels are excluded from SCORING but are exactly what calibration wants, so
+   * a root holding only growth sessions must calibrate rather than report an empty scoring set.
+   */
+  if (args.calibrateContract) {
+    const forCalibration = loadGroundTruthDetailed(args.root, undefined, {
+      includeDuplicates: args.includeDuplicates,
+      includeGrowth: true,
+    }).cases.filter((c) => c.skip === undefined);
+    if (forCalibration.length === 0) {
+      console.log("no ground-truth cases found — nothing to calibrate");
+      return;
+    }
+    await calibrateContract(forCalibration, { modelPath: args.modelPath });
     return;
   }
 
-  if (args.calibrateContract) {
-    await calibrateContract(active, { modelPath: args.modelPath });
+  const active = cases.filter((c) => c.skip === undefined);
+  if (active.length === 0) {
+    console.log("no active ground-truth cases found — nothing to evaluate");
     return;
   }
 
@@ -460,9 +479,11 @@ async function main(): Promise<void> {
 /**
  * Pass 1 measures the RAW depth plane's distribution on GT (no hardcoded ranges anywhere); pass 2
  * derives the search grids FROM those measurements and picks the (d0, s) maximising
- * centreline-vs-background separation on the contract plane subject to background p99 <= 0.15.
- * The chosen constants are WRITTEN into lib/scan/contract.ts (and the corridor acceptance floor
- * into lib/scan/corridor-path.ts) with the GT census in the JSDoc.
+ * centreline-vs-background separation on the contract plane subject to background p90 <= 0.15.
+ * ONLY complete-label cases enter the census — every one of the nine classes traced or marked
+ * absent — because an unlabelled crease sits in the background mask and inflates its quantiles.
+ * The chosen constants are WRITTEN into lib/scan/contract.ts (and the fate corridor's acceptance
+ * floor into lib/scan/corridor-path.ts) with the GT census in the JSDoc.
  */
 async function calibrateContract(active: readonly EvalCase[], opts: RunOptions): Promise<void> {
   interface CaseCensus {
@@ -473,9 +494,18 @@ async function calibrateContract(active: readonly EvalCase[], opts: RunOptions):
   }
   const censuses: CaseCensus[] = [];
   console.log("# contract calibration — pass 1: RAW depth-plane census (raw luma units)\n");
+  const complete = active.filter(hasCompleteLabel);
+  const growthCount = complete.filter((c) => c.purpose === "growth").length;
+  console.log(
+    `complete-label cases: ${complete.length} of ${active.length} active (all nine classes traced or marked absent; ${growthCount} growth) — only these enter the census\n`,
+  );
+  if (complete.length === 0) {
+    console.log("no complete-label case — an incomplete label leaves unlabelled creases in the background mask; nothing to calibrate");
+    return;
+  }
   console.log("| case | centre median | centre p90 | bg median | bg p90 | bg p99 |");
   console.log("|---|--:|--:|--:|--:|--:|");
-  for (const evalCase of active) {
+  for (const evalCase of complete) {
     const masks = gtMasks(evalCase);
     if (masks === null) continue;
     const planes = await rawPlanesOf(evalCase, opts);
@@ -530,7 +560,7 @@ async function calibrateContract(active: readonly EvalCase[], opts: RunOptions):
         if (plane === null) continue;
         const stats = contractStats(plane, W128, census.masks.centreline, census.masks.background);
         if (stats.centrelineMedian !== null) centreMedians.push(stats.centrelineMedian);
-        if (stats.backgroundP99 !== null && stats.backgroundP99 > worstBg) worstBg = stats.backgroundP99;
+        if (stats.backgroundP90 !== null && stats.backgroundP90 > worstBg) worstBg = stats.backgroundP90;
       }
       if (centreMedians.length === 0) continue;
       const centre = centreMedians.reduce((a, b) => a + b, 0) / centreMedians.length;
@@ -540,7 +570,7 @@ async function calibrateContract(active: readonly EvalCase[], opts: RunOptions):
   const feasible = scored.filter((entry) => entry.bg <= 0.15);
   const pool = feasible.length > 0 ? feasible : scored;
   pool.sort((a, b) => b.objective - a.objective);
-  console.log("| rank | d0 | s | centre median | worst bg p99 | objective |");
+  console.log("| rank | d0 | s | centre median | worst bg p90 | objective |");
   console.log("|--:|--:|--:|--:|--:|--:|");
   pool.slice(0, 5).forEach((entry, i) => {
     console.log(
@@ -550,7 +580,7 @@ async function calibrateContract(active: readonly EvalCase[], opts: RunOptions):
   const chosen = pool[0];
   console.log(
     `\nchosen: d0=${chosen.d0.toFixed(4)} s=${chosen.s.toFixed(4)} — centre median ${chosen.centre.toFixed(3)}, ` +
-      `worst bg p99 ${chosen.bg.toFixed(3)}${feasible.length === 0 ? " (NO grid point met bg p99 <= 0.15 — best objective taken)" : ""}`,
+      `worst bg p90 ${chosen.bg.toFixed(3)}${feasible.length === 0 ? " (NO grid point met bg p90 <= 0.15 — best objective taken)" : ""}`,
   );
 
   // Fate-corridor census on the CONTRACT plane (chosen params), fate-ABSENT hands only.
@@ -568,8 +598,8 @@ async function calibrateContract(active: readonly EvalCase[], opts: RunOptions):
   const acceptMean = fateP95 === null ? null : Number((fateP95 + corridorMargin).toFixed(3));
   console.log(
     fateP95 === null
-      ? "\nno fate-ABSENT case with labels — CORRIDOR_ACCEPT_MEAN not derivable, left as-is"
-      : `\nfate-corridor p95 on contract plane (fate-ABSENT hands): ${fateP95.toFixed(3)} → CORRIDOR_ACCEPT_MEAN = ${String(acceptMean)} (p95 + ${corridorMargin} margin)`,
+      ? "\nno fate-ABSENT case with labels — CORRIDOR_GATES.fate.acceptMean not derivable, left as-is"
+      : `\nfate-corridor p95 on contract plane (fate-ABSENT hands): ${fateP95.toFixed(3)} → CORRIDOR_GATES.fate.acceptMean = ${String(acceptMean)} (p95 + ${corridorMargin} margin)`,
   );
 
   const sessionCases = censuses.filter((c) => c.evalCase.source === "session").length;
@@ -585,7 +615,7 @@ async function calibrateContract(active: readonly EvalCase[], opts: RunOptions):
   const censusLine = censuses.map((c) => c.evalCase.id).join(", ");
   const contractPath = path.resolve(__dirname, "..", "..", "lib", "scan", "contract.ts");
   const contractSrc = readFileSync(contractPath, "utf8");
-  const docTag = ` * Calibration ${stamp}${provisional ? " (PROVISIONAL)" : ""}: GT census ${censusLine}; centre median ${chosen.centre.toFixed(3)}, worst bg p99 ${chosen.bg.toFixed(3)} (target <= 0.15).`;
+  const docTag = ` * Calibration ${stamp}${provisional ? " (PROVISIONAL)" : ""}: GT census ${censusLine} (${censuses.length} complete-label case(s)); centre median ${chosen.centre.toFixed(3)}, worst bg p90 ${chosen.bg.toFixed(3)} (calibration constraint <= 0.15).`;
   let nextSrc = contractSrc.replace(/ \* (UNCALIBRATED[^\n]*|Calibration [^\n]*)/, docTag);
   nextSrc = nextSrc.replace(
     /export const CONTRACT_DEPTH_DEFAULTS: ContractParams = \{ d0: [^,]+, s: [^}]+\};/,
@@ -597,13 +627,14 @@ async function calibrateContract(active: readonly EvalCase[], opts: RunOptions):
   if (acceptMean !== null) {
     const corridorPath = path.resolve(__dirname, "..", "..", "lib", "scan", "corridor-path.ts");
     const corridorSrc = readFileSync(corridorPath, "utf8");
-    const updated = corridorSrc.replace(
-      /export const CORRIDOR_ACCEPT_MEAN = [^;]+;/,
-      `export const CORRIDOR_ACCEPT_MEAN = ${String(acceptMean)};`,
-    );
-    if (updated === corridorSrc) throw new Error("calibration writer failed to update corridor-path.ts");
+    // Only the FATE entry of the per-class gates is calibrated here; the others say UNCALIBRATED.
+    const fateGate = /(\bfate: \{ acceptMean: )[^,]+,/;
+    // Anchored on the literal EXISTING, not on the text changing: re-deriving the same number is a
+    // successful calibration, and throwing there would fail a run that had already rewritten contract.ts.
+    if (!fateGate.test(corridorSrc)) throw new Error("calibration writer could not find CORRIDOR_GATES.fate.acceptMean in corridor-path.ts");
+    const updated = corridorSrc.replace(fateGate, `$1${String(acceptMean)},`);
     writeFileSync(corridorPath, updated);
-    console.log(`wrote CORRIDOR_ACCEPT_MEAN into ${path.relative(process.cwd(), corridorPath)}`);
+    console.log(`wrote CORRIDOR_GATES.fate.acceptMean into ${path.relative(process.cwd(), corridorPath)}`);
   }
 }
 
