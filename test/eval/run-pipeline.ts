@@ -43,7 +43,23 @@ import {
   solveFullHandHomography,
   warpFullHand,
 } from "../../lib/scan/fullhand-warp";
-import { LABEL_LINE_IDS, type LabelLineId } from "../../lib/scan/dev/session-types";
+import {
+  LABEL_LINE_IDS,
+  SESSION_DIR_SELECTED,
+  parseSessionMetadata,
+  type CaptureStillRecord,
+  type LabelLineId,
+} from "../../lib/scan/dev/session-types";
+import {
+  boxDownsample,
+  fuseFrames,
+  palmQuadVol,
+  SUPERRES_MIN_FRAMES,
+  SUPERRES_SCALE,
+  SUPERRES_VOL_FLOOR,
+  type SuperResFrame,
+} from "../../lib/scan/superres";
+import { existsSync, readFileSync } from "node:fs";
 import type { EvalCase } from "./gt-adapter";
 
 const WORK = MASK_SIZE;
@@ -51,7 +67,12 @@ const TICKS = 6;
 
 export const FRAMINGS = ["classical", "palmquad", "fullhand-fixed", "fullhand-ransac"] as const;
 export type Framing = (typeof FRAMINGS)[number];
-export const POSTS = ["fused", "enhancer", "enhancer-ridge", "corridor"] as const;
+/**
+ * `superres` (post "+superres"): the case's pose-duplicate stills are fused by lib/scan/superres
+ * and the IDENTICAL chain runs on the fusion instead of the single labelled still. Classical
+ * framing only — the fused texture is luma. Legacy cases and thin groups report n/a with the reason.
+ */
+export const POSTS = ["fused", "enhancer", "enhancer-ridge", "corridor", "superres"] as const;
 export type Post = (typeof POSTS)[number];
 export const FIELDS = ["legacy", "contract"] as const;
 export type FieldKind = (typeof FIELDS)[number];
@@ -81,6 +102,8 @@ export interface CaseField {
   readonly error?: string;
   readonly notes: readonly string[];
   readonly approximate?: boolean;
+  /** post "superres": what the fusion was made of. */
+  readonly superRes?: SuperResInfo;
 }
 
 export interface DetectedLines {
@@ -166,15 +189,39 @@ interface Prepared {
 
 const fieldCache = new Map<string, Prepared | { error: string }>();
 
+async function loadImageData(imagePath: string): Promise<ImageData> {
+  const { data, info } = await sharp(path.resolve(imagePath)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  return { width: info.width, height: info.height, data: new Uint8ClampedArray(data) } as ImageData;
+}
+
 async function prepare(evalCase: EvalCase, framing: Framing, opts: RunOptions): Promise<Prepared | { error: string }> {
   const key = `${evalCase.id}|${framing}|${opts.modelPath ?? ""}`;
   const cached = fieldCache.get(key);
   if (cached !== undefined) return cached;
-  const notes: string[] = [];
+  let result: Prepared | { error: string };
+  try {
+    result = await prepareFromSource(evalCase, await loadImageData(evalCase.imagePath), framing, opts, []);
+  } catch (error) {
+    result = { error: error instanceof Error ? error.message : String(error) };
+  }
+  fieldCache.set(key, result);
+  return result;
+}
+
+/**
+ * The chain from a source image (+ the case's anchors) to the prepared planes — split from
+ * `prepare` so the +superres post can run the IDENTICAL chain on a fused source, apples to apples
+ * with the single still, without pretending the fusion is a file on disk.
+ */
+async function prepareFromSource(
+  evalCase: EvalCase,
+  source: ImageData,
+  framing: Framing,
+  opts: RunOptions,
+  notes: string[],
+): Promise<Prepared | { error: string }> {
   let approximate: boolean | undefined;
   try {
-    const { data, info } = await sharp(path.resolve(evalCase.imagePath)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-    const source = { width: info.width, height: info.height, data: new Uint8ClampedArray(data) } as ImageData;
     const anchors: Point2[] = evalCase.anchors.map((a) => ({ x: a[0], y: a[1] }));
     const size = RECTIFIED_SIZE;
     const warped = rectifyPalm(source, anchors, size, makeImageData);
@@ -318,17 +365,201 @@ async function prepare(evalCase: EvalCase, framing: Framing, opts: RunOptions): 
       notes,
       approximate,
     };
-    fieldCache.set(key, prepared);
     return prepared;
   } catch (error) {
-    const failed = { error: error instanceof Error ? error.message : String(error) };
-    fieldCache.set(key, failed);
-    return failed;
+    return { error: error instanceof Error ? error.message : String(error) };
   }
+}
+
+/* ------------------------------ +superres post ------------------------------ */
+
+export interface SuperResGroup {
+  /** Index of the root still every member re-shot (the still's own index when it is the root); -1 when n/a. */
+  readonly root: number;
+  readonly members: readonly CaptureStillRecord[];
+  /** Why the group cannot be fused, when it cannot. */
+  readonly reason?: string;
+}
+
+/**
+ * The pose-duplicate group a session case belongs to: its own still plus every still in the same
+ * session the capture guard marked as re-shooting the same pose (`duplicateOf` all point at one
+ * root). Legacy cases have no session and no siblings — n/a, and said so. `stills` may be passed
+ * directly (tests); otherwise the session's metadata.json is read.
+ */
+export function superResGroupOf(evalCase: EvalCase, stills?: readonly CaptureStillRecord[]): SuperResGroup {
+  const na = (reason: string): SuperResGroup => ({ root: -1, members: [], reason });
+  if (evalCase.source !== "session") return na("legacy case — a single frame with no session stills to fuse (n/a)");
+  if (evalCase.sessionDir === undefined || evalCase.stillIndex === undefined) return na("session case without a still record (n/a)");
+  let records = stills;
+  if (records === undefined) {
+    const metaPath = path.join(evalCase.sessionDir, "metadata.json");
+    if (!existsSync(metaPath)) return na("session metadata.json missing (n/a)");
+    const metadata = parseSessionMetadata(readFileSync(metaPath, "utf8"));
+    if (metadata === null) return na("session metadata.json invalid (n/a)");
+    records = metadata.stills;
+  }
+  const own = records.find((still) => still.index === evalCase.stillIndex);
+  if (own === undefined) return na(`still #${evalCase.stillIndex} not in the session metadata (n/a)`);
+  const root = own.duplicateOf ?? own.index;
+  const members = records.filter((still) => still.index === root || still.duplicateOf === root).sort((a, b) => a.index - b.index);
+  if (members.length < SUPERRES_MIN_FRAMES) {
+    return {
+      root,
+      members,
+      reason: `only ${members.length} pose-duplicate still(s) in the session — fusion needs ≥ ${SUPERRES_MIN_FRAMES} (n/a)`,
+    };
+  }
+  return { root, members };
+}
+
+export interface SuperResInfo {
+  readonly available: boolean;
+  readonly reason?: string;
+  /** Stills in the pose-duplicate group, the labelled one included. */
+  readonly stillsInGroup: number;
+  /** Of those, stills clearing the ring's VoL floor — what was offered to the fusion. */
+  readonly stillsSharp: number;
+  /** Frames the fusion actually used (registered + overlapping). */
+  readonly stillsFused: number;
+  /** The reference still — always the labelled one, so the GT applies unchanged. */
+  readonly referenceStill: number;
+  /** VoL per group still, in metadata index order. */
+  readonly vols: readonly number[];
+}
+
+interface PreparedSuperRes {
+  readonly prepared: Prepared | { error: string };
+  readonly info: SuperResInfo;
+}
+
+const superResCache = new Map<string, PreparedSuperRes>();
+
+/**
+ * Fuse the case's pose-duplicate stills (reference pinned to the labelled still) and run the
+ * identical chain on the fused luma. The fused 2× grid is box-reduced to the crop's own side and
+ * handed to `prepareFromSource` as a grey RGBA source — the same rectification, the same six
+ * ticks, the same detectors the single still goes through.
+ */
+async function prepareSuperRes(evalCase: EvalCase, opts: RunOptions): Promise<PreparedSuperRes> {
+  const key = `${evalCase.id}|superres|${opts.modelPath ?? ""}`;
+  const cached = superResCache.get(key);
+  if (cached !== undefined) return cached;
+  const empty = (reason: string, stillsInGroup = 0, vols: number[] = []): PreparedSuperRes => ({
+    prepared: { error: reason },
+    info: { available: false, reason, stillsInGroup, stillsSharp: 0, stillsFused: 0, referenceStill: evalCase.stillIndex ?? -1, vols },
+  });
+  let result: PreparedSuperRes;
+  try {
+    const group = superResGroupOf(evalCase);
+    if (group.reason !== undefined) {
+      result = empty(group.reason, group.members.length);
+    } else {
+      const frames: SuperResFrame[] = [];
+      const vols: number[] = [];
+      let referenceIndex = -1;
+      let size = 0;
+      for (const still of group.members) {
+        const cropPath = path.join(evalCase.sessionDir!, SESSION_DIR_SELECTED, still.cropFile);
+        if (!existsSync(cropPath)) continue;
+        const image = await loadImageData(cropPath);
+        if (image.width !== image.height) continue;
+        if (size === 0) size = image.width;
+        if (image.width !== size) continue;
+        const plane = size * size;
+        const luma = new Float32Array(plane);
+        // The crop's black fill is "outside the source frame" (rectifyPalm's convention) — not skin.
+        const valid = new Uint8Array(plane);
+        for (let i = 0; i < plane; i += 1) {
+          const at = i * 4;
+          const r = image.data[at];
+          const g = image.data[at + 1];
+          const b = image.data[at + 2];
+          luma[i] = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+          valid[i] = r === 0 && g === 0 && b === 0 ? 0 : 1;
+        }
+        const vol = palmQuadVol(luma, size);
+        vols.push(vol);
+        // The ring's own gate: a soft still adds blur, not information.
+        if (vol < SUPERRES_VOL_FLOOR) continue;
+        if (still.index === evalCase.stillIndex) referenceIndex = frames.length;
+        frames.push({
+          luma,
+          valid,
+          anchors: still.anchors.map((a) => ({ x: a[0], y: a[1] })),
+          timestampMs: Date.parse(still.capturedAt),
+          vol,
+        });
+      }
+      if (referenceIndex < 0) {
+        result = empty(`labelled still #${evalCase.stillIndex} is below the VoL floor (${SUPERRES_VOL_FLOOR}) or missing — no reference to pin (n/a)`, group.members.length, vols);
+      } else {
+        const fusion = fuseFrames(frames, size, SUPERRES_SCALE, { referenceIndex });
+        if (fusion === null) {
+          result = empty(
+            `fusion unavailable — ${frames.length} sharp still(s) offered, fewer than ${SUPERRES_MIN_FRAMES} registered to the labelled still (n/a)`,
+            group.members.length,
+            vols,
+          );
+        } else {
+          const outSize = size * SUPERRES_SCALE;
+          const fusedLuma = new Float32Array(size * size);
+          boxDownsample(fusion.luma, outSize, SUPERRES_SCALE, fusedLuma);
+          const source = makeImageData(size, size);
+          for (let i = 0; i < size * size; i += 1) {
+            const grey = Math.round(Math.min(1, Math.max(0, fusedLuma[i])) * 255);
+            const at = i * 4;
+            source.data[at] = grey;
+            source.data[at + 1] = grey;
+            source.data[at + 2] = grey;
+            source.data[at + 3] = 255;
+          }
+          const info: SuperResInfo = {
+            available: true,
+            stillsInGroup: group.members.length,
+            stillsSharp: frames.length,
+            stillsFused: fusion.effectiveFrames,
+            referenceStill: evalCase.stillIndex ?? -1,
+            vols,
+          };
+          const prepared = await prepareFromSource(evalCase, source, "classical", opts, [
+            `superres post: ${fusion.effectiveFrames} of ${frames.length} sharp still(s) fused (group of ${group.members.length}; reference = labelled still #${evalCase.stillIndex}); classical framing`,
+          ]);
+          result = { prepared, info };
+        }
+      }
+    }
+  } catch (error) {
+    result = empty(error instanceof Error ? error.message : String(error));
+  }
+  superResCache.set(key, result);
+  return result;
+}
+
+/** What the +superres post would fuse for this case — or why it cannot. */
+export async function superResInfoOf(evalCase: EvalCase, opts: RunOptions = {}): Promise<SuperResInfo> {
+  return (await prepareSuperRes(evalCase, opts)).info;
 }
 
 /** The map extraction reads for one (case, framing, post). Cached per case+framing. */
 export async function computeField(evalCase: EvalCase, rung: ComposedRung, opts: RunOptions = {}): Promise<CaseField> {
+  if (rung.post === "superres") {
+    if (rung.framing !== "classical") {
+      return {
+        field: null,
+        error: "superres post is classical-only — the fused texture is luma, not the RGB the UNet was trained on",
+        notes: [],
+      };
+    }
+    const { prepared, info } = await prepareSuperRes(evalCase, opts);
+    if ("error" in prepared) return { field: null, error: prepared.error, notes: [], superRes: info };
+    return {
+      field: rung.field === "contract" ? prepared.emaContract : prepared.ema,
+      notes: [...prepared.notes],
+      approximate: prepared.approximate,
+      superRes: info,
+    };
+  }
   const prepared = await prepare(evalCase, rung.framing, opts);
   if ("error" in prepared) return { field: null, error: prepared.error, notes: [] };
   const notes = [...prepared.notes];
@@ -488,4 +719,5 @@ export function vocabDiff(field: Float32Array): { added: string[]; changed: stri
 /** Clear the per-run cache (tests). */
 export function resetFieldCache(): void {
   fieldCache.clear();
+  superResCache.clear();
 }

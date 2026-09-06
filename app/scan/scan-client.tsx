@@ -353,6 +353,7 @@ export function ScanClient() {
     fusedField,
     contractField,
     corridorAttempts,
+    superRes,
     stageMasks,
     stageTimings,
     videoSize,
@@ -503,6 +504,7 @@ export function ScanClient() {
                     classified: traces,
                     contract: contractField,
                     corridor: corridorAttempts,
+                    fused: superRes,
                   }}
                 />
                 <ScanHud quality={quality} />
@@ -630,6 +632,7 @@ export function ScanClient() {
         camera={camera}
         contrast={contrast}
         bracketFrames={bracketFrames}
+        superRes={superRes}
         degraded={degraded}
         diagnostics={diagnostics}
         inferenceMs={inferenceMs}

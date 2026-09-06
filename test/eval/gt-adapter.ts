@@ -52,6 +52,12 @@ export interface EvalCase {
   readonly rawImagePath?: string;
   /** Still-pixel anchors from metadata (PALM_ANCHORS order) — the quad solve in raw-still space. */
   readonly stillAnchors?: readonly (readonly number[])[];
+  /**
+   * Session cases only: the session directory and the labelled still's index, so the +superres
+   * post can find the still's pose-duplicate siblings in the same session's metadata.
+   */
+  readonly sessionDir?: string;
+  readonly stillIndex?: number;
 }
 
 interface LegacyGt {
@@ -208,6 +214,8 @@ function loadSessions(
         stillSize,
         rawImagePath: rawImagePath !== undefined && existsSync(rawImagePath) ? rawImagePath : undefined,
         stillAnchors,
+        sessionDir,
+        stillIndex: label.stillIndex,
       });
     }
   }

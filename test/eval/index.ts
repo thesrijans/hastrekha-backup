@@ -18,11 +18,12 @@
  */
 import path from "node:path";
 import { loadGroundTruthDetailed, type EvalCase } from "./gt-adapter";
-import { EVAL_TOLS, EVAL_TOL_PX_AT_512, EVAL_SIZE, lineMetrics, type LineMetrics, type LineRow } from "./metrics";
+import { EVAL_TOLS, EVAL_TOL_PX_AT_512, EVAL_SIZE, aggregate, lineMetrics, type LineMetrics, type LineRow } from "./metrics";
 import {
   FIELDS,
   FRAMINGS,
   POSTS,
+  SHIPPED_THRESHOLD,
   SWEEP_THRESHOLDS,
   computeField,
   contractFieldOf,
@@ -32,6 +33,7 @@ import {
   minorEmissionOn,
   rawPlanesOf,
   rungId,
+  superResInfoOf,
   vocabDiff,
   MINOR_EMISSION_CLASSES,
   type FieldKind,
@@ -43,7 +45,7 @@ import {
 } from "./run-pipeline";
 import { measureFwhm, type FwhmResult } from "./fwhm";
 import { measureJitter } from "./jitter";
-import { renderMarkdown, writeJson, type EvalReport, type RungSweep } from "./report";
+import { renderMarkdown, writeJson, type EvalReport, type RungSweep, type SuperResReportRow } from "./report";
 import { LABEL_LINE_IDS, LABELABLE_LINE_IDS } from "../../lib/scan/dev/session-types";
 import { contractStats } from "../../lib/scan/contract";
 import { CORRIDORS } from "../../lib/scan/completion";
@@ -387,6 +389,54 @@ async function main(): Promise<void> {
     for (const evalCase of active) fwhm[evalCase.id] = await measureFwhm(evalCase);
   }
 
+  /*
+   * +superres: fused vs single still, per case. For every active SESSION case whose pose-duplicate
+   * group holds ≥ 4 sharp stills, the group is fused with the reference pinned to the labelled
+   * still (so the GT applies unchanged) and scored through the IDENTICAL chain as the single still,
+   * at the shipped threshold and the headline tolerance. Legacy cases and thin groups are listed
+   * with the reason — n/a, never silently absent.
+   */
+  const superres: SuperResReportRow[] = [];
+  const scoreField = (field: Float32Array, evalCase: EvalCase): { f1: number; medianPx: number; detectRate: number } => {
+    const detected = extractAtThreshold(field, SHIPPED_THRESHOLD);
+    const rows: LineRow[] = [];
+    for (const id of LABEL_LINE_IDS) {
+      const gtLine = evalCase.lines[id];
+      if (gtLine === undefined) continue;
+      const gt = gtLine.absent ? null : gtLine.points;
+      rows.push({
+        caseId: evalCase.id,
+        source: evalCase.source,
+        hand: evalCase.hand,
+        lineId: id,
+        byTol: { [args.headlineTol]: lineMetrics(detected.lines[id], gt, EVAL_SIZE, args.headlineTol) },
+      });
+    }
+    const bucket = aggregate(rows, args.headlineTol).overall;
+    return { f1: bucket.meanF1, medianPx: bucket.meanMedianDistPx, detectRate: bucket.detectRate };
+  };
+  for (const evalCase of active) {
+    const info = await superResInfoOf(evalCase);
+    const base = {
+      caseId: evalCase.id,
+      source: evalCase.source,
+      stillsInGroup: info.stillsInGroup,
+      stillsSharp: info.stillsSharp,
+      stillsFused: info.stillsFused,
+    };
+    if (!info.available) {
+      superres.push({ ...base, status: "n/a", reason: info.reason, single: null, fused: null });
+      continue;
+    }
+    const single = await computeField(evalCase, { framing: "classical", post: "fused" });
+    const fusedField = await computeField(evalCase, { framing: "classical", post: "superres" });
+    if (single.field === null || fusedField.field === null) {
+      superres.push({ ...base, status: "n/a", reason: single.error ?? fusedField.error ?? "no field", single: null, fused: null });
+      continue;
+    }
+    superres.push({ ...base, status: "fused", single: scoreField(single.field, evalCase), fused: scoreField(fusedField.field, evalCase) });
+  }
+
   const report: EvalReport = {
     generatedAt: new Date().toISOString(),
     tols,
@@ -398,6 +448,7 @@ async function main(): Promise<void> {
     minorEmission: { rungId: runs[0]?.id ?? "-", rows: emissionRows },
     vocabDiffs,
     falseFate,
+    superres,
   };
   console.log(renderMarkdown(report));
   const jsonPath = writeJson(report);

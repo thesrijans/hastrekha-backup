@@ -84,14 +84,15 @@ const ANCHOR_SET = new Set<number>(PALM_ANCHORS);
 /*
  * ── Diagnostic layers (dev harness lane D, flag `scanDiagnostics`) ─────────────────────────────
  *
- * "O" cycles NONE → FIELD → RIDGE → TRACES → LINES. LINES is the shipped overlay, untouched.
+ * "O" cycles NONE → FIELD → CONTRACT → FUSED → RIDGE → TRACES → LINES. LINES is the shipped
+ * overlay, untouched. FUSED (flag superRes) shows the last super-resolution texture as luma.
  * FIELD/RIDGE render the canonical 128 map as a corner PIP rather than warped onto the hand:
  * canvas 2D has no perspective drawImage, and the PIP answers the actual question — "what did the
  * detector see" — without a per-pixel software warp at frame rate. TRACES projects every
  * classified trace with its class + score. A corner readout (field p99/mean, LINE_THRESHOLD,
  * trace counts around MIN_CLASS_SCORE, flags on) renders on every layer while the flag is on.
  */
-const DIAG_LAYERS = ["NONE", "FIELD", "CONTRACT", "RIDGE", "TRACES", "LINES"] as const;
+const DIAG_LAYERS = ["NONE", "FIELD", "CONTRACT", "FUSED", "RIDGE", "TRACES", "LINES"] as const;
 type DiagLayer = (typeof DIAG_LAYERS)[number];
 const DIAG_PIP_SIZE = 160;
 const DIAG_TEXT = "rgba(232, 226, 214, 0.92)";
@@ -105,6 +106,16 @@ interface DiagnosticsData {
   readonly contract?: Float32Array | null;
   /** Last corridor attempts (flag corridorSearch): class, accepted, mean field. */
   readonly corridor?: readonly { readonly cls: string; readonly accepted: boolean; readonly meanField: number | null }[];
+  /** superRes (flag): the last fusion's normalised texture + provenance; drawn by the FUSED layer. */
+  readonly fused?: {
+    readonly texture: Float32Array;
+    readonly size: number;
+    readonly effectiveFrames: number;
+    readonly offered: number;
+    readonly fused: boolean;
+    readonly ringFrames: number;
+    readonly fuseMs: number;
+  } | null;
 }
 
 /** p99/mean of a field, cached by array identity — sorting 16k floats per frame would be silly. */
@@ -123,19 +134,37 @@ function fieldStats(
   return { p99: cache.p99, mean: cache.mean };
 }
 
-/** Tint one canonical map into the PIP canvas (value → warm alpha) and blit it top-right. */
+/**
+ * Tint one canonical map into the PIP canvas (value → warm alpha, or luma → grey for a texture)
+ * and blit it top-right. The PIP canvas is resized to the plane's side when a layer needs a
+ * different one — the FUSED texture arrives at 256, the fields at 128.
+ */
 function drawPip(
   context: CanvasRenderingContext2D,
   pip: HTMLCanvasElement,
   plane: Float32Array,
   width: number,
+  size: number = MASK_SIZE,
+  mode: "alpha" | "luma" = "alpha",
 ): void {
+  if (pip.width !== size || pip.height !== size) {
+    pip.width = size;
+    pip.height = size;
+  }
   const pipContext = pip.getContext("2d");
   if (pipContext === null) return;
-  const image = pipContext.createImageData(MASK_SIZE, MASK_SIZE);
+  const image = pipContext.createImageData(size, size);
   for (let i = 0; i < plane.length; i += 1) {
     const v = Math.min(1, Math.max(0, plane[i]));
     const at = i * 4;
+    if (mode === "luma") {
+      const g = Math.round(v * 255);
+      image.data[at] = g;
+      image.data[at + 1] = g;
+      image.data[at + 2] = g;
+      image.data[at + 3] = 255;
+      continue;
+    }
     image.data[at] = 255;
     image.data[at + 1] = 154;
     image.data[at + 2] = 60;
@@ -414,6 +443,15 @@ export function PalmOverlay({
             pipCanvasRef.current = pip;
           }
           drawPip(context, pip, diag.contract, width);
+        } else if (layer === "FUSED" && diag?.fused != null) {
+          let pip = pipCanvasRef.current;
+          if (pip === null) {
+            pip = document.createElement("canvas");
+            pip.width = MASK_SIZE;
+            pip.height = MASK_SIZE;
+            pipCanvasRef.current = pip;
+          }
+          drawPip(context, pip, diag.fused.texture, width, diag.fused.size, "luma");
         } else if (layer === "RIDGE" && diag?.ridge != null) {
           let pip = pipCanvasRef.current;
           if (pip === null) {
@@ -434,6 +472,15 @@ export function PalmOverlay({
           `thr ${LINE_THRESHOLD} | traces >=${MIN_CLASS_SCORE}: ${above} below: ${below}`,
           `flags: ${flagsOn}`,
         ];
+        // superRes readout: what the last fusion was made of, or that none has landed yet.
+        if (flagsNow.superRes) {
+          const f = diag?.fused ?? null;
+          lines.push(
+            f === null
+              ? "fused: none yet"
+              : `fused: ${f.fused ? "yes" : "single best"} ${f.effectiveFrames}/${f.offered} frames (ring ${f.ringFrames}) ${f.fuseMs.toFixed(0)}ms`,
+          );
+        }
         // H9 readout: the contract plane's live stats (contractStats without GT masks yields the
         // mean; the two GT-anchored numbers live in the eval, where centrelines exist).
         if (diag?.contract != null) {

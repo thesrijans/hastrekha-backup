@@ -45,6 +45,12 @@ export interface ScanFlags {
   readonly fieldContract: boolean;
   /** Corridor minimal-path fill-in for a missing fate line and un-emitted minor classes. */
   readonly corridorSearch: boolean;
+  /**
+   * Multi-frame super-resolution: the sharpest same-pose 512 crops are registered and fused onto a
+   * 2× grid, and extraction detects ONCE on that fusion. Resolution from real frames, never
+   * invented — no single-image upscaler anywhere on this path.
+   */
+  readonly superRes: boolean;
 }
 
 export const DEFAULT_SCAN_FLAGS: ScanFlags = {
@@ -57,11 +63,12 @@ export const DEFAULT_SCAN_FLAGS: ScanFlags = {
   scanDiagnostics: false,
   fieldContract: false,
   corridorSearch: false,
+  superRes: false,
 };
 
 export type ScanFlagName = keyof ScanFlags;
 
-export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch"];
+export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch", "superRes"];
 
 /** Human labels for the HUD toggles, in the app's register. */
 export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
@@ -74,6 +81,7 @@ export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
   scanDiagnostics: "Diagnostics overlay",
   fieldContract: "Field contract",
   corridorSearch: "Corridor search",
+  superRes: "Super-resolution",
 };
 
 type Listener = (flags: ScanFlags) => void;

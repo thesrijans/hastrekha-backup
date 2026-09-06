@@ -73,6 +73,8 @@ import {
 import { extractAllTraces, extractLines, type ClassifiedTrace, type LineExtraction, type Poly } from "@/lib/scan/lines";
 import { fateDoubleOverride, minorLineFeatures } from "@/lib/scan/minor-lines";
 import { corridorFateFeatures, corridorTraces, type CorridorAttempt } from "@/lib/scan/corridor-traces";
+import { FrameRing, SUPERRES_CROP_SIZE, SUPERRES_MIN_FRAMES, SUPERRES_RING_SIZE } from "@/lib/scan/superres";
+import { createSuperResFuser, type SuperResFuser } from "@/lib/scan/superres-client";
 import {
   commitCapture,
   currentPose,
@@ -117,6 +119,18 @@ const MAX_FRAME_DELTA_MS = 120;
 const BRACKET_SETTLE_MS = 220;
 /** How often a bracket may be taken. It costs three rectify ticks, so not on every one. */
 const BRACKET_PERIOD_MS = 4000;
+/**
+ * How often a super-resolution fusion may be requested (flag superRes). One fusion is several
+ * hundred milliseconds of worker time and copies the whole ring across; the ring itself only turns
+ * over at the rectify cadence, so asking more often would fuse the same frames again.
+ */
+const SUPERRES_FUSE_INTERVAL_MS = 2000;
+/**
+ * A fused extraction older than this no longer supersedes per-frame extraction. The ring has gone
+ * quiet — the hand moved to a new pose, or fusions stopped being possible — and the live path
+ * takes over again rather than leaving the overlay on a stale claim.
+ */
+const SUPERRES_STALE_MS = 5000;
 
 const IDLE_QUALITY: QualityVerdict = {
   ok: false,
@@ -126,6 +140,23 @@ const IDLE_QUALITY: QualityVerdict = {
   checks: {} as QualityVerdict["checks"],
   facingReadout: null,
 };
+
+/** superRes (flag): what the last fusion produced, for the diagnostics overlay's FUSED layer and the HUD. */
+export interface SuperResReadout {
+  /** Illumination-normalised fused texture, `size`² — the FUSED diagnostics layer draws it. */
+  readonly texture: Float32Array;
+  readonly size: number;
+  /** Frames that actually contributed; 1 when the fusion fell back to the single sharpest frame. */
+  readonly effectiveFrames: number;
+  /** Frames the ring offered the worker. */
+  readonly offered: number;
+  /** False when fewer than the minimum frames registered and the single best frame was detected instead. */
+  readonly fused: boolean;
+  /** Frames the ring holds right now. */
+  readonly ringFrames: number;
+  readonly fuseMs: number;
+  readonly totalMs: number;
+}
 
 export interface UseHandScanOptions {
   /** Front camera is the natural pose for reading your own palm, and it needs a mirrored preview. */
@@ -184,6 +215,23 @@ export function useHandScan(options: UseHandScanOptions = {}) {
    * nothing reads it.
    */
   const fusionContractRef = useRef<FusionState>(emptyFusion(MASK_SIZE));
+  /**
+   * superRes (flag): the keep-ring of sharp same-pose 512 crops, the fusion worker, the luma
+   * scratch the ring is offered from, and the fused field's OWN accumulator. The ring, the worker
+   * and the scratch are created lazily on the first tick the flag is on — with the flag off none
+   * of them is constructed, let alone run. The accumulator mirrors the other two at every reset
+   * touch point (hand loss / other hand, pose commit, restart); it is never remapped across a
+   * convention change, because the ring itself restarts then.
+   */
+  const superResRingRef = useRef<FrameRing | null>(null);
+  const superResFuserRef = useRef<SuperResFuser | null>(null);
+  const superResLumaRef = useRef<Float32Array | null>(null);
+  const fusionSuperResRef = useRef<FusionState>(emptyFusion(MASK_SIZE));
+  const lastSuperResFuseAtRef = useRef(0);
+  /** `performance.now()` of the last fused extraction; per-frame extraction yields to it while fresh. */
+  const superResResultAtRef = useRef(0);
+  /** The live path's most recent UNet plane, kept (flag superRes only) so the fused detection can blend it. */
+  const lastUnetRef = useRef<Float32Array | null>(null);
   /**
    * Landmark jitter slides the same skin a few crop pixels between frames — more than a crease is
    * wide — which is what smears the accumulated mask into an unthinnable band. Filtering the anchors
@@ -329,6 +377,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const [contractField, setContractField] = useState<Float32Array | null>(null);
   /** Last corridor attempts (flag corridorSearch) for the diagnostics readout. */
   const [corridorAttempts, setCorridorAttempts] = useState<readonly CorridorAttempt[]>([]);
+  /** superRes readout (flag superRes); null until the first fusion result arrives. */
+  const [superRes, setSuperRes] = useState<SuperResReadout | null>(null);
   /** Raw per-detector fields from the last inference, for the debug HUD's three-way mask toggle. */
   const [stageMasks, setStageMasks] = useState<{
     unet: Float32Array | null;
@@ -364,6 +414,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     landmarkerRef.current = null;
     segmenterRef.current?.dispose();
     segmenterRef.current = null;
+    superResFuserRef.current?.dispose();
+    superResFuserRef.current = null;
+    superResRingRef.current?.reset();
     previousLandmarksRef.current = null;
     spanHistoryRef.current = [];
   }, []);
@@ -487,6 +540,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         const otherHand = next !== null && fusionRef.current.handedness !== null && next.handedness !== fusionRef.current.handedness;
         fusionRef.current = { ...resetFusion(fusionRef.current), handedness: next?.handedness ?? null };
         fusionContractRef.current = { ...resetFusion(fusionContractRef.current), handedness: next?.handedness ?? null };
+        fusionSuperResRef.current = { ...resetFusion(fusionSuperResRef.current), handedness: next?.handedness ?? null };
+        superResRingRef.current?.reset();
+        superResResultAtRef.current = 0;
         resetStabiliser(stabiliserRef.current);
         if (otherHand) {
           resetPhotometric(photometricRef.current);
@@ -534,6 +590,148 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       }
       setQuality(verdict);
       latestRef.current.quality = verdict;
+
+      /**
+       * Extraction + publication, shared by the per-frame path and (flag superRes) the fused path.
+       *
+       * Verbatim the block that used to live inside the worker reply — only the field it reads and
+       * the projection it stamps are parameters now. `activeFusion` is whichever accumulator the
+       * flags elected: legacy, contract, or the super-resolution fusion's own.
+       */
+      const extractAndPublish = (
+        activeFusion: FusionState,
+        at: number,
+        anchorsAtFire: readonly Point2[],
+        conventionAtFire: number,
+      ): void => {
+        const flagsAtExtract = scanFlags.snapshot();
+        const vocabV2 = flagsAtExtract.featureVocabV2;
+        const found = extractLines(activeFusion.ema, activeFusion.size, vocabV2);
+        /*
+         * Everything else on the palm. The four completed lines are the headline, but a
+         * reader looks at the minor creases too, and dropping them was throwing away most of
+         * what the detector had already found. The faint tier is gated on the accumulator’s
+         * own persistence counter, so a shallow trace has to have been there a while.
+         */
+        const all = extractAllTraces(
+          activeFusion.ema,
+          activeFusion.size,
+          activeFusion.faintHits,
+          vocabV2, // demotion tracking only feeds the v2 fate-double check
+        );
+        /*
+         * Corridor fill-in (flag corridorSearch): searched over the CONTRACT plane — the
+         * acceptance floors are probability statements — and only for lines the skeleton
+         * path did not produce. Accepted paths join the trace set as source:"corridor".
+         */
+        let allTraces = all;
+        let corridorFound: ReturnType<typeof corridorTraces> = [];
+        if (flagsAtExtract.corridorSearch && fusionContractRef.current.frames > 0) {
+          const attempts: CorridorAttempt[] = [];
+          corridorFound = corridorTraces(fusionContractRef.current.ema, fusionContractRef.current.size, found, all, attempts);
+          setCorridorAttempts(attempts);
+          if (corridorFound.length > 0) allTraces = { ...all, traces: [...all.traces, ...corridorFound] };
+        }
+        setTraces(allTraces.traces);
+        recordStage(telemetryRef.current, "tracesExtracted", at, all.faintCount);
+        recordStage(telemetryRef.current, "tracesExtracted", at, found.fragments.length);
+        recordStage(telemetryRef.current, "polylinesAfterCompletion", at, found.polys.length);
+        /*
+         * An empty extraction is a momentary miss, not news. Publishing it would clear the
+         * overlay for the ~0.4s until the next one succeeds, which reads as the lines
+         * blinking — the exact symptom this step exists to remove. Traces are replaced only
+         * by better traces; when evidence genuinely stops, the overlay fades them on
+         * `traceEvidenceAtMs` instead of dropping them at a frame boundary.
+         */
+        /*
+         * Completion is all-or-nothing per line, and on a hard frame it can accept none —
+         * which used to mean a blank overlay even though the detector had traced perfectly
+         * real creases. So the raw fragments are the fallback: they ARE detected structure,
+         * they are simply unnamed, and the overlay draws them at reduced weight to say so.
+         * Showing the evidence unlabelled is more honest than showing nothing.
+         */
+        /*
+         * Minor-line emission (flag emitMinorLines): the classifier's qualifying sun /
+         * health / marriage / bracelet / girdle traces become KB features, deep-merged
+         * into the extraction's bag. featureVocabV2 additionally lets a demoted second
+         * fate claimant override structure to the KB's "double". Both flags off ⇒ the
+         * callback receives `found` untouched, byte for byte.
+         */
+        let forFeatures = found;
+        if (flagsAtExtract.emitMinorLines) {
+          // Corridor-found minors flow through the SAME emitter — it is source-agnostic.
+          const minor = minorLineFeatures(allTraces, { lifePoly: found.completion.lines.life?.points }, activeFusion.size);
+          const baseLines = (found.features.lines ?? {}) as Record<string, unknown>;
+          const baseSigns = (found.features.signs ?? {}) as Record<string, unknown>;
+          const minorLines = (minor.lines ?? {}) as Record<string, unknown>;
+          const minorSigns = (minor.signs ?? {}) as Record<string, unknown>;
+          const mergedLines: Record<string, unknown> = { ...minorLines, ...baseLines };
+          if (vocabV2 && fateDoubleOverride(all)) {
+            mergedLines.fate = { ...(mergedLines.fate as Record<string, unknown> | undefined), structure: "double" };
+          }
+          forFeatures = {
+            ...found,
+            features: {
+              ...found.features,
+              ...(Object.keys(mergedLines).length > 0 ? { lines: mergedLines } : {}),
+              ...(Object.keys(minorSigns).length > 0 ? { signs: { ...minorSigns, ...baseSigns } } : {}),
+            } as typeof found.features,
+          };
+        }
+        if (flagsAtExtract.corridorSearch) {
+          const fateAdd = corridorFateFeatures(corridorFound);
+          if (fateAdd.lines !== undefined) {
+            const baseLines = (forFeatures.features.lines ?? {}) as Record<string, unknown>;
+            forFeatures = {
+              ...forFeatures,
+              features: {
+                ...forFeatures.features,
+                lines: {
+                  ...baseLines,
+                  // A corridor fate is a FAINT fate by definition — presence and the KB's
+                  // faint structure, nothing else claimed.
+                  fate: { ...(baseLines.fate as Record<string, unknown> | undefined), present: true, structure: "faint" },
+                },
+              } as typeof found.features,
+            };
+          }
+        }
+        const named = found.polys.length > 0;
+        const drawable = named ? found.polys : found.fragments;
+        if (drawable.length > 0) {
+          // Deliberately outside the gate: a tilted palm shows the same creases, and line
+          // evidence is a measurement rather than a claim about pose quality.
+          // Refused while the hand is clipped: the crop was fitted to extrapolated
+          // landmarks, so any line placed from it is a claim about guessed geometry.
+          if (named && !degradedRef.current) onLineFeatures?.(forFeatures, at);
+          setExtraction(found);
+          setPolys(drawable);
+          setPolySegments(
+            named
+              ? ACTIVE_LINE_IDS.flatMap((id) => {
+                  const fitted = found.completion.lines[id];
+                  return fitted === undefined ? [] : [fitted.segments];
+                })
+              : // Unnamed fragments carry no observed/inferred split — every point was seen.
+                drawable.map(() => undefined),
+          );
+          setTracesNamed(named);
+          // The rectification these traces were traced in, so the overlay projects consistently.
+          setProjection({ anchors: anchorsAtFire, convention: conventionAtFire });
+          recordStage(telemetryRef.current, "polylinesPassedToOverlay", at, drawable.length);
+          traceEvidenceAtRef.current = at;
+          setTraceEvidenceAtMs(at);
+          if (scanStartedAtRef.current > 0) {
+            setTimeToFirstTraceMs((previous) => previous ?? at - scanStartedAtRef.current);
+          }
+        }
+      };
+      /**
+       * While fused extractions keep arriving they supersede per-frame extraction; once the ring
+       * goes quiet (hand moved, fusion unavailable) the per-frame path resumes on its own.
+       */
+      const superResFresh = (at: number): boolean =>
+        scanFlags.snapshot().superRes && at - superResResultAtRef.current < SUPERRES_STALE_MS;
 
       /*
        * ── Segmentation eligibility — deliberately NOT the rule gate ──────────────────────────
@@ -846,6 +1044,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   : fusionRef.current.confidence,
               );
               setFusedField(fusionRef.current.ema);
+              // superRes: keep the live UNet plane so the fused detection can blend it (flag-gated write).
+              if (mask.stages?.unet != null && scanFlags.snapshot().superRes) lastUnetRef.current = mask.stages.unet;
               setStageMasks(
                 mask.stages === undefined
                   ? null
@@ -867,137 +1067,96 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               setBackend(mask.backend ?? segmenterRef.current?.backend ?? "wasm");
 
               const at = performance.now();
-              if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS) {
+              if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS && !superResFresh(at)) {
                 lastExtractAtRef.current = at;
                 const flagsAtExtract = scanFlags.snapshot();
-                const vocabV2 = flagsAtExtract.featureVocabV2;
                 /*
                  * H9: with fieldContract on, extraction reads the contract EMA — same size, same
                  * accumulator class. Everything downstream (completion, classifier, features,
                  * overlay) is field-agnostic; the flag decides which plane is "the field".
                  */
                 const activeFusion = flagsAtExtract.fieldContract ? fusionContractRef.current : fusionRef.current;
-                const found = extractLines(activeFusion.ema, activeFusion.size, vocabV2);
-                /*
-                 * Everything else on the palm. The four completed lines are the headline, but a
-                 * reader looks at the minor creases too, and dropping them was throwing away most of
-                 * what the detector had already found. The faint tier is gated on the accumulator’s
-                 * own persistence counter, so a shallow trace has to have been there a while.
-                 */
-                const all = extractAllTraces(
-                  activeFusion.ema,
-                  activeFusion.size,
-                  activeFusion.faintHits,
-                  vocabV2, // demotion tracking only feeds the v2 fate-double check
-                );
-                /*
-                 * Corridor fill-in (flag corridorSearch): searched over the CONTRACT plane — the
-                 * acceptance floors are probability statements — and only for lines the skeleton
-                 * path did not produce. Accepted paths join the trace set as source:"corridor".
-                 */
-                let allTraces = all;
-                let corridorFound: ReturnType<typeof corridorTraces> = [];
-                if (flagsAtExtract.corridorSearch && fusionContractRef.current.frames > 0) {
-                  const attempts: CorridorAttempt[] = [];
-                  corridorFound = corridorTraces(fusionContractRef.current.ema, fusionContractRef.current.size, found, all, attempts);
-                  setCorridorAttempts(attempts);
-                  if (corridorFound.length > 0) allTraces = { ...all, traces: [...all.traces, ...corridorFound] };
-                }
-                setTraces(allTraces.traces);
-                recordStage(telemetryRef.current, "tracesExtracted", at, all.faintCount);
-                recordStage(telemetryRef.current, "tracesExtracted", at, found.fragments.length);
-                recordStage(telemetryRef.current, "polylinesAfterCompletion", at, found.polys.length);
-                /*
-                 * An empty extraction is a momentary miss, not news. Publishing it would clear the
-                 * overlay for the ~0.4s until the next one succeeds, which reads as the lines
-                 * blinking — the exact symptom this step exists to remove. Traces are replaced only
-                 * by better traces; when evidence genuinely stops, the overlay fades them on
-                 * `traceEvidenceAtMs` instead of dropping them at a frame boundary.
-                 */
-                /*
-                 * Completion is all-or-nothing per line, and on a hard frame it can accept none —
-                 * which used to mean a blank overlay even though the detector had traced perfectly
-                 * real creases. So the raw fragments are the fallback: they ARE detected structure,
-                 * they are simply unnamed, and the overlay draws them at reduced weight to say so.
-                 * Showing the evidence unlabelled is more honest than showing nothing.
-                 */
-                /*
-                 * Minor-line emission (flag emitMinorLines): the classifier's qualifying sun /
-                 * health / marriage / bracelet / girdle traces become KB features, deep-merged
-                 * into the extraction's bag. featureVocabV2 additionally lets a demoted second
-                 * fate claimant override structure to the KB's "double". Both flags off ⇒ the
-                 * callback receives `found` untouched, byte for byte.
-                 */
-                let forFeatures = found;
-                if (flagsAtExtract.emitMinorLines) {
-                  // Corridor-found minors flow through the SAME emitter — it is source-agnostic.
-                  const minor = minorLineFeatures(allTraces, { lifePoly: found.completion.lines.life?.points }, activeFusion.size);
-                  const baseLines = (found.features.lines ?? {}) as Record<string, unknown>;
-                  const baseSigns = (found.features.signs ?? {}) as Record<string, unknown>;
-                  const minorLines = (minor.lines ?? {}) as Record<string, unknown>;
-                  const minorSigns = (minor.signs ?? {}) as Record<string, unknown>;
-                  const mergedLines: Record<string, unknown> = { ...minorLines, ...baseLines };
-                  if (vocabV2 && fateDoubleOverride(all)) {
-                    mergedLines.fate = { ...(mergedLines.fate as Record<string, unknown> | undefined), structure: "double" };
-                  }
-                  forFeatures = {
-                    ...found,
-                    features: {
-                      ...found.features,
-                      ...(Object.keys(mergedLines).length > 0 ? { lines: mergedLines } : {}),
-                      ...(Object.keys(minorSigns).length > 0 ? { signs: { ...minorSigns, ...baseSigns } } : {}),
-                    } as typeof found.features,
-                  };
-                }
-                if (flagsAtExtract.corridorSearch) {
-                  const fateAdd = corridorFateFeatures(corridorFound);
-                  if (fateAdd.lines !== undefined) {
-                    const baseLines = (forFeatures.features.lines ?? {}) as Record<string, unknown>;
-                    forFeatures = {
-                      ...forFeatures,
-                      features: {
-                        ...forFeatures.features,
-                        lines: {
-                          ...baseLines,
-                          // A corridor fate is a FAINT fate by definition — presence and the KB's
-                          // faint structure, nothing else claimed.
-                          fate: { ...(baseLines.fate as Record<string, unknown> | undefined), present: true, structure: "faint" },
-                        },
-                      } as typeof found.features,
-                    };
-                  }
-                }
-                const named = found.polys.length > 0;
-                const drawable = named ? found.polys : found.fragments;
-                if (drawable.length > 0) {
-                  // Deliberately outside the gate: a tilted palm shows the same creases, and line
-                  // evidence is a measurement rather than a claim about pose quality.
-                  // Refused while the hand is clipped: the crop was fitted to extrapolated
-                  // landmarks, so any line placed from it is a claim about guessed geometry.
-                  if (named && !degradedRef.current) onLineFeatures?.(forFeatures, at);
-                  setExtraction(found);
-                  setPolys(drawable);
-                  setPolySegments(
-                    named
-                      ? ACTIVE_LINE_IDS.flatMap((id) => {
-                          const fitted = found.completion.lines[id];
-                          return fitted === undefined ? [] : [fitted.segments];
-                        })
-                      : // Unnamed fragments carry no observed/inferred split — every point was seen.
-                        drawable.map(() => undefined),
-                  );
-                  setTracesNamed(named);
-                  // The rectification these traces were traced in, so the overlay projects consistently.
-                  setProjection({ anchors: anchorsAtFire, convention: conventionAtFire });
-                  recordStage(telemetryRef.current, "polylinesPassedToOverlay", at, drawable.length);
-                  traceEvidenceAtRef.current = at;
-                  setTraceEvidenceAtMs(at);
-                  if (scanStartedAtRef.current > 0) {
-                    setTimeToFirstTraceMs((previous) => previous ?? at - scanStartedAtRef.current);
-                  }
-                }
+                extractAndPublish(activeFusion, at, anchorsAtFire, conventionAtFire);
               }
             });
+
+            /*
+             * ── Multi-frame super-resolution (flag superRes, default off) ────────────────────────
+             *
+             * Nothing in this block is constructed, let alone run, with the flag off. With it on: a
+             * 512 rectification through the SAME stabilised anchors joins the keep-ring if it is
+             * sharp and of the pose the ring is collecting; once the ring holds enough frames, a
+             * fusion is requested from its own worker at a fixed cadence, and that worker detects
+             * ONCE on the fused texture. That detection — not the per-frame one — is what
+             * extraction reads while fusions keep arriving; per-frame detection continues only for
+             * the live overlay. The fused mask accumulates in its own FusionState so the faint tier
+             * keeps its persistence counter; a convention change restarts it, as it restarts the ring.
+             */
+            if (scanFlags.snapshot().superRes) {
+              const ring =
+                superResRingRef.current ?? (superResRingRef.current = new FrameRing(SUPERRES_CROP_SIZE, SUPERRES_RING_SIZE));
+              const fuser = superResFuserRef.current ?? (superResFuserRef.current = createSuperResFuser());
+              const crop = rectifyPalm(source, anchors.points, SUPERRES_CROP_SIZE);
+              if (crop !== null && segmentationEligible(next.score, crop.coverage)) {
+                const plane = SUPERRES_CROP_SIZE * SUPERRES_CROP_SIZE;
+                const luma = superResLumaRef.current ?? (superResLumaRef.current = new Float32Array(plane));
+                const rgba = crop.image.data;
+                for (let i = 0; i < plane; i += 1) {
+                  const at = i * 4;
+                  luma[i] = (0.2126 * rgba[at] + 0.7152 * rgba[at + 1] + 0.0722 * rgba[at + 2]) / 255;
+                }
+                ring.offer(luma, crop.inside, anchorsAtFire, crop.toCrop, convention, now, source.width);
+              }
+              if (
+                ring.count >= SUPERRES_MIN_FRAMES &&
+                fuser.ready &&
+                !fuser.busy &&
+                now - lastSuperResFuseAtRef.current > SUPERRES_FUSE_INTERVAL_MS
+              ) {
+                lastSuperResFuseAtRef.current = now;
+                const ringFrames = ring.frames();
+                const flagsAtFuse = scanFlags.snapshot();
+                const toCropAtFuse = warped.toCrop;
+                void fuser
+                  .fuse(ringFrames, {
+                    size: SUPERRES_CROP_SIZE,
+                    convention,
+                    wantContract: flagsAtFuse.fieldContract || flagsAtFuse.corridorSearch,
+                    unet: lastUnetRef.current,
+                  })
+                  .then((result) => {
+                    if (result === null || !runningRef.current) return;
+                    if (epochAtFire !== fusionEpochRef.current) return;
+                    const at = performance.now();
+                    const reference = ringFrames[result.referenceIndex];
+                    /*
+                     * The fused field lives in the reference frame's canonical space under
+                     * `convention`. No remap is ever attempted for the SR accumulator: a convention
+                     * change is answered by alignFusion dropping and restarting it, which is what
+                     * the ring itself did the moment the convention moved.
+                     */
+                    let state = alignFusion(fusionSuperResRef.current, toCropAtFuse, result.convention).state;
+                    // With fieldContract on, the SR accumulator carries the contract plane — the same
+                    // choice the per-frame path makes at extraction, made here once per fusion.
+                    const contractPlane = scanFlags.snapshot().fieldContract ? result.mask.contract : undefined;
+                    state = fuse(state, contractPlane === undefined ? result.mask : { ...result.mask, all: contractPlane }, at);
+                    fusionSuperResRef.current = state;
+                    superResResultAtRef.current = at;
+                    setSuperRes({
+                      texture: result.texture,
+                      size: result.textureSize,
+                      effectiveFrames: result.effectiveFrames,
+                      offered: result.offered,
+                      fused: result.fused,
+                      ringFrames: ring.count,
+                      fuseMs: result.fuseMs,
+                      totalMs: result.totalMs,
+                    });
+                    lastExtractAtRef.current = at;
+                    extractAndPublish(state, at, reference?.anchors ?? anchorsAtFire, result.convention);
+                  });
+              }
+            }
           }
         }
       }
@@ -1073,6 +1232,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         // Each pose starts from a clean average; the merged mask is assembled at the end.
         fusionRef.current = resetFusion(fusionRef.current);
         fusionContractRef.current = resetFusion(fusionContractRef.current);
+        fusionSuperResRef.current = resetFusion(fusionSuperResRef.current);
+        superResRingRef.current?.reset();
+        superResResultAtRef.current = 0;
         fusionEpochRef.current += 1;
         setFusedConfidence(0);
         if (committed.done) onCaptureComplete?.(committed);
@@ -1302,6 +1464,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     setCapture(captureRef.current);
     fusionRef.current = resetFusion(fusionRef.current);
     fusionContractRef.current = resetFusion(fusionContractRef.current);
+    fusionSuperResRef.current = resetFusion(fusionSuperResRef.current);
+    superResRingRef.current?.reset();
+    superResResultAtRef.current = 0;
     fusionEpochRef.current += 1;
     setFusedConfidence(0);
     setPolys([]);
@@ -1344,6 +1509,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     fusedField,
     contractField,
     corridorAttempts,
+    superRes,
     stageMasks,
     stageTimings,
     videoSize,

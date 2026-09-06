@@ -26,6 +26,19 @@ export interface RungSweep {
   readonly approximateCases: number;
 }
 
+/** One case's fused-vs-single comparison for the +superres section, or the reason it is n/a. */
+export interface SuperResReportRow {
+  readonly caseId: string;
+  readonly source: "legacy" | "session";
+  readonly status: "fused" | "n/a";
+  readonly reason?: string;
+  readonly stillsInGroup: number;
+  readonly stillsSharp: number;
+  readonly stillsFused: number;
+  readonly single: { readonly f1: number; readonly medianPx: number; readonly detectRate: number } | null;
+  readonly fused: { readonly f1: number; readonly medianPx: number; readonly detectRate: number } | null;
+}
+
 export interface EvalReport {
   readonly generatedAt: string;
   readonly tols: readonly number[];
@@ -43,6 +56,8 @@ export interface EvalReport {
   };
   /** featureVocabV2 off→on bag diffs per case — the freeze-lift commit's receipts. */
   readonly vocabDiffs?: Readonly<Record<string, { readonly added: readonly string[]; readonly changed: readonly string[] }>>;
+  /** +superres: fused vs single still per case (classical framing, shipped threshold, headline tolerance). */
+  readonly superres?: readonly SuperResReportRow[];
 }
 
 const fmt = (value: number, digits = 2): string => (Number.isFinite(value) ? value.toFixed(digits) : "—");
@@ -277,6 +292,39 @@ export function renderMarkdown(report: EvalReport): string {
       for (const add of diff.added) out.push(`  - added: \`${add}\``);
       for (const change of diff.changed) out.push(`  - changed: \`${change}\``);
     }
+  }
+
+  if (report.superres !== undefined) {
+    out.push("");
+    out.push(
+      `## +superres — fused vs single still (classical framing, shipped t=${SHIPPED_THRESHOLD}, F1/median @${report.headlineTol}px)`,
+    );
+    out.push("");
+    const fusedRows = report.superres.filter((row) => row.status === "fused");
+    if (fusedRows.length === 0) {
+      out.push("no case could be fused — every row below says why.");
+    } else {
+      out.push("| case | group | sharp | fused | single F1 | fused F1 | ΔF1 | single med px | fused med px | Δmed | single detect | fused detect |");
+      out.push("|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|");
+      for (const row of fusedRows) {
+        const s = row.single!;
+        const f = row.fused!;
+        const delta = (a: number, b: number, digits: number): string =>
+          Number.isFinite(a) && Number.isFinite(b) ? (b - a >= 0 ? "+" : "") + (b - a).toFixed(digits) : "—";
+        out.push(
+          `| ${row.caseId} | ${row.stillsInGroup} | ${row.stillsSharp} | ${row.stillsFused} | ${fmt(s.f1)} | ${fmt(f.f1)} | ${delta(s.f1, f.f1, 2)} | ${fmt(s.medianPx, 1)} | ${fmt(f.medianPx, 1)} | ${delta(s.medianPx, f.medianPx, 1)} | ${pct(s.detectRate)} | ${pct(f.detectRate)} |`,
+        );
+      }
+    }
+    const na = report.superres.filter((row) => row.status === "n/a");
+    if (na.length > 0) {
+      out.push("");
+      for (const row of na) out.push(`- **${row.caseId}** (${row.source}): ${row.reason ?? "n/a"}`);
+    }
+    out.push("");
+    out.push(
+      "> single = the labelled still through the shipped chain; fused = its pose-duplicate group registered to that still and fused by lib/scan/superres, then the SAME chain. Legacy GT is one frame — n/a by construction.",
+    );
   }
 
   const skipped = report.cases.filter((c) => c.skip !== undefined);

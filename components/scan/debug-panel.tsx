@@ -66,6 +66,15 @@ export interface DebugPanelProps {
   readonly alignment: { readonly outcome: string; readonly displacement: number; readonly warps: number } | null;
   /** Photometric channel progress: poses folded in, tilt span observed, weight earned. */
   readonly photometric: { readonly samples: number; readonly weight: number; readonly tiltSpan: number } | null;
+  /** superRes (flag): the last fusion's provenance — frames fused of frames offered, ring fill, cost. */
+  readonly superRes?: {
+    readonly effectiveFrames: number;
+    readonly offered: number;
+    readonly fused: boolean;
+    readonly ringFrames: number;
+    readonly fuseMs: number;
+    readonly totalMs: number;
+  } | null;
   /** Per-line completion outcome, so a refused line says why. */
   readonly completion: CompletionResult | null;
   /** Rolling per-stage frame counts. The first zero after a non-zero is where frames are lost. */
@@ -146,6 +155,7 @@ export function DebugPanel({
   traceEvidenceAtMs,
   alignment,
   photometric,
+  superRes = null,
   completion,
   telemetry,
   polylinesDrawn,
@@ -509,6 +519,16 @@ export function DebugPanel({
                 ? "0 poses"
                 : `${photometric.samples} poses · tilt ${photometric.tiltSpan.toFixed(2)} · w ${photometric.weight.toFixed(2)}`}
             </dd>
+            {flags.superRes ? (
+              <>
+                <dt className="text-muted">super-res</dt>
+                <dd className="tabular-nums text-ink">
+                  {superRes === null
+                    ? "no fusion yet"
+                    : `${superRes.fused ? "fused" : "single best"} ${superRes.effectiveFrames}/${superRes.offered} · ring ${superRes.ringFrames} · ${superRes.fuseMs.toFixed(0)}+${(superRes.totalMs - superRes.fuseMs).toFixed(0)} ms`}
+                </dd>
+              </>
+            ) : null}
           </dl>
 
           {/*
