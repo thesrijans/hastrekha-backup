@@ -26,7 +26,7 @@ import {
   tickCapture,
   AUTO_CAPTURE_HOLD_MS,
 } from "../lib/scan/capture";
-import { ACTIVE_LINE_IDS, RECTIFIED_SIZE, RESERVED_LINE_IDS, type LineMask, type Point2 } from "../lib/scan/types";
+import { ACTIVE_LINE_IDS, MASK_SIZE, RECTIFIED_SIZE, RESERVED_LINE_IDS, type LineMask, type Point2 } from "../lib/scan/types";
 import { curledHand, syntheticHand } from "./hand-fixture";
 
 const LATCH: LatchOptions = { confirmAfter: 3, decayAfterMs: 2000 };
@@ -371,6 +371,71 @@ function drawLine(field: Float32Array, size: number, from: Point2, to: Point2, w
     assert.ok(points.length > 1, "projected lines keep their points");
     for (const [x, y] of points) assert.ok(Number.isFinite(x) && Number.isFinite(y), "and stay finite");
   }
+}
+
+/* ------------------- projectLines: the source size is not optional ------------------- */
+
+/*
+ * REGRESSION. `extractLines(field, size)` writes its polylines in `size` space unscaled, so a scan
+ * that extracts at MASK_SIZE hands projectLines 128-space points. projectLines solves its
+ * homography from `canonicalQuad(size)` and DEFAULTS that size to RECTIFIED_SIZE (256) — so
+ * omitting the argument reads 128-space points against a 256-space quad and collapses every line
+ * into the quarter of the target nearest the origin corner.
+ *
+ * app/scan/scan-client.tsx shipped that omission: the user's own traced lines were drawn on the
+ * replica palm at roughly a quarter of their true span. Both spans are pinned here, so a
+ * reintroduction fails on the number rather than on somebody noticing the picture looks wrong.
+ */
+{
+  const HOLO_ANCHORS = [
+    { x: 150, y: 350 },
+    { x: 86, y: 250 },
+    { x: 104, y: 180 },
+    { x: 232, y: 196 },
+  ] as const;
+
+  /** A heart line as extractLines emits one at MASK_SIZE: percussion edge to the Jupiter mount. */
+  const heartAt128 = [
+    [0.9 * MASK_SIZE, 0.3 * MASK_SIZE],
+    [0.55 * MASK_SIZE, 0.24 * MASK_SIZE],
+    [0.22 * MASK_SIZE, 0.22 * MASK_SIZE],
+  ] as const;
+  const lines = { heart: { id: "heart" as const, points: heartAt128, confidence: 0.8 } };
+
+  const spanOf = (points: ReadonlyArray<readonly [number, number]>): number =>
+    Math.max(...points.map((p) => p[0])) - Math.min(...points.map((p) => p[0]));
+
+  const correct = projectLines(lines, HOLO_ANCHORS, MASK_SIZE).heart;
+  const defaulted = projectLines(lines, HOLO_ANCHORS).heart;
+  assert.ok(correct !== undefined && defaulted !== undefined, "both projections produce the line");
+
+  /*
+   * The replica hand's own anchors span 86 (thumb CMC) to 232 (little MCP) = 146px. A heart line
+   * running most of the palm's width must cover a comparable distance; anything far below that is
+   * the collapsed projection.
+   */
+  const correctSpan = spanOf(correct);
+  assert.ok(
+    correctSpan > 120,
+    `size-matched projection spans the palm (${correctSpan.toFixed(1)}px across a 146px anchor width)`,
+  );
+  const defaultedSpan = spanOf(defaulted);
+  assert.ok(
+    defaultedSpan < 60,
+    `and the 256-space default collapses it (${defaultedSpan.toFixed(1)}px) — this is the bug being pinned`,
+  );
+  assert.ok(
+    correctSpan > defaultedSpan * 3,
+    `the defect shrinks the line more than threefold (${(correctSpan / defaultedSpan).toFixed(1)}x)`,
+  );
+
+  /*
+   * And the call site itself: a maths test cannot see an omitted argument, so the one place that
+   * projects a scan onto the replica palm is read and pinned directly.
+   */
+  const scanClient = readFileSync("app/scan/scan-client.tsx", "utf8");
+  const call = /projectLines\(\s*found\.lines\s*,\s*HOLO_PALM_ANCHORS\s*,\s*MASK_SIZE\s*\)/.test(scanClient);
+  assert.ok(call, "scan-client projects with MASK_SIZE, the space its extraction produced");
 }
 
 /* Every emitted key must exist in the KB's feature index — the contract this module promises. */

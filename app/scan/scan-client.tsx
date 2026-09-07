@@ -258,7 +258,12 @@ export function ScanClient() {
         // MASK_SIZE, not the default: every stored pose mask is at the worker's working resolution.
         const merged = mergedMask(capture, MASK_SIZE);
         const found = extractLines(merged, MASK_SIZE);
-        setHoloLines(projectLines(found.lines, HOLO_PALM_ANCHORS));
+        // MASK_SIZE again, and this is load-bearing: `found` was extracted at the working
+        // resolution, so its polylines are in 128-space. projectLines defaults to RECTIFIED_SIZE
+        // (256), and solving the homography from a 256 canonical quad while feeding it 128-space
+        // points squeezed every traced line into a ~38px stub near the thumb anchor instead of the
+        // ~160px span it actually covers. test/scan.test.ts pins both spans.
+        setHoloLines(projectLines(found.lines, HOLO_PALM_ANCHORS, MASK_SIZE));
 
         /*
          * The merged-mask extraction is the best-evidenced observation of the whole scan — every
