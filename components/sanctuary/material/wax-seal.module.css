@@ -1,0 +1,205 @@
+/*
+ * ============================================================================
+ * THE WAX SEAL — the material around the geometry.
+ * Observation 5: an irregular lobed blob of poured wax with a lit crown, a warm
+ * shadow thrown down and right, and an emblem PRESSED IN.
+ * ============================================================================
+ *
+ * WHAT THIS FILE DOES AND DOES NOT OWN.
+ *
+ * The SHAPE is in wax-seal.tsx, because it is per-seed geometry and a
+ * stylesheet cannot be handed a seed. What is here is everything that is the
+ * same for every seal: the colour relationships, the cast shadow, and the
+ * 200 ms press. Splitting it this way is what lets the geometry be a pure
+ * function a test can read without a browser.
+ *
+ * WHY THERE IS NO WAX COLOUR IN THIS FILE.
+ *
+ * The measured wax ramp is #9E2925 -> #7D1F1B -> #5E1715: a crown catching the
+ * candle, a body, and a rim cooled toward the ground. None of those three is in
+ * the token layer, and the brief allowed them to be re-derived here as
+ * documented custom properties. They are NOT, because they already exist: the
+ * foundation's shared `#snc-g-wax` radial is exactly that ramp expressed in
+ * tokens — ink-red warmed toward flame-warm at an off-centre focus, ink-red at
+ * the body, ink-red cooled toward stone-900 at the rim — and the seal's blob
+ * fills from it directly. Re-declaring the three literals here would have been
+ * a second, silently diverging definition of one material: the day the wax is
+ * warmed a shade, half the seal would move and half would not. So the fill has
+ * NO colour of its own, and the four properties below cover only what the
+ * shared gradient does not paint: the sheen, the poured lip, and the two faces
+ * of the pressed emblem.
+ *
+ * Every one of them is a color-mix of --color-snc-* tokens. There is not a
+ * literal in this file, and there is no border-radius in it either — a seal is
+ * a lobed path, and the moment a radius appears here it has become a red dot.
+ */
+
+/*
+ * The seal itself.
+ *
+ * THE SHADOW IS WARM AND IT FALLS LOWER-RIGHT. Two layers, not one: a tight
+ * contact shadow that seats the wax on the leaf it was dripped onto, and a
+ * wider falloff that gives it height. Both are mixed from --color-snc-ink, the
+ * warm near-black of manuscript ink, and never from a grey or a black — a grey
+ * shadow under a red seal on parchment is the single fastest way to make a page
+ * look rendered instead of photographed. The offsets are positive on both axes
+ * because the one warm source in this world is above and to the left, which is
+ * the same light the sheen below is drawn for and the same light the emboss
+ * offset agrees with.
+ *
+ * `drop-shadow` and not `box-shadow`: a box-shadow would trace the SVG's square
+ * border box and betray the whole lobed outline in one line of CSS.
+ * `overflow: visible` keeps the shadow from being clipped by the viewBox.
+ */
+.seal {
+  /* The specular sheen: the candle reflected in a wet, slightly convex surface.
+   * Flame carried most of the way to parchment rather than to white, because a
+   * white highlight on warm wax reads as plastic. */
+  --snc-wax-sheen: color-mix(in oklab, var(--color-snc-flame) 55%, var(--color-snc-parchment));
+
+  /* The poured lip — the thin cooled edge where the wax stopped moving. It is
+   * the shared gradient's own rim stop taken one step further, so the blob has
+   * a defined boundary against the near-black ground instead of dissolving. */
+  --snc-wax-rim: color-mix(in oklab, var(--color-snc-ink-red) 44%, var(--color-snc-stone-900));
+
+  /* The pressed emblem's two faces. INK is darker than any part of the wax it
+   * sits in — that is what "pressed in" means — and LIP is lighter AND warmer,
+   * because the sliver of light on the far wall of a depression is the candle,
+   * not a white. A neutral pale lip would read as printed-on ink with a
+   * drop shadow, which is the exact failure this construction avoids. */
+  --snc-wax-press-ink: color-mix(in oklab, var(--color-snc-ink-red) 50%, var(--color-snc-stone-900));
+  --snc-wax-press-lip: color-mix(in oklab, var(--color-snc-ink-red) 60%, var(--color-snc-flame-warm));
+
+  /* The cast shadow, warm at both radii. */
+  --snc-wax-shadow-near: color-mix(in oklab, var(--color-snc-ink) 62%, transparent);
+  --snc-wax-shadow-far: color-mix(in oklab, var(--color-snc-ink) 32%, transparent);
+
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(1px 2px 3px var(--snc-wax-shadow-near))
+    drop-shadow(3px 5px 10px var(--snc-wax-shadow-far));
+}
+
+/*
+ * The poured lip, drawn as a hairline on the blob path itself rather than as a
+ * second shape, so it can never disagree with the outline by a sub-pixel. The
+ * weight is the secondary rung of the stroke ladder read in viewBox units at
+ * the size a seal is stamped, and it is solid — the only kind of line this
+ * product draws.
+ */
+.body {
+  stroke: var(--snc-wax-rim);
+  stroke-width: 0.9;
+  stroke-dasharray: none;
+}
+
+/*
+ * The specular. Low opacity on top of an already-lit crown: the shared wax
+ * gradient puts the light in the right PLACE, and this puts a wet sheen on it.
+ * It is clipped to the blob in the markup, so on a seed whose lobes bite inward
+ * the highlight is cut off by the rim exactly as a real one would be.
+ */
+.sheen {
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
+/*
+ * THE EMBOSS, HALF ONE. The lighter copy sits UNDER the dark emblem and is
+ * offset down and right in the markup, so all that escapes is a hairline of lit
+ * wax along the lower-right wall of the groove — the far wall from a light
+ * above and to the left. Reverse the offset and the emblem lifts off the
+ * surface and becomes a printed mark with a shadow.
+ */
+.pressLip {
+  color: var(--snc-wax-press-lip);
+}
+
+/*
+ * THE EMBOSS, HALF TWO. Darker than every part of the wax around it, drawn at
+ * the true position. Depth is the difference between these two classes and
+ * nothing else — no blur, no bevel filter, no glow.
+ */
+.pressInk {
+  color: var(--snc-wax-press-ink);
+}
+
+/*
+ * The stamped session id. Small, spaced and upper-case: a die-struck legend,
+ * not a caption. It inherits the page's face rather than naming one, so the
+ * seal cannot introduce a typeface the sanctuary has not already chosen, and it
+ * takes its colour from whichever emboss half is rendering it.
+ */
+.label {
+  font-size: 7.2px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/*
+ * THE PRESS — 200 ms, once, on mount.
+ *
+ * WHY 200 ms WHEN THE FAST INTERFACE TOKEN IS 400.
+ *
+ * A stamp is an impact, not an interface move. The 400-800 ms band is for
+ * things that travel; this one lands. It still eases with --snc-ease, so it
+ * belongs to the same motion language, and it is deliberately the only duration
+ * in the sanctuary that is shorter than the fast token — stated as a named
+ * property here rather than typed inline so it is visible as a decision.
+ *
+ * 0.9 -> 1.02 -> 1 is a squash and settle, and the 2% overshoot is the impact
+ * itself, not a spring: it is one keyframe with a fixed magnitude, it happens
+ * once, and it cannot oscillate. --snc-ease never overshoots on its own, which
+ * is exactly why the overshoot has to be in the keyframes to exist at all.
+ *
+ * `both` so the element is already at 0.9 on the first painted frame; without
+ * it the seal appears full-size for one frame and then jumps down.
+ */
+@keyframes snc-wax-press {
+  0% {
+    transform: scale(0.9);
+  }
+
+  62% {
+    transform: scale(1.02);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/*
+ * Written as longhands rather than the `animation` shorthand on purpose. CSS Modules has to rewrite
+ * the keyframe name to its scoped one, and it can only do that where the name is unambiguous — in a
+ * shorthand that also carries two `var()` values, a compiler has no way to know which token is the
+ * name. The failure would be silent and total: the animation simply never runs, in production only.
+ */
+.pressed {
+  --snc-wax-press-duration: 200ms;
+
+  transform-origin: center;
+  animation-name: snc-wax-press;
+  animation-duration: var(--snc-wax-press-duration);
+  animation-timing-function: var(--snc-ease);
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+}
+
+/*
+ * FLOOR AND REDUCED MOTION. What stops is MOTION, and only motion: the wax, the
+ * grain of its rim, the sheen, the cast shadow and the pressed emblem all still
+ * render, in their final state, immediately. The material is never what
+ * degrades.
+ *
+ * This is stated in CSS as well as in the component's FLOOR check on purpose.
+ * The component's check depends on a capability tier that is measured after
+ * mount; this one is true before a single line of JavaScript has run, and stays
+ * true if none ever does.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .pressed {
+    animation: none;
+    transform: none;
+  }
+}

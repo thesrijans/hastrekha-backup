@@ -1,0 +1,472 @@
+/*
+ * ============================================================================
+ * THE READING LEAF — the one stylesheet behind <LeafPage> and <ProvenanceRows>
+ * ============================================================================
+ *
+ * WHY TWO COMPONENTS SHARE ONE SHEET.
+ *
+ * The provenance rows are not a widget that happens to be placed on a leaf;
+ * they are a paragraph of the leaf's typography — the same ink, the same
+ * measure, the same soft second colour as the body above them. Splitting them
+ * into a second module would mean declaring `--snc-leaf-ink-soft` twice, and
+ * the day one copy is adjusted the medallion caption and the footer stop
+ * agreeing about what "lighter ink" means. One leaf, one sheet.
+ *
+ * WHAT IS MEASURED HERE, AND WHY IT IS A TOKEN RATHER THAN A TASTE.
+ *
+ * `--snc-leaf-ink-soft` is the only colour this file composes, and it was
+ * chosen by measurement rather than by eye. Contrast on the leaf, computed
+ * from the committed tokens (WCAG 2.x relative luminance, sRGB):
+ *
+ *   --color-snc-ink on --color-snc-parchment ............ 9.45 : 1
+ *   --color-snc-ink on the `aged` leaf base .............. 8.65 : 1
+ *   --color-snc-ink on the `light` inset base ........... 9.25 : 1
+ *   --color-snc-ink on --color-snc-parch-edge (the burnt
+ *     rim — the darkest ground any ink can land on) ..... 6.44 : 1
+ *   --snc-leaf-ink-soft on the aged base ................ 6.06 : 1
+ *   --snc-leaf-ink-soft over the burnt rim .............. 4.51 : 1
+ *
+ * The budget is 4.5:1 for body text and every one of those clears it,
+ * INCLUDING the worst case — the softened ink where the corner scorch is at
+ * full strength. That last number is why the mix is 78% and not the 70% that
+ * looks marginally more delicate: 70% measures 3.87:1 over the rim, and a
+ * caption that fails only in the corners of the page is exactly the kind of
+ * defect that survives review.
+ *
+ * NO COLOUR IS INVENTED BELOW. Every value resolves to a --color-snc-* token
+ * or to a color-mix of two of them. There is no hex, no rgb(), and no
+ * border-radius anywhere — the one disc on this page is `.snc-medallion` from
+ * the token layer, which owns the single place in this language where a radius
+ * is the shape rather than a default.
+ *
+ * @layer components, like every other sheet in the sanctuary, so a utility
+ * passed through a `className` still wins over these defaults.
+ */
+
+@layer components {
+  /* ---------------------------------------------------------------------- */
+  /* THE PAGE — header strip on the ground, the leaf, the page number        */
+  /* ---------------------------------------------------------------------- */
+
+  /*
+   * The measure is set HERE and inherited, rather than on the leaf, because
+   * the header strip and the page number belong to the same column: a chapter
+   * title running wider than the leaf it introduces reads as two pages
+   * accidentally overlapping.
+   */
+  .page {
+    --snc-leaf-ink-soft: color-mix(in oklab, var(--color-snc-ink) 78%, var(--color-snc-parch-edge));
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    inline-size: 100%;
+    max-inline-size: min(100%, 40rem);
+    margin-inline: auto;
+  }
+
+  /*
+   * A four-part strip that wraps rather than shrinking: the back arrow and the
+   * seal are fixed marks, the crest is a disc, and only the titles are
+   * elastic. `align-items: start` and not `center` because the seal in the
+   * reference hangs from the top of the strip and overlaps the leaf's
+   * shoulder.
+   */
+  .headerStrip {
+    display: flex;
+    align-items: start;
+    gap: 0.85rem;
+    padding-inline: 0.25rem;
+  }
+
+  /*
+   * The back arrow: a hairline, and nothing else. No disc behind it, no hover
+   * fill — the restraint rule applies hardest to the smallest mark on a page,
+   * and a chevron that needs a button drawn around it to be found is a chevron
+   * drawn too faintly.
+   */
+  .back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    margin-block-start: 0.35rem;
+    color: var(--color-snc-gold-400);
+    text-decoration: none;
+  }
+
+  .backGlyph {
+    display: block;
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+    overflow: visible;
+  }
+
+  /* The engraved medallion of the header, sized against the display title. */
+  .crest {
+    flex: none;
+    inline-size: 4rem;
+    margin-block-start: 0.1rem;
+  }
+
+  .crestGlyph {
+    display: block;
+    inline-size: 62%;
+    block-size: 62%;
+    overflow: visible;
+  }
+
+  .titles {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  /*
+   * The Devanagari chapter name, set above the Latin one — the same order the
+   * sanctuary header sets its wordmark in, so a reader meets the book's own
+   * name for the chapter first. Flat gold-400 and NOT <GoldText>: the metal
+   * ramp has a measured 24px floor and this line is deliberately small.
+   */
+  .eyebrow {
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.86rem;
+    letter-spacing: 0.02em;
+    line-height: 1.35;
+    color: var(--color-snc-gold-400);
+  }
+
+  /*
+   * Only the face and the box. Size belongs to <GoldText size="display">, and
+   * restating a font-size here is the one documented way to break that
+   * component's contrast contract.
+   */
+  .title {
+    display: block;
+    font-family: var(--font-snc-display);
+  }
+
+  /*
+   * Small caps rather than full capitals: the terms are real words taken off
+   * the response — a direction, a band, a rule category — and shouting them
+   * would make derived data read as a slogan.
+   */
+  .subtitle {
+    margin: 0.15rem 0 0;
+    font-family: var(--font-snc-display);
+    font-variant-caps: small-caps;
+    font-size: 0.95rem;
+    letter-spacing: 0.09em;
+    line-height: 1.4;
+    color: var(--color-snc-gold-400);
+  }
+
+  /*
+   * The seal hangs at the top right and is allowed to overlap the leaf below
+   * it — wax is poured onto a sheet, not laid out beside it. A negative margin
+   * rather than absolute positioning, so the strip still reserves its height
+   * and nothing under it has to know the seal is there.
+   */
+  .sealSlot {
+    flex: none;
+    display: block;
+    margin-inline-start: auto;
+    margin-block-end: -1.25rem;
+    line-height: 0;
+  }
+
+  /*
+   * The leaf itself carries no padding here: <Parchment> owns its written
+   * surface, whose block padding is deliberately asymmetric, and a second ring
+   * of padding would push the first line off the sheet's optical centre.
+   */
+  .leaf {
+    inline-size: 100%;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE NARRATION — the reference's body is large and airy; do not cram it  */
+  /* ---------------------------------------------------------------------- */
+
+  .body {
+    font-family: var(--font-snc-serif);
+    color: var(--color-snc-ink);
+  }
+
+  /*
+   * 1.75 leading at a 17–21px body. The paragraph is the most expensive-looking
+   * thing on the reference card and none of that is an effect: it is one long
+   * measure, generous leading, and old-style figures.
+   */
+  .paragraph {
+    margin: 0 0 1.05rem;
+    font-size: clamp(1.0625rem, 0.97rem + 0.5vw, 1.3125rem);
+    line-height: 1.75;
+    font-variant-numeric: oldstyle-nums;
+    text-wrap: pretty;
+  }
+
+  .paragraph:last-child {
+    margin-block-end: 0;
+  }
+
+  /*
+   * A narration section's own title, and the field label above a bare list of
+   * ids. Ink, never gold: gold on parchment measures 1.28:1 and is unreadable,
+   * so on the leaf the hierarchy is weight and size rather than colour.
+   */
+  .blockHeading {
+    margin: 1.4rem 0 0.4rem;
+    font-family: var(--font-snc-display);
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--snc-leaf-ink-soft);
+  }
+
+  .blockHeading:first-child {
+    margin-block-start: 0;
+  }
+
+  .divider {
+    margin-block: 1.6rem;
+  }
+
+  /*
+   * Two scripts in one heading, so two faces are listed: the browser resolves
+   * the family per glyph, taking Devanagari out of the second entry and Latin
+   * out of the first. One family here would set the Hindi half in whatever the
+   * serif's fallback happens to cover.
+   */
+  .whyHeading {
+    margin: 0 0 1.15rem;
+    font-family: var(--font-snc-serif), var(--font-snc-devanagari);
+    font-size: clamp(1.35rem, 1.1rem + 1.1vw, 1.7rem);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-snc-ink);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* PROVENANCE ROWS                                                         */
+  /* ---------------------------------------------------------------------- */
+
+  .provenance {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .provenanceRow {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  /* Sized here; every other property of the disc belongs to `.snc-medallion`. */
+  .provenanceDisc {
+    flex: none;
+    inline-size: 2.75rem;
+  }
+
+  .provenanceGlyph {
+    display: block;
+    inline-size: 60%;
+    block-size: 60%;
+    overflow: visible;
+  }
+
+  .provenanceText {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-inline-size: 0;
+  }
+
+  .provenanceTitle {
+    font-family: var(--font-snc-serif);
+    font-size: 1.075rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-snc-ink);
+  }
+
+  /* The parenthetical. Measured at 6.06:1 on this leaf — see the head note. */
+  .provenanceSource {
+    font-family: var(--font-snc-serif);
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    font-variant-numeric: oldstyle-nums;
+    color: var(--snc-leaf-ink-soft);
+  }
+
+  /*
+   * The honest empty state. It is a sentence about THIS response rather than a
+   * shrug: an empty provenance list is a correct answer, and the leaf says how
+   * many rules it had and that none of them carried a citation.
+   */
+  .provenanceEmpty {
+    margin: 0;
+    font-family: var(--font-snc-serif);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--snc-leaf-ink-soft);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE SOURCE WISDOM INSET — a sealed panel, never an invented verse       */
+  /* ---------------------------------------------------------------------- */
+
+  .inset {
+    position: relative;
+    margin-block-start: 1.75rem;
+  }
+
+  /* The four engraved brackets, placed inside <Parchment>'s ornament slot. */
+  .insetCorner {
+    position: absolute;
+    inline-size: 1.9rem;
+    block-size: 1.9rem;
+  }
+
+  .insetCorner[data-snc-corner="tl"] {
+    inset-block-start: 0.7rem;
+    inset-inline-start: 0.7rem;
+  }
+
+  .insetCorner[data-snc-corner="tr"] {
+    inset-block-start: 0.7rem;
+    inset-inline-end: 0.7rem;
+  }
+
+  .insetCorner[data-snc-corner="bl"] {
+    inset-block-end: 0.7rem;
+    inset-inline-start: 0.7rem;
+  }
+
+  .insetCorner[data-snc-corner="br"] {
+    inset-block-end: 0.7rem;
+    inset-inline-end: 0.7rem;
+  }
+
+  /*
+   * The written column stops short of the lotus rather than flowing under it.
+   * The reference's bloom is a watermark the quotation sits beside; text
+   * crossing it would make both unreadable and would read as a mistake.
+   */
+  .insetBody {
+    position: relative;
+    z-index: 1;
+    max-inline-size: 78%;
+  }
+
+  /*
+   * NO GLYPH BESIDE THIS HEADING, THOUGH THE REFERENCE HAS ONE.
+   *
+   * The reference sets a small compass rose before "Source Wisdom". This panel
+   * already carries four engraved brackets and a lotus, and the restraint rule
+   * says to ask whether removing something would work better before adding an
+   * effect. A sixth mark on a panel whose whole message is "there is nothing
+   * here yet" would be decoration arguing with its own content.
+   */
+  .insetHeading {
+    margin: 0 0 0.7rem;
+    font-family: var(--font-snc-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--color-snc-ink);
+  }
+
+  /*
+   * The seal's own line, in the ink-red the token layer reserves for
+   * marginalia and citations — measured 4.86:1 on the aged leaf and 5.19:1 on
+   * this lighter inset, so the one coloured line on the sheet still clears the
+   * body budget.
+   */
+  .insetSealLine {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-snc-serif);
+    font-size: 1.0125rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--color-snc-ink-red);
+  }
+
+  .insetSealDetail {
+    margin: 0;
+    font-family: var(--font-snc-serif);
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    font-variant-numeric: oldstyle-nums;
+    color: var(--snc-leaf-ink-soft);
+  }
+
+  /* Bottom-right, beside the text column, exactly where the reference sets it. */
+  .insetLotus {
+    position: absolute;
+    inset-block-end: 0.9rem;
+    inset-inline-end: 0.9rem;
+    pointer-events: none;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE FOOTER — on the parchment, never in a bar                           */
+  /* ---------------------------------------------------------------------- */
+
+  .footer {
+    margin-block-start: 1.9rem;
+  }
+
+  .footerOrnament {
+    margin-inline: auto;
+    margin-block-end: 0.9rem;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-snc-serif);
+    font-size: 1rem;
+    line-height: 1.3;
+    text-decoration: none;
+    color: var(--snc-leaf-ink-soft);
+  }
+
+  .actionGlyph {
+    display: block;
+    flex: none;
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    overflow: visible;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE PAGE NUMBER — outside the leaf, on the ground                       */
+  /* ---------------------------------------------------------------------- */
+
+  .pageNumber {
+    margin: 0;
+    padding-inline: 0.35rem;
+    text-align: end;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    color: var(--color-snc-gold-400);
+  }
+}

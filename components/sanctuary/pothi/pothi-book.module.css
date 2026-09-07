@@ -1,0 +1,515 @@
+/*
+ * ============================================================================
+ * <PothiBook> — where the leaves sit, and how one of them turns.
+ * ============================================================================
+ *
+ * THE BOUNDARY THIS FILE KEEPS. A declaration belongs here if it says WHERE a
+ * leaf is or HOW it moves. Everything a leaf is MADE of already belongs to
+ * <Parchment>, <LeafPage> and <SealedLeaf>, and none of it is restated below —
+ * there is no leaf background, no leaf border and no leaf typography in this
+ * sheet, because a second opinion about any of those is how two components
+ * start disagreeing about one material.
+ *
+ * THE ONE NUMBER THAT ARRIVES FROM JAVASCRIPT, AND WHY IT HAS TO.
+ * `--snc-turn-duration` is set on the stage from POTHI_TURN_DURATION_MS. The
+ * component gates a second turn on a timer of exactly that length, so a
+ * transition declared independently here would eventually disagree with the
+ * gate and let a leaf start rotating through one still in flight. One table,
+ * two readers. `--snc-leaf-turn` and `--snc-leaf-shadow` arrive the same way,
+ * per leaf, because during a drag they track a pointer and cannot be known
+ * until the frame they are painted in.
+ *
+ * NO COLOUR LITERAL APPEARS BELOW. Every pigment is a --color-snc-* token or a
+ * color-mix of two, and every shadow is warm — mixed out of stone-900, which is
+ * the room's own near-black, never a grey. The `transparent` keywords are the
+ * same ones the gold rule in app/sanctuary.css uses to make a gradient vanish
+ * at its ends; they paint nothing.
+ *
+ * NO border-radius, ANYWHERE. The only disc in this language is .snc-medallion
+ * in the token layer, and a rounded rectangle on a bitten sheet is the single
+ * detail that would turn the whole book back into a card.
+ *
+ * WHY @layer components. Everything here is a DEFAULT a caller's utility must
+ * be able to beat. Tailwind orders utilities after components, so a `className`
+ * passed to <PothiBook> still wins — whereas unlayered module CSS would
+ * silently beat it and leave the caller wondering why their width did nothing.
+ */
+
+@layer components {
+  /* ---------------------------------------------------------------------- */
+  /* THE BOOK — the outer box, and the only place a scroll is clipped        */
+  /* ---------------------------------------------------------------------- */
+
+  /*
+   * `overflow-x: clip` and not `hidden`, and the difference is load-bearing:
+   * `hidden` makes this a scroll container, which would let a mid-turn leaf
+   * push a horizontal scrollbar onto the page before being clipped by it.
+   * `clip` clips without ever scrolling.
+   *
+   * The inline padding is what keeps that clip off the material: a turning
+   * leaf sweeps out to the LEFT of the stage, and <Parchment>'s tear leaves its
+   * own box by design. Both need room inside this element, not outside it.
+   */
+  .book {
+    --snc-book-fold-ink: color-mix(in oklab, var(--color-snc-stone-900) 82%, transparent);
+    --snc-book-chrome-ink: color-mix(in oklab, var(--color-snc-gold-500) 76%, transparent);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.6rem;
+    inline-size: 100%;
+    padding-inline: clamp(0.5rem, 4vw, 3.5rem);
+    overflow-x: clip;
+  }
+
+  /* The book is a keyboard target, so it must say so — and quietly, in gold. */
+  .book:focus-visible {
+    outline: 1px solid var(--color-snc-gold-500);
+    outline-offset: 0.6rem;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE STAGE — one leaf wide, with the depth the fold is seen through      */
+  /* ---------------------------------------------------------------------- */
+
+  /*
+   * `perspective` is on the STAGE and not on the leaf, because a perspective
+   * declared per leaf gives each sheet its own vanishing point and the stack
+   * stops reading as one bound object. The value is deliberately long: at
+   * ~1600px a 40rem leaf rotates without the near edge ballooning, which is the
+   * difference between a page turning and a page being thrown at the reader.
+   *
+   * `touch-action: pan-y` is what actually makes a horizontal swipe reachable.
+   * Without it the browser claims every touch drag for scrolling and the
+   * pointermove handler never sees a committed gesture; with `none` the reader
+   * could no longer scroll a leaf that is taller than the stage.
+   */
+  .stage {
+    --snc-turn-duration: 720ms;
+    position: relative;
+    inline-size: min(100%, 46rem);
+    block-size: min(78vh, 54rem);
+    perspective: 1600px;
+    perspective-origin: 0% 50%;
+    touch-action: pan-y;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE LEAF — a sheet with two faces, hinged at its spine                  */
+  /* ---------------------------------------------------------------------- */
+
+  .leaf {
+    --snc-leaf-turn: 0deg;
+    --snc-leaf-shadow: 0;
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    transform: rotateY(var(--snc-leaf-turn));
+    will-change: transform;
+  }
+
+  .fold .leaf {
+    transition: transform var(--snc-turn-duration) cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /*
+   * A dragged leaf must track the pointer exactly. A transition here would put
+   * the sheet a fifth of a second behind the finger holding it, which reads as
+   * the book being slow rather than as the animation being smooth.
+   */
+  .stage[data-snc-dragging="true"] .leaf {
+    transition: none;
+  }
+
+  /*
+   * Only three leaves are ever rendered to the compositor: the one being read,
+   * the one under it, and the one most recently turned (which is the left-hand
+   * page). The rest stay in the DOM — they are the book, and a screen reader
+   * paging through it will meet them — but they cost nothing to composite.
+   */
+  .leaf[data-snc-leaf-state="ahead"],
+  .leaf[data-snc-leaf-state="back"],
+  .leaf[data-snc-leaf-state="next"] {
+    visibility: hidden;
+  }
+
+  /*
+   * ART-DIRECTION PASS: "next" joined the hidden states, and losing a depth cue
+   * was the cheaper of two costs.
+   *
+   * Leaving the next leaf visible is the right instinct — a pothi IS a bundle,
+   * and you should see the sheet under the one you are reading. But leaves do
+   * not share a footprint here: a sealed chapter renders 656x492 and an open one
+   * 704x648, so the taller sheet underneath protruded about 160px below the
+   * shorter one on top. Measured on a real capture it read as a charcoal slab
+   * with a torn top edge hanging off the bottom of the page — a grey box, which
+   * is the one thing this material system exists to avoid.
+   *
+   * The honest depth cue is a stack EDGE: a few px of each sheet's bitten rim
+   * showing along one side, all sheets sharing a footprint. That is a composition
+   * change, not a visibility toggle, and it belongs with the shelf work rather
+   * than being improvised here. Until then the book shows one sheet at a time,
+   * which is true to the reference photograph — the reader's hand is on a single
+   * leaf and the bundle behind it is dark.
+   */
+
+  /*
+   * Below the point where a turned leaf would sit off-screen, it is hidden
+   * rather than clipped. The verso is context, not content: losing it on a
+   * phone costs the reader nothing, and letting it hang past the viewport edge
+   * would cost them a page that looks broken.
+   */
+  @media (max-width: 60rem) {
+    .leaf[data-snc-leaf-state="turned"] {
+      visibility: hidden;
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE FACES                                                              */
+  /* ---------------------------------------------------------------------- */
+
+  /*
+   * `overflow-y: auto` on the FACE and not on the leaf: a chapter is routinely
+   * taller than the stage, and the scroll has to live inside the rotated sheet
+   * rather than around it. Setting overflow here is safe for the 3D — the face
+   * is a leaf of the transform tree, and only its own children flatten.
+   *
+   * `overflow-x: visible` is not available beside a scrolling y-axis, so the
+   * inline padding below is what keeps <Parchment>'s tear from being shaved by
+   * the scroll container. It is the same reason the book has padding, one
+   * level down.
+   */
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.75rem clamp(0.4rem, 2vw, 1.25rem) 2rem;
+    scrollbar-width: thin;
+  }
+
+  .recto {
+    transform: rotateY(0deg);
+  }
+
+  .verso {
+    transform: rotateY(180deg);
+  }
+
+  /*
+   * The spread: the measured plate on the left of the written leaf once there
+   * is room for both, stacked above it when there is not. The plate is the
+   * narrower column because it is evidence for the page, not the page.
+   */
+  .spread {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+    align-items: start;
+  }
+
+  @media (min-width: 72rem) {
+    .spread {
+      grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    }
+  }
+
+  /*
+   * <PalmPlate> returns null whenever the hand-off carries neither a crop nor a
+   * drawable line, so this slot is genuinely childless in that case and `:empty`
+   * removes it. Without this the grid would keep a column of air beside every
+   * chapter that was never measured.
+   */
+  .plateSlot:empty {
+    display: none;
+  }
+
+  .sealedSlot {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    inline-size: 100%;
+    max-inline-size: min(100%, 40rem);
+    margin-inline: auto;
+  }
+
+  .sealedLeaf {
+    inline-size: 100%;
+  }
+
+  /*
+   * The folio, matched to <LeafPage>'s own: same size, same tracking, same
+   * gold, same outer edge. A reader turning from an open leaf to a sealed one
+   * must not see the page number move.
+   */
+  .folio {
+    margin: 0;
+    padding-inline: 0.35rem;
+    text-align: end;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    color: var(--color-snc-gold-400);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE VERSO — chapter data, and nothing that could be mistaken for a      */
+  /* reading                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  .versoLeaf {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: min(60vh, 40rem);
+  }
+
+  .versoBody {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.15rem;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+
+  .versoNumeral {
+    font-family: var(--font-snc-devanagari);
+    font-size: 2rem;
+    letter-spacing: 0.12em;
+  }
+
+  .versoTitle {
+    font-family: var(--font-snc-devanagari);
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+    color: color-mix(in oklab, var(--color-snc-ink) 78%, var(--color-snc-parch-edge));
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE FOLD SHADOW — the crease, tracking the sheet                        */
+  /* ---------------------------------------------------------------------- */
+
+  /*
+   * A gradient anchored at the spine and thinning outward, exactly as the light
+   * falls on a sheet lifting off a stack. Its strength is `--snc-leaf-shadow`,
+   * computed per frame in the component: 0 at both rests, 1 edge-on. Warm, out
+   * of the room's own stone — a grey here would read as a rendered UI dropped
+   * on top of a photographed page, which is the one thing this whole material
+   * system exists to avoid.
+   *
+   * `pointer-events: none` because it lies over the written face: a shadow that
+   * swallowed a click on a citation would be a decoration breaking a control.
+   */
+  .foldShadow {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: var(--snc-leaf-shadow);
+    background: linear-gradient(
+      to right,
+      var(--snc-book-fold-ink) 0%,
+      color-mix(in oklab, var(--snc-book-fold-ink) 45%, transparent) 32%,
+      transparent 78%
+    );
+    transform: translateZ(0.5px);
+  }
+
+  .crossfade .foldShadow {
+    display: none;
+  }
+
+  /*
+   * During a programmatic turn the shadow has to pass THROUGH its peak, and a
+   * transition between two rest values (0 → 0) never would. The keyframes carry
+   * it; the inline custom property carries a drag. Two mechanisms because there
+   * are genuinely two cases, not because one of them failed.
+   */
+  .fold .leaf[data-snc-turning="true"] .foldShadow {
+    animation: snc-fold-pass var(--snc-turn-duration) cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  @keyframes snc-fold-pass {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE CROSSFADE — the same book, without the third dimension              */
+  /* ---------------------------------------------------------------------- */
+
+  /*
+   * Not a degraded fold: a different, complete gesture. No rotation, no verso,
+   * no shadow, one opacity interpolation, and `visibility` stepped at the end
+   * of the fade so a faded-out leaf cannot be tabbed into or read aloud.
+   */
+  .crossfade .leaf {
+    transform: none;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--snc-turn-duration) ease,
+      visibility 0s linear var(--snc-turn-duration);
+  }
+
+  .crossfade .leaf[data-snc-leaf-state="current"] {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity var(--snc-turn-duration) ease,
+      visibility 0s;
+  }
+
+  .crossfade .verso {
+    display: none;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE CONTROLS                                                            */
+  /* ---------------------------------------------------------------------- */
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1rem, 5vw, 2.75rem);
+    inline-size: 100%;
+  }
+
+  /*
+   * A mark, not a button: no fill, no border, no radius. The affordance is the
+   * chevron and the space around it, which is the same argument the sealed leaf
+   * makes about room being the difference between deliberate and broken.
+   */
+  .control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--snc-book-chrome-ink);
+    cursor: pointer;
+    transition: color 180ms ease;
+  }
+
+  .control:hover,
+  .control:focus-visible {
+    color: var(--color-snc-gold-400);
+  }
+
+  .control:focus-visible {
+    outline: 1px solid var(--color-snc-gold-500);
+    outline-offset: 0.25rem;
+  }
+
+  /*
+   * A control that cannot act says so by receding, not by greying out: there is
+   * one warm light in this room and no grey in it. The first and last leaves
+   * are ordinary places to be, not errors.
+   */
+  .control:disabled {
+    color: color-mix(in oklab, var(--color-snc-gold-600) 45%, transparent);
+    cursor: default;
+  }
+
+  .controlGlyph {
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+  }
+
+  /* One chevron path, mirrored — so the two marks cannot drift apart. */
+  .controlNext .controlGlyph {
+    transform: scaleX(-1);
+  }
+
+  .readout {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    margin: 0;
+    text-align: center;
+  }
+
+  .readoutNumeral {
+    font-family: var(--font-snc-devanagari);
+    font-size: 1.05rem;
+    letter-spacing: 0.1em;
+  }
+
+  .readoutTitle {
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.92rem;
+    letter-spacing: 0.05em;
+    color: color-mix(in oklab, var(--color-snc-gold-500) 70%, transparent);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* THE EMPTY BOOK                                                          */
+  /* ---------------------------------------------------------------------- */
+
+  .emptyBook {
+    padding-block: clamp(2rem, 8vh, 5rem);
+  }
+
+  .emptyLeaf {
+    inline-size: 100%;
+    max-inline-size: min(100%, 34rem);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* REDUCED MOTION — the preference, honoured where it cannot be overridden */
+  /* ---------------------------------------------------------------------- */
+
+  /*
+   * The component already resolves a reduced-motion reader to FLOOR and
+   * therefore to the crossfade, through useCapabilityTier(). This block is the
+   * copy that cannot be bypassed: the tier is measured once at mount, while the
+   * preference is a live query a reader can flip without this tree re-rendering
+   * — and a caller may pass a tier by hand.
+   *
+   * It forces the crossfade LAYOUT and not merely `transition: none`, because
+   * removing the transition alone would leave every un-turned leaf lying
+   * un-rotated on top of the one being read.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .leaf {
+      transform: none;
+      transition: none;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .leaf[data-snc-leaf-state="current"] {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .verso,
+    .foldShadow {
+      display: none;
+    }
+
+    .fold .leaf[data-snc-turning="true"] .foldShadow {
+      animation: none;
+    }
+
+    .control {
+      transition: none;
+    }
+  }
+}

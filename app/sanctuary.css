@@ -156,6 +156,87 @@
   /* threshold where the eye starts tracking an individual mote.            */
   /* --------------------------------------------------------------------- */
   --snc-dust-drift-px-per-frame: 0.02;
+
+  /* --------------------------------------------------------------------- */
+  /* THE GOLD METAL RAMP — appended after the references were re-measured.  */
+  /*                                                                        */
+  /* WHY THREE COLOURS HAD TO BE ADDED TO A LAYER WHOSE RULE WAS "INVENT    */
+  /* NO COLOUR".                                                            */
+  /*                                                                        */
+  /* §3 gives gold as three flat values, and three flat values cannot say   */
+  /* the thing the references actually show. In both of them gold is STRUCK */
+  /* METAL: it runs dark bronze at one end, climbs through a bright         */
+  /* highlight to a pale crest, and falls back to bronze at the other — all */
+  /* within a single glyph. Painting text in flat #C9A24B is the failure    */
+  /* state the whole material pass exists to fix, and it cannot be fixed    */
+  /* with a gold-500 that has nothing to ramp between. The alternative was  */
+  /* a hex literal inside a component, which is worse in every way: it is   */
+  /* unreviewable, unpinnable, and duplicated at the second use site.       */
+  /*                                                                        */
+  /* WHAT WAS SNAPPED TO EXISTING TOKENS, AND WHAT WAS NOT.                 */
+  /*                                                                        */
+  /* The measured ramp is                                                   */
+  /*   105deg, #8A6A2A, #B88935, #E1BE73, #F0D18A, #C99A4A, #8A6A2A         */
+  /* Two of those six are already in this file, or nearly:                  */
+  /*                                                                        */
+  /*   #8A6A2A IS --color-snc-gold-600, exactly. Re-declaring it under a    */
+  /*   ramp name would be a second name for one colour, and the day someone */
+  /*   adjusts the engraved shadow the ramp would silently stop agreeing    */
+  /*   with it. Snapped: stops 1 and 6 reference gold-600.                  */
+  /*                                                                        */
+  /*   #C99A4A is NOT --color-snc-gold-500 (#C9A24B). It is eight units of  */
+  /*   green and one of blue away — invisible as one stop of a six-stop     */
+  /*   ramp across a glyph, and unmistakable as a swatch. It was SNAPPED TO */
+  /*   gold-500 anyway, deliberately. A sixteenth gold sitting one point    */
+  /*   from an existing gold is the worst outcome available here: two names */
+  /*   nobody can tell apart, chosen by whoever typed fastest, drifting     */
+  /*   apart over time. The falling side of the ramp is the primary         */
+  /*   linework gold, which is also what it means.                          */
+  /*                                                                        */
+  /* Only the three genuinely new stops are added, and they are named for   */
+  /* their role on the ramp rather than by number, so a component reading   */
+  /* `gold-ramp-pale` knows it has the crest and not stop four.             */
+  /* --------------------------------------------------------------------- */
+  --color-snc-gold-ramp-bronze: #B88935; /* the rise out of the engraved shadow */
+  --color-snc-gold-ramp-bright: #E1BE73; /* where the light first catches the metal */
+  --color-snc-gold-ramp-pale: #F0D18A; /* the crest — the brightest point on the ramp */
+
+  /* The ramp itself, composed once so nothing re-declares it. Every consumer
+   * — .snc-gold-text, .snc-gold-border, and the SVG #snc-g-gold gradient which
+   * mirrors these six stops at the same 105deg — is then made of one alloy
+   * under one light, which is the only way an engraved glyph and the heading
+   * beside it can look like the same object. 105deg and not 90: a ramp
+   * straight across reads as a horizontal wipe, while fifteen degrees past
+   * horizontal drags the highlight diagonally over a glyph the way a light
+   * above and to the left crosses a struck, slightly convex surface. */
+  /*
+   * ART-DIRECTION PASS, measured on a real capture of /sanctuary/materials.
+   *
+   * The first weighting put gold-600 at both 0% and 100% with 20% ramps either
+   * side, which meant a WIDE heading — "MATERIAL BENCH", "PARCHMENT" — spent
+   * roughly two fifths of its run in the engraved shadow. On the warm near-black
+   * ground those glyph ends read as a dim outline rather than as metal, and the
+   * headings were the least legible thing on the page while a flat gold-400
+   * caption beside them was perfectly clear. That is the exact failure this
+   * whole build exists to fix, arrived at from the other direction.
+   *
+   * So the dark stops are kept — struck metal needs the shadow it turns out of,
+   * and removing them gives back the flat yellow — but they are pulled into
+   * short tails, and the lit crest is widened into a plateau across the middle
+   * half. A long heading now runs bright with its ends turning down, which is
+   * what the reference's "Life Line" does. Angle stays at 105deg.
+   */
+  --snc-gold-metal: linear-gradient(
+    105deg,
+    var(--color-snc-gold-600) 0%,
+    var(--color-snc-gold-ramp-bronze) 9%,
+    var(--color-snc-gold-ramp-bright) 24%,
+    var(--color-snc-gold-ramp-pale) 42%,
+    var(--color-snc-gold-ramp-pale) 58%,
+    var(--color-snc-gold-ramp-bright) 76%,
+    var(--color-snc-gold-500) 91%,
+    var(--color-snc-gold-600) 100%
+  );
 }
 
 /*
@@ -189,5 +270,149 @@
     stroke-opacity: var(--snc-stroke-active-opacity);
     stroke-dasharray: none;
     filter: var(--snc-stroke-active-glow);
+  }
+}
+
+/*
+ * ============================================================================
+ * THE MATERIAL CLASSES — appended with the gold ramp above.
+ * ============================================================================
+ *
+ * Four classes, and each one exists because the same mistake kept being made in
+ * a different component.
+ *
+ * WHY THESE ARE CLASSES AND NOT A COMPONENT PROP OR A UTILITY STACK.
+ *
+ * All four encode a RELATIONSHIP between values — a ramp and the shadow that
+ * sits under it, a gradient and the two ends it has to vanish at — and a
+ * relationship spread across four utilities on a div is a relationship that
+ * holds until somebody copies three of them. Written once here, an ornament
+ * cannot half-inherit the look.
+ *
+ * They live in @layer components for the same reason the stroke ladder does: a
+ * Tailwind utility must still be able to win. These are the default material,
+ * not a lock.
+ *
+ * All four render identically at every capability tier and under
+ * prefers-reduced-motion. There is no transition, no animation and no filter
+ * that moves in any of them. What FLOOR turns off is motion; the material is
+ * never what degrades.
+ */
+@layer components {
+  /*
+   * GOLD IS STRUCK METAL, NOT YELLOW TEXT.
+   *
+   * The ramp is clipped to the glyphs, so the letterform itself carries the
+   * bronze-to-pale-to-bronze travel that a flat fill cannot. `color:
+   * transparent` is what lets the clipped background show; -webkit-text-fill-color
+   * repeats it because Safari honours the fill property over `color` here, and a
+   * missing prefix there means invisible headings rather than ugly ones.
+   *
+   * The two text-shadows are the emboss, and their direction is the whole
+   * point. A text-shadow paints BEHIND the glyph, so with the glyph filled by an
+   * opaque gradient only the 1px offset escapes: a warm near-black lip below,
+   * where the one light source above the scene leaves the metal in shadow, and a
+   * pale hairline above, where the struck edge catches it. Reverse them and the
+   * letters look pressed into the page instead of raised off it.
+   *
+   * The light edge is mixed down to 45% rather than used at full strength: at
+   * full it reads as a second outline, which is one effect too many. Both
+   * shadows resolve to tokens, so this class introduces no colour.
+   */
+  .snc-gold-text {
+    background-image: var(--snc-gold-metal);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-shadow:
+      0 1px 0 var(--color-snc-stone-900),
+      0 -1px 0 color-mix(in oklab, var(--color-snc-gold-ramp-pale) 45%, transparent);
+  }
+
+  /*
+   * EVERY GOLD RULE FADES AT BOTH ENDS.
+   *
+   * There is not one solid gold bar anywhere in the references, and this class
+   * is how that stays true: a rule is brightest at its centre and gone at both
+   * ends, so it reads as a struck line catching the light rather than as a
+   * border someone dropped in. This single class does more for the look than
+   * any other rule in this file, which is exactly why it is a class and not a
+   * pattern to be re-typed — and why test/sanctuary-tokens.test.ts asserts both
+   * ends are transparent rather than trusting the next author to notice.
+   *
+   * The foil gold (400) and not the linework gold (500): a rule that spends
+   * most of its length under half alpha needs the brighter metal to read as a
+   * line at all. #snc-g-rule in the SVG sprite is the same three stops in the
+   * same gold, so an ornament drawn in SVG and a rule drawn in CSS match.
+   *
+   * `border: none` because the intended element is an <hr>, which arrives with
+   * a border, a colour and a vertical margin of its own; height and margin are
+   * stated so the rule is exactly one pixel and its spacing belongs to whoever
+   * places it.
+   */
+  .snc-gold-rule {
+    border: none;
+    height: 1px;
+    margin: 0;
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-gold-400), transparent);
+  }
+
+  /*
+   * A GOLD EDGE MADE OF THE SAME METAL.
+   *
+   * border-image rather than border-color, so the frame around a panel varies
+   * along its length the way the ramp does instead of being a flat rectangle of
+   * one gold. `border-image-slice: 1` is the incantation that makes a gradient
+   * source fill the whole border box.
+   *
+   * The width is the secondary rung of the stroke ladder, so a gold frame and a
+   * gold hairline stroke are the same weight, and the style is solid — the only
+   * kind of line this product draws.
+   */
+  .snc-gold-border {
+    border-style: solid;
+    border-width: var(--snc-stroke-secondary-width);
+    border-image-source: var(--snc-gold-metal);
+    border-image-slice: 1;
+  }
+
+  /*
+   * THE DARK MEDALLION — the recurring provenance motif.
+   *
+   * A near-black disc, a 1px gold ring, and a warm shadow beneath. The disc is a
+   * radial gradient lit from upper-left rather than a flat fill, for the same
+   * reason parchment is never flat: one warm source lights this whole world, and
+   * a disc that ignores it reads as a circle rather than as an object sitting on
+   * a page.
+   *
+   * `color` is set so an engraved glyph inside can be drawn in `currentColor`
+   * and inherit the ring's gold without every call site restating it.
+   *
+   * Two shadow layers, not one: a tight contact shadow that seats the disc on
+   * the leaf and a soft falloff around it. Both are mixed from --color-snc-ink,
+   * the warm near-black of manuscript ink, and never from a grey — a grey shadow
+   * under a gold disc on parchment is the single fastest way to make a page look
+   * rendered rather than photographed.
+   *
+   * The radius is 50% because a medallion is a disc. It is the one place in this
+   * language where a radius is the shape rather than a default.
+   */
+  .snc-medallion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background-image: radial-gradient(
+      circle at 34% 28%,
+      var(--color-snc-stone-700),
+      var(--color-snc-stone-900) 72%
+    );
+    color: var(--color-snc-gold-500);
+    box-shadow:
+      inset 0 0 0 1px var(--color-snc-gold-500),
+      0 1px 2px color-mix(in oklab, var(--color-snc-ink) 55%, transparent),
+      0 4px 10px color-mix(in oklab, var(--color-snc-ink) 28%, transparent);
   }
 }

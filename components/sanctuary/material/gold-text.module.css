@@ -1,0 +1,195 @@
+/*
+ * ============================================================================
+ * GOLD TEXT — the tooth on the metal, the display size ladder, and the
+ * tracking that separates struck gold from yellow text.
+ * ============================================================================
+ *
+ * WHAT IS DELIBERATELY NOT HERE: THE RAMP.
+ *
+ * The six-stop 105deg alloy lives once, in app/sanctuary.css, as
+ * `--snc-gold-metal`, and it is clipped to glyphs once, by `.snc-gold-text`.
+ * Nothing below restates a stop, an angle or a colour. A second copy of the
+ * ramp would be a second alloy the moment either one was adjusted, and the
+ * whole reason an engraved SVG glyph and the CSS heading beside it look like
+ * one object is that they read the same token. There is no hex, no rgb() and
+ * no hsl() in this file, and the test fails if one appears.
+ *
+ * WHY A MODULE AT ALL, RATHER THAN UTILITIES ON THE ELEMENT.
+ *
+ * Three of the four things below are RELATIONSHIPS, and a relationship spread
+ * across utilities holds only until somebody copies three of the four:
+ *
+ *   1. The tooth is three background layers that must stay in that order, at
+ *      those sizes, over the ramp — an arbitrary-value Tailwind class for a
+ *      stacked `background-image` is unreadable and unreviewable.
+ *   2. Every font-size on the ladder is bound to a MEASURED contrast floor
+ *      (see gold-text.tsx). "font-size" and "is this legible" are one decision,
+ *      so they are one rule.
+ *   3. Letterspaced caps need the phantom trailing space taken back off, and a
+ *      tracking without that compensation is an off-centre title.
+ *
+ * CASCADE NOTE, stated because it is load-bearing rather than incidental.
+ * Module CSS is UNLAYERED; `.snc-gold-text` lives in `@layer components`.
+ * Unlayered wins, so `.metal` below is guaranteed to override the base class's
+ * `background-image` with the tooth-over-ramp stack. It overrides nothing else:
+ * `background-clip`, `color: transparent` and the emboss shadows all still come
+ * from the token layer, which is the only place they are allowed to be defined.
+ *
+ * NOTHING HERE MOVES. No transition, no animation, no filter. So there is
+ * nothing for the FLOOR tier or prefers-reduced-motion to turn off: the
+ * material renders in full on every device, which is the rule.
+ */
+
+/* -------------------------------------------------------------------------
+ * THE TOOTH — observation 3, the part a flat gradient still gets wrong.
+ *
+ * A six-stop ramp gives gold its TRAVEL (bronze to crest and back). What it
+ * cannot give is SURFACE: a perfectly smooth ramp reads as coloured plastic,
+ * because real struck metal keeps the drag of the strike and the microscopic
+ * pitting of the die. That is what these two layers are, and why they are
+ * clipped to the glyphs along with the ramp rather than sitting behind them.
+ *
+ * WHY THE TOOTH IS MADE OF THE RAMP OWN TWO ENDS.
+ *
+ * The obvious way to roughen a surface is white and black speckle. It is also
+ * wrong twice over here: a hex literal in a component file is a colour outside
+ * the token layer, and — the reason that rule exists — achromatic speckle
+ * desaturates the metal toward grey wherever it lands. So the highlight
+ * speckle is the crest of the ramp and the shadow speckle is its engraved
+ * bronze, each mixed down to 3%. Mixed with `transparent`, so the mix is purely
+ * an alpha change: the tooth CANNOT introduce a hue the alloy does not already
+ * contain, which is the constraint the brief actually names.
+ *
+ * 3% is the whole budget. At 6% the striations become visible as stripes and
+ * the letterform starts to look hatched; below about 2% they stop reading at
+ * all on an 8-bit display. This is a texture you should only be able to find
+ * by looking for it.
+ * ---------------------------------------------------------------------- */
+.metal {
+  /* Local to this file, not design tokens — one expression each, kept out of
+   * the `background-image` line only so that line stays readable. */
+  --gold-text-tooth-light: color-mix(in oklab, var(--color-snc-gold-ramp-pale) 3%, transparent);
+  --gold-text-tooth-dark: color-mix(in oklab, var(--color-snc-gold-600) 3%, transparent);
+
+  /*
+   * Layer 1, the pitting: a 3px conic tile, which repeats to a chequer far too
+   * fine to resolve at 3% alpha — it simply roughens. `from 105deg` puts the
+   * seam of the tile on the axis of the ramp rather than crossing it, so the
+   * two textures never argue about direction.
+   *
+   * Layer 2, the drag: 1px striations every 3px ALONG the 105deg ramp axis, in
+   * the engraved bronze. Along, not across: a burnished surface carries the
+   * mark of the tool travelling with the light, and striae crossing the ramp
+   * would read as a screen or a halftone.
+   *
+   * Layer 3 is the alloy itself, referenced and never restated.
+   */
+  background-image:
+    repeating-conic-gradient(from 105deg, var(--gold-text-tooth-light) 0% 25%, transparent 0% 50%),
+    repeating-linear-gradient(105deg, var(--gold-text-tooth-dark) 0 1px, transparent 1px 3px),
+    var(--snc-gold-metal);
+  background-size:
+    3px 3px,
+    auto,
+    auto;
+  background-repeat: repeat, repeat, no-repeat;
+
+  /* A struck title is an object, and an object does not end a line with one
+   * orphaned word. Inert on inline elements, which is why it can live here
+   * rather than being duplicated across the four block sizes. */
+  text-wrap: balance;
+}
+
+/* -------------------------------------------------------------------------
+ * THE SIZE LADDER — four rungs, and every one of them is DISPLAY size.
+ *
+ * This is not a taste decision and the numbers are not round by accident. The
+ * darkest stop of the ramp, --color-snc-gold-600, measures 3.91:1 against the
+ * --color-snc-stone-800 ground (WCAG 2.2 relative luminance; the arithmetic is
+ * re-derived from the tokens in test/material-gold.test.ts). That FAILS the
+ * 4.5:1 body-text minimum and PASSES the 3:1 large-text minimum, so every rung
+ * here has a floor at or above 24px — the "large scale" threshold of 18pt. The
+ * clamp minimums are the enforcement: 2.5rem, 2rem, 1.625rem, 1.5rem.
+ *
+ * A gold label smaller than this is not a smaller GoldText. It is flat
+ * --color-snc-gold-400 (11.81:1, comfortable at any size) — see the JSDoc on
+ * the component. Shrinking the ramp instead would put part of every glyph at
+ * 3.91:1 in running text, which is the failure the floor exists to prevent.
+ *
+ * Line heights fall as the size rises because display type sets tighter: at
+ * 4rem, 1.3 leading opens a gap you could park a paragraph in.
+ * ---------------------------------------------------------------------- */
+
+/* The Threshold wordmark and nothing else. Floor 40px. */
+.hero {
+  font-size: clamp(2.5rem, 7vw, 4.25rem);
+  line-height: 1.02;
+}
+
+/* Chapter and screen titles — the "Life Line" of the reference card. Floor 32px. */
+.display {
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.08;
+}
+
+/* Section heads inside a leaf — "Why Hastrekha says this". Floor 26px. */
+.title {
+  font-size: clamp(1.625rem, 3.5vw, 2.25rem);
+  line-height: 1.15;
+}
+
+/* The smallest gold the ramp is allowed to paint. Floor 24px, exactly the limit. */
+.subtitle {
+  font-size: clamp(1.5rem, 2.5vw, 1.75rem);
+  line-height: 1.3;
+}
+
+/* -------------------------------------------------------------------------
+ * LETTERSPACED CAPS — the optical detail that stops this being yellow text.
+ *
+ * Both references letterspace their capitalised lines noticeably, and the
+ * reason is mechanical rather than decorative: inscriptional capitals were cut
+ * with space between them, and set solid they close up into a wall.
+ *
+ * `word-spacing` rises with the tracking because it has to. Adding 0.18em
+ * between every letter without touching the word space leaves the gap BETWEEN
+ * words almost the same as the gap between letters, and the line stops
+ * resolving into words at a glance.
+ *
+ * The negative `margin-inline-end` is the classic and non-optional companion:
+ * letter-spacing is applied AFTER the last glyph too, so a centred tracked
+ * title sits 0.18em left of centre and a right-aligned one floats. Taking
+ * exactly the tracking back off is what re-centres it.
+ * ---------------------------------------------------------------------- */
+.caps {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  word-spacing: 0.12em;
+  margin-inline-end: -0.18em;
+}
+
+/* -------------------------------------------------------------------------
+ * HIGH CONTRAST — the one place the metal is allowed to stop being metal.
+ *
+ * A reader who has asked the operating system for more contrast has said that
+ * 3.91:1 across part of a glyph is not good enough for them, and no amount of
+ * material honesty outranks that. So the ramp and the tooth are removed and the
+ * text is painted flat in the foil gold, measured at 11.81:1 on stone-800.
+ *
+ * This is a REMOVAL, which is the correct shape for a refinement: it takes the
+ * effect away rather than adding a second one on top.
+ *
+ * `-webkit-text-fill-color` is restated alongside `color` and is the whole
+ * point of this block. `.snc-gold-text` sets it to `transparent` for Safari,
+ * and Safari honours the fill property OVER `color` — so a high-contrast block
+ * that set `color` alone would hand exactly those users invisible headings,
+ * which is the opposite of what they asked for.
+ * ---------------------------------------------------------------------- */
+@media (prefers-contrast: more) {
+  .metal {
+    background-image: none;
+    color: var(--color-snc-gold-400);
+    -webkit-text-fill-color: var(--color-snc-gold-400);
+    text-shadow: none;
+  }
+}

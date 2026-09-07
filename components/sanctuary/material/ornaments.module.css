@@ -1,0 +1,119 @@
+/*
+ * ============================================================================
+ * THE ORNAMENT FAMILY — the only CSS six pure-SVG server components need.
+ * ============================================================================
+ *
+ * WHY THIS FILE IS SO SHORT, AND WHY IT EXISTS AT ALL.
+ *
+ * Everything about an ornament that can be said in SVG is said in SVG: the
+ * geometry, the 1px gold gradient stroke, the fade, the seeded waver. Three
+ * things cannot be, and they are the whole contents of this file.
+ *
+ *   1. `overflow: visible` on the root <svg>. A `vector-effect:
+ *      non-scaling-stroke` hairline is half a pixel wider than the geometry it
+ *      follows, and a stroke drawn exactly on the viewBox edge — the divider's
+ *      rule, the ring's rim — is clipped by the UA's default `overflow: hidden`
+ *      on a sized <svg>. The symptom is a rule that looks a shade thinner at
+ *      its ends than in its middle, which is unattributable in review.
+ *
+ *   2. @keyframes. Tailwind ships nothing at this speed, and the sanctuary's
+ *      slowest move (0.15 deg/s — see CELESTIAL_ROTATION_DEG_PER_SECOND) is a
+ *      forty-minute rotation. There is no arbitrary-value syntax for that which
+ *      a reader could check against the spec.
+ *
+ *   3. A `prefers-reduced-motion` media query. This is the half of the pause
+ *      that the FLOOR tier cannot cover; see the note on `.spin`.
+ *
+ * NO COLOUR APPEARS BELOW. Not one value here paints anything: every gold in
+ * the family is `url(#snc-g-gold)` or `url(#snc-g-rule)` from the shared sprite,
+ * and the ruby is `var(--color-snc-ink-red)` — all of it in the markup, where a
+ * palette review can see it. A colour in this file would be a colour outside
+ * the token layer that nothing would ever surface.
+ *
+ * NO `border-radius`, NO BOX-SHADOW, NO TRANSITION. §7's restraint applies to
+ * the stylesheet too: an ornament that needed a glow to read would be an
+ * ornament drawn wrong.
+ */
+
+/*
+ * The shared root of every ornament in the family.
+ *
+ * `display: block` because an <svg> is inline by default, and an inline
+ * replaced element sits on the text baseline — which leaves three or four
+ * pixels of descender space under a divider that the caller then "fixes" with a
+ * negative margin. A block ornament measures exactly its own height.
+ */
+.ornament {
+  display: block;
+  overflow: visible;
+}
+
+/*
+ * The divider is the one member that is placed rather than sized: it is dropped
+ * between two blocks of body text and belongs centred in that column, at its
+ * natural width, shrinking rather than overflowing on a narrow one.
+ */
+.divider {
+  margin-inline: auto;
+  max-width: 100%;
+}
+
+/*
+ * THE ZODIAC WHEEL'S ROTATION — 0.15 deg/s, i.e. one turn every 2400 s.
+ *
+ * `from`/`to` in degrees rather than `rotate(0.15deg * t)`: a linear animation
+ * over a full turn is the only formulation that never accumulates error and
+ * never seams, and `linear` (not --snc-ease) is deliberate — an eased rotation
+ * would visibly slow and re-accelerate once every forty minutes, which is the
+ * one thing a celestial mechanism must not do.
+ *
+ * `transform-origin` is stated because this class lands on the root <svg>, and
+ * an <svg> with a viewBox is a replaced element whose CSS transform box is its
+ * border box; the ring is drawn concentric with that box, so 50%/50% is the
+ * axle. Rotating the root rather than an inner <g> also sidesteps
+ * `transform-box: fill-box`, whose support has never been uniform.
+ *
+ * `will-change` is deliberately ABSENT. Promoting a compositor layer that
+ * repaints 0.15 degrees per second is a permanent texture allocation bought for
+ * nothing, and §10's LOW and FLOOR devices pay for it in memory they do not
+ * have.
+ */
+@keyframes sncCelestialSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: sncCelestialSpin 2400s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+/*
+ * THE SECOND HALF OF THE PAUSE.
+ *
+ * <CelestialRing> already omits `.spin` entirely at the FLOOR tier, so the
+ * cheapest devices never allocate an animation at all. That is not enough on
+ * its own: the capability tier is MEASURED ONCE, at mount, while
+ * prefers-reduced-motion is a live media query a reader can flip in the OS
+ * without this tree ever re-rendering. A HIGH-tier machine belonging to someone
+ * with a vestibular disorder would keep turning.
+ *
+ * So the tier decides whether the animation is created, and this query decides
+ * whether it runs. `animation: none` and not `animation-play-state: paused`,
+ * because paused still holds the composited layer and still leaves the wheel
+ * frozen at whatever angle it had reached — a ring stopped mid-turn reads as
+ * broken, while a ring at 0deg reads as engraved.
+ *
+ * MOTION IS ALL THAT STOPS. The rim, the beads, the twelve spokes, the ticks
+ * and the hub all render exactly as they do at HIGH. The material is never what
+ * degrades.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}

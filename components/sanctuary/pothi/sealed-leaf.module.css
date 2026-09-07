@@ -1,0 +1,252 @@
+/*
+ * ============================================================================
+ * <SealedLeaf> — the composition of a leaf that did not open.
+ * ============================================================================
+ *
+ * WHAT THIS FILE IS TRYING TO DO, IN ONE SENTENCE.
+ *
+ * Make an absence feel DELIBERATE rather than broken — which is almost entirely
+ * a question of space. Every error state in every product is cramped: an icon,
+ * a heading and a button stacked at 8px intervals inside a bordered box. The
+ * only thing separating "this leaf is sealed" from "something went wrong" is
+ * that the sealed leaf is given room it does not strictly need, and is allowed
+ * to be quiet in it. So the numbers below are large on purpose and the
+ * decoration is close to none.
+ *
+ * FOUR THINGS ARE ABSENT ON PURPOSE.
+ *
+ *   border / border-radius — none. The leaf's visible outline is <Parchment>'s
+ *   seeded tear, and any box drawn inside it re-introduces the card the whole
+ *   material system exists to escape.
+ *
+ *   background — none, anywhere. Every surface here is the leaf showing
+ *   through. A panel behind the ink, however faint, is a second material.
+ *
+ *   any warning colour — none. No red beyond the wax itself (which is painted
+ *   by <WaxSeal> from the shared #snc-g-wax, not from here), no amber, no
+ *   "muted" grey. Grey is the tell: this world has one warm light, and a grey
+ *   in it reads as a rendered UI rather than a photographed page. The ink is
+ *   stepped by ALPHA — color-mix down to transparent over parchment — so every
+ *   level of emphasis is the same pigment thinned, exactly as a nib does it.
+ *
+ *   colour literals — none. Every colour resolves to a --color-snc-* token.
+ *
+ * WHY @layer components.
+ *
+ * The same reason as parchment.module.css: everything here is a default that a
+ * caller's utility class must be able to beat. Tailwind orders utilities last,
+ * so a rule declared in `components` loses to `p-10` for the same property,
+ * whereas unlayered module CSS would silently win and leave the caller
+ * wondering why their override did nothing.
+ *
+ * TYPE. Two faces, read as var(--font-snc-*) so the stacks and their fallbacks
+ * are declared once in lib/sanctuary/fonts.ts: Tiro Devanagari Hindi for the
+ * two Devanagari strings, Cormorant Garamond for the Hinglish body. They
+ * resolve only under an element carrying SANCTUARY_FONT_CLASS, which is the
+ * same contract every other sanctuary component has.
+ *
+ * WHY THE THREE BODY CLASSES NAME BOTH STACKS, WHICH IS NOT BELT AND BRACES.
+ *
+ * A SealReason is MIXED SCRIPT and this was only visible once a real one was
+ * rendered: `lineUnread.hi` is built as `${chapter.titleHi} par is paath mein
+ * kuch nahi aaya.` — so the sentence opens "हृदय रेखा" in Devanagari and
+ * finishes in Latin. Set in the serif alone, those first two words fall past
+ * Cormorant and past every named Latin fallback to whatever the UA reaches for
+ * last, which is a different face on every operating system and none of them
+ * chosen. So the serif stack is named first (Latin in Cormorant, as intended)
+ * and the Devanagari stack is appended after it, because font matching is
+ * PER CHARACTER: a family that lacks a glyph does not stop the walk, so the
+ * Devanagari runs reach Tiro and the Latin runs never get that far.
+ *
+ * Appended and not prepended: Tiro is subset to `devanagari` only, so it has no
+ * Latin glyphs at all — putting it first would set every Hinglish word in the
+ * Devanagari stack's sans-serif fallback and lose the serif entirely.
+ */
+
+@layer components {
+  /*
+   * THE COLUMN, AND THE SPACE THAT IS THE WHOLE DESIGN.
+   *
+   * Centred, because a seal is centred and everything under it is hanging from
+   * it. The extra padding-block sits ON TOP of <Parchment>'s own content inset
+   * (2.25rem / 2.9rem), taking the leaf to roughly 3.9rem of air above the wax
+   * — far more than the content needs, which is the point: this is the one
+   * screen in the product that should feel unhurried.
+   *
+   * `gap` is deliberately NOT uniform; the three overrides below break it where
+   * the meaning changes. A single rhythm everywhere is what makes a stack read
+   * as a form rather than as a page.
+   */
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.15rem;
+    padding-block: 1.7rem 1.1rem;
+    text-align: center;
+  }
+
+  /*
+   * THE ONE FIXED LINE. Set in Devanagari at a generous 1.95 leading, because
+   * this script carries matras above and below the baseline and the tight
+   * leading a Latin face tolerates collides them.
+   *
+   * It is the largest type on the leaf and still not large: the wax above it is
+   * the headline, and a second loud element would make the pair an alert.
+   * `text-wrap: balance` so a wrap at a narrow width breaks it evenly rather
+   * than leaving one orphaned syllable.
+   */
+  .unopened {
+    margin: 0;
+    margin-block-start: 1.5rem;
+    max-inline-size: 26ch;
+    font-family: var(--font-snc-devanagari);
+    font-size: 1.06rem;
+    line-height: 1.95;
+    letter-spacing: 0.012em;
+    color: var(--color-snc-ink);
+    text-wrap: balance;
+  }
+
+  /*
+   * THE ONE-LINE REASON (SealReason.hi). The serif at reading size and full ink
+   * — this is the sentence a reader who reads nothing else will take away, so
+   * it gets the strongest pigment on the leaf after the fixed line.
+   *
+   * The negative top margin closes the gap against .unopened's 1.95 leading,
+   * which otherwise leaves the two lines looking like separate paragraphs when
+   * they are a statement and its answer.
+   */
+  .reason {
+    margin: 0;
+    margin-block-start: -0.35rem;
+    max-inline-size: 32ch;
+    font-family: var(--font-snc-serif), var(--font-snc-devanagari);
+    font-size: 1.2rem;
+    line-height: 1.5;
+    color: var(--color-snc-ink);
+    text-wrap: balance;
+  }
+
+  /*
+   * THE WORKING (SealReason.detail) — the counts and key names that make the
+   * line above checkable instead of merely asserted.
+   *
+   * Thinner ink and a 46ch measure, which is the classical line length for
+   * comfortable reading; wider than that and the eye loses the return sweep on
+   * a paragraph nobody arrived here intending to read. 72% of the ink rather
+   * than a lighter token so it stays comfortably above 4.5:1 on parchment: this
+   * is the honest part of the leaf and it must not be technically present and
+   * practically invisible.
+   */
+  .detail {
+    margin: 0;
+    max-inline-size: 46ch;
+    font-family: var(--font-snc-serif), var(--font-snc-devanagari);
+    font-size: 0.98rem;
+    line-height: 1.72;
+    color: color-mix(in oklab, var(--color-snc-ink) 72%, transparent);
+  }
+
+  /*
+   * WHAT WOULD ACTUALLY HELP (SealReason.capture). Present only when a rescan
+   * can genuinely fill the gap, so its extra top margin is a real break: above
+   * it the leaf explains, below it the leaf offers.
+   *
+   * Pitched between .reason and .detail in weight — it is an instruction, not
+   * an aside, and the reader has to be able to act on it after they have
+   * stopped reading the paragraph above.
+   */
+  .instruction {
+    margin: 0;
+    margin-block-start: 1.35rem;
+    max-inline-size: 38ch;
+    font-family: var(--font-snc-serif), var(--font-snc-devanagari);
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: color-mix(in oklab, var(--color-snc-ink) 88%, transparent);
+    text-wrap: balance;
+  }
+
+  /*
+   * THE RESCAN LINK — engraved ink over a rule that fades at both ends, never a
+   * filled button.
+   *
+   * A filled control is the loudest thing a page can contain and there is not
+   * one anywhere in this design language; a bordered one re-draws the box this
+   * whole file avoids. What is left to carry the affordance is what a
+   * manuscript would actually use: the label struck in the same Devanagari as
+   * the line above, letterspaced so it reads as a stamped instruction, over a
+   * hairline of engraved gold.
+   *
+   * gold-600 and not the 500 the corner marks use: 500 is the linework gold and
+   * sits nearly at parchment's own value, which is right for decoration and
+   * wrong for the one interactive element on the leaf. The 600 is the engraved
+   * shadow, and it is the gold that stays a LINE on a light ground.
+   *
+   * The padding is a tap target before it is anything else — 0.72rem of block
+   * padding around a 1.4-leaded 0.98rem label clears 44px on a phone.
+   */
+  .rescan {
+    position: relative;
+    display: inline-block;
+    margin-block-start: 0.35rem;
+    padding-block: 0.72rem;
+    padding-inline: 1.05rem;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.98rem;
+    line-height: 1.4;
+    letter-spacing: 0.05em;
+    color: var(--color-snc-ink);
+    text-decoration: none;
+  }
+
+  /*
+   * EVERY GOLD RULE FADES AT BOTH ENDS — observation 2, and it holds for a
+   * 9rem underline exactly as it holds for a full-width divider. A solid bar
+   * under these two words would be the single most obviously wrong mark on the
+   * page.
+   *
+   * A pseudo-element rather than a border-block-end, for two reasons that are
+   * both about the fade: a border cannot carry a gradient, and the rule has to
+   * inset from the tap target's padding so it hugs the word rather than
+   * floating a quarter-inch beneath it.
+   */
+  .rescan::after {
+    content: "";
+    position: absolute;
+    inset-block-end: 0.42rem;
+    inset-inline: 0.5rem;
+    block-size: var(--snc-stroke-secondary-width);
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-gold-600), transparent);
+    opacity: 0.8;
+    transition: opacity var(--snc-duration-fast) var(--snc-ease);
+  }
+
+  /*
+   * Hover lights the metal rather than moving the label. Nothing on this leaf
+   * travels: a control that slides on hover asks for attention, and this one is
+   * an offer the reader may reasonably decline.
+   *
+   * No prefers-reduced-motion branch is needed here — globals.css already
+   * collapses every transition to 0.01ms — and there is no other motion in this
+   * file, so a FLOOR device and a reduced-motion reader get identical material.
+   */
+  .rescan:hover::after {
+    opacity: 1;
+  }
+
+  /*
+   * The focus ring is INK, not gold. Over parchment the golds are close to the
+   * ground value and a gold ring would be a suggestion; the ring has to be
+   * unmistakable to a keyboard reader on the first frame. Two pixels is the
+   * active rung of the stroke ladder, and 4px of offset clears the fading rule
+   * so the two marks are never read as one thicker line.
+   *
+   * `:focus-visible` and not `:focus`, so a pointer click never draws it.
+   */
+  .rescan:focus-visible {
+    outline: var(--snc-stroke-active-width) solid var(--color-snc-ink);
+    outline-offset: 4px;
+  }
+}

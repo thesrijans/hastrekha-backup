@@ -1,0 +1,273 @@
+/*
+ * ============================================================================
+ * THE GROUND — six strata of warm near-black stone, painted back to front.
+ * ============================================================================
+ *
+ * WHY SIX LAYERS AND NOT ONE FILL.
+ *
+ * A single dark background-color is the failure this whole pass exists to fix.
+ * The candlelight photograph is a *surface*: it is lit from one place, it has
+ * grain, it is scored, it falls away to black at every corner, and something is
+ * cut into it. Take any one of those away and the screen stops being a room and
+ * becomes a swatch. So each stratum below is one physical claim, in the order
+ * light actually reaches the eye:
+ *
+ *   base       the deepest ground, opaque, warm
+ *   stone      the one warm source pooling on brown stone
+ *   grain      the fibre of the surface, at the scale of the pixel
+ *   scratches  a handful of scored hairlines catching that source
+ *   vignette   the falloff of that source — corners go to the base
+ *   watermark  one engraved ornament, barely there
+ *
+ * WHY THE BASE IS OPAQUE, WHICH IS NOT MERELY BELT AND BRACES.
+ *
+ * globals.css already paints `body::before` at z-index -1: three large radial
+ * gradients in the instrument palette's cold accent and its orange. Laid under
+ * a translucent ground those would tint this warm brown toward green, which is
+ * precisely the clash the sanctuary skin exists to end. `.base` is therefore a
+ * flat opaque token fill, and the ground is mounted as a later child of the
+ * same stacking context so it paints over that glow rather than through it.
+ *
+ * WHAT THIS FILE DELIBERATELY DOES NOT CONTAIN, AND WHY IT IS TESTED FOR.
+ *
+ * No `transform`, no `filter`, no `perspective`, no `contain`, no
+ * `will-change`, no `backdrop-filter`, no `overflow` — on `.ground` or anywhere
+ * else. Every one of those on the root would make this element the containing
+ * block for the page's own `position: fixed` children, so a sticky dialog or a
+ * fixed toast mounted anywhere in the route would silently start scrolling with
+ * the document. A decorative backdrop must be impossible to feel. The two
+ * things the root does set — `position: fixed` and a negative `z-index` — do
+ * create a stacking context, but it contains only the six strata below it and
+ * nothing of the page: page content is the ground's *sibling*, never its child.
+ *
+ * NOTHING HERE ANIMATES, AT ANY CAPABILITY TIER. There is no transition, no
+ * keyframe and no motion to switch off, which is why the FLOOR tier renders
+ * this file byte for byte: what FLOOR turns off is movement, and the material
+ * is never what degrades.
+ *
+ * Every colour resolves to a --color-snc-* token from app/sanctuary.css.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* THE SHELL — geometry only. It paints nothing at all.                    */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * `position: fixed` rather than an absolutely positioned box the height of the
+ * document: the ground is the room, not the page, so it must not repaint or
+ * re-rasterise as the reader scrolls. A fixed layer is handed to the
+ * compositor once and then simply stays where it is — the cheapest possible
+ * way to own the whole viewport.
+ *
+ * `z-index: -1` is the one value that puts a backdrop under ordinary flow
+ * content without demanding that every consumer position itself. Painting order
+ * inside a stacking context runs: the root's own background, then negative
+ * z-index descendants, then in-flow blocks — so the ground lands above the page
+ * background and below everything a route renders, with no `isolation`, no
+ * wrapper and no z-index bookkeeping at the call site. globals.css already uses
+ * exactly this idiom for `body::before`, and the ground is a later child, so at
+ * equal depth tree order puts this warm stone over that cold glow.
+ *
+ * `pointer-events: none` because a full-viewport overlay that swallowed clicks
+ * would break every route it decorates.
+ */
+.ground {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Each stratum fills the shell exactly; DOM order is paint order, so no stratum needs a z-index of its own. */
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* SVG-bearing strata: the element must fill its stratum rather than fall back to the 300x150 default. */
+.fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------------------------------------------------------------------- */
+/* 1. BASE — the deepest ground.                                           */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * stone-900, the token whose own note calls it "deepest ground, vignette core".
+ * Using it as the base rather than the stone-800 primary is what lets the
+ * vignette be a *subtraction*: the falloff paints this same token back over the
+ * warm pool, so the corners resolve to the exact colour the room is carved out
+ * of instead of to some second, darker value nobody named.
+ *
+ * It is red-biased, not blue — the ground is warm even where no light reaches
+ * it, which is the whole difference between a candlelit room and a night-mode
+ * app.
+ */
+.base {
+  background-color: var(--color-snc-stone-900);
+}
+
+/* ---------------------------------------------------------------------- */
+/* 2. STONE — one warm source, pooling on brown.                           */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Three very large, very soft radial pools, and their arrangement is the light
+ * discipline of the spec rather than decoration:
+ *
+ *   the key      above the top edge, left of centre, in stone-700 ("raised
+ *                panels") — the warmest, brightest brown in the ground palette.
+ *                Its centre sits OUTSIDE the viewport so the visible field is
+ *                all falloff and never shows a hot spot with a middle.
+ *   the bounce   low and right, at just over half strength: light returning off
+ *                the table in the reference photograph. Half strength because a
+ *                bounce that reads as a second key would break the one-source
+ *                rule the moment a shadow disagreed with it.
+ *   the floor    obsidian rising from below the bottom edge, the near surface
+ *                the leaves would rest on. It is the coolest of the three and
+ *                still warm.
+ *
+ * All three are gradients to `transparent`, never to another colour: a pool
+ * that ended in a stated tone would draw an edge, and there is no edge anywhere
+ * on lit stone.
+ */
+.stone {
+  background-image:
+    radial-gradient(76rem 46rem at 38% -8%, var(--color-snc-stone-700), transparent 70%),
+    radial-gradient(
+      54rem 40rem at 86% 74%,
+      color-mix(in oklab, var(--color-snc-stone-700) 58%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      92rem 52rem at 50% 116%,
+      color-mix(in oklab, var(--color-snc-obsidian) 62%, transparent),
+      transparent 74%
+    );
+}
+
+/* ---------------------------------------------------------------------- */
+/* 3. GRAIN — the fibre of the surface.                                    */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * `overlay`, not the `multiply` parchment uses, and the arithmetic is the
+ * reason. The shared grain filter emits luminance noise centred on mid-grey.
+ * Composited normally over a near-black ground that noise is a flat grey wash
+ * carrying a variation of a unit or two — a haze, not a texture. Overlay
+ * against a backdrop below half luminance evaluates to 2 x backdrop x source,
+ * so it *scales* the ground instead of adding to it: the mean is preserved and
+ * the variation becomes a proportion of whatever is underneath. The dark stays
+ * dark and becomes uneven, which is what grain in a shadow actually looks like.
+ *
+ * 0.5 halves that swing to roughly a sixth of the local value — a mottle you
+ * find by looking for it, per observation 1(b), and never a layer you notice.
+ *
+ * `mix-blend-mode` establishes a stacking context on THIS element. That is
+ * deliberate and harmless: it keeps the blend inside the ground, so the grain
+ * can never composite against page content, and it creates no containing block
+ * for anything fixed.
+ *
+ * NOTE ON THE 4% GRAIN globals.css ALREADY LAYS OVER EVERY ROUTE. That one is
+ * a repeating 180px tile at z-index 50 — above the content, uniform, and with a
+ * repeat that becomes visible across a large flat dark field. This one is under
+ * the content and does not tile: it belongs to the stone rather than to the
+ * screen. Two grains at these strengths read as one surface, which is why this
+ * layer is kept to a proportion of the ground rather than an added wash.
+ */
+.grain {
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
+/* ---------------------------------------------------------------------- */
+/* 4. SCRATCHES — a handful of scored hairlines.                           */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * The lines are drawn in `currentColor` so the only colour decision lives here
+ * rather than in a presentation attribute, and they carry `.snc-stroke-secondary`
+ * from the token layer — so a scratch is the same 1px at the same 0.35 as every
+ * other secondary line in the product, solid, with no glow.
+ *
+ * gold-500 at the ladder's 0.35, dimmed again by 0.16, lands near 6% — a warm
+ * hairline you register as damage rather than as ornament. Gold rather than a
+ * pale grey because a scratch in stone is not a white line: it is the one warm
+ * source catching a scored edge, and it has to agree with that source or the
+ * ground grows a second one.
+ */
+.scratches {
+  color: var(--color-snc-gold-500);
+  opacity: 0.16;
+}
+
+/* ---------------------------------------------------------------------- */
+/* 5. VIGNETTE — the falloff, heavy.                                       */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Observation 6 asks for corners that are almost black, and `farthest-corner`
+ * is how that is stated exactly rather than approximated: the gradient's 100%
+ * stop lands ON the farthest corner of the viewport, at any aspect ratio, so
+ * the corner resolves to fully opaque stone-900 — the base, unlit — on a phone
+ * and on an ultrawide alike. A percentage radius would leave one shape short
+ * and overshoot the other.
+ *
+ * Two gradients, because a single one heavy enough to kill the corners also
+ * flattens the middle. The first is the corner falloff and is centred high, on
+ * the key light of the stone layer, so the dark closes in from below the way it
+ * does in the reference photograph. The second is a broad mid-field damping at
+ * 70% strength that never reaches full, which keeps the reading area from
+ * lifting into a bright disc.
+ *
+ * Both fade FROM `transparent`, so the lit stone beneath survives in the centre
+ * and this layer only ever removes light.
+ */
+.vignette {
+  background-image:
+    radial-gradient(
+      farthest-corner at 50% 6%,
+      transparent 32%,
+      color-mix(in oklab, var(--color-snc-stone-900) 80%, transparent) 76%,
+      var(--color-snc-stone-900) 100%
+    ),
+    radial-gradient(
+      98% 64% at 50% 46%,
+      transparent 24%,
+      color-mix(in oklab, var(--color-snc-stone-900) 70%, transparent) 100%
+    );
+}
+
+/* ---------------------------------------------------------------------- */
+/* 6. WATERMARK — one engraved ornament.                                   */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * ONE, and it is the last thing painted — the only stratum allowed above the
+ * vignette. That inversion is on purpose: the vignette is the falloff of light
+ * across a *surface tone*, while an engraved line is a cut edge catching the
+ * source directly, and a cut edge stays faintly legible in a corner the flat
+ * stone around it has already lost. It is also exactly what the reference
+ * shows: the vine in the upper right sits in the dark and is still there.
+ *
+ * Anchored top-right and sized against the viewport, so it reads as part of the
+ * room rather than as an image someone placed. `min()` keeps it from swelling
+ * past a hand's width on a large display, where a big ornament stops being a
+ * watermark and starts being a graphic.
+ *
+ * gold-500 at the stroke ladder's 0.35, dimmed to 0.22, resolves near 8%:
+ * present at a glance only as a change in the corner, legible if you look
+ * straight at it. Observation 7 — the restraint is the effect.
+ */
+.watermark {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(52vw, 30rem);
+  aspect-ratio: 1;
+  color: var(--color-snc-gold-500);
+  opacity: 0.22;
+}

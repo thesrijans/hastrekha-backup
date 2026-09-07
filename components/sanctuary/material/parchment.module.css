@@ -1,0 +1,198 @@
+/*
+ * ============================================================================
+ * <Parchment> — the geometry of a torn leaf.
+ * ============================================================================
+ *
+ * WHAT IS IN THIS FILE, AND WHAT IS DELIBERATELY NOT.
+ *
+ * One rule, applied throughout: a declaration belongs here if it says WHERE a
+ * layer is, and belongs in the component if it says WHAT that layer is made of.
+ * So boxes, stacking, isolation and the content rhythm are here; every
+ * gradient, blend mode, clip path and opacity is inline in parchment.tsx.
+ *
+ * That split is not a style preference, it falls out of two hard facts. The
+ * mottle, the stains and the outline are placed by the leaf's `seed`, so their
+ * values do not exist until render and cannot be written in a stylesheet at
+ * all. And a material whose composition were half here and half there would be
+ * a material nobody could review in one pass — which is exactly how the flat
+ * fill this component replaces got shipped. Better one boundary, stated once,
+ * than a plausible-looking division that leaks.
+ *
+ * WHY @layer components.
+ *
+ * A leaf is a primitive other people wrap. Everything below is a DEFAULT, and a
+ * caller passing `className="p-10"` or a width utility must win. Tailwind's
+ * layer order puts utilities last, so declaring these rules in `components`
+ * makes them lose to any utility for the same property — whereas unlayered
+ * module CSS (which is what app/privacy/privacy.module.css relies on, for its
+ * own good reasons) would silently beat one and the caller would be left
+ * wondering why their padding did nothing.
+ *
+ * WHAT IS ABSENT ON PURPOSE.
+ *
+ *   border-radius — nowhere in this file, at all. The visible outline of a leaf
+ *   is the seeded clip-path polygon in the component, and a radius anywhere
+ *   under it would show through wherever a bite is shallow. That absence IS the
+ *   design; test/material-parchment.test.ts fails if it comes back.
+ *
+ *   overflow: hidden — the tear travels OUTSIDE the leaf's box (that is what
+ *   makes it a tear), so anything here that clipped would cut the outline back
+ *   into the straight rectangle the whole component exists to avoid.
+ *
+ *   transition, animation, @keyframes, and any prefers-reduced-motion or
+ *   capability branch — none, anywhere. Nothing about a leaf moves, so at the
+ *   FLOOR tier and under reduced motion a leaf renders byte-identical to every
+ *   other tier. Motion is what degrades; the material never does.
+ *
+ *   colour literals — none. Every colour below is either a --color-snc-* token
+ *   or one of the --snc-parch-* variables the component sets from those tokens.
+ */
+
+@layer components {
+  /*
+   * THE LEAF. A positioning context and nothing else: no fill, no padding, no
+   * border. The sheet is painted by .material, which is a sibling of the
+   * content rather than its background, so the tearing filter can displace the
+   * material without touching a single glyph.
+   *
+   * `isolation: isolate` is load-bearing. Two layers inside the sheet blend
+   * with `multiply`, and without an isolated stacking context here a multiply
+   * would reach past the leaf and darken whatever the leaf is lying ON — the
+   * warm near-black ground, a photograph, another leaf in a bundle.
+   */
+  .leaf {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /*
+   * THE FILTERED STACK. Inset by one negative bleed on every side, so the sheet
+   * inside it is larger than the leaf's own box by exactly the amount the tear
+   * can travel. That is what lets the bitten outline oscillate ACROSS the
+   * nominal edge instead of only eating into it — an outline that could only
+   * move inward would read as a panel that had been shrunk, not torn.
+   *
+   * The fallback in the var() is not decoration: if this rule ever renders
+   * before the component's inline variables arrive (a stylesheet loaded into a
+   * page whose markup is still streaming), 4px is the plain tear's bleed and
+   * the leaf still looks right rather than collapsing onto its own edge.
+   */
+  .material {
+    position: absolute;
+    inset: calc(-1 * var(--snc-parch-bleed, 4px));
+    pointer-events: none;
+  }
+
+  /*
+   * THE SHEET — the clipped body of the leaf. Its own isolated stacking context
+   * so the stain, burn and grain layers multiply against the parchment and
+   * against each other, and stop there.
+   */
+  .sheet {
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+  }
+
+  /* One material layer, filling the sheet. Order in the markup is paint order; none of them carries a z-index, so moving one in the JSX moves it in the stack. */
+  .layer {
+    position: absolute;
+    inset: 0;
+  }
+
+  /*
+   * THE WRITTEN SURFACE.
+   *
+   * Deliberately NOT a uniform card padding. The block start is tighter than
+   * the block end because that is how a hand lays out a leaf — text begins near
+   * the top and the sheet is left to breathe below — and both are generous
+   * enough to keep a line of ink clear of the burnt rim and of the deepest bite
+   * the torn edge can take. A cramped panel would put the first word inside the
+   * scorch.
+   *
+   * `position: relative` with a z-index above the auto-positioned material, so
+   * the reading sits on the leaf rather than under it.
+   */
+  .content {
+    position: relative;
+    z-index: 1;
+    padding-block: 2.25rem 2.9rem;
+    padding-inline: 2rem;
+  }
+
+  /* The ornament slot: over the material, under nothing, and never in the way of a pointer. */
+  .corners {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /*
+   * ONE BUILT-IN CORNER MARK — two hairline arms meeting at a right angle,
+   * inset far enough to sit inside the torn edge at its deepest bite.
+   *
+   * The three mirrored corners are the SAME two arms reflected, rather than
+   * four hand-placed variants: a corner piece that is genuinely the same object
+   * seen four ways cannot drift out of agreement with itself, and the reflection
+   * costs nothing at render time.
+   */
+  .corner {
+    position: absolute;
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+  }
+
+  .corner[data-snc-corner="tl"] {
+    inset-block-start: 0.9rem;
+    inset-inline-start: 0.9rem;
+  }
+
+  .corner[data-snc-corner="tr"] {
+    inset-block-start: 0.9rem;
+    inset-inline-end: 0.9rem;
+    transform: scaleX(-1);
+  }
+
+  .corner[data-snc-corner="bl"] {
+    inset-block-end: 0.9rem;
+    inset-inline-start: 0.9rem;
+    transform: scaleY(-1);
+  }
+
+  .corner[data-snc-corner="br"] {
+    inset-block-end: 0.9rem;
+    inset-inline-end: 0.9rem;
+    transform: scale(-1);
+  }
+
+  /*
+   * EVERY GOLD RULE FADES AT BOTH ENDS — observation 2, and it applies to a
+   * 2.4rem corner arm exactly as it applies to a full-width divider. The metal
+   * is brightest a third of the way in, where the two arms meet, and gone at
+   * both terminals, so the mark reads as a struck line catching the light
+   * rather than as a bracket someone drew. A solid gold bar here would be the
+   * single most obviously wrong thing on the page.
+   *
+   * gold-500 is the linework gold: these arms sit at full alpha over parchment,
+   * where the brighter foil gold would read as a highlight rather than as
+   * engraved line.
+   */
+  .cornerArmInline {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: 1px;
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-gold-500) 34%, transparent);
+  }
+
+  .cornerArmBlock {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 1px;
+    block-size: 100%;
+    background-image: linear-gradient(180deg, transparent, var(--color-snc-gold-500) 34%, transparent);
+  }
+}

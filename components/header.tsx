@@ -28,6 +28,20 @@ const NAV: ReadonlyArray<{ readonly href: "/read" | "/scan" | "/privacy" | "/ter
  * Auth state comes from /api/auth/me rather than a prop so the session cookie can stay httpOnly:
  * the browser never needs to read the token to know whether it is signed in.
  */
+/**
+ * Routes that own their own chrome. The sanctuary ships <SanctuaryHeader />, whose whole point is
+ * that it carries no cyan; rendering this header above it stacked two navigations on one page and
+ * put the scan palette's brightest accent directly over a warm gold-and-parchment surface.
+ *
+ * A prefix check rather than an exact list: every sanctuary route added later inherits the rule,
+ * and no other route's behaviour changes by a single byte.
+ */
+const SANCTUARY_PREFIXES: readonly string[] = ["/sanctuary", "/read/pothi", "/scan/chamber"];
+
+function ownsItsChrome(pathname: string): boolean {
+  return SANCTUARY_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
@@ -88,6 +102,10 @@ export function Header() {
       isActive ? "bg-mount-glow/10 text-mount-glow" : "text-muted hover:text-ink",
     ].join(" ");
   };
+
+  // Placed after every hook so the hook order is identical on every route — an early return above
+  // the auth effect would change the hook count between a sanctuary route and any other one.
+  if (ownsItsChrome(pathname)) return null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-night/70 backdrop-blur-xl">

@@ -1,0 +1,244 @@
+/*
+ * ============================================================================
+ * <PalmPlate> — where the layers of the plate sit, and nothing about what they
+ * are made of.
+ * ============================================================================
+ *
+ * THE SAME BOUNDARY <Parchment> DRAWS, DRAWN AGAIN HERE. A declaration belongs
+ * in this file if it says WHERE a layer is; it belongs in palm-plate.tsx if it
+ * says WHAT that layer is made of. The one exception is stated rather than
+ * smuggled: the aging of the crop (a sepia/desaturate filter chain and two
+ * multiplying washes) lives here, because it is the same treatment for every
+ * plate and nothing about it depends on the hand-off. Anything seeded or
+ * measured — the projected polylines, the trail's path — arrives as markup or as
+ * a custom property, because those values do not exist until render.
+ *
+ * WHY @layer components. A plate is a primitive the Pothi's leaves wrap, and
+ * everything below is a DEFAULT. Tailwind orders utilities after components, so
+ * a caller passing `className="w-64"` still wins — whereas unlayered module CSS
+ * would silently beat it and leave them wondering why their width did nothing.
+ *
+ * NO COLOUR LITERAL APPEARS BELOW. Every pigment is a --color-snc-* token; the
+ * two `transparent` keywords are the same ones the gold rule in sanctuary.css
+ * uses to make a gradient vanish at its ends, and they paint nothing.
+ *
+ * NO border-radius, ANYWHERE. The plate lies on a torn leaf, and a rounded
+ * rectangle on a bitten sheet is the one detail that would turn the whole spread
+ * back into a card.
+ */
+
+@layer components {
+  /*
+   * THE FIGURE — the plate plus its marginalia, and no box of its own.
+   *
+   * No background, no border, no padding: the plate is lying ON a leaf the
+   * caller owns, and anything painted here would be a second surface between
+   * the two. `margin: 0` because a <figure> carries a 40px UA inline margin
+   * that would indent the plate away from the leaf's own rhythm.
+   */
+  .plate {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /*
+   * THE SQUARE. The crop and the mask the creases were traced in are both
+   * squares, so the frame is one too — that is what lets a polyline be
+   * projected by a single scale factor with no letterbox to reason about.
+   *
+   * `isolation: isolate` is load-bearing, not tidiness. Two layers below blend
+   * with `multiply`, and without an isolated stacking context here that multiply
+   * would reach past the plate and darken the parchment it is lying on — the
+   * leaf would develop a dark square exactly where the plate is, which reads as
+   * a rendering fault rather than as aged paper.
+   */
+  .frame {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    isolation: isolate;
+  }
+
+  /* Every layer fills the square exactly. Stated once so a new layer cannot be
+   * added at a slightly different inset and go unnoticed for a release. */
+  .layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /*
+   * THE CROP, AGED.
+   *
+   * The filter chain is the whole of the "photo pasted on a manuscript" fix, and
+   * each term is doing separate work: `sepia` pulls the hue to the warm side the
+   * whole sanctuary is lit in, `saturate` below 1 stops that sepia turning
+   * orange, `contrast` recovers the crease detail sepia flattens, and
+   * `brightness` below 1 seats the image behind the leaf's own highlights rather
+   * than on top of them. None of these is a colour: they are transfer functions,
+   * so the palette rule is untouched.
+   *
+   * The default `overflow: hidden` on a sized <svg> is deliberately KEPT here,
+   * unlike the ink layer below — a crop that escaped its square would print a
+   * piece of somebody's hand across the reading.
+   */
+  .crop {
+    filter: sepia(0.62) saturate(0.7) contrast(1.06) brightness(0.94);
+  }
+
+  /*
+   * THE PARCHMENT WASH — a flat sheet of the leaf's own base tone, multiplied.
+   *
+   * `multiply` and not an alpha overlay: multiplying preserves the crop's
+   * luminance structure while forcing every one of its pixels through the
+   * parchment's pigment, which is what "aged onto the leaf" physically means. An
+   * overlay at the same opacity would fog the creases evenly and leave the image
+   * looking veiled rather than absorbed.
+   */
+  .wash {
+    background-color: var(--color-snc-parchment);
+    mix-blend-mode: multiply;
+    opacity: 0.58;
+  }
+
+  /*
+   * THE BURN — the rim of the plate darkening into the leaf.
+   *
+   * Radial and centre-weighted rather than a border: a border is a boundary the
+   * eye reads as a frame, while a falloff is the edge of a stain, and the plate
+   * has to look like something that happened to the paper. The focus sits above
+   * centre (45%) because the sanctuary has one warm light source above the
+   * scene, so the far rim is the lower one.
+   */
+  .burn {
+    background-image: radial-gradient(
+      ellipse at 50% 45%,
+      transparent 38%,
+      var(--color-snc-parch-edge) 100%
+    );
+    mix-blend-mode: multiply;
+    opacity: 0.72;
+  }
+
+  /*
+   * THE INK — the traced lines, and the opposite overflow decision from .crop.
+   *
+   * `overflow: visible` because the active rung carries a soft outer glow
+   * (--snc-stroke-active-glow), and a life line that starts at the edge of the
+   * palm — which is where a life line always starts — would have that glow
+   * sliced off by the viewBox. A hairline bloom spilling a few pixels onto the
+   * parchment is what a lit line does; a bloom cut down its middle is visibly
+   * wrong and unattributable in review.
+   */
+  .ink {
+    overflow: visible;
+  }
+
+  /*
+   * THE MARGINALIA — the note that says the original image is not kept.
+   *
+   * Ink-red, which is this design language's marginalia colour (the same token
+   * as a citation and the wax), so the sentence reads as something written
+   * beside the plate rather than as an error message under it. Small, and
+   * letter-spaced, because it is an aside; not italic, because Devanagari has no
+   * true italic and a synthesised slant is what makes Devanagari look broken.
+   */
+  .margin {
+    margin: 0;
+    color: var(--color-snc-ink-red);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    opacity: 0.85;
+  }
+
+  /*
+   * THE TRAIL — one particle, once, when the page settles.
+   *
+   * BASE STATE IS INVISIBLE, and that is the whole safety mechanism. The dot is
+   * revealed only by the keyframes, so every way this animation can fail to run
+   * — the FLOOR tier omitting the class, a reader who asked for stillness, a
+   * browser with no motion path support — ends with the particle simply absent
+   * rather than parked at the origin of the coordinate system, which is what a
+   * dot with a visible base state would do.
+   */
+  .trail {
+    opacity: 0;
+  }
+
+  /*
+   * @supports, not a bare declaration.
+   *
+   * `offset-path` on an SVG element is well supported but not universally, and
+   * an unsupported `offset-path` does NOT stop the rest of the animation: the
+   * opacity keyframes would still run and reveal a stationary dot at (0, 0), in
+   * the corner of the plate, for two seconds. Gating the animation on the
+   * feature that makes it mean anything turns that into nothing at all.
+   *
+   * `offset-rotate: 0deg` because the particle is a disc: letting it rotate to
+   * follow the tangent costs a transform per frame and changes nothing anybody
+   * can see.
+   */
+  @supports (offset-path: path("M 0 0 L 1 1")) {
+    .trailAnimated {
+      offset-path: var(--snc-plate-trail);
+      offset-rotate: 0deg;
+      animation: sncPlateTrail var(--snc-duration-camera-max) linear var(--snc-duration-slow) 1 both;
+    }
+  }
+}
+
+/*
+ * `linear`, not --snc-ease. The particle is a stylus being drawn along a line
+ * that was measured; an eased travel would accelerate and brake, which reads as
+ * a UI element animating rather than as a hand tracing. Same argument the
+ * celestial ring's rotation makes, for the same reason.
+ *
+ * The fade is asymmetric on purpose — in over the first eighth, out over the
+ * last eighth — so the particle appears to enter the leaf and leave it rather
+ * than switching on at one end of the crease and off at the other.
+ */
+@keyframes sncPlateTrail {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  88% {
+    opacity: 0.9;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+/*
+ * THE SECOND HALF OF THE PAUSE.
+ *
+ * <PalmPlate> already omits `.trailAnimated` at the FLOOR tier, so the weakest
+ * devices never allocate the animation. That is not enough on its own: the
+ * capability tier is MEASURED ONCE, at mount, while prefers-reduced-motion is a
+ * live media query a reader can flip in the OS without this tree re-rendering. A
+ * HIGH-tier machine belonging to someone with a vestibular disorder would keep
+ * sending a particle down the leaf.
+ *
+ * `animation: none` and not `animation-play-state: paused`: paused holds the
+ * composited layer AND freezes the dot mid-crease at whatever opacity it had
+ * reached, which looks like a stuck render. None returns it to its base state,
+ * which is invisible.
+ *
+ * MOTION IS ALL THAT STOPS. The crop, the wash, the burn, the outline and every
+ * traced line render exactly as they do at HIGH. The material is never what
+ * degrades.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .trailAnimated {
+    animation: none;
+  }
+}

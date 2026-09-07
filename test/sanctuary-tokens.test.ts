@@ -8,9 +8,10 @@
  *    app/sanctuary.css with that exact value, AND the §3 block of
  *    docs/specs/ui-sanctuary-spec.md must still say the same thing. A token
  *    nudged "just a shade" in either file fails here. The reverse direction is
- *    pinned too — the set of --color-snc-* tokens must be EXACTLY these fifteen
- *    — because the standing instruction on this layer was to invent no colour,
- *    and a sixteenth gold is exactly how a one-warm-light scene stops being one.
+ *    pinned too — the set of --color-snc-* tokens must be EXACTLY the fifteen
+ *    plus the three named in 7 — because the standing instruction on this layer
+ *    was to invent no colour, and a sixteenth gold is exactly how a
+ *    one-warm-light scene stops being one.
  *
  * 2. THE COLLISION THAT FORCED THE PREFIX. globals.css already defines
  *    --color-ink as #eaf2f4, a near-white used as body text by a hundred-odd
@@ -45,6 +46,26 @@
  * 6. THE WIRING. globals.css must import the new file exactly once, before any
  *    rule (CSS requires it) and after Tailwind itself, and must still contain
  *    no other imports — the whole permitted change to that file was one line.
+ *
+ * 7. THE GOLD RAMP AND THE MATERIAL CLASSES, added after the references were
+ *    re-measured. Three stops of the struck-metal ramp are genuinely new
+ *    colours, so they are pinned DOUBLY rather than triply: against the CSS by
+ *    value, and against the spec by absence — §3 does not contain them and must
+ *    not be edited to pretend it does. Two further pins protect the decision
+ *    that produced them. Every declared --color-snc-* value must be pairwise
+ *    distinct, and the literal #C99A4A — the measured fifth stop, eight units of
+ *    green away from gold-500 — must appear nowhere in the file: it was snapped
+ *    to gold-500 on purpose, and a sixteenth gold one point from an existing
+ *    gold is the worst outcome available to this palette.
+ *
+ *    The two invariants of the art direction that a component cannot be trusted
+ *    to remember are asserted on the classes themselves. .snc-gold-rule must
+ *    fade to transparent at BOTH ends — there is not one solid gold bar in the
+ *    references, and a rule that stops fading is the single most visible way to
+ *    lose the look. .snc-gold-text must set no flat colour but `transparent`,
+ *    because the moment it does, background-clip stops showing through and the
+ *    heading is flat yellow text again, which is the exact failure the ramp was
+ *    added to fix.
  * ========================================================================== */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -128,6 +149,21 @@ const SPEC_COLOURS: ReadonlyArray<readonly [string, string]> = [
   ["flame-warm", "#E08A2E"],
 ];
 
+/* The three stops of the struck-metal ramp that no existing token could express.
+ * Left column is the CSS name under the `snc-` prefix, as above; unlike the §3
+ * table these are NOT in the spec, and the assertions below check that too. */
+const RAMP_COLOURS: ReadonlyArray<readonly [string, string]> = [
+  ["gold-ramp-bronze", "#B88935"],
+  ["gold-ramp-bright", "#E1BE73"],
+  ["gold-ramp-pale", "#F0D18A"],
+];
+
+/**
+ * The measured fifth stop of the ramp, which is NOT gold-500 (#C9A24B) and was
+ * snapped to it anyway. Pinned as an absence: see 7 in the header.
+ */
+const SNAPPED_RAMP_STOP = "#C99A4A";
+
 /* The nine --color-* names globals.css owned before this layer existed. */
 const EXISTING_COLOUR_NAMES: ReadonlyArray<string> = [
   "--color-night",
@@ -202,9 +238,122 @@ for (const [specName, specValue] of SPEC_COLOURS) {
 
 const colourNames = themeNames.filter((name) => name.startsWith("--color-"));
 ok(
-  colourNames.length === SPEC_COLOURS.length,
-  `sanctuary.css declares exactly the ${SPEC_COLOURS.length} colours §3 lists and no sixteenth one (found ${colourNames.length})`,
+  colourNames.length === SPEC_COLOURS.length + RAMP_COLOURS.length,
+  `sanctuary.css declares exactly the ${SPEC_COLOURS.length} colours §3 lists plus the ${RAMP_COLOURS.length} ramp stops, and nothing else (found ${colourNames.length})`,
 );
+
+/* ------------------- 7. the ramp stops, pinned by presence ---------------- */
+
+for (const [rampName, rampValue] of RAMP_COLOURS) {
+  const cssName = `--color-snc-${rampName}`;
+  const declared = theme.get(cssName);
+  ok(declared !== undefined, `${cssName} is declared`);
+  ok(
+    declared !== undefined && dense(declared) === dense(rampValue),
+    `${cssName} is ${rampValue} exactly, not ${String(declared)}`,
+  );
+  ok(
+    !specDense.includes(dense(rampValue)),
+    `${rampValue} is absent from the spec — the ramp was added to this layer, and §3 must not be back-edited to look like it always said so`,
+  );
+}
+
+ok(
+  !sanctuaryCss.toLowerCase().includes(SNAPPED_RAMP_STOP.toLowerCase()),
+  `${SNAPPED_RAMP_STOP} does not appear as a declared value — the ramp's fifth stop is snapped to gold-500 (#C9A24B) on purpose, and a second gold one point away from an existing one is unreviewable drift`,
+);
+
+const colourValues = colourNames.map((name) => dense(theme.get(name) ?? ""));
+ok(
+  new Set(colourValues).size === colourValues.length,
+  "no two --color-snc-* tokens carry the same value — two names for one colour is how a palette starts drifting",
+);
+
+/* The ramp itself: one composed value, six stops, every one a token. */
+const metal = theme.get("--snc-gold-metal") ?? "";
+ok(metal.length > 0, "--snc-gold-metal composes the ramp once, so nothing re-declares it");
+ok(dense(metal).startsWith("linear-gradient(105deg,"), "the ramp runs at 105deg — a 90deg ramp reads as a horizontal wipe, not as struck metal");
+const metalStops = [...metal.matchAll(/var\((--[a-zA-Z0-9-]+)\)/g)].map((m) => m[1]);
+/*
+ * The ramp's SHAPE, not its stop count.
+ *
+ * The first weighting had six stops with the engraved shadow occupying the outer 20% on each side,
+ * and a capture of /sanctuary/materials showed what that costs: a wide heading spends two fifths of
+ * its run in the dark and reads as a dim outline on the near-black ground. Pinning "six stops" would
+ * have locked that failure in, so what is pinned instead is the property the art-direction pass was
+ * actually after — short dark tails, and a lit crest wide enough that a long word stays metal.
+ */
+const stopPercents = [...metal.matchAll(/var\(--[a-zA-Z0-9-]+\)\s+([0-9.]+)%/g)].map((m) => Number(m[1]));
+ok(metalStops.length >= 6, `the ramp keeps at least the six measured stops (found ${metalStops.length})`);
+ok(stopPercents.length === metalStops.length, "every ramp stop carries an explicit position");
+const firstLit = stopPercents[metalStops.indexOf("--color-snc-gold-ramp-bright")];
+const lastLit = stopPercents[metalStops.lastIndexOf("--color-snc-gold-ramp-bright")];
+ok(firstLit <= 28, `the ramp reaches lit metal within the first quarter of its run (at ${firstLit}%)`);
+ok(lastLit >= 72, `and stays lit until the last quarter (falls at ${lastLit}%)`);
+ok(
+  lastLit - firstLit >= 40,
+  `the lit crest spans at least 40% of the run (spans ${lastLit - firstLit}%) — this is what keeps a wide heading legible`,
+);
+ok(
+  !/#[0-9a-fA-F]{3,8}|rgba?\(/.test(metal),
+  "every stop of the ramp is a token reference — a hex inside the composed gradient would be a colour nobody can find",
+);
+ok(
+  metalStops[0] === "--color-snc-gold-600" && metalStops[metalStops.length - 1] === "--color-snc-gold-600",
+  "the ramp begins and ends in the engraved shadow gold, which is what makes it read as a curved surface rather than a wipe",
+);
+ok(
+  metalStops.includes("--color-snc-gold-500"),
+  "the falling side of the ramp is the primary linework gold — this is the snap recorded above, asserted rather than described",
+);
+for (const stop of metalStops) {
+  ok(theme.get(stop) !== undefined, `the ramp stop ${stop} is a token declared in this file`);
+}
+
+/* ------------------ 7. the two invariants of the art direction ------------ */
+
+const goldRule = ruleBody(sanctuaryCss, ".snc-gold-rule");
+const ruleGradient = dense(/background-image\s*:\s*([^;]+);/.exec(goldRule)?.[1] ?? "");
+ok(ruleGradient.startsWith("linear-gradient(90deg,transparent,"), ".snc-gold-rule begins at transparent");
+ok(ruleGradient.endsWith(",transparent)"), ".snc-gold-rule ends at transparent — a rule that is solid at either end is not the rule the references draw");
+ok(
+  /var\(--color-snc-gold-\d00\)/.test(ruleGradient),
+  ".snc-gold-rule is brightest at its centre in a gold from the palette",
+);
+ok(/border\s*:\s*none\s*;/.test(goldRule), ".snc-gold-rule clears the <hr> border it is meant to replace");
+
+const goldText = ruleBody(sanctuaryCss, ".snc-gold-text");
+ok(
+  /background-image\s*:\s*var\(--snc-gold-metal\)\s*;/.test(goldText),
+  ".snc-gold-text is painted with the shared ramp rather than a gradient of its own",
+);
+ok(/background-clip\s*:\s*text\s*;/.test(goldText), ".snc-gold-text clips the ramp to the glyphs");
+ok(
+  /(?:^|[\s;])color\s*:\s*transparent\s*;/m.test(goldText),
+  ".snc-gold-text sets color: transparent, which is what lets the clipped ramp show at all (and makes the loop below non-vacuous)",
+);
+for (const [property, value] of [...goldText.matchAll(/([a-zA-Z-]*color)\s*:\s*([^;]+);/g)].map(
+  (m) => [m[1], m[2].trim()] as const,
+)) {
+  ok(
+    value === "transparent",
+    `.snc-gold-text sets ${property}: ${value} — any flat colour here hides the clipped ramp and the heading is flat yellow text again`,
+  );
+}
+ok(/text-shadow\s*:/.test(goldText), ".snc-gold-text carries the emboss shadow that makes the metal read as struck");
+
+const medallion = ruleBody(sanctuaryCss, ".snc-medallion");
+ok(/box-shadow\s*:/.test(medallion), ".snc-medallion has the shadow that seats it on the leaf");
+ok(
+  !/#[0-9a-fA-F]{3,8}|rgba?\(/.test(medallion),
+  ".snc-medallion introduces no colour of its own — its warm shadow is mixed from --color-snc-ink, never from a grey literal",
+);
+const goldBorder = ruleBody(sanctuaryCss, ".snc-gold-border");
+ok(
+  /border-image-source\s*:\s*var\(--snc-gold-metal\)\s*;/.test(goldBorder),
+  ".snc-gold-border is the same metal as the text, so a frame and a heading agree",
+);
+ok(/border-style\s*:\s*solid\s*;/.test(goldBorder), ".snc-gold-border is solid, the only kind of line this product draws");
 
 /* ------------------- 2. the collision that forced the prefix -------------- */
 
