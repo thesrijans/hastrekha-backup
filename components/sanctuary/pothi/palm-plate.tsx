@@ -63,7 +63,6 @@
  * floating on one.
  */
 import type { CSSProperties, ReactElement } from "react";
-import { defUrl, SNC_GRADIENT_GOLD } from "@/components/sanctuary/material";
 import type { CapabilityTier } from "@/components/sanctuary/use-capability-tier";
 import {
   POTHI_PLATE_SIZE,
@@ -189,23 +188,42 @@ const STROKE_ACTIVE = "snc-stroke-active";
 const STROKE_SECONDARY = "snc-stroke-secondary";
 
 /**
- * Gold for the ink, as flat tokens rather than the `#snc-g-gold` ramp.
+ * THE PLATE IS DRAWN IN INK, and it used to be drawn in gold.
  *
- * THE REASON IS GEOMETRIC, NOT AESTHETIC. An SVG gradient paints in
- * objectBoundingBox units by default, and a traced crease can be very nearly
- * straight — a head line often is. A bounding box of zero height makes the
- * gradient degenerate, and the affected engines respond by painting the stroke
- * with NOTHING: the chapter's own line disappears on exactly the hands whose
- * head line is straightest. Flat tokens cannot do that. The neutral diagram is a
- * large closed shape with no such risk, so it keeps the family's ramp and the
- * plate still belongs to the ornament set.
+ * The gold was chosen carefully and never once seen on the surface it was for.
+ * This component paints no background — its own header says the caller lays it
+ * on a <Parchment> — and the caller did not, so every review of it happened
+ * against the dark ground, where gold is exactly right. Put on the leaf it was
+ * always meant for, the numbers are ruinous. Against #D9C39A:
  *
- * The active line takes gold-400 (the palette's own "foil highlight, active
- * state") and everything else gold-500 (its "primary gold, all linework"), so
- * the ladder is carried by weight, opacity, glow AND value at once.
+ *   gold-400, the ACTIVE line ....... 1.03 : 1
+ *   gold-500, every other line ...... 1.40 : 1, and 1.13 at the secondary rung
+ *   ink ............................. 9.45 : 1, and 1.97 at the secondary rung
+ *
+ * A contrast of 1.03 is not a faint line, it is no line: the chapter's own
+ * measured crease — the single thing the plate exists to show — separated from
+ * the leaf by nothing but hue, and would vanish outright for a reader who does
+ * not see that hue. It looked passable in review only because the active rung's
+ * glow drew a halo where the stroke should have been.
+ *
+ * So the plate is drawn the way anything on paper is drawn. Ink for every line,
+ * with the ladder doing what a ladder is for: the chapter's crease at full ink
+ * and 2px, everything else at the same ink and the rung's own 0.35, which is
+ * 9.45 against 1.97 — a hierarchy carried by value, where before it was carried
+ * by a hue difference worth three hundredths of a ratio. The gold does not
+ * leave the plate; it moves to where gold belongs on a manuscript, the glow on
+ * the active rung, which now reads as the illumination of the subject rather
+ * than as the only reason the subject was visible.
+ *
+ * Flat tokens rather than the `#snc-g-gold` ramp, and that part is geometric
+ * rather than aesthetic: an SVG gradient paints in objectBoundingBox units, a
+ * traced crease can be very nearly straight, and a box of zero height makes the
+ * gradient degenerate — affected engines then paint the stroke with NOTHING, on
+ * exactly the hands whose head line is straightest. A flat token cannot fail
+ * that way.
  */
-const INK_ACTIVE = "var(--color-snc-gold-400)";
-const INK_SECONDARY = "var(--color-snc-gold-500)";
+const INK_ACTIVE = "var(--color-snc-ink)";
+const INK_SECONDARY = "var(--color-snc-ink)";
 
 /** Radius of the travelling particle, in plate units — under a pixel at any size a leaf is read at. */
 const TRAIL_RADIUS = 0.9;
@@ -280,6 +298,20 @@ export interface PalmPlateProps {
  * @returns the plate, or null when the hand-off carries neither a crop nor a
  * single drawable line — in which case the caller seals the leaf.
  */
+/**
+ * Whether a plate would draw anything at all for this hand-off.
+ *
+ * The same test {@link PalmPlate} makes before it returns null, exported so a
+ * caller can decide whether to build the SURFACE the plate lies on. Without it
+ * the caller would have to guess, and a leaf raised around a plate that then
+ * declined to render is precisely the "frame around an empty square" the null
+ * return exists to prevent.
+ */
+export function hasPlateContent(geometry: PothiGeometry | null): boolean {
+  if (geometry === null) return false;
+  return pothiPlatePaths(geometry).length > 0 || geometry.cropDataUrl !== undefined;
+}
+
 export function PalmPlate({
   lineId,
   geometry,
@@ -291,7 +323,7 @@ export function PalmPlate({
 
   /* Nothing measured survived. Render nothing rather than a frame around an
    * empty square — an empty plate is a picture of a hand we do not have. */
-  if (paths.length === 0 && crop === undefined) return null;
+  if (!hasPlateContent(geometry)) return null;
 
   const active = paths.find((path) => path.id === lineId) ?? null;
   const others = paths.filter((path) => path.id !== lineId);
@@ -349,11 +381,15 @@ export function PalmPlate({
         >
           {measured ? null : (
             /* The neutral palm, at the secondary rung: it is context for the
-               measured line, never a claim of its own. */
+               measured line, never a claim of its own. Ink like every other
+               line here, and off the gold ramp for the same reason they are:
+               against the leaf the ramp's own pale stops are the parchment
+               back again, so the outline faded out exactly where the light on
+               it should have been brightest. */
             <path
               d={NEUTRAL_PALM_PATH}
               className={STROKE_SECONDARY}
-              stroke={defUrl(SNC_GRADIENT_GOLD)}
+              stroke={INK_SECONDARY}
               data-snc-part="neutral-palm"
               {...STROKE_GEOMETRY}
             />

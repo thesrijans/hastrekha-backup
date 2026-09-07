@@ -208,14 +208,27 @@ export function SanctuaryDefs(): ReactElement {
             * buy texture. Slope and intercept are a pair: 0.5 must map to 0.5 or the grain shifts
             * the parchment's value as well as its texture. */}
           <feComponentTransfer in="snc-grain-luma" result="snc-grain-stretched">
-            <feFuncR type="linear" slope="1.9" intercept="-0.45" />
-            <feFuncG type="linear" slope="1.9" intercept="-0.45" />
-            <feFuncB type="linear" slope="1.9" intercept="-0.45" />
+            <feFuncR type="linear" slope="1.32" intercept="-0.16" />
+            <feFuncG type="linear" slope="1.32" intercept="-0.16" />
+            <feFuncB type="linear" slope="1.32" intercept="-0.16" />
           </feComponentTransfer>
+          {/* THE GRAIN IS A TEXTURE, NOT A SHEET — and this row is the whole difference.
+            *
+            * It used to force alpha to 1 while keeping the noise as its colour, which made the
+            * layer an OPAQUE field of grey wherever the parchment base was not painted underneath
+            * it. Two failures on real captures came from that one decision: a rectangle of neutral
+            * grey around a torn leaf, and a palm plate that rendered as grey static instead of as
+            * fibre on tan. Neutral grey where the whole system is warm — the exact failure the art
+            * direction forbids, arriving from inside the material rather than from a stray shadow.
+            *
+            * So the output is now BLACK with alpha driven by the noise: dark fibres carry alpha and
+            * multiply into the sheet, bright ones carry none and leave it alone. The layer can no
+            * longer paint a surface of its own, only shade one that is already there — which is
+            * what fibre is. A missing base now reads as nothing, not as static. */}
           <feColorMatrix
             in="snc-grain-stretched"
             type="matrix"
-            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1"
+            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -1 0 0 0 1"
           />
         </filter>
 

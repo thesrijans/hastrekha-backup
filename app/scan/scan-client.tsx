@@ -28,6 +28,7 @@ import { PalmOverlay } from "@/components/scan/palm-overlay";
 import { ScanHud } from "@/components/scan/scan-hud";
 import { useHandScan } from "@/components/scan/use-hand-scan";
 import { ReadingView } from "@/app/read/reading-view";
+import { encodeCrop, handOffToPothi, rescanPrompt, RESCAN_PARAM } from "@/lib/sanctuary/pothi-handoff";
 import type { FeedbackState, ReadingResponse, Verdict } from "@/app/read/reading-types";
 
 /**
@@ -35,6 +36,16 @@ import type { FeedbackState, ReadingResponse, Verdict } from "@/app/read/reading
  * which is what lets the ticker run without a round trip per frame.
  */
 const KB: KnowledgeBase = loadKnowledgeBase(kbDocument);
+
+/**
+ * A store that never changes.
+ *
+ * `useSyncExternalStore` is used here for its SERVER SNAPSHOT rather than for
+ * subscription, so the subscribe half is honest about having nothing to offer.
+ * Module scope, not inline, because a fresh function per render would resubscribe
+ * on every one of them.
+ */
+const subscribeToNothing = (): (() => void) => (): void => undefined;
 
 /**
  * How often the whole KB is re-evaluated against the session bag.
@@ -84,6 +95,16 @@ export function ScanClient() {
   const [edgePeak, setEdgePeak] = useState(PALM_EDGE_PEAK);
 
   const isMountedRef = useRef(true);
+  /*
+   * The latest rectified crop, for the manuscript hand-off only.
+   *
+   * A ref of its own rather than a read through `scanRef`: that ref is handed to a
+   * hook, and the immutability lint rightly refuses a value that is both passed
+   * into a hook and written from an effect. This one is written in one effect and
+   * read once, at hand-off, so the crop the manuscript shows is the last frame the
+   * pipeline actually rectified.
+   */
+  const cropRef = useRef<ImageData | null>(null);
   const landmarkBagRef = useRef<Record<string, unknown>>({});
   /**
    * The monotonic session. Held in a ref as well as state because the frame callbacks fire from the
@@ -294,6 +315,32 @@ export function ScanClient() {
           return;
         }
         const reading = (await response.json()) as ReadingResponse;
+
+        /*
+         * U1.5 — THE HAND-OFF. One call, at the one moment both halves exist: the
+         * reading has just arrived and `found` still holds the traced geometry.
+         *
+         * `MASK_SIZE` is passed rather than defaulted, and that is the whole
+         * lesson of 2db5c39 restated one layer up: `found` was extracted at the
+         * working resolution, so its polylines are 128-space, and a consumer that
+         * assumed 256 drew every line at a quarter of its span. The plate scales
+         * by whatever number arrives here, so this must be the number that
+         * produced the points.
+         *
+         * The crop is encoded for THIS TAB ONLY. It never reaches the server —
+         * prisma/schema.prisma refuses images by design, and R3's neutral palm
+         * diagram is what a revisited reading falls back to.
+         */
+        const cropImage = cropRef.current;
+        handOffToPothi({
+          reading,
+          lines: found.lines,
+          space: MASK_SIZE,
+          ...(cropImage === null ? {} : { cropDataUrl: encodeCrop(cropImage) ?? undefined }),
+          sessionId: reading.readingId ?? `scan-${Math.round(performance.now())}`,
+          capturedAt: new Date().toISOString(),
+        });
+
         if (isMountedRef.current) setOutcome({ status: "ready", reading });
       } catch {
         if (isMountedRef.current) setOutcome({ status: "failed", message: "Network thoda dagmaga gaya." });
@@ -320,6 +367,9 @@ export function ScanClient() {
   useEffect(() => {
     scanRef.current = scan;
   }, [scan]);
+  useEffect(() => {
+    cropRef.current = scan.rectified?.image ?? cropRef.current;
+  }, [scan.rectified]);
   const {
     status,
     error,
@@ -424,6 +474,35 @@ export function ScanClient() {
     [traces],
   );
 
+  /*
+   * U1.5 A2 — the rescan ask, made behaviour.
+   *
+   * A sealed leaf's button carries ?rescan=<id>. Until now nothing read it, so the
+   * invitation A2 promises ended at the link. `useSearchParams` is deliberately not
+   * used: it would opt the whole page into a Suspense boundary it does not otherwise
+   * need, and the URL cannot change under this route without a navigation.
+   *
+   * THE SERVER SNAPSHOT IS null, AND THAT IS THE FIX. A lazy `useState` initialiser
+   * reads this value in one line and it was wrong: the initialiser runs during SSR,
+   * where it returns null, and again on the client for the HYDRATION render, where
+   * it returns the prompt. React compared the two and threw — "the server rendered
+   * HTML didn't match the client" on every rescan link, with the subtree regenerated
+   * to cover it. A query parameter is client knowledge on a statically rendered
+   * route, so the first render has to agree it does not have one yet.
+   *
+   * `useSyncExternalStore` is how this codebase already says that (see the reading
+   * store behind /read/pothi, whose own header calls a null server snapshot "the
+   * whole of the pending state"), and it is the one form that survives lint: an
+   * effect calling setState is `react-hooks/set-state-in-effect`, and rightly so.
+   * The subscribe is a no-op because there is genuinely nothing to subscribe to —
+   * the URL cannot change under this route without a navigation.
+   */
+  const rescanAsk = useSyncExternalStore(
+    subscribeToNothing,
+    () => rescanPrompt(new URLSearchParams(window.location.search).get(RESCAN_PARAM)),
+    () => null,
+  );
+
   const restart = useCallback(() => {
     setOutcome({ status: "scanning" });
     setFeedback({});
@@ -449,14 +528,28 @@ export function ScanClient() {
 
   if (outcome.status === "ready") {
     return (
-      <ReadingView
+      <>
+        {/*
+         * U1.5 A3 — the invitation. The reading is on screen either way; this is the
+         * door to the manuscript, offered rather than forced, and it only appears
+         * once the hand-off above has actually written something for it to open.
+         */}
+        <a href="/read/pothi" className="snc-gold-border mx-auto mb-6 flex w-full max-w-md items-center justify-between gap-4 px-5 py-4 no-underline">
+          <span className="flex flex-col gap-1">
+            <span className="font-[family-name:var(--font-snc-devanagari)] text-base text-snc-gold-400">अपना पत्र खोलें</span>
+            <span className="font-[family-name:var(--font-snc-serif)] text-sm text-snc-parch-edge">Open your leaf</span>
+          </span>
+          <span aria-hidden="true" className="text-snc-gold-500">→</span>
+        </a>
+        <ReadingView
         reading={outcome.reading}
         mounts={SCAN_MOUNTS}
         lines={holoLines}
         feedback={feedback}
         onFeedback={sendFeedback}
         onRestart={restart}
-      />
+        />
+      </>
     );
   }
 
@@ -464,6 +557,14 @@ export function ScanClient() {
     <div className="flex flex-col gap-8">
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         <div className="flex flex-col gap-4">
+          {rescanAsk === null ? null : (
+            <p
+              role="status"
+              className="font-[family-name:var(--font-snc-devanagari)] mb-1 bg-snc-parchment px-4 py-2 text-sm text-snc-ink"
+            >
+              {rescanAsk}
+            </p>
+          )}
           <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-hairline bg-surface sm:aspect-square">
             {/* Always mounted: the hook needs the element before the stream exists. */}
             <video

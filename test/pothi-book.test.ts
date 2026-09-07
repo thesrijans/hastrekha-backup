@@ -91,6 +91,7 @@ interface PothiBookModule {
   POTHI_TURN_COMMIT_FRACTION: number;
   pothiTurnMode: (capabilityTier: CapabilityTier, degraded: boolean) => "fold" | "crossfade";
   pothiFolio: (chapter: (typeof POTHI_CHAPTERS)[number]) => string;
+  faceUp: (angleDeg: number) => "recto" | "verso";
 }
 
 const COMPONENT_DIR = path.resolve(__dirname, "..", "components", "sanctuary", "pothi");
@@ -105,12 +106,22 @@ const {
   POTHI_TURN_COMMIT_FRACTION,
   pothiTurnMode,
   pothiFolio,
+  faceUp,
 } = createRequire(__filename)("../components/sanctuary/pothi/pothi-book") as PothiBookModule;
 
 const bookSource = readFileSync(path.join(COMPONENT_DIR, "pothi-book.tsx"), "utf8");
 const bookStyles = readFileSync(path.join(COMPONENT_DIR, "pothi-book.module.css"), "utf8");
 const leafSource = readFileSync(path.join(COMPONENT_DIR, "leaf-page.tsx"), "utf8");
 const clientSource = readFileSync(path.join(ROUTE_DIR, "pothi-client.tsx"), "utf8");
+/* The reading's session key and its validator were lifted out of the client and
+ * into lib/sanctuary, so the SCAN side can write the reading without importing a
+ * route component — `tsx` cannot parse a CSS module, and a writer that had to
+ * would have been a writer nobody could test. The key is asserted where it now
+ * lives, which is the same shape the geometry half already had. */
+const storeSource = readFileSync(
+  path.resolve(__dirname, "..", "lib", "sanctuary", "pothi-reading-store.ts"),
+  "utf8",
+);
 const routeSource = readFileSync(path.join(ROUTE_DIR, "page.tsx"), "utf8");
 
 /**
@@ -433,8 +444,9 @@ ok(
     "the one control on it goes to /scan, because a scan is genuinely what fills this gap — the seal carries a capture instruction for exactly that reason",
   );
   ok(
-    clientCode.includes("hastrekha:pothi-reading:v1"),
-    "the reading itself travels on a versioned session key, the same hand-off idiom the geometry module already uses across the same boundary",
+    withoutComments(storeSource).includes("hastrekha:pothi-reading:v1") &&
+      clientCode.includes("pothi-reading-store"),
+    "the reading itself travels on a versioned session key, the same hand-off idiom the geometry module already uses across the same boundary — declared once in the store both sides import, never spelled out twice",
   );
   ok(
     /GET/.test(clientSource) && /no GET-reading endpoint|GET-READING ENDPOINT/i.test(clientSource),
@@ -546,5 +558,50 @@ ok(
   clientCode.includes('"use client"') && clientCode.includes("useCapabilityTier"),
   "the single island is the one place that reads the tab and measures the device — both unknowable on the server",
 );
+
+/* ==========================================================================
+ * THE MATERIAL HAS TO SURVIVE THE THIRD DIMENSION
+ *
+ * Four defects found on real captures, all of the same family: the book's 3D
+ * machinery quietly deleting the material the whole design is made of. Each is
+ * pinned by the mechanism that fixed it rather than by a screenshot, because a
+ * screenshot cannot say WHY and every one of these looked like a styling
+ * mistake until it was measured.
+ * ========================================================================== */
+{
+  ok(
+    !/backface-visibility:\s*hidden/.test(bookCss),
+    "no face culls its own back: under a preserve-3d leaf, Chromium drops every descendant that needs a render surface inside a `backface-visibility: hidden` box, which is a <Parchment>'s filtered tear layer and all four of its blended ones — the leaf then paints as bare ground with the plate's linework floating on it, at 0deg, where there is no back face to cull",
+  );
+  ok(
+    /data-snc-face-up/.test(bookCss) && /data-snc-face-up/.test(bookCode),
+    "the away face is hidden by a decision the component makes from the leaf's own angle, in both files, rather than by the compositor",
+  );
+  ok(
+    typeof faceUp === "function" && faceUp(0) === "recto" && faceUp(-180) === "verso" && faceUp(-91) === "verso" && faceUp(-89) === "recto",
+    "and that decision flips at edge-on, which is where a sheet actually changes the side it shows",
+  );
+  ok(
+    /snc-face-away/.test(bookCss) && /snc-face-toward/.test(bookCss) && /step-end/.test(bookCss),
+    "a programmatic turn steps the swap at the halfway point: the attribute already holds the side the leaf will END on, so left alone the far face would appear the instant the turn began",
+  );
+  ok(
+    count(bookCss, "content-visibility: hidden") === 2,
+    "every hidden leaf skips painting outright, both the settled turned one and the three off-stage states: `visibility` alone left fourteen sheets' worth of multiply reaching the ground, measured as a hard-edged rectangle at roughly half the luminance of the ground beside it",
+  );
+  ok(
+    /\[data-snc-leaf-state="turned"\]:not\(\[data-snc-turning="true"\]\)/.test(bookCss),
+    "and a turned leaf is visible for exactly as long as it is turning: it hinges at its spine, so at rest it lands a full stage-width to the left of centre with its title half outside the window — no viewport is wide enough to close that, because widening moves both edges together",
+  );
+  ok(
+    bookCode.includes("hasPlateContent"),
+    "the plate is only given a leaf once there is something to lie on it, so the slot's `:empty` rule still removes an unmeasured chapter's frame",
+  );
+  /* BOOK is rendered with a reading AND geometry, so it already contains a plate. */
+  ok(
+    /data-snc-tone="aged"[^>]*>(?:(?!data-snc-tone=)[\s\S]){0,6000}?data-snc-layer="ink"/.test(BOOK),
+    "and the plate lies ON that leaf: <PalmPlate> paints no surface of its own — its own header says the caller supplies one — and while no caller did, the measured creases hung on the bare ground of the room with nothing behind them",
+  );
+}
 
 console.log(`POTHI BOOK ASSERTIONS PASSED (${assertions})`);

@@ -1,0 +1,110 @@
+/*
+ * ============================================================================
+ * <RevealBeat> — where the two sentences sit, and what takes them away.
+ * ============================================================================
+ *
+ * Placement only. The timing is the score in lib/sanctuary/reveal-beat.ts and
+ * the opacity of the darkness is set from it inline, because it is a computed
+ * value that exists for three and a half seconds and belongs to no rule.
+ *
+ * NO COLOUR LITERAL. NO ANIMATION. There is not one @keyframes below and that
+ * is deliberate: every moving thing in this beat is driven from the score, so a
+ * keyframe here would be a second clock running beside the first.
+ */
+
+@layer components {
+  /*
+   * THE BEAT COVERS EVERYTHING. Fixed rather than absolute: it has to take the
+   * camera feed, the canvas and the litany leaf with it, and those do not share
+   * one positioned ancestor.
+   *
+   * `pointer-events: none` — the beat is watched, not used, and for three and a
+   * half seconds there is nothing on screen to press.
+   */
+  /*
+   * THE BEAT BRINGS ITS OWN GROUND.
+   *
+   * The two sentences are set in parchment, which reads on the dimmed chamber
+   * they normally play over — and vanished entirely the one time they landed on
+   * something pale. A component whose legibility depends on what happens to be
+   * behind it is a component waiting for that. The scrim below is light enough
+   * not to pre-empt the darkening (which is a separate, opaque sheet) and heavy
+   * enough that the words are readable over anything.
+   */
+  .beat::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-color: color-mix(in oklab, var(--color-snc-stone-900) 62%, transparent);
+  }
+
+  .beat {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.1rem;
+    padding-inline: 2rem;
+    pointer-events: none;
+  }
+
+  /*
+   * THE TWO LINES.
+   *
+   * Centred, serif, in the parchment tone rather than in gold: gold is the
+   * material's ornament, and these two sentences are the last thing the chamber
+   * says rather than a decoration on it. Set generously — this is the one screen
+   * in the product with nothing else on it, so the type has the room to be read
+   * at the pace the silences imply.
+   */
+  .line {
+    margin: 0;
+    max-inline-size: 26rem;
+    font-family: var(--font-snc-devanagari);
+    font-size: clamp(1.1rem, 5vw, 1.45rem);
+    line-height: 1.9;
+    text-align: center;
+    color: var(--color-snc-parchment);
+    /* Above the darkness, so the fade takes the words and the room together
+       rather than leaving two sentences floating on black. */
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 620ms ease;
+  }
+
+  .line[data-snc-shown="true"] {
+    opacity: 1;
+  }
+
+  /*
+   * THE DARKNESS. A plain sheet of the room's own ink at an opacity the score
+   * sets, which is why it carries no transition: a transition here would fight
+   * the frame-by-frame value and produce a fade that lags its own clock.
+   */
+  .dark {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    /* stone-900, the room's own deepest ground and the vignette's core. Not
+       black: the sanctuary has no pure black in it, and a true #000 here would
+       be the one surface in the product colder than the room around it. */
+    background-color: var(--color-snc-stone-900);
+  }
+
+  /*
+   * Reduced motion removes the lines' fade. It does NOT remove the beat: the
+   * score still runs its full length, because the reader still has two
+   * sentences to read and reduced motion is a request about movement rather
+   * than a request to be hurried.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .line {
+      transition: none;
+    }
+  }
+}

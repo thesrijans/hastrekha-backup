@@ -1,0 +1,128 @@
+/*
+ * ============================================================================
+ * <ScanLitany> — the geometry of a leaf sliding in from the bottom.
+ * ============================================================================
+ *
+ * The same split every sanctuary stylesheet keeps: WHERE a thing is lives here,
+ * WHAT it is made of lives in the material primitives. There is no background,
+ * no border and no radius below — the sheet is a <Parchment>, and a panel drawn
+ * around it would be a card behind a torn leaf.
+ *
+ * NO COLOUR LITERAL. Every pigment is a --color-snc-* token.
+ */
+
+@layer components {
+  /*
+   * THE DOCK. Fixed to the bottom of the viewport rather than to the video box,
+   * because the leaf must clear a phone's home indicator whatever the camera's
+   * aspect ratio turns out to be — a leaf tucked under a system gesture bar is
+   * a line of copy nobody can read on the device this is built for.
+   *
+   * `pointer-events: none` on the dock and nothing re-enabling it below: this
+   * leaf is read, never touched, and a transparent box across the bottom third
+   * of a camera view would swallow a tap meant for the shutter.
+   */
+  .dock {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: max(1.25rem, env(safe-area-inset-bottom));
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    padding-inline: 1rem;
+    pointer-events: none;
+  }
+
+  /*
+   * THE LEAF ITSELF. A width, and nothing else: everything visible about it is
+   * <Parchment>'s. The maximum is narrow on purpose — a leaf as wide as a phone
+   * is a bar across the bottom of the screen, and the reference's leaves are
+   * always narrower than what they lie on.
+   */
+  .leaf {
+    inline-size: min(100%, 22rem);
+  }
+
+  /*
+   * THE SLIDE. From below the fold, once, and it does not slide again when the
+   * line changes: a leaf that re-entered on every stage would move six times
+   * during a scan the reader is being asked to hold still through.
+   */
+  .dock[data-snc-litany="in"] {
+    transform: translateY(0);
+    opacity: 1;
+    transition:
+      transform 520ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 380ms ease;
+  }
+
+  .dock[data-snc-litany="out"] {
+    transform: translateY(120%);
+    opacity: 0;
+    transition:
+      transform 380ms cubic-bezier(0.4, 0, 1, 1),
+      opacity 240ms ease;
+  }
+
+  /*
+   * THE STAGE LINE. Devanagari, ink, and the largest thing on the leaf — it is
+   * the sentence the whole component exists to carry.
+   */
+  .stage {
+    margin: 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 1rem;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+    color: var(--color-snc-ink);
+    text-align: center;
+  }
+
+  /*
+   * "इस बार नहीं मिला" — a stage that ran and found nothing.
+   *
+   * Ink-red, this language's marginalia colour: the same pigment as a citation
+   * and as the note beside the palm plate. It is a fact written in the margin,
+   * not an error, and the difference between those two readings is exactly the
+   * difference between A2 and an error state.
+   */
+  .empty {
+    margin: 0.35rem 0 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--color-snc-ink-red);
+    text-align: center;
+  }
+
+  /*
+   * THE GATE'S HINT. Set smaller and lighter than the stage line, because it is
+   * about what the reader should do rather than about what the chamber is
+   * doing, and the two must not read as one sentence.
+   */
+  .hint {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-snc-serif);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: color-mix(in oklab, var(--color-snc-ink) 76%, transparent);
+    text-align: center;
+  }
+
+  /*
+   * MOTION IS WHAT DEGRADES; THE LEAF NEVER DOES. Under reduced motion the
+   * sheet is simply there or simply not, with the same ink on it — no slide, no
+   * fade, and no substitute animation sneaking in through opacity.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .dock[data-snc-litany="in"],
+    .dock[data-snc-litany="out"] {
+      transition: none;
+    }
+
+    .dock[data-snc-litany="out"] {
+      transform: none;
+      visibility: hidden;
+    }
+  }
+}

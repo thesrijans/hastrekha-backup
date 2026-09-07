@@ -493,4 +493,35 @@ const count = (haystack: string, needle: string): number => haystack.split(needl
   );
 }
 
+/* =============== 12. The plate is drawn on the leaf it lies on ============ */
+
+/*
+ * The gold this plate used to be drawn in was chosen well and never once seen
+ * on the surface it was for: no caller supplied the <Parchment> the component's
+ * own header asks for, so every review happened against the dark ground. On the
+ * leaf, against #D9C39A, gold-400 — the ACTIVE line, the one thing the plate
+ * exists to show — measures 1.03 : 1. Not faint: absent, separated from the
+ * paper by hue alone. Ink measures 9.45 : 1, and 1.97 at the secondary rung.
+ */
+{
+  ok(
+    !/--color-snc-gold-\d00/.test(code.component),
+    "no line on this plate is gold: on the parchment it lies on, gold-400 reads 1.03 : 1 against the leaf and gold-500 reads 1.40 — a chapter's own measured crease that a reader could not see",
+  );
+  ok(
+    count(code.component, "var(--color-snc-ink)") >= 2,
+    "the plate is drawn in ink, the way anything on paper is drawn",
+  );
+  const drawn = render({ lineId: "life", geometry: geometry({ lines: { life: MASK_SPAN, heart: MASK_SPAN } }) });
+  ok(
+    count(drawn, "url(#snc-g-gold") === 0,
+    "and the neutral diagram is off the gold ramp too: the ramp's pale stops ARE the parchment, so the outline faded out exactly where the light on it should have been brightest",
+  );
+  ok(
+    tagWith(drawn, 'data-snc-line="life"').includes("snc-stroke-active") &&
+      tagWith(drawn, 'data-snc-line="life"').includes("var(--color-snc-ink)"),
+    "the subject crease is full ink at the active rung — 9.45 : 1, where the ladder's own hierarchy is finally carried by value rather than by three hundredths of a ratio",
+  );
+}
+
 console.log(`POTHI PALM PLATE ASSERTIONS PASSED (${assertions})`);

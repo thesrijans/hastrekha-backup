@@ -1,0 +1,180 @@
+/*
+ * ============================================================================
+ * The Chamber — full-bleed camera, and what sits over it.
+ * ============================================================================
+ *
+ * §9: "The Chamber is full-bleed camera with the ring at thumb height." Full
+ * bleed is the whole layout: there is no card, no panel and no page margin
+ * below, because the room IS the screen. The ring's own height is decided in
+ * scan-ring.ts, where the geometry lives.
+ *
+ * NO COLOUR LITERAL. Every pigment is a --color-snc-* token.
+ */
+
+@layer components {
+  /*
+   * THE ROOM. Fixed and inset-0 rather than a tall block: a camera view that
+   * scrolls is a camera view that can be scrolled halfway off, and on a phone
+   * the address bar collapsing mid-scan would otherwise resize the feed under
+   * the reader's hand.
+   *
+   * `overscroll-behavior: none` stops the pull-to-refresh a vertical drag over
+   * a full-screen surface would otherwise trigger — which on this route would
+   * throw away a scan in progress.
+   */
+  .chamber {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background-color: var(--color-snc-stone-900);
+    overscroll-behavior: none;
+  }
+
+  /*
+   * THE FEED. `object-fit: cover`, which the canvas's own cover transform is
+   * built to match: any other fit and every projected crease lands beside the
+   * crease it was traced from.
+   */
+  .feed {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  /*
+   * THE OVERLAY. One canvas over the feed, at the size of the room.
+   * `pointer-events: none` because everything drawn on it is watched rather
+   * than touched, and a canvas across the viewport would swallow the one
+   * gesture this route has.
+   */
+  .canvas {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    pointer-events: none;
+    /* The Devanagari face, so the canvas can resolve a family name for the line
+       labels: getComputedStyle on the element is the only way canvas reaches a
+       CSS variable at all. */
+    font-family: var(--font-snc-devanagari);
+  }
+
+  /*
+   * THE BACK MARK. A mark, not a button: no fill, no border, no radius. Sized
+   * to the 44px touch minimum even though it draws far less than that, because
+   * the target is what a thumb finds and the glyph is what an eye reads.
+   */
+  .back {
+    position: absolute;
+    inset-block-start: max(0.75rem, env(safe-area-inset-top));
+    inset-inline-start: 0.75rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    font-size: 1.5rem;
+    line-height: 1;
+    text-decoration: none;
+    color: color-mix(in oklab, var(--color-snc-gold-500) 76%, transparent);
+    transition: color 180ms ease;
+  }
+
+  .back:hover,
+  .back:focus-visible {
+    color: var(--color-snc-gold-400);
+  }
+
+  /*
+   * THE GATE AND THE FAILURES share one dock, because they are the same thing
+   * at different moments: the chamber, saying it is not open yet. Centred
+   * rather than docked at the bottom like the litany — nothing is happening
+   * behind them, so there is nothing for them to stay out of the way of.
+   */
+  .gate {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+
+  .gateLeaf {
+    inline-size: min(100%, 24rem);
+  }
+
+  .gateLine {
+    margin: 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--color-snc-ink);
+    text-align: center;
+  }
+
+  .gateNote {
+    margin: 0.6rem 0 0;
+    font-family: var(--font-snc-serif);
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: color-mix(in oklab, var(--color-snc-ink) 74%, transparent);
+    text-align: center;
+  }
+
+  /*
+   * THE ONE CONTROL. A struck rule under a word rather than a filled pill: a
+   * solid button on a torn leaf is the SaaS card this whole material system
+   * exists to get away from. The rule fades at both ends like every other rule
+   * in this language.
+   */
+  .gateButton {
+    display: block;
+    margin: 1.25rem auto 0;
+    padding: 0.35rem 0.2rem 0.5rem;
+    border: 0;
+    background: none;
+    font-family: var(--font-snc-serif);
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    color: var(--color-snc-ink);
+    cursor: pointer;
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-gold-600) 34%, var(--color-snc-gold-600) 66%, transparent);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 100% 1px;
+  }
+
+  .gateButton:hover,
+  .gateButton:focus-visible {
+    color: var(--color-snc-ink-red);
+  }
+
+  /*
+   * THE FRAME-COST READOUT. Deliberately plain and deliberately small: it is an
+   * instrument reading, it appears only when asked for with `?cost=1`, and it
+   * must not be mistaken for part of the room.
+   */
+  .cost {
+    position: absolute;
+    inset-block-end: max(0.5rem, env(safe-area-inset-bottom));
+    inset-inline-start: 0.75rem;
+    z-index: 6;
+    margin: 0;
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    color: var(--color-snc-gold-500);
+  }
+
+  /* Over budget reads in the marginalia colour — the same red a sealed leaf's
+     reason is written in, because both are the product telling the truth about
+     a shortfall. */
+  .cost[data-snc-budget="over"] {
+    color: var(--color-snc-ink-red);
+  }
+}

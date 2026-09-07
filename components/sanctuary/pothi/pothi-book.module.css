@@ -133,6 +133,25 @@
   .leaf[data-snc-leaf-state="back"],
   .leaf[data-snc-leaf-state="next"] {
     visibility: hidden;
+    /*
+     * A HIDDEN LEAF WAS STILL TINTING THE ROOM, and `visibility` alone could
+     * not stop it. Measured on a capture: the ground inside the leaves'
+     * footprint read at roughly half the luminance of the ground beside it, a
+     * hard-edged darker rectangle where fourteen invisible sheets were stacked.
+     * A leaf's material blends — the stain, the burn and the grain all multiply
+     * — and a blend group inside a `visibility: hidden` subtree still reaches
+     * the backdrop in Chromium. What the reader saw was fourteen sheets'
+     * worth of multiply and none of the paper that would have justified it.
+     *
+     * `content-visibility` skips the subtree's painting outright, which is the
+     * only thing that actually silenced it, and it keeps what `display: none`
+     * would throw away: the element stays in layout and each face keeps the
+     * scroll position it was left at, so a chapter returned to is where the
+     * reader left it. On an engine without it the `visibility` line still
+     * hides the leaf and the tint is the behaviour that shipped — a floor, not
+     * a break.
+     */
+    content-visibility: hidden;
   }
 
   /*
@@ -156,15 +175,34 @@
    */
 
   /*
-   * Below the point where a turned leaf would sit off-screen, it is hidden
-   * rather than clipped. The verso is context, not content: losing it on a
-   * phone costs the reader nothing, and letting it hang past the viewport edge
-   * would cost them a page that looks broken.
+   * A TURNED LEAF IS SEEN TURNING AND THEN PUT DOWN.
+   *
+   * This was a phone-only rule — a turned leaf hidden below 60rem, on the
+   * grounds that the verso would otherwise hang past the viewport edge. The
+   * width was never what made it hang. A leaf hinges at its spine, and the
+   * stage is centred, so a leaf at -180deg lands one full stage-width to the
+   * LEFT of centre: at 1440px its sheet reached x = -364 and the chapter title
+   * inked on it sat at x = -37, half of it outside the window. Widening the
+   * viewport moves both edges together and never closes that gap. It only went
+   * unnoticed because the material was being culled and the slab was invisible;
+   * the first capture with parchment rendering showed a blank sheet lying half
+   * off the left of the screen with its title cut in two.
+   *
+   * A left-hand page needs the spine at the centre of the spread and a leaf's
+   * width of room on either side of it. That is the same composition change the
+   * stack edge above is waiting on, and it belongs with that work rather than
+   * being improvised here.
+   *
+   * So the verso keeps the only job it can do well today: it is what you see
+   * for the half-second a sheet is passing, at every width. `:not(...turning)`
+   * is the whole of the change — the leaf stays visible for exactly as long as
+   * it is rotating, and is put down when it lands.
    */
-  @media (max-width: 60rem) {
-    .leaf[data-snc-leaf-state="turned"] {
-      visibility: hidden;
-    }
+  .leaf[data-snc-leaf-state="turned"]:not([data-snc-turning="true"]) {
+    visibility: hidden;
+    /* Same reason as the three states above: hidden is not enough to stop a
+     * sheet made of blend layers from reaching the ground behind it. */
+    content-visibility: hidden;
   }
 
   /* ---------------------------------------------------------------------- */
@@ -185,7 +223,22 @@
   .face {
     position: absolute;
     inset: 0;
-    backface-visibility: hidden;
+    /*
+     * `visible`, and stated rather than left to the initial value, because
+     * `hidden` is the obvious thing to write here and it is wrong. A leaf has
+     * two sides and one of them faces away, so backface culling reads as the
+     * exact tool for the job — but under the `preserve-3d` leaf above, Chromium
+     * drops every descendant that needs its own render surface inside a
+     * `backface-visibility: hidden` box. <Parchment> is made of precisely those:
+     * one filtered layer for the tear and four blended ones for the material. A
+     * capture showed the result plainly — the plate's gold linework floating on
+     * bare ground with no sheet under it, at a leaf resting at 0deg, where there
+     * is no back face to cull at all.
+     *
+     * The away face is hidden by `visibility` below instead. See faceUp() in
+     * pothi-book.tsx for the angle that decides it.
+     */
+    backface-visibility: visible;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 0.75rem clamp(0.4rem, 2vw, 1.25rem) 2rem;
@@ -198,6 +251,73 @@
 
   .verso {
     transform: rotateY(180deg);
+  }
+
+  /*
+   * THE AWAY FACE. `visibility` and not `display`, for two reasons that both
+   * matter: a face keeps its own scroll position through a turn, which `display`
+   * would discard, and `visibility` leaves the box in layout so the leaf's
+   * height does not change as it rotates.
+   *
+   * At rest these two rules are the whole mechanism. A dragged leaf is also
+   * fully covered by them, because a drag re-renders on every pointer move and
+   * the attribute is recomputed from the live angle — the swap lands at edge-on
+   * to the frame.
+   */
+  .leaf[data-snc-face-up="recto"] .verso,
+  .leaf[data-snc-face-up="verso"] .recto {
+    visibility: hidden;
+  }
+
+  /*
+   * A PROGRAMMATIC TURN, where the attribute cannot help on its own.
+   *
+   * A click sets the leaf's final angle in one render and lets the transition
+   * carry the rotation, so `data-snc-face-up` already holds the side the leaf
+   * will END on while the sheet is still edge-on to the reader. Left at that,
+   * the far side would appear the instant the turn began and the near side
+   * vanish with it — the reader would watch the wrong face rotate away.
+   *
+   * So the swap is stepped at the halfway point, which is the same instant the
+   * fold shadow peaks and the same mechanism it uses: keyframes for the turn the
+   * book performs, the plain attribute for the turn a hand performs. `step-end`
+   * with stops either side of 50% because visibility must jump; anything that
+   * interpolated would show both faces at once through the middle of the turn.
+   */
+  .fold .leaf[data-snc-turning="true"][data-snc-face-up="verso"] .recto,
+  .fold .leaf[data-snc-turning="true"][data-snc-face-up="recto"] .verso {
+    visibility: visible;
+    /* `forwards` so the stepped value survives to the end of the turn. Without
+     * it the shorthand's declared value returns the instant the animation
+     * finishes, and the far face would flash back for the frame between that
+     * and `data-snc-turning` being dropped. */
+    animation: snc-face-away var(--snc-turn-duration) step-end forwards;
+  }
+
+  .fold .leaf[data-snc-turning="true"][data-snc-face-up="verso"] .verso,
+  .fold .leaf[data-snc-turning="true"][data-snc-face-up="recto"] .recto {
+    visibility: hidden;
+    animation: snc-face-toward var(--snc-turn-duration) step-end forwards;
+  }
+
+  @keyframes snc-face-away {
+    0% {
+      visibility: visible;
+    }
+
+    50% {
+      visibility: hidden;
+    }
+  }
+
+  @keyframes snc-face-toward {
+    0% {
+      visibility: hidden;
+    }
+
+    50% {
+      visibility: visible;
+    }
   }
 
   /*
@@ -226,6 +346,12 @@
    */
   .plateSlot:empty {
     display: none;
+  }
+
+  /* The plate's own sheet. Full width of its slot, like the sealed leaf's, so
+   * the tear is the only thing deciding its outline. */
+  .plateLeaf {
+    inline-size: 100%;
   }
 
   .sealedSlot {

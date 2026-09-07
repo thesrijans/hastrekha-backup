@@ -113,7 +113,7 @@ import {
   type PothiSessionGeometry,
 } from "@/lib/sanctuary/pothi-geometry";
 import { chapterSeed, devanagariNumber, LeafPage } from "./leaf-page";
-import { PalmPlate } from "./palm-plate";
+import { PalmPlate, hasPlateContent } from "./palm-plate";
 import { SealedLeaf } from "./sealed-leaf";
 import styles from "./pothi-book.module.css";
 
@@ -263,6 +263,16 @@ const CHEVRON_PATH = "M 14.6 4.8 L 7.4 12 L 14.6 19.2";
 /** How far the verso's seed is moved off its recto's, so one sheet does not tear twice the same way. */
 const VERSO_SEED_OFFSET = 313;
 
+/**
+ * How far the plate's seed is moved off the written leaf's.
+ *
+ * The two sheets lie one above the other on a phone, so a shared seed would put
+ * two identical sets of bites in the reader's eye at once — the one place in
+ * this book where the tearing would read as a repeated asset rather than as
+ * paper. A different prime from the verso's, for the same reason.
+ */
+const PLATE_SEED_OFFSET = 577;
+
 /** The verso's rule, narrower than the leaf's own so the two do not rhyme. */
 const VERSO_DIVIDER_WIDTH = 180;
 
@@ -333,6 +343,38 @@ function leafAngleDeg(index: number, current: number, drag: number | null): numb
 function foldShadow(angleDeg: number): number {
   const turned = Math.min(Math.abs(angleDeg) / HALF_TURN_DEG, 1);
   return 1 - Math.abs(turned - 0.5) * 2;
+}
+
+/** The quarter turn at which a sheet is edge-on and the face toward the reader changes. */
+const EDGE_ON_DEG = HALF_TURN_DEG / 2;
+
+/**
+ * Which face of this leaf is turned toward the reader at this angle.
+ *
+ * WHY THIS IS COMPUTED RATHER THAN LEFT TO `backface-visibility`.
+ *
+ * Hiding the away-facing side is exactly what `backface-visibility: hidden`
+ * exists for, and that is what this book used until a capture showed the
+ * material missing from every leaf: the parchment rendered as bare dark ground
+ * with the gold linework of the plate floating on it, no sheet underneath.
+ *
+ * The cause is not the rotation. A leaf resting at 0deg — no turn at all — lost
+ * its parchment just as completely as one at -180. Under a `preserve-3d`
+ * ancestor, Chromium drops any descendant that needs its own render surface
+ * inside a `backface-visibility: hidden` box, and a <Parchment> is nothing but
+ * such descendants: a filtered tear layer and four blended material layers. The
+ * text on the leaf has no surface of its own, so it survived — which is why the
+ * failure looked like ink hovering on the ground rather than like a blank page.
+ * Measured on a real capture: the sheet's own background computed to the
+ * parchment tone and painted at (3, 4, 3).
+ *
+ * So the swap is decided here, where the angle already lives, and the stylesheet
+ * hides the away face outright. Nothing about the geometry changes — the leaf
+ * still rotates, the verso still passes through edge-on — only the mechanism
+ * that decides which side is seen, which is now one this material can survive.
+ */
+export function faceUp(angleDeg: number): "recto" | "verso" {
+  return Math.abs(angleDeg) < EDGE_ON_DEG ? "recto" : "verso";
 }
 
 /** The custom properties a leaf is positioned with. Numbers and angles only — never a colour. */
@@ -748,6 +790,13 @@ export function PothiBook({
               data-snc-leaf={chapter.numeral}
               data-snc-leaf-state={where}
               data-snc-turning={inFlight ? "true" : undefined}
+              /* Which side the reader is looking at. At rest this is the whole
+                 answer; during a programmatic turn it is the side the leaf will
+                 END on, and the stylesheet steps the swap at the halfway point
+                 the way the fold shadow already peaks there. A drag re-renders
+                 per pointer move, so a dragged leaf swaps at edge-on with no
+                 animation involved at all. */
+              data-snc-face-up={faceUp(angle)}
               /* Only the leaf being read is in the accessibility tree: fifteen
                  chapters announced at once is not a book, it is a wall. */
               aria-hidden={where === "current" ? undefined : true}
@@ -760,8 +809,29 @@ export function PothiBook({
                         hand-off carries neither a crop nor a drawable line, so
                         an unmeasured chapter never gets a frame around nothing. */}
                     <div className={styles.plateSlot}>
-                      {plateId === null ? null : (
-                        <PalmPlate lineId={plateId} geometry={geometry} capabilityTier={capabilityTier} />
+                      {plateId === null || !hasPlateContent(geometry) ? null : (
+                        /* THE PLATE LIES ON A LEAF, and until now it did not.
+                           <PalmPlate> paints no surface of its own — its own
+                           header says the caller supplies one — and this caller
+                           supplied nothing, so on a real capture the measured
+                           creases hung as gold linework on the bare ground of
+                           the room with no paper beneath them. Its own wash and
+                           burn layers made it worse rather than better: both
+                           multiply, and multiplying onto nothing is nothing.
+
+                           `hasPlateContent` above rather than letting the plate
+                           return null inside this leaf: the sheet is raised only
+                           once there is something to lie on it, so the `:empty`
+                           rule on the slot still removes an unmeasured chapter's
+                           frame exactly as it did before. */
+                        <Parchment
+                          tone="aged"
+                          tear="subtle"
+                          seed={seed + PLATE_SEED_OFFSET}
+                          className={styles.plateLeaf}
+                        >
+                          <PalmPlate lineId={plateId} geometry={geometry} capabilityTier={capabilityTier} />
+                        </Parchment>
                       )}
                     </div>
                     <LeafPage
