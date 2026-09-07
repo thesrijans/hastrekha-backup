@@ -1,0 +1,193 @@
+/*
+ * ============================================================================
+ * THE SANCTUARY — design-token layer
+ * Source of every value: docs/specs/ui-sanctuary-spec.md §3, §9, §10.
+ * ============================================================================
+ *
+ * WHY THIS FILE EXISTS AS A SECOND LAYER, AND WHY EVERY NAME IS PREFIXED.
+ *
+ * globals.css already ships a committed "holographic scan" palette whose @theme
+ * owns nine --color-* names, and one of them is the reason a prefix is not
+ * optional: --color-ink there is #eaf2f4, a near-white, and it is the body text
+ * colour behind a hundred-odd existing utilities. The sanctuary's ink is
+ * #2A1E12 — the near-black of manuscript ink. Same word, opposite colour. An
+ * unprefixed sanctuary layer would repaint the whole existing product on
+ * import. Spec A1 says the sanctuary is additive only; the `snc-` prefix is
+ * what makes that true mechanically rather than by good intentions, so
+ * `text-snc-ink` (manuscript) and `text-ink` (instrument chrome) can coexist in
+ * one tree with neither one moving.
+ *
+ * WHY `@theme static` AND NOT PLAIN `@theme`.
+ *
+ * Tailwind v4 drops any theme variable that no generated utility references
+ * (measured against tailwindcss 4.3.3, not assumed). Most of this layer is read
+ * as `var(--…)` from inline styles, SVG presentation attributes and
+ * framer-motion values — places the compiler cannot scan — so plain `@theme`
+ * would silently emit nothing and every reader would fall back to its default.
+ * `static` forces all of it into :root. The flag is parsed per @theme block, so
+ * the existing block in globals.css keeps its default pruning untouched.
+ *
+ * WHY THE NON-COLOUR SCALARS LIVE HERE TOO.
+ *
+ * The stroke ladder, the easings, the parallax clamps, the flicker range and
+ * the dust drift are numbers that several future components must agree on
+ * exactly. One place to read them from is the only way that agreement survives
+ * more than one author.
+ *
+ * Nothing below was invented. test/sanctuary-tokens.test.ts carries the spec's
+ * own table and fails on drift, on an extra colour, and on a dashed stroke.
+ */
+
+@theme static {
+  /* --------------------------------------------------------------------- */
+  /* GROUND — the dark the whole sanctuary is carved out of. stone-800 is   */
+  /* the primary ground and is always grained, never flat.                  */
+  /* --------------------------------------------------------------------- */
+  --color-snc-stone-900: #0A0806; /* deepest ground, vignette core */
+  --color-snc-stone-800: #0D0B09; /* primary ground (grain texture, never flat) */
+  --color-snc-stone-700: #16120D; /* raised panels */
+  --color-snc-obsidian: #1C1712; /* nav rail, glass panels over stone */
+
+  /* --------------------------------------------------------------------- */
+  /* GOLD — all linework is gold-500; 400 is the foil / active highlight,   */
+  /* 600 is the engraved shadow. gold-dust is the only translucent member   */
+  /* (it is gold-500 at 0.12 alpha), so haze and particles cannot drift to  */
+  /* some other gold.                                                       */
+  /* --------------------------------------------------------------------- */
+  --color-snc-gold-400: #E8C56A; /* foil highlight, active state */
+  --color-snc-gold-500: #C9A24B; /* primary gold (all linework) */
+  --color-snc-gold-600: #8A6A2A; /* engraved shadow */
+  --color-snc-gold-dust: rgba(201, 162, 75, 0.12); /* particle, haze */
+
+  /* --------------------------------------------------------------------- */
+  /* LEAF — the manuscript. ink here is DARK; see the header note on why    */
+  /* that name had to be namespaced.                                        */
+  /* --------------------------------------------------------------------- */
+  --color-snc-parchment: #D9C39A; /* leaf base */
+  --color-snc-parch-edge: #B8A075; /* aged edge burn */
+  --color-snc-ink: #2A1E12; /* manuscript body text */
+  --color-snc-ink-red: #8B1E1E; /* marginalia, wax seal, citations */
+
+  /* --------------------------------------------------------------------- */
+  /* LIGHT — one warm point source per scene (flame core plus falloff), and */
+  /* every shadow, rim and highlight must agree with it. moon is the ONLY   */
+  /* second light allowed: cold moonlight from a window, at or below the    */
+  /* intensity ceiling immediately below.                                   */
+  /* --------------------------------------------------------------------- */
+  --color-snc-moon: #2B3A52; /* cold rim light, window, night sky */
+  --color-snc-flame: #FFB347; /* candle core */
+  --color-snc-flame-warm: #E08A2E; /* candle falloff */
+
+  /* The ceiling on that second light, from the light-discipline rule: 25%.
+   * A token rather than a comment so a moonlit scene cannot quietly become a
+   * two-key-light scene. */
+  --snc-moonlight-max-intensity: 0.25;
+
+  /* --------------------------------------------------------------------- */
+  /* THE STROKE LADDER — only two rungs exist.                              */
+  /*                                                                        */
+  /* SOLID STROKES ONLY, NEVER DASHED, ANYWHERE IN THE PRODUCT. There is no */
+  /* dashed rung, no dotted rung, and no token here that could make one.    */
+  /* The scan route animates a draw-on with stroke-dasharray (.hr-draw in   */
+  /* globals.css), and that is exactly the inheritance this layer has to    */
+  /* defend against: a sanctuary stroke rendered inside, or after, anything */
+  /* that set a dash pattern must still come out solid. Hence the explicit  */
+  /* `stroke-dasharray: none` in both classes at the foot of this file.     */
+  /* --------------------------------------------------------------------- */
+  --snc-stroke-secondary-width: 1px;
+  --snc-stroke-secondary-opacity: 0.35;
+  --snc-stroke-active-width: 2px;
+  --snc-stroke-active-opacity: 1;
+
+  /* The "soft outer glow" the active rung carries, as one reusable value.
+   * Layered drop-shadow rather than an SVG <filter>: drop-shadow follows the
+   * alpha of the shape, so a 2px stroke blooms instead of its bounding box.
+   * Every layer is gold-dust — the spec's own haze of the same gold the stroke
+   * is drawn in — so the glow can never introduce a fourth gold. Only the
+   * three blur radii are chosen here: they are the softness, and the stacking
+   * is what lets 0.12 alpha read at all. */
+  --snc-stroke-active-glow: drop-shadow(0 0 2px var(--color-snc-gold-dust))
+    drop-shadow(0 0 6px var(--color-snc-gold-dust))
+    drop-shadow(0 0 14px var(--color-snc-gold-dust));
+
+  /* --------------------------------------------------------------------- */
+  /* MOTION — slow and heavy. NOTHING BOUNCES, NOTHING SPRINGS: this easing */
+  /* never overshoots 1, and there is deliberately no spring or overshoot   */
+  /* token here for anyone to reach for. 400–800 ms for interface moves,    */
+  /* 1.2–2.0 s for camera moves, and nothing between them is a third        */
+  /* category.                                                              */
+  /* --------------------------------------------------------------------- */
+  --snc-ease: cubic-bezier(.16, 1, .3, 1);
+  --snc-duration-fast: 400ms;
+  --snc-duration-slow: 800ms;
+  --snc-duration-camera-min: 1200ms; /* camera moves are 1.2–2.0 s */
+  --snc-duration-camera-max: 2000ms;
+
+  /* --------------------------------------------------------------------- */
+  /* PARALLAX CLAMPS — the hard ceiling on layer travel. Desktop and tablet */
+  /* parallax, on pointer AND device tilt, is 12 px maximum; mobile         */
+  /* parallax is tilt-driven and clamped tighter, to 8 px, because a        */
+  /* hand-held device supplies far more tilt than a scene can absorb before */
+  /* the plates read as sliding cards instead of depth.                     */
+  /* --------------------------------------------------------------------- */
+  --snc-parallax-max-desktop: 12px;
+  --snc-parallax-max-mobile: 8px;
+
+  /* --------------------------------------------------------------------- */
+  /* CANDLE FLICKER — 2–4 Hz, 4% opacity swing, NEVER RHYTHMIC. The range   */
+  /* is the point: a flicker driven at one fixed frequency reads as a       */
+  /* blinking light, so a consumer must resample somewhere inside these     */
+  /* bounds instead of picking a favourite. The periods are the same two    */
+  /* numbers in the unit CSS animations want (1000 / Hz), and they cross    */
+  /* over — the FASTEST flicker, 4 Hz, is the SHORTEST period, 250 ms.      */
+  /* --------------------------------------------------------------------- */
+  --snc-flicker-hz-min: 2;
+  --snc-flicker-hz-max: 4;
+  --snc-flicker-opacity-delta: 0.04;
+  --snc-flicker-period-min: 250ms; /* 1000 / 4 Hz */
+  --snc-flicker-period-max: 500ms; /* 1000 / 2 Hz */
+
+  /* --------------------------------------------------------------------- */
+  /* DEPTH — the near dust layer of the three-or-more parallax layers every */
+  /* screen owes. Unitless because it is a per-FRAME displacement, not a    */
+  /* length: a consumer multiplies it by elapsed frames, and anything that  */
+  /* hands it straight to a CSS length has misread it. At 0.02 px/frame the */
+  /* drift is roughly 1.2 px per second at 60 fps — deliberately under the  */
+  /* threshold where the eye starts tracking an individual mote.            */
+  /* --------------------------------------------------------------------- */
+  --snc-dust-drift-px-per-frame: 0.02;
+}
+
+/*
+ * The stroke ladder as the two classes that actually render it.
+ *
+ * In @layer components so a Tailwind utility still wins over them: these are
+ * the default rung, not a lock.
+ *
+ * `stroke-opacity`, not `opacity`: the ladder's 0.35 is the weight of the LINE.
+ * Plain `opacity` would also fade any fill on the same node, and would
+ * composite the active rung's glow along with the stroke, which is a different
+ * picture from the one specified.
+ *
+ * `stroke-dasharray: none` on both is load-bearing, not tidiness. Stroke
+ * properties inherit, and this app already ships a dash-driven draw-on
+ * animation in globals.css; without this declaration a sanctuary stroke nested
+ * under it would inherit a dash pattern and quietly break the "solid strokes
+ * only, never dashed anywhere" rule in the one place nobody would think to
+ * look.
+ */
+@layer components {
+  .snc-stroke-secondary {
+    stroke-width: var(--snc-stroke-secondary-width);
+    stroke-opacity: var(--snc-stroke-secondary-opacity);
+    stroke-dasharray: none;
+    filter: none; /* the glow belongs to the active rung alone */
+  }
+
+  .snc-stroke-active {
+    stroke-width: var(--snc-stroke-active-width);
+    stroke-opacity: var(--snc-stroke-active-opacity);
+    stroke-dasharray: none;
+    filter: var(--snc-stroke-active-glow);
+  }
+}
