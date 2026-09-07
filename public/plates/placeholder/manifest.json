@@ -1,0 +1,31 @@
+{
+  "id": "placeholder",
+  "alt": "Sanctuary stone wall in candlelight — a placeholder ground until the Blender plates are rendered.",
+  "layer": "far",
+  "densities": [
+    {
+      "scale": 1,
+      "width": 640,
+      "height": 360,
+      "avif": "/plates/placeholder/placeholder-1x.avif",
+      "webp": "/plates/placeholder/placeholder-1x.webp",
+      "bytes": 1333
+    },
+    {
+      "scale": 2,
+      "width": 1280,
+      "height": 720,
+      "avif": "/plates/placeholder/placeholder-2x.avif",
+      "webp": "/plates/placeholder/placeholder-2x.webp",
+      "bytes": 2790
+    },
+    {
+      "scale": 3,
+      "width": 1920,
+      "height": 1080,
+      "avif": "/plates/placeholder/placeholder-3x.avif",
+      "webp": "/plates/placeholder/placeholder-3x.webp",
+      "bytes": 4221
+    }
+  ]
+}

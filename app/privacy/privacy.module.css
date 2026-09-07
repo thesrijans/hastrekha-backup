@@ -1,0 +1,203 @@
+/*
+ * ============================================================================
+ * /privacy — the sanctuary token layer, applied to one existing route.
+ * Every value here is read from app/sanctuary.css (spec §3). Nothing invented.
+ * ============================================================================
+ *
+ * WHY A MODULE EXISTS AT ALL, WHEN THE BRIEF SAYS "PREFER UTILITIES".
+ *
+ * Colour, type scale, spacing and the leaf's fill are all utilities in
+ * page.tsx — `bg-snc-stone-800`, `text-snc-gold-400`, `bg-snc-parchment`,
+ * `text-snc-ink`, `text-snc-ink-red`. What is left over is the set of things a
+ * utility cannot say without either inventing a hex or writing an unreadable
+ * arbitrary value:
+ *
+ *   1. @keyframes. Tailwind ships none that fit, and the entrance is the only
+ *      place --snc-ease and --snc-duration-slow become observable on this page.
+ *   2. Multi-stop gradients (the warm haze, the vignette, the leaf's bloom).
+ *   3. color-mix() against a token, which is how the stroke ladder's 0.35 is
+ *      expressed on a CSS *border* — .snc-stroke-secondary sets stroke-opacity
+ *      and so only reaches SVG. The SVG rule under the title does use that
+ *      class; these borders are the same two numbers read from the same two
+ *      tokens, so the ladder stays single-source.
+ *
+ * SCOPE. This file is imported by app/privacy/page.tsx and nothing else. It
+ * adds no global rule, touches no existing selector, and every class is
+ * hashed by CSS Modules, so /terms — the byte-identical twin of this page,
+ * deliberately left unskinned — is the live "before" screenshot.
+ *
+ * CASCADE NOTE. Module CSS is unlayered and therefore beats Tailwind's
+ * @layer utilities for the *same* property. Nothing below sets a property that
+ * page.tsx also sets by utility; the split is deliberate, not incidental.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* DEPTH — three strata over stone-800, painted back to front.            */
+/*                                                                        */
+/* This is a static document, not a scene, so it claims no parallax: §3's  */
+/* ">= 3 parallax layers" belongs to the plate-driven screens. What it does */
+/* owe is "never flat", and stone-800 alone is flat. The strata are:       */
+/* (1) the stone-800 fill on <main>, (2) .haze, (3) .vignette — plus the   */
+/* 4% grain body::after already lays over every route from globals.css,    */
+/* which is why no grain is repeated here (two grains would read as noise).*/
+/* ---------------------------------------------------------------------- */
+
+/*
+ * The one warm point source, and the reason every shadow on this page falls
+ * downward. It sits above the top edge at centre, so the title's engraved
+ * shadow, the leaf's bloom and the leaf's cast shadow all agree with it.
+ * gold-dust is the spec's own haze token and is already 0.12 alpha, so the
+ * softness is in the token, not in an opacity someone chose here.
+ */
+.haze {
+  background-image: radial-gradient(54rem 30rem at 50% -8rem, var(--color-snc-gold-dust), transparent 70%);
+}
+
+/*
+ * stone-900 as the vignette, per its own token note ("deepest ground,
+ * vignette core"). Against stone-800 this is a three-value darkening — barely
+ * nameable in isolation and exactly right as the thing that stops the ground
+ * reading as a flat swatch. No second light: the moonlight allowance is not
+ * spent on this page.
+ */
+.vignette {
+  background-image: radial-gradient(122% 78% at 50% 6%, transparent 38%, var(--color-snc-stone-900) 100%);
+}
+
+/* ---------------------------------------------------------------------- */
+/* TYPE                                                                    */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Cinzel, §4's display Latin. font-weight is pinned to 600 because that is the
+ * only cut lib/sanctuary/fonts.ts loads — leaving it to `font-semibold` would
+ * work today and silently synthesise a fake bold the day someone changes the
+ * utility. Positive tracking because Cinzel is an inscriptional face whose
+ * caps were cut for spacing; the old `tracking-tight` was correct for Space
+ * Grotesk and wrong for this.
+ *
+ * The text-shadow is the --gold-600 "engraved shadow" token doing its one job:
+ * gold-400 foil laid on stone, lit from above by .haze, so the shadow it
+ * throws is 1px BELOW. Reversing it would light the page from underneath.
+ */
+.title {
+  font-family: var(--font-snc-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 0 var(--color-snc-gold-600);
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE LEAF — the only parchment surface on the page.                      */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Cormorant Garamond (§4 body serif, "manuscript body text on leaves") is set
+ * once here and inherited by the note and the list, so no child has to know
+ * the variable name. old-style figures are switched on even though today's
+ * copy has no digits: §4 requires them on anything on a leaf, and the day a
+ * date or a clause number is added it must not arrive in lining figures.
+ *
+ * Three separate warm agreements with the single light above:
+ *   border    — parch-edge, at the secondary rung's 1px, the "aged edge burn".
+ *   inset     — the same parch-edge bled inward, so the leaf darkens at its
+ *               rim the way a real leaf does rather than ending at a line.
+ *   bloom     — flame-warm ("candle falloff") at 12% from above the top edge.
+ *   cast      — stone-900 below, because the light is above. This is the only
+ *               shadow that leaves the leaf, and it lands on the deepest
+ *               ground token, not on an invented black.
+ */
+.leaf {
+  font-family: var(--font-snc-serif);
+  font-variant-numeric: oldstyle-nums;
+  border: var(--snc-stroke-secondary-width) solid var(--color-snc-parch-edge);
+  border-radius: 2px;
+  background-image: radial-gradient(
+    130% 88% at 50% -10%,
+    color-mix(in srgb, var(--color-snc-flame-warm) 12%, transparent),
+    transparent 62%
+  );
+  box-shadow:
+    inset 0 0 3rem color-mix(in srgb, var(--color-snc-parch-edge) 60%, transparent),
+    0 1.25rem 2.5rem color-mix(in srgb, var(--color-snc-stone-900) 62%, transparent);
+}
+
+/*
+ * The draft note, as the leaf's head-note rather than a page subtitle.
+ *
+ * WHY IT MOVED ONTO THE LEAF: §3 assigns --ink-red to "marginalia", and this
+ * sentence is marginalia — a scribe's note about the state of the text, not
+ * part of it. ink-red is unusable on stone (#8B1E1E on #0D0B09 measures
+ * 2.15:1, far under any threshold) and comfortable on parchment (5.31:1). The
+ * leaf is therefore the only surface in the design where the token can do the
+ * job the spec gives it, so the note goes where the ink is legible. DOM order
+ * is unchanged: h1, then this, then the list.
+ */
+.headNote {
+  letter-spacing: 0.06em;
+  padding-bottom: 1rem;
+  border-bottom: var(--snc-stroke-secondary-width) solid
+    color-mix(in srgb, var(--color-snc-ink-red) calc(var(--snc-stroke-secondary-opacity) * 100%), transparent);
+}
+
+/*
+ * Manuscript ruling between clauses, replacing the old `gap-3`. Red ruling is
+ * the historical convention and, more to the point here, it is the second job
+ * §3 gives --ink-red. Width and opacity are read from the stroke ladder's own
+ * two tokens rather than retyped, so the rule is 1px @ 0.35 by construction —
+ * and solid, because the ladder has no dashed rung and nothing on this page
+ * may introduce one.
+ */
+.leafList > li + li {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: var(--snc-stroke-secondary-width) solid
+    color-mix(in srgb, var(--color-snc-ink-red) calc(var(--snc-stroke-secondary-opacity) * 100%), transparent);
+}
+
+/* ---------------------------------------------------------------------- */
+/* MOTION — one move, slow and heavy.                                      */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * 10px of rise and a fade. --snc-duration-slow is 800ms, the top of §3's
+ * 400-800ms band, and --snc-ease is the spec's cubic-bezier(.16,1,.3,1),
+ * which is monotonic — it cannot overshoot, so nothing bounces and nothing
+ * springs even if someone later raises the distance.
+ *
+ * WHY `both` AND NO `opacity: 0` IN THE BASE RULE: if this stylesheet ever
+ * fails to load, the elements must still be visible. Starting the fade inside
+ * the keyframe rather than on the element means a missing animation degrades
+ * to "no animation", never to "invisible legal text".
+ *
+ * Reduced motion is already handled globally — globals.css forces
+ * animation-duration to 0.01ms with animation-iteration-count 1, and `both`
+ * pins the end state — so this needs no reduced-motion branch of its own. The
+ * stagger below is the one thing that would still be felt, which is why the
+ * delay is fenced behind no-preference instead of shipped unconditionally.
+ */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.625rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.riseTitle {
+  animation: riseIn var(--snc-duration-slow) var(--snc-ease) both;
+}
+
+.riseLeaf {
+  animation: riseIn var(--snc-duration-slow) var(--snc-ease) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .riseLeaf {
+    animation-delay: 160ms;
+  }
+}
