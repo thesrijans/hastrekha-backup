@@ -41,10 +41,18 @@ import styles from "./sanctuary-header.module.css";
  * change of information architecture: the day a fifth destination is added to
  * the product header it must be added here too, and a reader comparing the two
  * files should be able to see the correspondence without reading any JSX.
+ *
+ * THE FIRST TWO POINT INTO THE SANCTUARY, and until this pass they did not.
+ * "Reading" went to /read and "Scan" to /scan — the pre-sanctuary surfaces —
+ * so the nav on a sanctuary page was a set of doors out of it. The information
+ * architecture is unchanged, which is exactly the point: the same four
+ * destinations, each resolved to the room this skin actually has. Privacy and
+ * Terms have no sanctuary counterpart and are left alone rather than given a
+ * fabricated one.
  */
 export const SANCTUARY_NAV = [
-  { href: "/read", label: "Reading" },
-  { href: "/scan", label: "Scan" },
+  { href: "/read/pothi", label: "Reading" },
+  { href: "/scan/chamber", label: "Scan" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ] as const;

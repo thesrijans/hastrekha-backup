@@ -134,7 +134,13 @@
   .eyebrow {
     font-family: var(--font-snc-devanagari);
     font-size: 0.86rem;
-    letter-spacing: 0.02em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED. Tracking inserts space between
+     * the glyphs a conjunct is assembled from, so it does not loosen the
+     * script, it takes it apart. The header wordmark हस्तरेखा was
+     * captured on a real page rendering as "ह स्त रे खा".
+     * The declared tracking is removed here with the rest. The value came from the Latin voice this
+     * rule was written beside, where tracking is correct and stays. */
+    letter-spacing: normal;
     line-height: 1.35;
     color: var(--color-snc-gold-400);
   }
@@ -466,7 +472,13 @@
     text-align: end;
     font-family: var(--font-snc-devanagari);
     font-size: 0.82rem;
-    letter-spacing: 0.08em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED. Tracking inserts space between
+     * the glyphs a conjunct is assembled from, so it does not loosen the
+     * script, it takes it apart. The header wordmark हस्तरेखा was
+     * captured on a real page rendering as "ह स्त रे खा".
+     * The declared tracking is removed here with the rest. The value came from the Latin voice this
+     * rule was written beside, where tracking is correct and stays. */
+    letter-spacing: normal;
     color: var(--color-snc-gold-400);
   }
 }

@@ -123,7 +123,12 @@ interface GroundModule {
 }
 
 interface HeaderModule {
-  readonly SanctuaryHeader: (props: { readonly activeHref?: "/read" | "/scan" | "/privacy" | "/terms" | null }) => ReactElement;
+  /* The union mirrors SANCTUARY_NAV's hrefs. The first two are the SANCTUARY
+     routes: the nav used to point "Reading" at /read and "Scan" at /scan, which
+     made the nav on a sanctuary page a set of doors out of it. */
+  readonly SanctuaryHeader: (props: {
+    readonly activeHref?: "/read/pothi" | "/scan/chamber" | "/privacy" | "/terms" | null;
+  }) => ReactElement;
   readonly SANCTUARY_NAV: readonly { readonly href: string; readonly label: string }[];
   readonly SANCTUARY_WORDMARK_LATIN: string;
   readonly SANCTUARY_WORDMARK_DEVANAGARI: string;
@@ -415,7 +420,7 @@ ok(count(HEADER_CSS, "var(--color-snc-") >= 6, "so does every paint in the heade
 /* 8. THE HEADER — GOLD, ENGRAVED, AND CARRYING NO INSTRUMENT ACCENT         */
 /* ======================================================================== */
 
-const headerHtml = renderToString(createElement(header.SanctuaryHeader, { activeHref: "/scan" }));
+const headerHtml = renderToString(createElement(header.SanctuaryHeader, { activeHref: "/scan/chamber" }));
 const headerIdle = renderToString(createElement(header.SanctuaryHeader, {}));
 
 /*
@@ -543,14 +548,38 @@ ok(
 /* --- the skin changed; the information architecture did not --- */
 
 {
-  const productOrder = header.SANCTUARY_NAV.map((item) => PRODUCT_HEADER_TSX.indexOf(`href: "${item.href}"`));
+  /*
+   * THE CORRESPONDENCE IS NOW A MAPPING, NOT AN IDENTITY, and that is the point
+   * of this pass rather than a weakening of the check.
+   *
+   * The sanctuary nav used to hold the product's four hrefs verbatim, which made
+   * "Reading" go to /read and "Scan" to /scan — the pre-sanctuary surfaces. A
+   * nav on a sanctuary page whose first two entries lead out of the sanctuary is
+   * a set of doors out of the room the reader is standing in.
+   *
+   * So each sanctuary destination is now the product destination OR A ROOM
+   * INSIDE IT: /read/pothi under /read, /scan/chamber under /scan, and privacy
+   * and terms unchanged because they have no sanctuary counterpart and inventing
+   * one would be worse than sharing the page. The information architecture is
+   * identical — same four, same order — which is exactly what this asserts.
+   */
+  const PRODUCT_ORDER = ["/read", "/scan", "/privacy", "/terms"] as const;
   ok(
-    productOrder.every((at) => at !== -1),
-    "every sanctuary destination is still one of the product header's own — this is a change of material, not of information architecture",
+    PRODUCT_ORDER.every((href) => PRODUCT_HEADER_TSX.includes(`href: "${href}"`)),
+    "the product header still carries the four destinations this variant mirrors",
   );
   ok(
-    productOrder.join() === [...productOrder].sort((x, y) => x - y).join(),
-    "…in the same order, so a reader comparing the two files sees the correspondence without reading any JSX",
+    header.SANCTUARY_NAV.length === PRODUCT_ORDER.length,
+    "the sanctuary nav has the same number of destinations — this is a change of material, not of information architecture",
+  );
+  ok(
+    header.SANCTUARY_NAV.every((item, at) => item.href === PRODUCT_ORDER[at] || item.href.startsWith(`${PRODUCT_ORDER[at]}/`)),
+    "…and each one is the product's own destination or a room inside it, in the same order, so a reader comparing the two files sees the correspondence without reading any JSX",
+  );
+  ok(
+    header.SANCTUARY_NAV.filter((item) => item.href.includes("/")).length === 4 &&
+      !header.SANCTUARY_NAV.some((item) => item.href === "/read" || item.href === "/scan"),
+    "and NEITHER of the first two is the bare pre-sanctuary route any more, which is the defect this replaced",
   );
   ok(
     /"use client"/.test(PRODUCT_HEADER_TSX),

@@ -198,11 +198,42 @@ ok(
   "the token layer sets both the fill and its Safari prefix to transparent — the prefix is not optional, it is the difference between metal and nothing",
 );
 
-/* The emboss: 1px dark BELOW, a hairline light ABOVE. Reversed, the letters
- * look pressed into the page rather than struck out of it. */
+/* ---------------------------------------------------------------------------
+ * THE EMBOSS, AND THE THREE SIZES IT HAS TO SURVIVE
+ *
+ * It used to be a pair: an opaque stone-900 lip 1px BELOW the glyph and a pale
+ * hairline 1px above. Measured on real captures at three sizes, the share of
+ * glyph INTERIOR pixels (mask eroded by one pixel, so antialiasing is excluded)
+ * still at or above the bronze end of the ramp was 58% at hero, 58% at section
+ * and 58% at label — a bright outline around a dark interior at every size,
+ * which is the "hollow, not metal" the hero was reported as. With the lip gone
+ * and the highlight expressed in `em`: 92% / 99% / 99%.
+ *
+ * These four assertions pin the SHAPE that produced those numbers, because the
+ * numbers themselves need a browser and this suite has none. Each one is a
+ * separate way the fix could be undone by a later edit that looked reasonable.
+ * ------------------------------------------------------------------------- */
 const emboss = /text-shadow:([^;]+);/.exec(goldTextRule)?.[1] ?? "";
-ok(/0\s+1px\s+0\s+var\(--color-snc-stone-900\)/.test(emboss), "the emboss drops a warm near-black lip 1px BELOW the glyph, agreeing with the one light source above the scene");
-ok(/0\s+-1px\s+0\s+color-mix\([^)]*gold-ramp-pale/.test(emboss), "…and catches a pale hairline 1px ABOVE it, which is what makes the letterform read as raised metal");
+ok(
+  !/stone-900/.test(emboss),
+  "NO dark lip: an opaque near-black shadow under a hairline inscriptional stroke covers most of the stroke, and did so at every size rather than only at small ones",
+);
+ok(
+  /0\s+-0?\.\d+em\s+0\s+color-mix\([^)]*gold-ramp-pale/.test(emboss),
+  "the pale hairline is still there and still ABOVE the glyph, which is what makes the letterform read as raised rather than pressed in",
+);
+ok(
+  !/-?\d+px/.test(emboss),
+  "and its offset is in em, never px: a fixed pixel emboss is 7% of a 14px em and 1.5% of a 68px one, so a value tuned for a title is a smear on a caption",
+);
+{
+  const offset = /-(0?\.\d+)em/.exec(emboss)?.[1] ?? "";
+  const em = Number(offset);
+  ok(
+    em > 0 && em <= 0.03,
+    `the offset stays inside the measured window (${offset}em): above about 0.03em the highlight starts eating the glyph it is meant to catch light on`,
+  );
+}
 ok(
   (MODULE_CSS.match(/text-shadow/g) ?? []).length === 1 && /text-shadow:\s*none/.test(MODULE_CSS_HIGH_CONTRAST),
   "the module touches the emboss exactly once, to remove it in high contrast — it never redefines it",

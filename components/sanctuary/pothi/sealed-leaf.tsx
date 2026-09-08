@@ -71,13 +71,22 @@ export const SEALED_LEAF_UNOPENED_HI = "यह पत्ता अभी खु�
 /** The rescan link's visible label, in the same Devanagari voice as the line above it. */
 export const SEALED_LEAF_RESCAN_LABEL = "दोबारा स्कैन करें";
 
-/** Where the rescan link goes. /scan is the live scanner; nothing else can refill a measured gap. */
-export const SEALED_LEAF_RESCAN_PATH = "/scan";
+/**
+ * Where the rescan link goes.
+ *
+ * THE CHAMBER, NOT /scan. This pointed at the pre-sanctuary scanner, which is
+ * the same pipeline wearing the old cyan instrument chrome — so a reader who
+ * followed a sealed leaf's invitation was walked out of the sanctuary by the one
+ * control the sanctuary offers them. The chamber consumes the identical hook and
+ * reads the identical `?rescan=` parameter, so nothing about the measurement
+ * changes; only the room the reader is asked to stand in.
+ */
+export const SEALED_LEAF_RESCAN_PATH = "/scan/chamber";
 
 /**
  * The query parameter that carries WHICH seal sent the reader to the scanner.
  *
- * THE MECHANISM, STATED PLAINLY: the link is `/scan?rescan=<SealReason.code>` — a stable machine
+ * THE MECHANISM, STATED PLAINLY: the link is `/scan/chamber?rescan=<SealReason.code>` — a stable machine
  * code from `SEAL_CODES`, never the capture sentence itself. Three reasons, and the third is the
  * one that decides it:
  *
@@ -204,14 +213,28 @@ export function SealedLeaf({
           capability={capability}
         />
 
-        <p className={styles.unopened}>{SEALED_LEAF_UNOPENED_HI}</p>
-        <p className={styles.reason}>{reason.hi}</p>
+        {/*
+          `lang="hi"` on both, and it was missing on both. Measured on a real
+          page, these two resolved to lang="en" by inheritance while carrying
+          Devanagari — so a screen reader set to English pronounces the script
+          with an English voice, and a browser picking a fallback face has no
+          reason to choose a Devanagari one. It is the same defect as the
+          tracking, one layer up: the markup did not say which script this is.
+          `reason.hi` is named for the language it is in; the attribute now
+          agrees with the field.
+        */}
+        <p className={styles.unopened} lang="hi">
+          {SEALED_LEAF_UNOPENED_HI}
+        </p>
+        <p className={styles.reason} lang="hi">
+          {reason.hi}
+        </p>
         <p className={styles.detail}>{reason.detail}</p>
 
         {href === null ? null : (
           <>
             <p className={styles.instruction}>{reason.capture}</p>
-            <Link className={styles.rescan} href={href}>
+            <Link className={styles.rescan} href={href} lang="hi">
               {SEALED_LEAF_RESCAN_LABEL}
             </Link>
           </>

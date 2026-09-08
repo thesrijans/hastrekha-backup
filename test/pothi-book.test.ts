@@ -440,8 +440,8 @@ ok(
     "and NOT ONE chapter leaf: fifteen seals would read as fifteen separate failures of one reading, where the true fact is a single one",
   );
   ok(
-    empty.includes(`/scan?rescan=${POTHI_NO_READING_SEAL_CODE}`),
-    "the one control on it goes to /scan, because a scan is genuinely what fills this gap — the seal carries a capture instruction for exactly that reason",
+    empty.includes(`/scan/chamber?rescan=${POTHI_NO_READING_SEAL_CODE}`),
+    "the one control on it goes to the CHAMBER, because a scan is genuinely what fills this gap — and because a sanctuary route whose only control leaves the sanctuary is a door out of it",
   );
   ok(
     withoutComments(storeSource).includes("hastrekha:pothi-reading:v1") &&
@@ -547,8 +547,8 @@ ok(
   "and the sprite is mounted BEFORE anything that references it — a url(#…) resolving to nothing renders unfiltered and silent, which looks like a design decision",
 );
 ok(
-  routeCode.includes('activeHref="/read"'),
-  "the header is told which route it is on, because it is a server component and cannot ask usePathname()",
+  routeCode.includes('activeHref="/read/pothi"'),
+  "the header is told which route it is on, because it is a server component and cannot ask usePathname() — and the route it names is the SANCTUARY one, so the nav marks the page the reader is actually standing on rather than the pre-sanctuary page of the same name",
 );
 ok(
   !routeCode.includes('"use client"'),
@@ -586,8 +586,12 @@ ok(
     "a programmatic turn steps the swap at the halfway point: the attribute already holds the side the leaf will END on, so left alone the far face would appear the instant the turn began",
   );
   ok(
-    count(bookCss, "content-visibility: hidden") === 2,
-    "every hidden leaf skips painting outright, both the settled turned one and the three off-stage states: `visibility` alone left fourteen sheets' worth of multiply reaching the ground, measured as a hard-edged rectangle at roughly half the luminance of the ground beside it",
+    count(bookCss, "content-visibility: hidden") === 3,
+    "every hidden sheet skips painting outright — the three off-stage leaf states, the settled turned leaf, and the AWAY FACE of the leaf being read: `visibility` alone left fourteen sheets' worth of multiply reaching the ground, measured first as a hard-edged rectangle at roughly half the luminance of the ground beside it, and then, once that was fixed, as a residual 2.5% lift over the away face's own footprint",
+  );
+  ok(
+    /:not\(\[data-snc-turning="true"\]\)\[data-snc-face-up=/.test(bookCss),
+    "and the away face's version is scoped away from a leaf mid-turn: at the halfway point that face BECOMES the near one, and a face that had skipped rendering its contents would arrive blank",
   );
   ok(
     /\[data-snc-leaf-state="turned"\]:not\(\[data-snc-turning="true"\]\)/.test(bookCss),

@@ -270,6 +270,25 @@
   }
 
   /*
+   * AND THE AWAY FACE SKIPS PAINTING, for the same reason the off-stage leaf
+   * states above do: `visibility: hidden` does not stop a subtree whose layers
+   * blend and filter from reaching the ground behind it in Chromium. Measured
+   * at 1440px with the away faces removed outright, two of five sample points
+   * over their footprint lifted by about 2.5% of luminance — far below the band
+   * that made this worth chasing in the first place, and still a tint that is
+   * there for no reason.
+   *
+   * Scoped away from a leaf mid-turn, and that scoping is the whole care in
+   * this rule: during a programmatic turn the away face BECOMES the near one at
+   * the halfway point, and a face that had skipped rendering its contents would
+   * arrive blank. The turn keeps the plain `visibility` mechanism it had.
+   */
+  .leaf:not([data-snc-turning="true"])[data-snc-face-up="recto"] .verso,
+  .leaf:not([data-snc-turning="true"])[data-snc-face-up="verso"] .recto {
+    content-visibility: hidden;
+  }
+
+  /*
    * A PROGRAMMATIC TURN, where the attribute cannot help on its own.
    *
    * A click sets the leaf's final angle in one render and lets the transition
@@ -378,7 +397,13 @@
     text-align: end;
     font-family: var(--font-snc-devanagari);
     font-size: 0.82rem;
-    letter-spacing: 0.08em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED. Tracking inserts space between
+     * the glyphs a conjunct is assembled from, so it does not loosen the
+     * script, it takes it apart. The header wordmark हस्तरेखा was
+     * captured on a real page rendering as "ह स्त रे खा".
+     * On this element it resolved to 1.0496px. The value came from the Latin voice this
+     * rule was written beside, where tracking is correct and stays. */
+    letter-spacing: normal;
     color: var(--color-snc-gold-400);
   }
 
@@ -406,13 +431,34 @@
   .versoNumeral {
     font-family: var(--font-snc-devanagari);
     font-size: 2rem;
-    letter-spacing: 0.12em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED, and this one is a DIGIT, which is worth
+     * being exact about rather than sweeping into the same sentence.
+     *
+     * The rule exists because tracking inserts space between the glyphs a
+     * conjunct is assembled from, and conjuncts are what come apart: हस्तरेखा
+     * was captured on a real page as "ह स्त रे खा". A Devanagari digit forms no
+     * conjunct, carries no matra and shares no headline, so 0.12em here was
+     * doing no damage that anyone could see.
+     *
+     * It is normalised anyway, and deliberately: the rule this codebase enforces
+     * is absolute — no Devanagari-bearing element resolves to a non-normal
+     * letter-spacing — because that is the only version of it a test can check
+     * without a font engine. An exception for digits would need a per-element
+     * opt-out in markup, and the cost of that machinery is higher than the two
+     * hundredths of an em it would buy back on a folio numeral. */
+    letter-spacing: normal;
   }
 
   .versoTitle {
     font-family: var(--font-snc-devanagari);
     font-size: 1.05rem;
-    letter-spacing: 0.06em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED. Tracking inserts space between
+     * the glyphs a conjunct is assembled from, so it does not loosen the
+     * script, it takes it apart. The header wordmark हस्तरेखा was
+     * captured on a real page rendering as "ह स्त रे खा".
+     * On this element it resolved to 1.008px. The value came from the Latin voice this
+     * rule was written beside, where tracking is correct and stays. */
+    letter-spacing: normal;
     color: color-mix(in oklab, var(--color-snc-ink) 78%, var(--color-snc-parch-edge));
   }
 
@@ -574,13 +620,34 @@
   .readoutNumeral {
     font-family: var(--font-snc-devanagari);
     font-size: 1.05rem;
-    letter-spacing: 0.1em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED, and this one is a DIGIT, which is worth
+     * being exact about rather than sweeping into the same sentence.
+     *
+     * The rule exists because tracking inserts space between the glyphs a
+     * conjunct is assembled from, and conjuncts are what come apart: हस्तरेखा
+     * was captured on a real page as "ह स्त रे खा". A Devanagari digit forms no
+     * conjunct, carries no matra and shares no headline, so 0.12em here was
+     * doing no damage that anyone could see.
+     *
+     * It is normalised anyway, and deliberately: the rule this codebase enforces
+     * is absolute — no Devanagari-bearing element resolves to a non-normal
+     * letter-spacing — because that is the only version of it a test can check
+     * without a font engine. An exception for digits would need a per-element
+     * opt-out in markup, and the cost of that machinery is higher than the two
+     * hundredths of an em it would buy back on a folio numeral. */
+    letter-spacing: normal;
   }
 
   .readoutTitle {
     font-family: var(--font-snc-devanagari);
     font-size: 0.92rem;
-    letter-spacing: 0.05em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED. Tracking inserts space between
+     * the glyphs a conjunct is assembled from, so it does not loosen the
+     * script, it takes it apart. The header wordmark हस्तरेखा was
+     * captured on a real page rendering as "ह स्त रे खा".
+     * The declared tracking is removed here with the rest. The value came from the Latin voice this
+     * rule was written beside, where tracking is correct and stays. */
+    letter-spacing: normal;
     color: color-mix(in oklab, var(--color-snc-gold-500) 70%, transparent);
   }
 

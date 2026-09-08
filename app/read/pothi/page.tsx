@@ -104,7 +104,17 @@ const MASTHEAD_RULE_WIDTH = "20rem";
  * size is the correct mark.
  */
 const DISPLAY_FACE = "[font-family:var(--font-snc-display)]";
-const EYEBROW = "text-[0.8rem] tracking-[0.3em] text-snc-gold-500 [font-family:var(--font-snc-devanagari)]";
+/*
+ * NO `tracking-` UTILITY HERE, and its absence is the fix rather than an
+ * oversight. This line is Devanagari — पोथी — and it carried `tracking-[0.3em]`
+ * copied from the Latin small-caps eyebrows elsewhere in the product. Measured
+ * on a real page that resolved to 3.84px of letter-spacing, and the word came
+ * apart on screen as "पो थी": tracking inserts space between the glyphs a
+ * conjunct and its matra are assembled from, so the script stops being the
+ * script. Devanagari sets its own rhythm through its leading, which is why the
+ * line-height below is generous and the tracking is nothing at all.
+ */
+const EYEBROW = "text-[0.8rem] leading-[1.9] text-snc-gold-500 [font-family:var(--font-snc-devanagari)]";
 const STANDFIRST = "max-w-xl text-[0.95rem] leading-8 text-snc-parch-edge [font-family:var(--font-snc-serif)]";
 
 /** The Devanagari name of the book, above the Latin title — the sanctuary header's own order. */
@@ -123,8 +133,25 @@ const POTHI_TITLE_EN = "The Pothi";
 const POTHI_STANDFIRST =
   "Pandrah adhyaay. Jo patta khul nahi paaya, wo apni wajah khud batata hai.";
 
-/** Where a leaf's back arrow returns to: the reading flow this book is a second view of. */
-const BACK_HREF = "/read";
+/*
+ * NO BACK ARROW ON THIS ROUTE, AND THE ABSENCE IS THE FIX.
+ *
+ * The arrow used to return to `/read`, the pre-sanctuary reading page, which is
+ * the one thing a link out of a sanctuary surface may not do. The obvious repair
+ * is to re-point it at the only other sanctuary room, `/scan/chamber` — and that
+ * is a worse defect than the one it fixes. The control is a chevron labelled
+ * "Wapas", it sits on a leaf of a book, and the room it would lead to is a
+ * camera. A back arrow that misnames its own destination is not navigation.
+ *
+ * <LeafPage> already states the rule this follows, at its own prop: "Omit and no
+ * arrow is drawn — a dead control is worse than none." Nothing is stranded by
+ * it. The sanctuary header above the book carries a labelled Scan that goes to
+ * the chamber, and the wordmark beside it goes home, so the page measured seven
+ * links with the arrow gone.
+ *
+ * The arrow comes back the day the sanctuary has a home or a library to return
+ * to — by passing that route to <PothiClient/>, and nothing else.
+ */
 
 export default function PothiPage(): ReactElement {
   if (process.env.NODE_ENV !== "development") notFound();
@@ -135,7 +162,7 @@ export default function PothiPage(): ReactElement {
       <SanctuaryGround seed={GROUND_SEED} capability="HIGH" />
 
       <div className="mx-auto flex w-full max-w-[84rem] flex-col gap-10 px-4 pb-32 sm:px-8">
-        <SanctuaryHeader activeHref="/read" />
+        <SanctuaryHeader activeHref="/read/pothi" />
 
         <header className="flex flex-col items-center gap-4 pt-16 text-center">
           <span className={EYEBROW} lang="hi">
@@ -148,7 +175,7 @@ export default function PothiPage(): ReactElement {
           <p className={STANDFIRST}>{POTHI_STANDFIRST}</p>
         </header>
 
-        <PothiClient backHref={BACK_HREF} />
+        <PothiClient />
       </div>
     </main>
   );

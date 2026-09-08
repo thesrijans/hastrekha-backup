@@ -436,8 +436,13 @@ export function PalmPlate({
         </svg>
       </div>
 
+      {/* `lang="hi"` on the note below: it is Devanagari, and without the
+          attribute a screen reader set to English pronounces it with an English
+          voice and a browser choosing a fallback face has no reason to pick a
+          Devanagari one — which is exactly what was measured here, the note
+          rendering in Inter. */}
       {measured ? null : (
-        <figcaption className={styles.margin} data-snc-layer="margin">
+        <figcaption className={styles.margin} lang="hi" data-snc-layer="margin">
           {POTHI_PLATE_ORIGINAL_NOT_KEPT}
         </figcaption>
       )}

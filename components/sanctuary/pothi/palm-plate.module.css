@@ -142,16 +142,38 @@
    *
    * Ink-red, which is this design language's marginalia colour (the same token
    * as a citation and the wax), so the sentence reads as something written
-   * beside the plate rather than as an error message under it. Small, and
-   * letter-spaced, because it is an aside; not italic, because Devanagari has no
-   * true italic and a synthesised slant is what makes Devanagari look broken.
+   * beside the plate rather than as an error message under it. Small; not
+   * italic, because Devanagari has no true italic and a synthesised slant is
+   * what makes Devanagari look broken.
+   *
+   * AND NOT LETTER-SPACED EITHER, which is the same argument one step further.
+   * This rule used to carry 0.02em "because it is an aside", and the note it
+   * sets is मूल चित्र सुरक्षित नहीं रखा जाता — every word of it Devanagari, with
+   * three conjuncts in it. Tracking inserts space between the glyphs a conjunct
+   * is assembled from, so it does not loosen the script, it takes it apart.
+   *
+   * This one hid from the first sweep, and how it hid is worth recording: the
+   * rule does not DECLARE the Devanagari face, it inherits it, so a search for
+   * rules that set both the face and a tracking could not see it. That is why
+   * test/sanctuary-devanagari.test.ts renders the components and walks each
+   * Devanagari text node's ancestor chain rather than only reading stylesheets.
    */
   .margin {
     margin: 0;
     color: var(--color-snc-ink-red);
+    /*
+     * THE FACE, STATED, because inheriting it did not work. This rule set no
+     * font-family, and the note it carries — मूल चित्र सुरक्षित नहीं रखा जाता,
+     * every word of it Devanagari — was measured on a real page rendering in
+     * Inter: the Latin sans the product body text uses, drawing Devanagari
+     * through whatever the system happened to substitute. The leaf above it
+     * never set a Devanagari face for it to inherit, so there was nothing to
+     * inherit; the plate simply took the page's default.
+     */
+    font-family: var(--font-snc-devanagari);
     font-size: 0.75rem;
     line-height: 1.5;
-    letter-spacing: 0.02em;
+    letter-spacing: normal;
     opacity: 0.85;
   }
 

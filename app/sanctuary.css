@@ -325,9 +325,37 @@
     -webkit-background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
-    text-shadow:
-      0 1px 0 var(--color-snc-stone-900),
-      0 -1px 0 color-mix(in oklab, var(--color-snc-gold-ramp-pale) 45%, transparent);
+    /*
+     * THE EMBOSS — a pale hairline ABOVE, and nothing below.
+     *
+     * ART-DIRECTION PASS, measured on real captures at three sizes. This was a
+     * pair: an opaque stone-900 lip 1px BELOW the glyph and a pale hairline 1px
+     * above. The lip was the defect. A struck letterform is thin — Cinzel is an
+     * inscriptional face with hairline horizontals — so an opaque near-black
+     * shadow one pixel down covers a large share of every stroke it sits under,
+     * and it does so at EVERY size rather than only at small ones.
+     *
+     * Measured as the share of glyph INTERIOR pixels (the mask eroded by one
+     * pixel, so antialiasing is excluded) still at or above the bronze end of
+     * the ramp:
+     *
+     *                          hero 64px   section 32px   label 14px
+     *   1px lip + 1px pale ....... 58%          58%           58%
+     *   pale hairline only ....... 95%          91%           87%
+     *   THIS (0.02em pale) ....... 92%          99%           99%
+     *
+     * At 58% the letterform is a bright outline around a dark interior, which is
+     * exactly the "hollow, not metal" the hero was reported as — and the run's
+     * horizontal profile was even (106-129 mean luma across ten bands), so the
+     * ramp's dark tails were never the cause.
+     *
+     * The offset is in `em` and not `px`, which is the part that makes this hold
+     * at every size rather than at one: a fixed pixel emboss is 7% of a 14px em
+     * and 1.5% of a 68px one, so a value tuned for a title is a smear on a
+     * caption and a value tuned for a caption is invisible on a title. At
+     * 0.02em it is the same fraction of the letter everywhere.
+     */
+    text-shadow: 0 -0.02em 0 color-mix(in oklab, var(--color-snc-gold-ramp-pale) 45%, transparent);
   }
 
   /*

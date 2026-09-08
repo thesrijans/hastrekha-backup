@@ -47,8 +47,15 @@ export const metadata: Metadata = {
 /** Where the bundle arrives when the reveal beat finishes. */
 const READ_HREF = "/read/pothi";
 
-/** Where the back mark returns to. */
-const BACK_HREF = "/read";
+/**
+ * Where the back mark returns to.
+ *
+ * The book, for the same reason the book's own back arrow points here: these two
+ * rooms are the whole sanctuary until Home and Library are built, and a reader
+ * leaving the chamber is going back to what they came to read. It used to be
+ * `/read`, the pre-sanctuary page, which is a door out of the skin.
+ */
+const BACK_HREF = "/read/pothi";
 
 export default function ChamberPage(): ReactElement {
   if (process.env.NODE_ENV !== "development") notFound();

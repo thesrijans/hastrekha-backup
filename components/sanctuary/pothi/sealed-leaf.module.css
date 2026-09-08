@@ -81,8 +81,24 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.15rem;
-    padding-block: 1.7rem 1.1rem;
+    /*
+     * ONE BLOCK, NOT SIX ITEMS ON A FIELD.
+     *
+     * Measured at 390px before this pass: a 745px leaf around a 663px stack, of
+     * which 137px was space BETWEEN the six items — 92px of gap plus 46px of
+     * extra margins — on 481px of actual content. Nearly a third of the block
+     * was air, and the seal, the heading, the reason and the button read as four
+     * separate things rather than as one statement.
+     *
+     * `padding-block: 0` is the other half, and it is the part that was really
+     * making the sheet tall: <Parchment> already pads its own content by 36px
+     * and 46px, which is the clearance the torn edge needs, and this added
+     * another 27px and 18px inside it. Two nested paddings on one axis is how a
+     * leaf ends up sized to nothing in particular. The tear's clearance is the
+     * parchment's job and it keeps it; this element now contributes none.
+     */
+    gap: 0.8rem;
+    padding-block: 0;
     text-align: center;
   }
 
@@ -98,12 +114,20 @@
    */
   .unopened {
     margin: 0;
-    margin-block-start: 1.5rem;
+    /* Enough to separate the fixed line from the wax above it, and no more: at
+     * 1.5rem the seal and the sentence were two elements rather than a pair. */
+    margin-block-start: 0.6rem;
     max-inline-size: 26ch;
     font-family: var(--font-snc-devanagari);
     font-size: 1.06rem;
     line-height: 1.95;
-    letter-spacing: 0.012em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED. Tracking inserts space between
+     * the glyphs a conjunct is assembled from, so it does not loosen the
+     * script, it takes it apart. The header wordmark हस्तरेखा was
+     * captured on a real page rendering as "ह स्त रे खा".
+     * On this element it resolved to 0.20352px. The value came from the Latin voice this
+     * rule was written beside, where tracking is correct and stays. */
+    letter-spacing: normal;
     color: var(--color-snc-ink);
     text-wrap: balance;
   }
@@ -132,12 +156,21 @@
    * THE WORKING (SealReason.detail) — the counts and key names that make the
    * line above checkable instead of merely asserted.
    *
-   * Thinner ink and a 46ch measure, which is the classical line length for
-   * comfortable reading; wider than that and the eye loses the return sweep on
-   * a paragraph nobody arrived here intending to read. 72% of the ink rather
-   * than a lighter token so it stays comfortably above 4.5:1 on parchment: this
-   * is the honest part of the leaf and it must not be technically present and
-   * practically invisible.
+   * A 46ch measure, which is the classical line length for comfortable reading;
+   * wider than that and the eye loses the return sweep on a paragraph nobody
+   * arrived here intending to read.
+   *
+   * FULL INK, and it used to be 72% of it. Measured against the parchment this
+   * actually sits on (sampled from a capture rather than taken from the base
+   * token, because the sheet is a stack of mottle, stain, burn and grain over
+   * that base): 72% ink gives 4.47:1 and 88% gives 6.57:1, where the floor for
+   * this paragraph is 7:1. Full ink measures 8.39:1.
+   *
+   * The hierarchy that the thinner ink was carrying is carried by size and
+   * measure instead — 0.98rem on 46ch against the reason's 1.2rem on 32ch —
+   * which is the instrument typography actually has for this. Fading body text
+   * to signal that it is secondary is the one move that trades legibility for
+   * an impression of hierarchy, and this is the honest part of the leaf.
    */
   .detail {
     margin: 0;
@@ -145,7 +178,7 @@
     font-family: var(--font-snc-serif), var(--font-snc-devanagari);
     font-size: 0.98rem;
     line-height: 1.72;
-    color: color-mix(in oklab, var(--color-snc-ink) 72%, transparent);
+    color: var(--color-snc-ink);
   }
 
   /*
@@ -159,12 +192,15 @@
    */
   .instruction {
     margin: 0;
-    margin-block-start: 1.35rem;
+    margin-block-start: 1rem;
     max-inline-size: 38ch;
     font-family: var(--font-snc-serif), var(--font-snc-devanagari);
     font-size: 1.02rem;
     line-height: 1.6;
-    color: color-mix(in oklab, var(--color-snc-ink) 88%, transparent);
+    /* Full ink for the same reason .detail is: 88% measured 6.57:1 on the
+     * parchment this lies on, under the 7:1 floor. This is the line a reader
+     * has to act on. */
+    color: var(--color-snc-ink);
     text-wrap: balance;
   }
 
@@ -196,7 +232,13 @@
     font-family: var(--font-snc-devanagari);
     font-size: 0.98rem;
     line-height: 1.4;
-    letter-spacing: 0.05em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED. Tracking inserts space between
+     * the glyphs a conjunct is assembled from, so it does not loosen the
+     * script, it takes it apart. The header wordmark हस्तरेखा was
+     * captured on a real page rendering as "ह स्त रे खा".
+     * The declared tracking is removed here with the rest. The value came from the Latin voice this
+     * rule was written beside, where tracking is correct and stays. */
+    letter-spacing: normal;
     color: var(--color-snc-ink);
     text-decoration: none;
   }

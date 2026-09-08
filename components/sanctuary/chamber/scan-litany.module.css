@@ -73,7 +73,13 @@
     font-family: var(--font-snc-devanagari);
     font-size: 1rem;
     line-height: 1.7;
-    letter-spacing: 0.01em;
+    /* DEVANAGARI IS NEVER LETTER-SPACED. Tracking inserts space between
+     * the glyphs a conjunct is assembled from, so it does not loosen the
+     * script, it takes it apart. The header wordmark हस्तरेखा was
+     * captured on a real page rendering as "ह स्त रे खा".
+     * The declared tracking is removed here with the rest. The value came from the Latin voice this
+     * rule was written beside, where tracking is correct and stays. */
+    letter-spacing: normal;
     color: var(--color-snc-ink);
     text-align: center;
   }

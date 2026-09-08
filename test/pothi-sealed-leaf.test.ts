@@ -310,17 +310,24 @@ const SEALED = RESOLVED.flatMap((state) => (state.status === "sealed" ? [state] 
 
   ok(
     sealedLeafRescanHref(helpful) === `${SEALED_LEAF_RESCAN_PATH}?${SEALED_LEAF_RESCAN_PARAM}=${helpful.code}`,
-    "the href helper builds /scan?rescan=<code> when a rescan can help",
+    "the href helper builds <scanner>?rescan=<code> when a rescan can help",
   );
   ok(sealedLeafRescanHref(hopeless) === null, "and returns null when it cannot — one gate, one place");
 
   const inviting = render({ reason: helpful, seed: 2 });
-  ok(inviting.includes(`href="/scan?${SEALED_LEAF_RESCAN_PARAM}=${helpful.code}"`), "the rendered button links to the scanner");
+  ok(
+    inviting.includes(`href="${SEALED_LEAF_RESCAN_PATH}?${SEALED_LEAF_RESCAN_PARAM}=${helpful.code}"`),
+    "the rendered button links to the scanner",
+  );
+  ok(
+    SEALED_LEAF_RESCAN_PATH === "/scan/chamber",
+    "and the scanner it means is the CHAMBER, not the pre-sanctuary /scan: this is the one control a sealed leaf offers, and it used to walk the reader out of the skin they were standing in",
+  );
   ok(visibleText(inviting).includes(SEALED_LEAF_RESCAN_LABEL), "and is labelled in Devanagari");
 
   const quiet = render({ reason: hopeless, seed: 2 });
   ok(!quiet.includes("<a "), "the sealed-forever leaf renders no anchor");
-  ok(!quiet.includes("/scan"), "and no path to the scanner anywhere in its markup");
+  ok(!quiet.includes(SEALED_LEAF_RESCAN_PATH), "and no path to the scanner anywhere in its markup");
   ok(!visibleText(quiet).includes(SEALED_LEAF_RESCAN_LABEL), "and never shows the rescan words");
 
   /* The capture sentence is DERIVED per response — it quotes this reading's own missing keys — so it
