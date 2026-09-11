@@ -84,6 +84,28 @@
   --snc-moonlight-max-intensity: 0.25;
 
   /* --------------------------------------------------------------------- */
+  /* THE EMBLEM STONE — added by U3, and the second time this layer has     */
+  /* accepted a colour §3 does not list. The ramp's own note below sets the  */
+  /* bar for that, and this clears it on the same two grounds.              */
+  /*                                                                        */
+  /* IT IS GENUINELY NEW, NOT DRIFT. The ramp note refuses a second gold one */
+  /* point from an existing gold. This is the opposite case: ink-red is      */
+  /* #8B1E1E and the stone is #C72C2C — far apart, and far apart on purpose. */
+  /*                                                                        */
+  /* IT IS A ROLE, NOT A SHADE. ink-red is the marginalia pigment: the wax,  */
+  /* the citation, the note in the margin. The brand mark's cabochon is a    */
+  /* gem, and the brief makes it the ONLY saturated red outside wax — which  */
+  /* is a distinction the palette could not express while the stone and the  */
+  /* wax were literally the same token. Naming it for the role is what keeps */
+  /* a future "make the wax warmer" from quietly recolouring the emblem.     */
+  /*                                                                        */
+  /* §3 IS NOT BACK-EDITED TO SUIT IT. The spec does not list this colour    */
+  /* and must not be made to look as though it always did; the test pins     */
+  /* that absence, exactly as it does for the three ramp stops.              */
+  /* --------------------------------------------------------------------- */
+  --color-snc-ruby: #C72C2C; /* the emblem's cabochon — the only saturated red outside wax */
+
+  /* --------------------------------------------------------------------- */
   /* THE STROKE LADDER — only two rungs exist.                              */
   /*                                                                        */
   /* SOLID STROKES ONLY, NEVER DASHED, ANYWHERE IN THE PRODUCT. There is no */

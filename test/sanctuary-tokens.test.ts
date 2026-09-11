@@ -159,6 +159,20 @@ const RAMP_COLOURS: ReadonlyArray<readonly [string, string]> = [
 ];
 
 /**
+ * The one colour U3 added, held to exactly the rule the ramp stops are held to.
+ *
+ * The brand mark's cabochon is the ONLY saturated red outside wax, and until U3
+ * the palette could not say that: the stone and the wax were literally the same
+ * token, so "make the wax warmer" would have silently recoloured the emblem.
+ * ink-red is #8B1E1E and the stone is #C72C2C — far enough apart that this is a
+ * role rather than the one-point drift the ramp note refuses.
+ *
+ * Pinned as an ABSENCE from the spec below, for the same reason the ramp is:
+ * §3 does not list it, and must not be back-edited to look as though it did.
+ */
+const EMBLEM_COLOURS: ReadonlyArray<readonly [string, string]> = [["ruby", "#C72C2C"]];
+
+/**
  * The measured fifth stop of the ramp, which is NOT gold-500 (#C9A24B) and was
  * snapped to it anyway. Pinned as an absence: see 7 in the header.
  */
@@ -238,8 +252,8 @@ for (const [specName, specValue] of SPEC_COLOURS) {
 
 const colourNames = themeNames.filter((name) => name.startsWith("--color-"));
 ok(
-  colourNames.length === SPEC_COLOURS.length + RAMP_COLOURS.length,
-  `sanctuary.css declares exactly the ${SPEC_COLOURS.length} colours §3 lists plus the ${RAMP_COLOURS.length} ramp stops, and nothing else (found ${colourNames.length})`,
+  colourNames.length === SPEC_COLOURS.length + RAMP_COLOURS.length + EMBLEM_COLOURS.length,
+  `sanctuary.css declares exactly the ${SPEC_COLOURS.length} colours §3 lists, plus the ${RAMP_COLOURS.length} ramp stops and the ${EMBLEM_COLOURS.length} emblem stone, and nothing else (found ${colourNames.length})`,
 );
 
 /* ------------------- 7. the ramp stops, pinned by presence ---------------- */
@@ -255,6 +269,22 @@ for (const [rampName, rampValue] of RAMP_COLOURS) {
   ok(
     !specDense.includes(dense(rampValue)),
     `${rampValue} is absent from the spec — the ramp was added to this layer, and §3 must not be back-edited to look like it always said so`,
+  );
+}
+
+/* ------------- 7b. the emblem stone, pinned the same way ----------------- */
+
+for (const [emblemName, emblemValue] of EMBLEM_COLOURS) {
+  const cssName = `--color-snc-${emblemName}`;
+  const declared = theme.get(cssName);
+  ok(declared !== undefined, `${cssName} is declared`);
+  ok(
+    declared !== undefined && dense(declared) === dense(emblemValue),
+    `${cssName} is ${emblemValue} exactly, not ${String(declared)}`,
+  );
+  ok(
+    !specDense.includes(dense(emblemValue)),
+    `${emblemValue} is absent from the spec — U3 added it to this layer, and §3 must not be back-edited to look like it always said so`,
   );
 }
 

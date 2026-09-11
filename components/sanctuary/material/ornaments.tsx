@@ -710,6 +710,32 @@ export interface TrishulEmblemProps {
   size?: number;
   /** Drives the waver of the arc's open ends and the tines. */
   seed?: number;
+  /**
+   * Render the stone as a domed cabochon rather than a flat bezel.
+   *
+   * OFF BY DEFAULT, AND THAT DEFAULT IS LOAD-BEARING. Every existing caller
+   * renders the flat stone, and the ornament suite pins it hard: the mark must
+   * carry `var(--color-snc-ink-red)` exactly once, as "the only non-gold paint
+   * in the entire ornament family". Defaulting this to `false` keeps the
+   * default render byte-identical, so the brand mark can gain a gem without
+   * quietly restating what the palette says about red everywhere else.
+   *
+   * ON, the stone becomes `--color-snc-ruby` — a different token for a
+   * different job. ink-red is the marginalia pigment (wax, citations, the note
+   * in the margin); the cabochon is a jewel, and the brief makes it the only
+   * saturated red outside wax.
+   *
+   * WHY LAYERED FILLS AND NOT A SMOOTH RAMP. A dome is a ramp of colour, and
+   * this file may not declare one: the suite asserts that no ornament inlines
+   * a paint definition of its own, because every shared paint belongs in the
+   * sprite — and the sprite is itself frozen at exactly seven ids, four
+   * filters and one radial paint (the wax). Rather than break either contract
+   * for one 4-unit stone, the dome is drawn the way an engraver would cut it:
+   * the body, a lit crown set up and left toward the room's one warm source,
+   * and a specular point inside that. At the sizes this mark is used the read
+   * is identical, and the emboss it already carries is what seats it.
+   */
+  cabochon?: boolean;
   /** Appended to the component's own classes. */
   className?: string;
 }
@@ -733,7 +759,12 @@ export interface TrishulEmblemProps {
  * it. The stone is `--color-snc-ink-red`, the palette's own red, and it is the
  * only non-gold paint in the entire ornament family.
  */
-export function TrishulEmblem({ size = 120, seed = 0, className }: TrishulEmblemProps): ReactElement {
+export function TrishulEmblem({
+  size = 120,
+  seed = 0,
+  cabochon = false,
+  className,
+}: TrishulEmblemProps): ReactElement {
   /* Three-quarters of a unit at the arc's four open ends and on the tine tips:
    * a struck mark, not a generated one. */
   const wave = seededJitter(seed, 6, 0.75);
@@ -796,7 +827,28 @@ export function TrishulEmblem({ size = 120, seed = 0, className }: TrishulEmblem
       />
       {/* The stone, pressed in — a bezel of the same hairline and the warm emboss beneath. */}
       <g data-snc-part="ruby" filter={defUrl(SNC_FILTER_EMBOSS)}>
-        <circle cx={jx} cy={jy} r={4} fill="var(--color-snc-ink-red)" />
+        {cabochon ? (
+          <>
+            {/* The body of the stone. */}
+            <circle cx={jx} cy={jy} r={4} fill="var(--color-snc-ruby)" />
+            {/* The lit crown, set up and to the left — the same direction the
+                room's one warm source crosses every other struck surface here.
+                Mixed toward the ramp's crest rather than toward white, so the
+                dome catches the scene's gold and never a light of its own. */}
+            <circle
+              cx={jx - 0.85}
+              cy={jy - 0.95}
+              r={2.35}
+              fill="color-mix(in oklab, var(--color-snc-ruby) 68%, var(--color-snc-gold-ramp-pale))"
+            />
+            {/* The specular point. Small enough to read as a highlight rather
+                than a second stone, and offset inside the crown so the two
+                together describe a curve instead of two flat discs. */}
+            <circle cx={jx - 1.45} cy={jy - 1.6} r={0.78} fill="var(--color-snc-gold-ramp-pale)" />
+          </>
+        ) : (
+          <circle cx={jx} cy={jy} r={4} fill="var(--color-snc-ink-red)" />
+        )}
         <circle cx={jx} cy={jy} r={4} {...HAIRLINE} />
       </g>
     </svg>
