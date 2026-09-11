@@ -1,0 +1,121 @@
+/*
+ * The not-yet-built control and its note.
+ *
+ * The trigger resets a <button> to nothing, so the surface that holds it — the
+ * rail, the bar, a card — styles it exactly as it styles its links, and a room
+ * that is not built sits in the same row as one that is. What marks it as
+ * unavailable is colour, set by that surface, and the note.
+ *
+ * The note is a small dark panel with the metal edge (`.snc-gold-border`, from
+ * the token layer), set over whatever is behind it. The UA stylesheet gives every
+ * [popover] a border, a Canvas background, CanvasText and an inset of 0 with auto
+ * margins — the centred-dialog default — and all of it is replaced here.
+ */
+
+.trigger {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: default;
+  anchor-name: var(--snc-soon-anchor);
+}
+
+.note {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.55rem 0.95rem 0.6rem;
+  max-width: min(18rem, calc(100vw - 2rem));
+  color: var(--color-snc-gold-400);
+  background-color: color-mix(in oklab, var(--color-snc-obsidian) 97%, transparent);
+  box-shadow: 0 10px 24px color-mix(in oklab, var(--color-snc-ink) 70%, transparent);
+  opacity: 0;
+  transition:
+    opacity 250ms var(--snc-ease),
+    display 250ms allow-discrete,
+    overlay 250ms allow-discrete;
+}
+
+.note:popover-open {
+  display: flex;
+  opacity: 1;
+}
+
+@starting-style {
+  .note:popover-open {
+    opacity: 0;
+  }
+}
+
+.noteLabel {
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-snc-gold-500) 80%, transparent);
+}
+
+/* Devanagari is never letter-spaced; the Latin label above it is. */
+.noteHi {
+  font-family: var(--font-snc-devanagari);
+  font-size: 0.95rem;
+  line-height: 1.35;
+  letter-spacing: normal;
+  color: var(--color-snc-gold-400);
+}
+
+/* ---- where the note opens without anchor positioning ---- */
+
+.note[data-placement="bar"] {
+  left: 50%;
+  bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  translate: -50% 0;
+}
+
+.note[data-placement="rail"] {
+  left: calc(var(--snc-rail-width, 0rem) + 0.75rem);
+  bottom: 1.5rem;
+}
+
+.note[data-placement="inline"] {
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+}
+
+/* ---- and beside its control, where the browser can anchor it ---- */
+
+@supports (position-anchor: --snc-soon) {
+  .note {
+    position-anchor: var(--snc-soon-anchor);
+  }
+
+  .note[data-placement="rail"] {
+    left: anchor(right);
+    top: anchor(center);
+    bottom: auto;
+    translate: 0.85rem -50%;
+  }
+
+  .note[data-placement="bar"] {
+    left: anchor(center);
+    bottom: anchor(top);
+    translate: -50% -0.6rem;
+  }
+
+  .note[data-placement="inline"] {
+    left: anchor(center);
+    top: anchor(bottom);
+    translate: -50% 0.6rem;
+  }
+}

@@ -63,6 +63,7 @@
  * value a client snapshot can never be, since a key the tab does not hold reads
  * as {@link EMPTY_SLOT}. That is the whole of the pending state.
  */
+import { useSearchParams } from "next/navigation";
 import { useMemo, useSyncExternalStore, type ReactElement } from "react";
 import type { ReadingResponse } from "@/app/read/reading-types";
 import { PothiBook } from "@/components/sanctuary/pothi/pothi-book";
@@ -73,6 +74,7 @@ import {
   type PothiGeometryStorage,
   type PothiSessionGeometry,
 } from "@/lib/sanctuary/pothi-geometry";
+import { POTHI_CHAPTER_PARAM, pothiChapterIndex } from "@/lib/sanctuary/pothi-deep-link";
 
 /* ================================ THE KEY ================================= */
 
@@ -221,6 +223,12 @@ export function PothiClient({ backHref }: PothiClientProps): ReactElement | null
   const capabilityTier = useCapabilityTier();
   const readingRaw = useSyncExternalStore(subscribeToTabStorage, readingSlot, unreadSlot);
   const geometryRaw = useSyncExternalStore(subscribeToTabStorage, geometrySlot, unreadSlot);
+  /* The `?chapter=` a Home path card sent the reader with. From the ROUTER, not from `location`: on a
+     client-side arrival the new page renders before the address bar is written, so `location` still
+     holds the previous page's search when the book takes its opening leaf — the first capture opened
+     chapter IX's card at leaf I for exactly that reason. The page wraps this island in its own
+     Suspense boundary, which is what lets a static route call this hook. */
+  const chapterRaw = useSearchParams().get(POTHI_CHAPTER_PARAM);
 
   /* Both hand-offs are parsed in one pass so a book can never render a reading
      whose geometry arrived a frame later — the plate would pop in beside a
@@ -244,6 +252,7 @@ export function PothiClient({ backHref }: PothiClientProps): ReactElement | null
       capabilityTier={capabilityTier}
       sessionId={handOff.geometry?.sessionId}
       backHref={backHref}
+      initialIndex={pothiChapterIndex(chapterRaw)}
     />
   );
 }

@@ -88,6 +88,12 @@ export interface SanctuaryHeaderProps {
    * always has this for free.
    */
   readonly activeHref?: SanctuaryNavHref | null;
+  /**
+   * Whether the four destinations render. Off inside `<SanctuaryShell>`, whose
+   * rail and bottom bar already list the rooms: two navigations naming the same
+   * places is one too many. Login stays either way, because it is not a room.
+   */
+  readonly links?: boolean;
 }
 
 /**
@@ -106,7 +112,14 @@ export interface SanctuaryHeaderProps {
  * --color-snc-* token in the stylesheet, and the test asserts the rendered
  * markup and that stylesheet carry no trace of the instrument accents.
  */
-export function SanctuaryHeader({ activeHref = null }: SanctuaryHeaderProps): ReactElement {
+export function SanctuaryHeader({ activeHref = null, links = true }: SanctuaryHeaderProps): ReactElement {
+  /* A dark panel with a gold edge, never a solid gold fill: `.snc-gold-border` is a border-image
+     of the same metal ramp as the wordmark, so the button is struck from the same alloy as the name. */
+  const login = (
+    <Link href="/login" className={`${styles.login} snc-gold-border`}>
+      Login
+    </Link>
+  );
   return (
     <header className={styles.header}>
       <div className={styles.bar}>
@@ -126,27 +139,28 @@ export function SanctuaryHeader({ activeHref = null }: SanctuaryHeaderProps): Re
         {/* "Sanctuary", not "Main": the product header is still mounted by the root layout, and
             two navigation landmarks sharing one accessible name is worse than either name being
             slightly indirect. */}
-        <nav aria-label="Sanctuary" className={styles.nav}>
-          {SANCTUARY_NAV.map((item) => {
-            const isActive = item.href === activeHref;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-          {/* A dark panel with a gold edge, never a solid gold fill: `.snc-gold-border` is a
-              border-image of the same metal ramp as the wordmark, so the button is struck from
-              the same alloy as the name. */}
-          <Link href="/login" className={`${styles.login} snc-gold-border`}>
-            Login
-          </Link>
-        </nav>
+        {links ? (
+          <nav aria-label="Sanctuary" className={styles.nav}>
+            {SANCTUARY_NAV.map((item) => {
+              const isActive = item.href === activeHref;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+            {login}
+          </nav>
+        ) : (
+          /* No landmark around a lone Login: a navigation region with nothing to navigate
+             would be announced as one. */
+          <div className={styles.nav}>{login}</div>
+        )}
       </div>
 
       {/* The only thing separating the header from the page, and it is not a border: a rule

@@ -736,9 +736,25 @@ export interface TrishulEmblemProps {
    * is identical, and the emboss it already carries is what seats it.
    */
   cabochon?: boolean;
+  /**
+   * Strike the row of beads that runs outside the ring on both upper flanks —
+   * the dotted arc in brand-bhrigu-bodh-logo-concept.png.
+   *
+   * OFF BY DEFAULT for the same reason as `cabochon`: the default render stays
+   * byte-identical, and the beads are the brand mark's detail rather than the
+   * ornament's. They are struck by a die, not drawn by hand, so they carry no
+   * seed: every bead sits on one radius at one spacing, tapering toward both
+   * ends of each run. Below about 40px they merge into a smudge, which is why
+   * `<BrandEmblem>` asks for them only at its larger sizes.
+   */
+  beads?: boolean;
   /** Appended to the component's own classes. */
   className?: string;
 }
+
+/** Where the beads sit: one radius outside the ring, and the run on each flank in degrees from up. */
+const TRISHUL_BEAD_RADIUS = 35.5;
+const TRISHUL_BEAD_RUN_DEG: readonly number[] = [48, 58, 68, 78, 88, 98, 108];
 
 /**
  * The mark from brand-bhrigu-bodh-logo-concept.png, rebuilt as ORIGINAL clean
@@ -763,6 +779,7 @@ export function TrishulEmblem({
   size = 120,
   seed = 0,
   cabochon = false,
+  beads = false,
   className,
 }: TrishulEmblemProps): ReactElement {
   /* Three-quarters of a unit at the arc's four open ends and on the tine tips:
@@ -816,6 +833,18 @@ export function TrishulEmblem({
       data-snc-ornament="trishul"
     >
       <path data-snc-part="arc" d={arc} {...HAIRLINE} opacity={0.8} />
+      {beads ? (
+        <g data-snc-part="beads" fill={GOLD_FILL}>
+          {[-1, 1].flatMap((side) =>
+            TRISHUL_BEAD_RUN_DEG.map((deg, at) => {
+              const [bx, by] = polar(50, 52, TRISHUL_BEAD_RADIUS, side * deg);
+              /* Largest mid-run, smallest at both ends, so each run reads as a curve of light. */
+              const taper = Math.sin((Math.PI * (at + 0.5)) / TRISHUL_BEAD_RUN_DEG.length);
+              return <circle key={`${side}-${deg}`} cx={bx} cy={by} r={0.5 + 0.55 * taper} />;
+            }),
+          )}
+        </g>
+      ) : null}
       <path data-snc-part="trident" d={trident} fill={GOLD_FILL} />
       {/* The staff crosses in front of the head, as it does in the reference. */}
       <path data-snc-part="staff" d={staff} fill={GOLD_FILL} />

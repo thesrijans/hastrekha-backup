@@ -1,8 +1,8 @@
 # HastRekha — The Sanctuary
 ## Complete UI/UX specification for the immersive palmistry experience
 
-**Version:** 1.1 · 7 Sep 2026
-**Supersedes:** ui-nadi-pothi.md (folded in below); v1.0 of this file
+**Version:** 1.2 · 11 Sep 2026
+**Supersedes:** ui-nadi-pothi.md (folded in below); v1.0 and v1.1 of this file
 **Status:** build-ready. Every section states what ships, what it costs, and
 what it must never claim.
 
@@ -16,6 +16,31 @@ contain (§6.4, §11); route gating belongs to the `app/dev` precedent rather th
 the scan flag store (§2); `CapabilityTier` needs its full name because
 `ReadingTier` already exists (§10). Chapters were also renumbered: the five life
 areas the backend actually scores now have five chapters instead of three.
+
+**v1.2 — two U3 reversals, recorded so the spec does not contradict the
+build.** Both are marked `[R7]` and `[R8]` where they land, and §1, §8, §10 and
+§13 are amended to agree with them.
+
+- **[R7] §6.2 — the room is a real scene first and a CSS composition second.**
+  v1.1 made the room pre-rendered plates with an *optional* R3F upgrade on
+  desktop. On the product owner's direction U3 reverses that: Three.js (React
+  Three Fiber) is the primary experience on `HIGH`, and on `MID` where WebGL2 is
+  available; the authored CSS/SVG composition is the fallback for every other
+  case and the first paint for everyone, and it is the SAME composition, so a
+  device that degrades never changes layout. Two facts made the reversal
+  practical: the showcase3d toolkit has no Blender path, so the "plates" would
+  have been drawn by hand either way; and a scene built procedurally with plain
+  lights — no baked environment map, no GLTF — fits the chunk budget while
+  keeping the one warm source the references are lit by.
+- **[R8] §6.1 — the Threshold may use WebGL for the doorway push, on `HIGH`
+  only.** v1.1 said the entrance uses no WebGL at all. U3 keeps that for the
+  whole sequence up to the click and for every tier below `HIGH`; on `HIGH`, on
+  the product owner's direction, the doorway is a scene object with the room
+  behind it and the camera travels through it.
+
+U3 ships in two commits: **U3a** — shell, navigation, the CSS composition, the
+Threshold in CSS and the Home content, with no WebGL anywhere — and **U3b** —
+the R3F room, the camera system and the `HIGH`-tier doorway push.
 
 ---
 
@@ -38,7 +63,7 @@ All in `docs/reference/`. Load them, then compare after.
 | File | Role |
 |---|---|
 | `ui-nadi-pothi-candlelight-photo.png` | **Tonal anchor for the book.** One candle, wooden covers, a hand on palm leaves. No glow, no particles. If a page ever looks *rendered*, this photo is the correction. |
-| `ui-scan-hologram-pedestal-library.png` | **Primary reference for the scanner.** Brass pedestal, zodiac ring, hologram cylinder, library depth behind. The book sits open beside it — sacred and instrument in one frame. ⚠️ **THIS FILE DOES NOT EXIST** — not in the working tree and not anywhere in git history (checked 7 Sep 2026). U3 and the pedestal look have no reference to build to; either the image is supplied or the Sanctuary composition is designed from scratch. The zodiac ring alone is recoverable from the wordmark below. |
+| `ui-scan-hologram-pedestal-library.webp` | **Primary reference for the scanner and the room.** Brass pedestal, zodiac ring, hologram cylinder, library depth behind. The book sits open beside it — sacred and instrument in one frame. Supplied in ee086a5; v1.1 recorded it as missing. Two of its details are deliberately NOT followed: its hologram hand carries traced lines, which A2 forbids on a decorative hand, and its hologram is cyan, which the sanctuary uses nowhere (A3). |
 | `ui-home-hero-hand-explore-wisdom.png` | Home composition, graha-line labels in Devanagari, wax seal, category tiles. |
 | `ui-reading-lifeline-explainability-card.png` | Parchment panel, "Why HastRekha says this", Source Wisdom block, provenance rows. |
 | `brand-hastrekha-logo-zodiac-wheel.png`, `brand-bhrigu-bodh-logo-concept.png` | Wordmarks, seal motif, sun/zodiac wheel. **The zodiac wheel here is the working reference for `ZodiacRing`** while the scanner plate is missing: outer bead ring, 12 sectors with Devanagari rashi glyphs on radial spokes, inner sun face, ornamental finials at the quarters. |
@@ -168,6 +193,7 @@ difference is large — Tiro's Devanagari is 62.1 KB under next/font's UA and
 | Cinzel | latin, static 600 | **14.9 KB** |
 | Cinzel | latin, variable | 25.3 KB |
 | Cormorant Garamond | latin, variable normal | **36.9 KB** |
+| Cormorant Garamond | latin, variable italic (v1.2, measured 11 Sep 2026) | 38.4 KB |
 | Tiro Devanagari Hindi | devanagari, 400 | 62.1 KB |
 | Tiro Devanagari Hindi | latin + latin-ext | 28.0 KB |
 | Inter | latin (already in the root layout) | 47.1 KB |
@@ -183,6 +209,16 @@ Devanagari Hindi is declared with `preload: false` and streams in the second
 wave. **`app/layout.tsx` is not touched** — Inter and Space Grotesk keep their
 current declarations and preloads, because editing the root layout to reclaim
 preload budget would change what every existing route ships, which A1 forbids.
+
+**v1.2 — one deferred face added (U3).** Cormorant Garamond's real italic (latin,
+variable, 38.4 KB) is declared with `preload: false` for the one line set in it,
+the Wisdom of the Day's translation on Home. A browser asked for italic from a
+face that has none slants the upright, which is a different and worse letter. R1
+counts new PRELOADED bytes, and a deferred face adds none, so the shipping set
+above is unchanged at 51.8 KB. Preloading the italic as well would take it to
+90.2 KB, over the ceiling, which is why it is deferred. The file is fetched only
+when there is italic to set, and on every route today that is one card below
+Home's fold.
 
 The consequence to accept honestly: Devanagari swaps in a beat late on first
 paint. Chapter titles and रेखा names are the visible cost. If that reads badly
@@ -234,15 +270,23 @@ settings).
 6.5s   [ ENTER THE SANCTUARY ]   — never auto-advances
 ```
 
-On click: camera pushes through the doorway (GSAP, 1.8 s), light blooms,
+On click: camera pushes through the doorway (1.8 s), light blooms,
 particles stream past, and the Sanctuary resolves from the bloom. Skippable
 with any key or tap; skip is remembered.
 
-Implementation: pre-rendered doorway plate + CSS/canvas particles + GSAP.
-**No WebGL** — this must be instant on a cold load.
+Implementation: everything up to the click is CSS — an authored doorway, CSS
+particles, keyframes on the sanctuary's own ease — and it must be instant on a
+cold load. The Threshold is the first-visit state of `/sanctuary`, not a route of
+its own, so a returning visitor never pays for it.
+
+**[R8] The doorway push may use WebGL, on `HIGH` only.** There the doorway is a
+scene object with the room behind it, and the camera travels through it. Every
+other tier gets a CSS push and a bloom crossfade. Under `prefers-reduced-motion`
+the entrance is skipped outright. v1.1 read "**No WebGL**"; U3 reversed it for
+this one tier and this one moment.
 
 ### 6.2 Sanctuary — home
-The room from `ui-scan-hologram-pedestal-library.png`, built as layers:
+The room from `ui-scan-hologram-pedestal-library.webp`, built as layers:
 
 ```
 LAYER 4 (far)   library architecture, arched window, moon, shelved bundles
@@ -252,14 +296,28 @@ LAYER 2 (near)  candles, crystals, brass instruments, stacked books
 LAYER 1 (dust)  drifting gold particles, incense haze
 ```
 
-Layers 4/2/1 are pre-rendered plates (Blender via the showcase3d toolkit) at
-three densities (1×/2×/3×), parallaxing on pointer and device tilt at
-±12 px max. Only the pedestal and the book are live.
+**[R7] The room is a real scene first, and a CSS composition second.** On
+`HIGH`, and on `MID` where WebGL2 is available, the room above is rendered in
+Three.js (React Three Fiber): procedural geometry, ONE warm point source at the
+pedestal, no baked environment map and no GLTF. Lazy chunk, loaded after idle;
+never on the scan route, and zero WebGL on any route while the camera is
+scanning — MediaPipe owns the GPU. Phones at `MID`+ get a compact vignette
+(pedestal and hologram only, ≤ 30 fps, suspended off-screen) instead of the full
+room.
 
-**Optional R3F upgrade (desktop, after idle, behind a capability check):**
-the pedestal becomes a real Three.js object with a slowly rotating zodiac
-ring and volumetric shaft. Lazy chunk, never on the scan route, never on
-low-end devices. Fallback is the plate — visually near-identical.
+Every other case — `LOW`, `FLOOR`, `prefers-reduced-motion`, no WebGL, or a chunk
+that fails to load — gets the same room as three authored CSS/SVG layers (far:
+window, shelves, drapes; mid: pedestal, hologram, book, candles; near: dust and
+haze). Where the tier allows motion (`MID` without WebGL2) the layers parallax
+on pointer and device tilt within the §3 clamps; at `LOW`, at `FLOOR` and under
+`prefers-reduced-motion` they are a still engraving. That
+composition paints first for everyone and the 3D scene fades over it when ready,
+so there is no blank frame and no layout shift when a device degrades. The
+layers are drawn rather than pre-rendered, because there is no Blender pipeline
+to render them from.
+
+v1.1 read "pre-rendered plates (Blender) … optional R3F upgrade (desktop)". U3
+reversed both halves.
 
 **Navigation** — carved into a dark stone rail on the left, not a sidebar:
 gold engraved glyphs, label revealed on hover, active item lit with a warm
@@ -491,7 +549,7 @@ CAM_GURU       three-quarter, scroll foreground
 CAM_LIBRARY    panned right to the shelf
 ```
 
-On plate-based (non-WebGL) screens these are implemented as coordinated
+On the CSS composition (non-WebGL, [R7]) these are implemented as coordinated
 parallax + scale + crossfade of the same layers, which reads as camera
 movement at a fraction of the cost.
 
@@ -529,19 +587,20 @@ four smaller chunks. Every new route inherits it before rendering anything.
 
 | Metric | Budget |
 |---|---|
-| Threshold route JS | **no new JS beyond the shared 135.5 kB floor**, no WebGL. (v1.0 said "≤ 60 KB gz", which is below the floor and therefore unreachable without changing the shared runtime.) |
-| Sanctuary initial JS | ≤ 140 KB gz (plates are images, not JS) |
-| R3F chunk | lazy, desktop only, after idle, ≤ 180 KB gz |
+| Threshold JS | **no new JS beyond the shared 135.5 kB floor**, no WebGL. (v1.0 said "≤ 60 KB gz", which is below the floor and therefore unreachable without changing the shared runtime.) [R8]: the Threshold is the first-visit state of `/sanctuary`, so its JS is counted in the Sanctuary budget below; the `HIGH`-tier doorway push rides the R3F chunk. |
+| Sanctuary initial JS | ≤ 140 KB gz (the fallback layers are SVG markup, not JS; the Threshold is counted inside this) |
+| R3F chunk | lazy, after idle; ≤ 180 KB gz target, 200 KB gz ceiling; `HIGH` and `MID`-with-WebGL2 only — the desktop room and the phone vignette [R7] |
 | Chamber added per-frame cost | **≤ 3 ms** over current scan (measured on mid-range Android) |
 | Pothi page flip | ≥ 55 fps; auto-degrade to crossfade below |
 | First leaf visible | < 1.5 s after route load |
-| Plates | AVIF with WebP fallback, 3 densities, `fetchpriority` on the current camera only |
+| Plates | not used under [R7] — the fallback layers are authored SVG/CSS. `<ScenePlate>` keeps its raster manifest for any plate added later |
 | Audio | ≤ 400 KB, lazy, only after opt-in |
 | Battery | scan session battery draw must not regress vs today |
 
-**Capability tiers:** HIGH (R3F + full particles) · MID (plates + parallax +
-particles) · LOW (plates, no particles, crossfade transitions) · FLOOR
-(static, no motion — also the `prefers-reduced-motion` target).
+**Capability tiers:** HIGH (R3F + full particles) · MID (R3F where WebGL2 is
+available, otherwise the CSS composition; parallax + particles) · LOW (the CSS
+composition, no particles, crossfade transitions) · FLOOR (static, no motion —
+also the `prefers-reduced-motion` target). [R7]
 
 **[R6] The type is `CapabilityTier`, always spelled in full.** `ReadingTier`
 (`free | premium | deep`) already exists, is exported from the KB barrel and is
@@ -607,9 +666,9 @@ live until parity is signed off.
 | **U0** | Tokens, fonts, plate pipeline (Blender → AVIF ×3), capability tiers, sound scaffold | Tokens applied to one existing page with no visual regressions |
 | **U1** | **The Pothi** — page turn, leaf layout, palm crop with measured line, marginalia, fold-out evidence, **Sealed Leaf** | A real reading renders end-to-end; flip ≥ 55 fps; sealed leaves appear for every unmeasured feature |
 | **U2** | **The Chamber** — canvas overlays, zodiac ring, progressive line reveal, stage copy, reveal beat | Added frame cost ≤ 3 ms on a mid-range Android; no pipeline file edited |
-| **U3** | **The Sanctuary** — plates, parallax, nav rail, camera positions, Threshold entrance | Initial JS ≤ 140 KB gz; entrance skippable and remembered |
+| **U3** | **The Sanctuary** — U3a: shell, nav rail and bottom bar, the CSS composition, the Threshold in CSS, the Home content. U3b: the R3F room, the camera positions, the `HIGH`-tier doorway push [R7][R8] | Initial JS ≤ 140 KB gz; entrance skippable and remembered; R3F chunk ≤ 200 KB gz; 60 fps on a 2022 laptop |
 | **U4** | **The Guru** — scroll UI, tool-grounded answers, tier badges | Grounding audit: 0 untraceable claims across 50 test conversations |
-| **U5** | Shelf, Timeline diff, Daily Guidance, sound + haptics, R3F upgrade for HIGH tier | Budgets hold; parity sign-off; old routes retired |
+| **U5** | Shelf, Timeline diff, Daily Guidance, sound + haptics (the R3F room moved to U3 under [R7]) | Budgets hold; parity sign-off; old routes retired |
 
 **U1 first, deliberately.** A working manuscript with honest sealed leaves is
 worth more than a beautiful empty room, and it can be built against the

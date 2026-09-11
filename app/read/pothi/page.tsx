@@ -1,13 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
-import type { ReactElement } from "react";
-import {
-  GoldRule,
-  GoldText,
-  SanctuaryDefs,
-  SanctuaryGround,
-} from "@/components/sanctuary/material";
-import { SanctuaryHeader } from "@/components/sanctuary/sanctuary-header";
+import { Suspense, type ReactElement } from "react";
+import { GoldRule, GoldText } from "@/components/sanctuary/material";
+import { SanctuaryShell } from "@/components/sanctuary/shell/sanctuary-shell";
 import { SANCTUARY_FONT_CLASS } from "@/lib/sanctuary/fonts";
 import { PothiClient } from "./pothi-client";
 
@@ -38,6 +33,10 @@ import { PothiClient } from "./pothi-client";
  *
  * ══ THE ASSEMBLY ORDER, WHICH IS A CONTRACT AND NOT A PREFERENCE ══
  *
+ * Since U3 it is written once, in `<SanctuaryShell>` (A1), which every
+ * sanctuary route but the chamber is assembled by. This route passes the font
+ * class and the room it is, and supplies step 4.
+ *
  *  1. `<SanctuaryDefs />` FIRST and ONCE. Every torn leaf, every wax seal,
  *     every ornament and the palm plate's neutral outline reference the shared
  *     `feTurbulence` sprite by id. `feTurbulence` is evaluated per filter
@@ -47,9 +46,11 @@ import { PothiClient } from "./pothi-client";
  *     silently: every leaf renders unfiltered, with square edges, looking like
  *     a design decision.
  *  2. `<SanctuaryGround />`, which paints the room at `z-index: -1`.
- *  3. The masthead and then the book.
+ *  3. The rail and the bottom bar, then the header — wordmark and Login only,
+ *     because the rail and the bar now name the rooms.
+ *  4. The masthead and then the book.
  *
- * ══ TWO ABSENCES ON <main> THAT ARE LOAD-BEARING ══
+ * ══ TWO ABSENCES ON THE SHELL'S <main> THAT ARE LOAD-BEARING ══
  *
  * NO background and NO `isolate`. The ground paints at negative z-index, and in
  * a stacking context a negative-z descendant is painted BEFORE the in-flow
@@ -71,6 +72,11 @@ import { PothiClient } from "./pothi-client";
 export const metadata: Metadata = {
   title: "Pothi — dev",
   robots: { index: false, follow: false },
+};
+
+/** The bottom bar pads itself clear of the home indicator; `env(safe-area-inset-*)` is 0 unless the page extends under it. */
+export const viewport: Viewport = {
+  viewportFit: "cover",
 };
 
 /**
@@ -157,13 +163,8 @@ export default function PothiPage(): ReactElement {
   if (process.env.NODE_ENV !== "development") notFound();
 
   return (
-    <main className={`${SANCTUARY_FONT_CLASS} relative flex w-full flex-1 flex-col`}>
-      <SanctuaryDefs />
-      <SanctuaryGround seed={GROUND_SEED} capability="HIGH" />
-
+    <SanctuaryShell activeHref="/read/pothi" groundSeed={GROUND_SEED} className={SANCTUARY_FONT_CLASS}>
       <div className="mx-auto flex w-full max-w-[84rem] flex-col gap-10 px-4 pb-32 sm:px-8">
-        <SanctuaryHeader activeHref="/read/pothi" />
-
         <header className="flex flex-col items-center gap-4 pt-16 text-center">
           <span className={EYEBROW} lang="hi">
             {POTHI_TITLE_HI}
@@ -175,8 +176,13 @@ export default function PothiPage(): ReactElement {
           <p className={STANDFIRST}>{POTHI_STANDFIRST}</p>
         </header>
 
-        <PothiClient />
+        {/* Its own boundary, because the island reads `?chapter=` with useSearchParams and a static
+            page may only do that inside Suspense. The island renders nothing on the server anyway
+            (the reading lives in the tab), so the fallback is that same nothing. */}
+        <Suspense fallback={null}>
+          <PothiClient />
+        </Suspense>
       </div>
-    </main>
+    </SanctuaryShell>
   );
 }

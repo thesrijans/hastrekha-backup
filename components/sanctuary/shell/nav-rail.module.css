@@ -1,0 +1,212 @@
+/*
+ * THE RAIL — carved into the stone, not laid over it.
+ *
+ * A recess, lit the way the rest of the sanctuary is: the panel is darker than
+ * the ground, its inner wall on the room side falls into shadow, and a single
+ * lip of old gold runs along that edge where the light catches it. No blur, no
+ * glass, no radius — stone does not have rounded corners.
+ *
+ * Every colour is a --color-snc-* token. Nothing here moves except hover and
+ * focus feedback, at the micro band (200–300 ms), which globals.css collapses
+ * under prefers-reduced-motion.
+ */
+
+.rail {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .rail {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.4rem;
+    width: var(--snc-rail-width);
+    padding-block: 1.25rem 1.5rem;
+    padding-inline: 0.7rem;
+    background-color: color-mix(in oklab, var(--color-snc-stone-900) 94%, transparent);
+    box-shadow:
+      inset -12px 0 20px -14px color-mix(in oklab, var(--color-snc-ink) 95%, transparent),
+      inset -1px 0 0 color-mix(in oklab, var(--color-snc-gold-600) 50%, transparent);
+  }
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+  padding-block: 0.25rem 0.5rem;
+}
+
+@media (min-width: 80rem) {
+  .brand {
+    justify-content: flex-start;
+    padding-inline-start: 0.3rem;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+}
+
+/* ---------------------------------------------------------------------- */
+/* ITEMS — a medallion, and the two names                                  */
+/* ---------------------------------------------------------------------- */
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.35rem;
+  text-decoration: none;
+  color: color-mix(in oklab, var(--color-snc-gold-500) 80%, transparent);
+  transition: color 250ms var(--snc-ease);
+}
+
+.item:hover {
+  color: var(--color-snc-gold-400);
+}
+
+.item:focus-visible {
+  outline: var(--snc-stroke-secondary-width) solid var(--color-snc-gold-400);
+  outline-offset: 2px;
+}
+
+/* The medallion takes the item's colour, so hover, active and "not yet" recolour the glyph and
+   the ring together. `color` here beats the token layer's because module CSS is unlayered. */
+.medallion {
+  flex: none;
+  width: 2.5rem;
+  color: inherit;
+  transition: box-shadow 250ms var(--snc-ease);
+}
+
+.item:hover .medallion {
+  box-shadow:
+    inset 0 0 0 1px var(--color-snc-gold-400),
+    0 1px 2px color-mix(in oklab, var(--color-snc-ink) 55%, transparent),
+    0 4px 10px color-mix(in oklab, var(--color-snc-ink) 28%, transparent);
+}
+
+/* The lamp behind the stone — the sanctuary header's active idiom, verbatim in its tokens. */
+.itemActive {
+  color: var(--color-snc-gold-400);
+  background-image: radial-gradient(
+    120% 150% at 50% 128%,
+    color-mix(in oklab, var(--color-snc-flame-warm) 14%, transparent),
+    transparent 72%
+  );
+  box-shadow:
+    inset 0 0 14px color-mix(in oklab, var(--color-snc-flame-warm) 22%, transparent),
+    inset 0 0 3px color-mix(in oklab, var(--color-snc-flame) 16%, transparent);
+}
+
+.itemActive .medallion {
+  box-shadow:
+    inset 0 0 0 1px var(--color-snc-gold-400),
+    0 0 14px color-mix(in oklab, var(--color-snc-flame-warm) 30%, transparent);
+}
+
+/* A room not built yet: the old gold, dimmed. Legible, plainly not a way in. */
+.itemSoon {
+  color: color-mix(in oklab, var(--color-snc-gold-600) 90%, transparent);
+}
+
+.itemSoon:hover {
+  color: color-mix(in oklab, var(--color-snc-gold-500) 70%, transparent);
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE NAMES                                                               */
+/* ---------------------------------------------------------------------- */
+
+.labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+  text-align: start;
+}
+
+/* Devanagari is never letter-spaced: tracking takes a conjunct apart. */
+.hi {
+  font-family: var(--font-snc-devanagari);
+  font-size: 0.98rem;
+  line-height: 1.25;
+  letter-spacing: normal;
+}
+
+.en {
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.66rem;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.soonHint {
+  display: none;
+  font-family: var(--font-snc-devanagari);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  letter-spacing: normal;
+  color: var(--color-snc-gold-500);
+}
+
+.item:hover .soonHint,
+.item:focus-visible .soonHint {
+  display: block;
+}
+
+/*
+ * GLYPH WIDTH (48–80rem): the names leave the rail and appear beside it, on a
+ * small dark panel, when the glyph is hovered or focused. They are moved and
+ * faded rather than removed, so the link's accessible name is its names at
+ * every width.
+ */
+@media (min-width: 48rem) and (max-width: 79.99rem) {
+  .labels {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 0.85rem);
+    z-index: 1;
+    padding: 0.4rem 0.75rem 0.45rem;
+    white-space: nowrap;
+    background-color: color-mix(in oklab, var(--color-snc-obsidian) 97%, transparent);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--color-snc-gold-600) 70%, transparent),
+      0 8px 20px color-mix(in oklab, var(--color-snc-ink) 70%, transparent);
+    opacity: 0;
+    translate: -0.25rem -50%;
+    pointer-events: none;
+    transition:
+      opacity 250ms var(--snc-ease),
+      translate 250ms var(--snc-ease);
+  }
+
+  .item:hover .labels,
+  .item:focus-visible .labels {
+    opacity: 1;
+    translate: 0 -50%;
+  }
+
+  .soonHint {
+    display: block;
+  }
+}

@@ -242,6 +242,18 @@ function devanagariChains(html: string): { text: string; chain: string[] }[] {
   const { PalmPlate } = load<{ PalmPlate: (p: Record<string, unknown>) => ReactElement | null }>(
     "../components/sanctuary/pothi/palm-plate",
   );
+  /* U3: every new surface that sets Devanagari — the rail's room names and its "coming soon",
+     the bar's notes, the masthead, the greeting, the tradition's nine रेखा names, the verse, the
+     room's overlay and labels, and the Threshold. */
+  type Component = (p: Record<string, unknown>) => ReactElement;
+  const { NavRail } = load<{ NavRail: Component }>("../components/sanctuary/shell/nav-rail");
+  const { BottomNav } = load<{ BottomNav: Component }>("../components/sanctuary/shell/bottom-nav");
+  const { HomeMasthead } = load<{ HomeMasthead: Component }>("../components/sanctuary/home/home-masthead");
+  const { HomeGreeting } = load<{ HomeGreeting: Component }>("../components/sanctuary/home/home-greeting");
+  const { TraditionPalm } = load<{ TraditionPalm: Component }>("../components/sanctuary/home/tradition-palm");
+  const { WisdomOfTheDay } = load<{ WisdomOfTheDay: Component }>("../components/sanctuary/home/wisdom-of-the-day");
+  const { HomeRoom } = load<{ HomeRoom: Component }>("../components/sanctuary/room/home-room");
+  const { Threshold } = load<{ Threshold: Component }>("../components/sanctuary/threshold/threshold");
 
   const REASON = {
     code: "lines.heart.absent",
@@ -273,6 +285,14 @@ function devanagariChains(html: string): { text: string; chain: string[] }[] {
         }),
       ),
     },
+    { name: "NavRail", html: renderToString(createElement(NavRail, { activeHref: "/sanctuary" })) },
+    { name: "BottomNav", html: renderToString(createElement(BottomNav, { activeHref: "/sanctuary" })) },
+    { name: "HomeMasthead", html: renderToString(createElement(HomeMasthead, { profile: null })) },
+    { name: "HomeGreeting", html: renderToString(createElement(HomeGreeting, { name: null })) },
+    { name: "TraditionPalm", html: renderToString(createElement(TraditionPalm, {})) },
+    { name: "WisdomOfTheDay", html: renderToString(createElement(WisdomOfTheDay, {})) },
+    { name: "HomeRoom", html: renderToString(createElement(HomeRoom, { id: "room", profile: null })) },
+    { name: "Threshold", html: renderToString(createElement(Threshold, {})) },
   ];
 
   let nodes = 0;

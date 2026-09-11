@@ -1,0 +1,802 @@
+/*
+ * THE ROOM — B7's layers, and the light that makes them one place.
+ *
+ * The light is the whole design: one warm source at the pedestal (the far
+ * layer's first background), falling off into a stone room; a small cold pool at
+ * the window; a lesser warm pool by the book candle; and a vignette that takes
+ * every edge of the room to near-black. Nothing is lit that the candle would not
+ * reach.
+ */
+
+.stageBox {
+  --snc-room-parallax: var(--snc-parallax-max-desktop);
+  position: relative;
+  overflow: hidden;
+  container-type: size;
+  background-color: var(--color-snc-stone-900);
+}
+
+.room {
+  height: 100svh;
+  min-height: 34rem;
+  max-height: 70rem;
+}
+
+.vignette {
+  --snc-room-parallax: var(--snc-parallax-max-mobile);
+  height: clamp(14rem, 64vw, 21rem);
+}
+
+/* The set: 16:9, covering the hero like object-fit: cover. The camera scales it. */
+.set {
+  position: absolute;
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+  transform-origin: 50% 50%;
+  transition:
+    scale 1400ms var(--snc-ease),
+    opacity 700ms var(--snc-ease);
+}
+
+.room .set {
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, 100cqh * 16 / 9);
+  translate: -50% -50%;
+}
+
+/* The phone's framing: the stage scaled so its pedestal-and-hologram band (y 40–880, crown to
+   plinth) fills the box's height, and slid so the pedestal (x 530 of 1600) sits on the centre line. */
+.vignette .set {
+  top: calc(-100cqh * 40 / 840);
+  left: calc(50cqw - 100cqh * 900 / 840 * 16 / 9 * 530 / 1600);
+  height: calc(100cqh * 900 / 840);
+}
+
+/* Each layer's `translate` is written directly by Home's island, scaled by the layer's own depth
+   (data-snc-depth) and --snc-room-parallax — never as a custom property on the room, which every
+   one of its thousands of SVG nodes would inherit and restyle on every frame of pointer movement. */
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* Small drawings laid exactly over the plates, so a thing that moves is its own element. */
+.part {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE LIGHT                                                                */
+/* ---------------------------------------------------------------------- */
+
+.far {
+  background-color: var(--color-snc-stone-800);
+  background-image:
+    radial-gradient(34% 50% at 33.1% 60%, color-mix(in oklab, var(--color-snc-flame-warm) 26%, transparent), transparent),
+    radial-gradient(56% 70% at 33.1% 62%, color-mix(in oklab, var(--color-snc-flame-warm) 9%, transparent), transparent),
+    radial-gradient(11% 19% at 77.2% 30%, color-mix(in oklab, var(--color-snc-moon) 40%, transparent), transparent),
+    radial-gradient(18% 26% at 73% 84%, color-mix(in oklab, var(--color-snc-flame-warm) 12%, transparent), transparent),
+    linear-gradient(180deg, var(--color-snc-stone-900), var(--color-snc-stone-800) 42%, var(--color-snc-stone-900));
+}
+
+.haze {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(26% 34% at 36% 42%, color-mix(in oklab, var(--color-snc-flame-warm) 7%, transparent), transparent),
+    radial-gradient(22% 26% at 74% 60%, color-mix(in oklab, var(--color-snc-flame-warm) 5%, transparent), transparent);
+}
+
+/* Every edge of the room falls to near-black: one candle does not reach the corners. */
+.shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    ellipse 70% 76% at 42% 56%,
+    transparent 42%,
+    color-mix(in oklab, var(--color-snc-stone-900) 68%, transparent) 80%,
+    var(--color-snc-stone-900)
+  );
+}
+
+.fadeToPage {
+  position: absolute;
+  inset: auto 0 0;
+  height: 16%;
+  pointer-events: none;
+  background-image: linear-gradient(to bottom, transparent, var(--color-snc-stone-900));
+}
+
+/* ---------------------------------------------------------------------- */
+/* LINEWORK — hairlines where an edge faces the candle, hatching where not   */
+/* ---------------------------------------------------------------------- */
+
+.masonry,
+.archTrim,
+.archTrimOuter,
+.corridorShelves,
+.mullion,
+.windowSurround,
+.shelfBoard,
+.caseRim,
+.bundleRim,
+.cord,
+.fold,
+.floorLine,
+.mandala,
+.mandalaSpokes,
+.hatch,
+.brassBand,
+.brassBandDim,
+.brassEdgeDim,
+.plaqueFrame,
+.spine,
+.pageHatch,
+.pageInk,
+.pageEdge,
+.bookTitle,
+.facet,
+.leader {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.masonry {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.07;
+}
+
+.archTrim {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.45;
+}
+
+.archTrimOuter {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.18;
+}
+
+.corridorShelves {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.16;
+}
+
+.mullion {
+  stroke: var(--color-snc-stone-900);
+  stroke-width: 5;
+}
+
+.windowSurround {
+  stroke: var(--color-snc-stone-700);
+  stroke-width: 12;
+}
+
+.shelfBoard {
+  stroke: var(--color-snc-stone-700);
+  stroke-width: 6;
+}
+
+.caseRim {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.4;
+}
+
+.bundleRim {
+  stroke: var(--color-snc-gold-500);
+  stroke-width: 1;
+  stroke-opacity: 0.28;
+}
+
+.cord {
+  stroke: color-mix(in oklab, var(--color-snc-ink-red) 70%, var(--color-snc-stone-900));
+  stroke-width: 1.2;
+  stroke-opacity: 0.8;
+}
+
+.fold {
+  stroke: var(--color-snc-stone-900);
+  stroke-width: 2;
+  stroke-opacity: 0.7;
+}
+
+.floorLine {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.12;
+}
+
+.mandala {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.22;
+}
+
+.mandalaSpokes {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.12;
+}
+
+.hatch {
+  stroke: var(--color-snc-stone-900);
+  stroke-width: 1.6;
+  stroke-opacity: 0.75;
+}
+
+.brassBand {
+  stroke: var(--color-snc-gold-500);
+  stroke-width: 1;
+  stroke-opacity: 0.6;
+}
+
+.brassBandDim {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.55;
+}
+
+.brassEdgeDim {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+  stroke-opacity: 0.35;
+}
+
+.plaqueFrame {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1;
+}
+
+.plaqueText {
+  font-family: var(--font-snc-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  fill: var(--color-snc-gold-500);
+}
+
+.spine {
+  stroke: color-mix(in oklab, var(--color-snc-ink) 70%, transparent);
+  stroke-width: 1.2;
+}
+
+.pageHatch {
+  stroke: var(--color-snc-ink);
+  stroke-width: 1;
+  stroke-opacity: 0.22;
+}
+
+.pageInk {
+  stroke: var(--color-snc-ink);
+  stroke-width: 1;
+  stroke-opacity: 0.42;
+}
+
+.pageEdge {
+  stroke: color-mix(in oklab, var(--color-snc-parchment) 80%, var(--color-snc-flame));
+  stroke-width: 1;
+  stroke-opacity: 0.7;
+}
+
+.bookTitle {
+  stroke: var(--color-snc-gold-600);
+  stroke-width: 1.5;
+  stroke-opacity: 0.55;
+}
+
+.facet {
+  stroke: var(--color-snc-gold-500);
+  stroke-width: 1;
+  stroke-opacity: 0.25;
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE PEDESTAL'S RING — the brand's wheel, flattened onto the top face      */
+/* ---------------------------------------------------------------------- */
+
+.zodiac {
+  position: absolute;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  scale: 1 0.26;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.zodiacRing {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE HOLOGRAM — warm light, never cyan; a hand with no line on it          */
+/* ---------------------------------------------------------------------- */
+
+.column {
+  fill: var(--color-snc-gold-400);
+  fill-opacity: 0.045;
+}
+
+.columnEdge {
+  fill: none;
+  stroke: var(--color-snc-gold-400);
+  stroke-width: 1;
+  stroke-opacity: 0.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.emitter {
+  fill: none;
+  stroke: var(--color-snc-gold-400);
+  stroke-width: 1.4;
+  stroke-opacity: 0.55;
+  vector-effect: non-scaling-stroke;
+}
+
+.emitterCore {
+  fill: color-mix(in oklab, var(--color-snc-flame) 14%, transparent);
+  stroke: var(--color-snc-gold-ramp-pale);
+  stroke-width: 1;
+  stroke-opacity: 0.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.handGlow {
+  fill: var(--color-snc-gold-400);
+  fill-opacity: 0.1;
+  stroke: var(--color-snc-flame-warm);
+  stroke-width: 6;
+  stroke-opacity: 0.08;
+  vector-effect: non-scaling-stroke;
+}
+
+.hand {
+  fill: none;
+  stroke: var(--color-snc-gold-400);
+  stroke-width: 1.1;
+  stroke-opacity: 0.6;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+.orbit {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.orbitRing {
+  fill: none;
+  stroke: var(--color-snc-gold-400);
+  stroke-width: 1;
+  stroke-opacity: 0.3;
+  vector-effect: non-scaling-stroke;
+}
+
+.orbitBead {
+  fill: var(--color-snc-gold-ramp-pale);
+  fill-opacity: 0.7;
+}
+
+/* A candle's pool of light: a soft radial, never a flat disc with a rim. Flickers with its flame. */
+.candleGlow {
+  position: absolute;
+  width: 14cqw;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-snc-flame) 40%, transparent),
+    color-mix(in oklab, var(--color-snc-flame-warm) 16%, transparent) 30%,
+    transparent 68%
+  );
+  pointer-events: none;
+}
+
+.leader {
+  stroke: var(--color-snc-gold-500);
+  stroke-width: 1;
+  stroke-opacity: 0.6;
+}
+
+.leaderDot {
+  fill: var(--color-snc-gold-400);
+}
+
+.dust {
+  fill: var(--color-snc-gold-ramp-pale);
+}
+
+.dustA {
+  fill-opacity: 0.5;
+}
+
+.dustB {
+  fill-opacity: 0.32;
+}
+
+.dustC {
+  fill-opacity: 0.22;
+}
+
+/* ---------------------------------------------------------------------- */
+/* MOTION — MID and HIGH only; still at LOW, FLOOR, and before measurement   */
+/* ---------------------------------------------------------------------- */
+
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .flame {
+  animation: sncRoomFlicker var(--snc-flicker-period, 370ms) linear infinite;
+}
+
+/* The layers are NOT promoted with will-change. Measured on the real GPU (ANGLE/D3D11, 11 Sep 2026)
+   with and without it: p50 and p95 were 16.7/16.8 ms either way at 1440 and 390, and promotion only
+   worsened the worst frame (390 at 4x CPU: 133 ms against 17). It also costs a full-stage texture per
+   layer and made software compositing slower, so it earns nothing here. */
+
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .driftA {
+  animation: sncRoomDrift 34s ease-in-out infinite alternate;
+}
+
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .driftB {
+  animation: sncRoomDrift 47s ease-in-out -12s infinite alternate-reverse;
+}
+
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .driftC {
+  animation: sncRoomDrift 61s ease-in-out -30s infinite alternate;
+}
+
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .haze {
+  animation: sncRoomHaze 23s ease-in-out infinite alternate;
+}
+
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .orbit {
+  animation-name: sncRoomOrbit;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .handFloat {
+  animation: sncRoomBreathe 5.5s ease-in-out infinite alternate;
+}
+
+/* The lifted leaf's box starts at stage x 1280, y 390 and is 80 × 232: the spine it turns on is
+   at 1292, 506 — 15% across and 50% down. */
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .flutter {
+  transform-origin: 15% 50%;
+  animation: sncRoomFlutter 9s ease-in-out infinite;
+}
+
+:is(.stageBox[data-snc-tier="HIGH"], .stageBox[data-snc-tier="MID"]) .scrollChevron {
+  animation: sncRoomBob 2.6s ease-in-out infinite alternate;
+}
+
+/* ±4% opacity — the token's delta — on an irregular pattern, so no two candles keep time. */
+@keyframes sncRoomFlicker {
+  0% {
+    opacity: 1;
+  }
+  21% {
+    opacity: calc(1 - var(--snc-flicker-opacity-delta));
+  }
+  38% {
+    opacity: 0.99;
+  }
+  59% {
+    opacity: calc(1 - var(--snc-flicker-opacity-delta) * 0.7);
+  }
+  81% {
+    opacity: 1;
+  }
+  100% {
+    opacity: calc(1 - var(--snc-flicker-opacity-delta) * 0.4);
+  }
+}
+
+@keyframes sncRoomDrift {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 14px -30px;
+  }
+}
+
+@keyframes sncRoomHaze {
+  from {
+    opacity: 0.75;
+    translate: -1% 0;
+  }
+  to {
+    opacity: 1;
+    translate: 1% -1%;
+  }
+}
+
+@keyframes sncRoomOrbit {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes sncRoomBreathe {
+  from {
+    opacity: 0.82;
+    translate: 0 3px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 -3px;
+  }
+}
+
+@keyframes sncRoomFlutter {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  40% {
+    rotate: -1.2deg;
+  }
+  55% {
+    rotate: 0.6deg;
+  }
+}
+
+@keyframes sncRoomBob {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 4px;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE CAMERA — MID/HIGH push in; LOW crossfades; FLOOR does not move        */
+/* ---------------------------------------------------------------------- */
+
+.stageBox[data-snc-tier="LOW"] .set[data-snc-camera] {
+  scale: none !important;
+  opacity: 0;
+}
+
+.set[data-snc-camera] .overlay,
+.set[data-snc-camera] .objectLabel {
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE PHONE'S VIGNETTE — the pedestal and the hologram, nothing else        */
+/* ---------------------------------------------------------------------- */
+
+.vignette [data-snc-room-object]:not([data-snc-room-object="pedestal"], [data-snc-room-object="hologram"]) {
+  display: none;
+}
+
+.vignette .shade {
+  background-image: radial-gradient(
+    ellipse 30% 58% at 33% 50%,
+    transparent 40%,
+    color-mix(in oklab, var(--color-snc-stone-900) 70%, transparent) 78%,
+    var(--color-snc-stone-900)
+  );
+}
+
+/* The vignette has no page edge of its own: it dissolves into the ground above and below it. */
+.vignette {
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 88%, transparent);
+}
+
+/* ---------------------------------------------------------------------- */
+/* B5 — THE WORDS OVER THE ROOM                                             */
+/* ---------------------------------------------------------------------- */
+
+.overlay {
+  position: absolute;
+  top: 6.5%;
+  left: 57.2%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55cqw;
+  width: 30cqw;
+  translate: -50% 0;
+  text-align: center;
+  transition: opacity 500ms var(--snc-ease);
+}
+
+.overlayWordmark {
+  margin: 0;
+  font-family: var(--font-snc-display);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 4.3cqw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: 0.06em;
+}
+
+.overlayHi {
+  margin: 0;
+  font-family: var(--font-snc-devanagari);
+  font-size: clamp(1rem, 1.4cqw, 1.5rem);
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--color-snc-gold-500);
+}
+
+.overlayMotto {
+  margin: 0.5cqw 0 0;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: clamp(0.66rem, 0.82cqw, 0.9rem);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-snc-gold-500) 88%, transparent);
+}
+
+.overlayStory {
+  margin: 0;
+  font-family: var(--font-snc-serif);
+  font-size: clamp(1.15rem, 1.6cqw, 1.75rem);
+  line-height: 1.35;
+  color: var(--color-snc-parchment);
+}
+
+.overlayActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.1cqw;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--font-snc-display);
+  font-weight: 600;
+  font-size: clamp(0.66rem, 0.78cqw, 0.8rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    filter 400ms var(--snc-ease),
+    color 400ms var(--snc-ease);
+}
+
+.primary {
+  padding: 0.4rem 0.45rem 0.4rem 1.15rem;
+  color: var(--color-snc-gold-400);
+  background-color: color-mix(in oklab, var(--color-snc-obsidian) 90%, transparent);
+}
+
+.primary:hover,
+.primary:focus-visible {
+  filter: brightness(1.22);
+  outline: none;
+}
+
+.primary:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-snc-gold-400) 40%, transparent);
+}
+
+.primaryArrow {
+  width: 2rem;
+  color: var(--color-snc-gold-400);
+}
+
+.secondary {
+  padding: 0.62rem 1.05rem;
+  color: color-mix(in oklab, var(--color-snc-gold-600) 95%, transparent);
+  background-color: color-mix(in oklab, var(--color-snc-obsidian) 72%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-snc-gold-600) 60%, transparent);
+}
+
+.secondary:hover,
+.secondary:focus-visible {
+  color: var(--color-snc-gold-500);
+  outline: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE LABELS ON THE ROOM'S OBJECTS                                          */
+/* ---------------------------------------------------------------------- */
+
+.objectLabel {
+  position: absolute;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  padding: 0.3rem 0.6rem 0.35rem;
+  translate: 0 -50%;
+  text-decoration: none;
+  color: var(--color-snc-gold-500);
+  background-color: color-mix(in oklab, var(--color-snc-obsidian) 82%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-snc-gold-600) 70%, transparent);
+  transition:
+    color 250ms var(--snc-ease),
+    box-shadow 250ms var(--snc-ease),
+    opacity 500ms var(--snc-ease);
+}
+
+.objectLabelEnd {
+  align-items: flex-end;
+}
+
+.objectLabel:hover,
+.objectLabel:focus-visible {
+  color: var(--color-snc-gold-400);
+  box-shadow: inset 0 0 0 1px var(--color-snc-gold-500);
+  outline: none;
+}
+
+.objectLabelHi {
+  font-family: var(--font-snc-devanagari);
+  font-size: clamp(0.82rem, 1cqw, 1.05rem);
+  line-height: 1.25;
+  letter-spacing: normal;
+}
+
+.objectLabelEn {
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: clamp(0.56rem, 0.66cqw, 0.7rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+/* ---------------------------------------------------------------------- */
+/* PINNED TO THE HERO                                                       */
+/* ---------------------------------------------------------------------- */
+
+.corner {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  z-index: 2;
+}
+
+.scrollCue {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  translate: -50% 0;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: color-mix(in oklab, var(--color-snc-gold-500) 85%, transparent);
+  transition: color 250ms var(--snc-ease);
+}
+
+.scrollCue:hover,
+.scrollCue:focus-visible {
+  color: var(--color-snc-gold-400);
+  outline: none;
+}

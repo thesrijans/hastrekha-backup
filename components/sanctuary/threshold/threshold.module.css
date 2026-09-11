@@ -1,0 +1,444 @@
+/*
+ * THE THRESHOLD — §6.1's score, as keyframes.
+ *
+ * Each beat is `.beat` with `--snc-at` set from THRESHOLD_BEATS, and enters over
+ * 1.2 s on the sanctuary's own ease: the transition band (700–1200 ms) for text,
+ * the ritual band (1–4 s) for the light. Nothing bounces; nothing flashes. The
+ * point breathes, the dust drifts, and the button waits.
+ *
+ * STATES, written onto the stage by the pre-paint script and then the island:
+ *   playing   the score runs
+ *   skipped   hidden before first paint (returning visitor, or reduced motion)
+ *   entering  the push through the doorway, 1.8 s
+ *   skipping  a 400 ms fade
+ *   done      hidden
+ */
+
+.threshold {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  background-color: var(--color-snc-stone-900);
+  color: var(--color-snc-gold-400);
+  cursor: default;
+}
+
+.threshold[data-snc-threshold="skipped"],
+.threshold[data-snc-threshold="done"] {
+  display: none;
+}
+
+/* While the entrance holds the screen, the page under it does not scroll. */
+:root:has(.threshold[data-snc-threshold="playing"]),
+:root:has(.threshold[data-snc-threshold="entering"]) {
+  overflow: hidden;
+}
+
+.beat {
+  opacity: 0;
+  animation: sncThresholdIn 1200ms var(--snc-ease) var(--snc-at, 0ms) both;
+}
+
+/*
+ * `transform`, NOT `translate`. The door, the path and the button are centred with the individual
+ * `translate` property, and a keyframe on `translate` replaces it: the first capture showed all
+ * three pushed half their width to the right. `transform` composes with `translate` instead.
+ */
+@keyframes sncThresholdIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.4rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* 0.5 s — a single gold point, breathing; 1.5 s — it becomes the doorway  */
+/* ---------------------------------------------------------------------- */
+
+.point {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background-color: var(--color-snc-gold-ramp-pale);
+  box-shadow:
+    0 0 10px 2px color-mix(in oklab, var(--color-snc-flame) 60%, transparent),
+    0 0 42px 12px color-mix(in oklab, var(--color-snc-flame-warm) 22%, transparent);
+  opacity: 0;
+  animation:
+    sncThresholdPoint 2000ms var(--snc-ease) var(--snc-at, 500ms) both,
+    sncThresholdBreath 2400ms ease-in-out var(--snc-at, 500ms) infinite alternate;
+}
+
+@keyframes sncThresholdPoint {
+  0% {
+    opacity: 0;
+    scale: 0.3;
+  }
+  25% {
+    opacity: 1;
+    scale: 1;
+  }
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 3;
+  }
+}
+
+@keyframes sncThresholdBreath {
+  from {
+    filter: brightness(0.85);
+  }
+  to {
+    filter: brightness(1.15);
+  }
+}
+
+.door {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  height: min(32svh, 17rem);
+  aspect-ratio: 100 / 180;
+  translate: -50% -50%;
+  transform-origin: 50% 62%;
+}
+
+/* The light beyond the door: the room's candle, seen from far off. */
+.doorLight {
+  position: absolute;
+  inset: 3% 8% 0;
+  border-radius: 50% 50% 0 0 / 28% 28% 0 0;
+  background-image: radial-gradient(
+    60% 55% at 50% 72%,
+    color-mix(in oklab, var(--color-snc-flame) 38%, transparent),
+    color-mix(in oklab, var(--color-snc-flame-warm) 16%, transparent) 55%,
+    color-mix(in oklab, var(--color-snc-stone-800) 90%, transparent)
+  );
+}
+
+.doorFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.doorFrame path {
+  fill: none;
+  stroke: var(--color-snc-gold-500);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.doorFrame .doorInner {
+  stroke: var(--color-snc-gold-600);
+  stroke-opacity: 0.7;
+}
+
+.doorMotes {
+  position: absolute;
+  inset: 8% 10% 0;
+  overflow: hidden;
+  border-radius: 50% 50% 0 0 / 28% 28% 0 0;
+}
+
+.doorMote {
+  position: absolute;
+  bottom: -4%;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background-color: var(--color-snc-gold-ramp-pale);
+  box-shadow: 0 0 4px color-mix(in oklab, var(--color-snc-flame) 70%, transparent);
+  opacity: 0;
+  animation: sncThresholdMote var(--snc-mote-dur, 5000ms) linear var(--snc-mote-delay, 1500ms) infinite;
+}
+
+@keyframes sncThresholdMote {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  85% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    translate: 0.6rem -16rem;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* 2.5–5.0 s — the name, its own script, and the two lines                 */
+/* ---------------------------------------------------------------------- */
+
+.titles {
+  position: absolute;
+  top: max(4%, env(safe-area-inset-top, 0px));
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: min(92vw, 36rem);
+  translate: -50% 0;
+  text-align: center;
+}
+
+.emblem {
+  margin-bottom: 0.2rem;
+}
+
+.thresholdName {
+  margin: 0;
+  font-family: var(--font-snc-display);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 9vw, 3.6rem);
+  line-height: 1.05;
+  letter-spacing: 0.08em;
+}
+
+/* Devanagari is never letter-spaced. */
+.thresholdNameHi {
+  margin: 0;
+  font-family: var(--font-snc-devanagari);
+  font-size: clamp(1.15rem, 4.4vw, 1.5rem);
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--color-snc-gold-500);
+}
+
+.motto {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: clamp(0.72rem, 2.6vw, 0.86rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-snc-gold-500) 85%, transparent);
+}
+
+.story {
+  margin: 0.2rem 0 0;
+  font-family: var(--font-snc-serif);
+  font-size: clamp(1.15rem, 4.4vw, 1.45rem);
+  line-height: 1.4;
+  color: var(--color-snc-parchment);
+}
+
+/* ---------------------------------------------------------------------- */
+/* 6.0 s — a lit path of gold dust toward the door                         */
+/* ---------------------------------------------------------------------- */
+
+.path {
+  position: absolute;
+  top: calc(55% + min(16svh, 8.5rem));
+  bottom: 0;
+  left: 50%;
+  width: min(88vw, 34rem);
+  translate: -50% 0;
+  clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
+  background-image:
+    radial-gradient(circle, color-mix(in oklab, var(--color-snc-gold-400) 50%, transparent) 0 0.8px, transparent 1.4px),
+    radial-gradient(
+      50% 90% at 50% 0%,
+      color-mix(in oklab, var(--color-snc-flame-warm) 16%, transparent),
+      transparent 80%
+    );
+  background-size:
+    12px 10px,
+    100% 100%;
+  mask-image: linear-gradient(to top, transparent, black 30%, black 70%, transparent);
+}
+
+/* ---------------------------------------------------------------------- */
+/* 6.5 s — the button, which waits                                         */
+/* ---------------------------------------------------------------------- */
+
+.enter {
+  position: absolute;
+  bottom: max(6%, calc(env(safe-area-inset-bottom, 0px) + 1.5rem));
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.55rem 0.6rem 0.55rem 1.4rem;
+  translate: -50% 0;
+  font: inherit;
+  white-space: nowrap;
+  color: var(--color-snc-gold-400);
+  background-color: color-mix(in oklab, var(--color-snc-obsidian) 94%, transparent);
+  cursor: pointer;
+  transition: filter 300ms var(--snc-ease);
+}
+
+.enter:hover,
+.enter:focus-visible {
+  filter: brightness(1.2);
+  outline: none;
+}
+
+.enter:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-snc-gold-400) 45%, transparent);
+}
+
+.enterLabel {
+  font-family: var(--font-snc-display);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.enterArrow {
+  width: 2.2rem;
+  color: var(--color-snc-gold-400);
+}
+
+.skip {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top, 0px));
+  right: 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  background: none;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-snc-gold-600) 95%, transparent);
+  cursor: pointer;
+  opacity: 0;
+  animation: sncThresholdIn 800ms var(--snc-ease) 800ms both;
+}
+
+.skip:hover,
+.skip:focus-visible {
+  color: var(--color-snc-gold-500);
+  outline: none;
+}
+
+.skip:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE PUSH — a CSS push and a bloom crossfade (the fallback tiers' form)  */
+/* ---------------------------------------------------------------------- */
+
+.bloom {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: radial-gradient(
+    circle at 50% 55%,
+    color-mix(in oklab, var(--color-snc-flame) 75%, transparent),
+    color-mix(in oklab, var(--color-snc-flame-warm) 45%, transparent) 32%,
+    transparent 72%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
+.threshold[data-snc-threshold="entering"] {
+  animation: sncThresholdLeave 1800ms var(--snc-ease) both;
+  pointer-events: none;
+}
+
+.threshold[data-snc-threshold="entering"] .door {
+  animation: sncThresholdPush 1800ms var(--snc-ease) both;
+}
+
+/* The jambs pass the camera and fade: a CSS scale magnifies their hairlines nine-fold, and a
+   door frame that stayed lit would read as two bars sliding off the screen rather than a threshold. */
+.threshold[data-snc-threshold="entering"] .doorFrame {
+  animation: sncThresholdOut 1000ms var(--snc-ease) both;
+}
+
+.threshold[data-snc-threshold="entering"] .bloom {
+  animation: sncThresholdBloom 1800ms var(--snc-ease) both;
+}
+
+.threshold[data-snc-threshold="entering"] .titles,
+.threshold[data-snc-threshold="entering"] .path,
+.threshold[data-snc-threshold="entering"] .enter,
+.threshold[data-snc-threshold="entering"] .skip {
+  animation: sncThresholdOut 600ms var(--snc-ease) both;
+}
+
+.threshold[data-snc-threshold="skipping"] {
+  animation: sncThresholdOut 400ms var(--snc-ease) both;
+  pointer-events: none;
+}
+
+@keyframes sncThresholdPush {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 1;
+    scale: 9;
+  }
+}
+
+@keyframes sncThresholdBloom {
+  0% {
+    opacity: 0;
+  }
+  55% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes sncThresholdLeave {
+  0%,
+  55% {
+    background-color: var(--color-snc-stone-900);
+    opacity: 1;
+  }
+  100% {
+    background-color: transparent;
+    opacity: 0;
+  }
+}
+
+/* An explicit start: the beats rest at opacity 0 under their entry animation, so an implicit
+   `from` would be that resting 0 and the fade would be a cut. */
+@keyframes sncThresholdOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Belt to the pre-paint script's braces: under reduced motion the stage is never shown. */
+@media (prefers-reduced-motion: reduce) {
+  .threshold {
+    display: none;
+  }
+}

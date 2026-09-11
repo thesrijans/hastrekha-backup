@@ -19,7 +19,8 @@
  *     this file exists to catch.
  *
  *  2. The preloaded set is Cinzel + Cormorant and NOTHING else — asserted as
- *     counts (exactly two `preload: true`, exactly one `preload: false`) and as
+ *     counts (exactly two `preload: true`; the deferred faces are Tiro and,
+ *     since U3, Cormorant's italic for C6's one italic line) and as
  *     arithmetic against the measured KB figures the module carries as data.
  *
  *  3. Cinzel ships the STATIC 600 cut only (the variable latin cut is 25.3 KB
@@ -80,7 +81,12 @@ function fallbackStack(role: string): string[] {
 const cinzel = callSite("Cinzel");
 const cormorant = callSite("Cormorant_Garamond");
 const tiro = callSite("Tiro_Devanagari_Hindi");
-const callSites = `${cinzel}\n${cormorant}\n${tiro}`;
+/* U3: Cormorant's italic, declared as its own deferred face for C6's one italic line. It is the
+   SECOND Cormorant_Garamond call, so `callSite` (first occurrence) still returns the body face. */
+const italicAt = source.indexOf("export const sanctuarySerifItalic");
+ok(italicAt !== -1, "the deferred italic face is declared and exported as sanctuarySerifItalic");
+const cormorantItalic = source.slice(source.indexOf("Cormorant_Garamond({", italicAt), source.indexOf("});", italicAt) + 3);
+const callSites = `${cinzel}\n${cormorant}\n${tiro}\n${cormorantItalic}`;
 
 /* --------------------------- Imports and isolation ------------------------- */
 
@@ -140,16 +146,28 @@ ok(/weight:\s*\["400"\]/.test(tiro), "Tiro declares weight 400 — the only weig
 ok(/display:\s*"swap"/.test(tiro), "Tiro uses display: swap, so the fallback Devanagari stack shows during the second wave");
 ok(/variable:\s*"--font-snc-devanagari"/.test(tiro), "Tiro exposes --font-snc-devanagari");
 
+/* ---------------- Cormorant Garamond italic — deferred (U3, C6) ------------- */
+
+ok(/style:\s*"italic"/.test(cormorantItalic), "the italic face requests the italic style — the real cut, so the browser never slants the upright");
+ok(/weight:\s*"variable"/.test(cormorantItalic), "…on the same variable weight axis as the body face, so one file covers every weight it is set in");
+ok(/subsets:\s*\["latin"\]/.test(cormorantItalic), "…latin only");
+ok(/display:\s*"swap"/.test(cormorantItalic), "…with display: swap per §4");
+ok(
+  /preload:\s*false/.test(cormorantItalic) && !/preload:\s*true/.test(cormorantItalic),
+  "…and preload: FALSE. R1 caps NEW PRELOADED bytes; a deferred face adds none, and the browser fetches it only when there is italic to set — one card below Home's fold",
+);
+ok(/variable:\s*"--font-snc-serif-italic"/.test(cormorantItalic), "it exposes --font-snc-serif-italic");
+
 /* ----------------- The preloaded set is those two and no others ------------ */
 
 ok(count(/preload:\s*true/g) === 2, "exactly two faces are preloaded — Cinzel-600 and Cormorant, per R1's shipping set");
-ok(count(/preload:\s*false/g) === 1, "exactly one face is deferred — Tiro");
-ok(count(/preload:/g) === 3, "every face states its preload posture explicitly; nothing inherits next/font's default of true");
-ok(count(/display:\s*"swap"/g) === 3, "all three faces use display: swap (§4)");
+ok(count(/preload:\s*false/g) === 2, "exactly two faces are deferred — Tiro, and Cormorant's italic");
+ok(count(/preload:/g) === 4, "every face states its preload posture explicitly; nothing inherits next/font's default of true");
+ok(count(/display:\s*"swap"/g) === 4, "all four faces use display: swap (§4)");
 
 const variables = [...source.matchAll(/variable:\s*"(--font-snc-[a-z-]+)"/g)].map((match) => match[1]);
-ok(variables.length === 3, "all three faces declare a --font-snc-* CSS variable");
-ok(new Set(variables).size === 3, "the three --font-snc-* variables are distinct, so no face silently overwrites another");
+ok(variables.length === 4, "all four faces declare a --font-snc-* CSS variable");
+ok(new Set(variables).size === 4, "the four --font-snc-* variables are distinct, so no face silently overwrites another");
 ok(
   !/--font-inter|--font-space-grotesk|--color-ink/.test(source),
   "the sanctuary layer redeclares none of the root layout's or globals.css's tokens — the snc- prefix is what keeps them apart",
@@ -169,7 +187,14 @@ ok(devanagariKb === 62.1, "Tiro devanagari 400 is the measured 62.1 KB under nex
 ok(baselineKb === 69.1, "Inter + Space Grotesk already cost 69.1 KB on every route, and the root layout stays untouched");
 ok(ceilingKb === 90, "R1's ceiling on NEW preloaded bytes is 90 KB");
 
+const italicKb = budget("serifItalicDeferred");
+ok(italicKb === 38.4, "Cormorant italic latin variable is the measured 38.4 KB, on the file next/font itself fetched");
+
 const preloadedTotal = displayKb + serifKb;
+ok(
+  preloadedTotal + italicKb > ceilingKb,
+  "preloading the italic as well would be 90.2 KB — over the ceiling on its own. Deferred is the only posture R1 allows it, which is why it is preload: false",
+);
 ok(Math.abs(preloadedTotal - 51.8) < 1e-9, "the preloaded set is Cinzel-600 + Cormorant = 51.8 KB, and nothing else");
 ok(preloadedTotal <= ceilingKb, "51.8 KB of new preloaded bytes fits inside the 90 KB ceiling");
 ok(
@@ -186,11 +211,12 @@ ok(
 ok(/export const SANCTUARY_FONT_CLASS: string =/.test(source), "SANCTUARY_FONT_CLASS is exported and typed");
 const classBody = source.slice(source.indexOf("export const SANCTUARY_FONT_CLASS"));
 ok(
-  /sanctuaryDisplay\.variable[\s\S]*sanctuarySerif\.variable[\s\S]*sanctuaryDevanagari\.variable/.test(classBody) &&
-    /\.join\(" "\)/.test(classBody),
-  "SANCTUARY_FONT_CLASS joins all three .variable classes, so a layout applies one className and no consumer has to know the order",
+  /sanctuaryDisplay\.variable[\s\S]*sanctuarySerif\.variable[\s\S]*sanctuaryDevanagari\.variable[\s\S]*sanctuarySerifItalic\.variable/.test(
+    classBody,
+  ) && /\.join\(" "\)/.test(classBody),
+  "SANCTUARY_FONT_CLASS joins all four .variable classes, so a layout applies one className and no consumer has to know the order",
 );
-for (const name of ["sanctuaryDisplay", "sanctuarySerif", "sanctuaryDevanagari"]) {
+for (const name of ["sanctuaryDisplay", "sanctuarySerif", "sanctuaryDevanagari", "sanctuarySerifItalic"]) {
   ok(source.includes(`export const ${name} =`), `${name} is exported individually for callers that need one face`);
 }
 ok(/export const SANCTUARY_FONT_FALLBACKS/.test(source), "SANCTUARY_FONT_FALLBACKS is exported for the swap window");

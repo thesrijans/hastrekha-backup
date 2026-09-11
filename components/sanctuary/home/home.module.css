@@ -1,0 +1,674 @@
+/*
+ * HOME — the masthead, the content below the room, and the cards.
+ *
+ * Every colour is a --color-snc-* token; gold is spent only on headings,
+ * borders, icons, dividers, the primary action and actives, and the majority of
+ * every screen stays dark. No radius except the medallion's disc. Devanagari is
+ * never letter-spaced.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* WHICH LAYOUT — the room on a wide landscape screen, the vertical scene   */
+/* everywhere else. The server renders both; this decides.                  */
+/* ---------------------------------------------------------------------- */
+
+.roomOnly {
+  display: none;
+}
+
+.portraitOnly {
+  display: block;
+}
+
+@media (min-width: 48rem) and (min-aspect-ratio: 1/1) {
+  .roomOnly {
+    display: block;
+  }
+
+  .portraitOnly {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* C1 — THE MASTHEAD                                                        */
+/* ---------------------------------------------------------------------- */
+
+.masthead {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: max(1.1rem, env(safe-area-inset-top, 0px)) 1rem 0.4rem;
+  text-align: center;
+}
+
+.mastheadProfile {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top, 0px));
+  right: 1rem;
+}
+
+.mastheadEmblem {
+  margin-bottom: -0.35rem;
+}
+
+/* The display face at the size the reference strikes it; the colour, clip and emboss stay
+   GoldText's own (see gold-text.module.css on the five properties a module must never set). */
+.mastheadName {
+  margin: 0;
+  font-family: var(--font-snc-display);
+  font-weight: 600;
+  font-size: clamp(2.35rem, 11.5vw, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+}
+
+.mastheadMotto {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.mastheadNameHi {
+  font-family: var(--font-snc-devanagari);
+  font-size: 1.02rem;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: color-mix(in oklab, var(--color-snc-gold-500) 85%, transparent);
+}
+
+.profile {
+  display: inline-flex;
+  color: var(--color-snc-gold-500);
+  text-decoration: none;
+  transition: color 250ms var(--snc-ease);
+}
+
+.profile:hover,
+.profile:focus-visible {
+  color: var(--color-snc-gold-400);
+  outline: none;
+}
+
+.profile:focus-visible .profileMedallion {
+  box-shadow:
+    inset 0 0 0 1px var(--color-snc-gold-400),
+    0 0 0 3px color-mix(in oklab, var(--color-snc-gold-400) 35%, transparent);
+}
+
+.profileMedallion {
+  width: 2.6rem;
+  color: inherit;
+}
+
+/* The vertical scene's vignette: pedestal and hologram, in a band under the masthead. */
+.vignetteBand {
+  margin-top: 0.4rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE CHAMBER — Part C's content                                           */
+/* ---------------------------------------------------------------------- */
+
+.chamber {
+  position: relative;
+  width: 100%;
+}
+
+/* Once the room is above it, the content sits on a darker reading-chamber ground under one rule. */
+@media (min-width: 48rem) and (min-aspect-ratio: 1/1) {
+  .chamber {
+    background-image: linear-gradient(
+      180deg,
+      var(--color-snc-stone-900),
+      color-mix(in oklab, var(--color-snc-stone-900) 82%, transparent) 14rem,
+      color-mix(in oklab, var(--color-snc-stone-900) 70%, transparent)
+    );
+  }
+}
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "greeting"
+    "begin"
+    "plate"
+    "paths"
+    "wisdom"
+    "colophon";
+  gap: 2rem;
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1.25rem 1rem 1.5rem;
+}
+
+@media (min-width: 34rem) {
+  .content {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-areas:
+      "greeting plate"
+      "begin begin"
+      "paths paths"
+      "wisdom wisdom"
+      "colophon colophon";
+    column-gap: 1.25rem;
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .content {
+    column-gap: 3.5rem;
+    row-gap: 2.75rem;
+    padding: 4.5rem 3rem 3rem;
+  }
+}
+
+.areaGreeting {
+  grid-area: greeting;
+}
+
+.areaBegin {
+  grid-area: begin;
+}
+
+.areaPlate {
+  grid-area: plate;
+}
+
+.areaPaths {
+  grid-area: paths;
+}
+
+.areaWisdom {
+  grid-area: wisdom;
+}
+
+.areaColophon {
+  grid-area: colophon;
+}
+
+/* ---------------------------------------------------------------------- */
+/* C2 — THE GREETING                                                        */
+/* ---------------------------------------------------------------------- */
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.namaste {
+  margin: 0;
+  font-family: var(--font-snc-devanagari);
+  font-size: 1.3rem;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--color-snc-gold-500);
+}
+
+/* Cormorant in gold: GoldText supplies the metal, this supplies the face and the size. */
+.storyTitle {
+  margin: 0;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: clamp(2.1rem, 8vw, 3.2rem);
+  line-height: 1.04;
+  letter-spacing: 0;
+}
+
+.greetingDivider {
+  max-width: 100%;
+}
+
+.storyBody {
+  margin: 0;
+  max-width: 32rem;
+  font-family: var(--font-snc-serif);
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: var(--color-snc-parchment);
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE CARD FRAME — outer, inner, corners                                   */
+/* ---------------------------------------------------------------------- */
+
+.frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.frameOuter {
+  position: absolute;
+  inset: 0;
+  transition: filter 500ms var(--snc-ease);
+}
+
+.frameInner {
+  position: absolute;
+  inset: 5px;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-snc-gold-600) 75%, transparent);
+  transition: box-shadow 500ms var(--snc-ease);
+}
+
+.cornerTl,
+.cornerTr,
+.cornerBl,
+.cornerBr {
+  position: absolute;
+}
+
+.cornerTl {
+  top: 1px;
+  left: 1px;
+}
+
+.cornerTr {
+  top: 1px;
+  right: 1px;
+}
+
+.cornerBl {
+  bottom: 1px;
+  left: 1px;
+}
+
+.cornerBr {
+  right: 1px;
+  bottom: 1px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* C4 — BEGIN YOUR READING                                                  */
+/* ---------------------------------------------------------------------- */
+
+.begin {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1rem 1rem 0.9rem;
+  text-decoration: none;
+  color: inherit;
+  background-color: color-mix(in oklab, var(--color-snc-stone-900) 80%, transparent);
+}
+
+@media (min-width: 34rem) {
+  .begin {
+    gap: 1.5rem;
+    padding: 1.25rem 1.75rem 1.25rem 1.5rem;
+  }
+}
+
+.begin:hover .frameOuter,
+.begin:focus-visible .frameOuter {
+  filter: brightness(1.3);
+}
+
+.begin:hover .frameInner,
+.begin:focus-visible .frameInner {
+  box-shadow: inset 0 0 0 1px var(--color-snc-gold-500);
+}
+
+.begin:focus-visible {
+  outline: var(--snc-stroke-secondary-width) solid var(--color-snc-gold-400);
+  outline-offset: 4px;
+}
+
+.beginSeal {
+  display: inline-flex;
+  transition: scale 500ms var(--snc-ease);
+}
+
+.begin:hover .beginSeal,
+.begin:focus-visible .beginSeal {
+  scale: 1.02;
+}
+
+.beginText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.beginTitle {
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 5.2vw, 2rem);
+  line-height: 1.12;
+  color: var(--color-snc-gold-400);
+}
+
+.beginBody {
+  font-family: var(--font-snc-serif);
+  font-size: clamp(0.98rem, 3.6vw, 1.12rem);
+  line-height: 1.45;
+  color: var(--color-snc-parchment);
+}
+
+.beginArrow {
+  width: 3.2rem;
+  color: var(--color-snc-gold-400);
+  transition:
+    rotate 500ms var(--snc-ease),
+    box-shadow 500ms var(--snc-ease);
+}
+
+.begin:hover .beginArrow,
+.begin:focus-visible .beginArrow {
+  rotate: 6deg;
+  box-shadow:
+    inset 0 0 0 1px var(--color-snc-gold-400),
+    0 0 18px color-mix(in oklab, var(--color-snc-flame-warm) 32%, transparent);
+}
+
+/* Gold rising beside the arrow — only while hovered, never under reduced motion. */
+.motes {
+  position: absolute;
+  right: 2.2rem;
+  bottom: 0.6rem;
+  width: 3rem;
+  height: 5rem;
+  pointer-events: none;
+}
+
+.mote {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--snc-mote) * 22%);
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background-color: var(--color-snc-gold-ramp-pale);
+  box-shadow: 0 0 5px color-mix(in oklab, var(--color-snc-flame) 70%, transparent);
+  opacity: 0;
+}
+
+.begin:hover .mote {
+  animation: sncHomeMoteRise 1800ms var(--snc-ease) calc(var(--snc-mote) * 260ms) infinite;
+}
+
+@keyframes sncHomeMoteRise {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    translate: 0.35rem -4.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motes {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* C5 — EXPLORE YOUR PATH                                                   */
+/* ---------------------------------------------------------------------- */
+
+.paths {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.pathsTitle {
+  margin: 0;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: clamp(1.55rem, 5.5vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.pathList {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 34rem) {
+  .pathList {
+    gap: 0.9rem;
+  }
+}
+
+.pathItem {
+  display: flex;
+  min-width: 0;
+}
+
+.pathCard {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-width: 0;
+  aspect-ratio: 0.88;
+  padding: 0.5rem 0.3rem 0.85rem;
+  text-decoration: none;
+  color: var(--color-snc-gold-500);
+  background-color: color-mix(in oklab, var(--color-snc-stone-900) 80%, transparent);
+  transition: color 400ms var(--snc-ease);
+}
+
+.pathCard:hover,
+.pathCard:focus-visible {
+  color: var(--color-snc-gold-400);
+  outline: none;
+}
+
+.pathCard:hover .frameOuter,
+.pathCard:focus-visible .frameOuter {
+  filter: brightness(1.3);
+}
+
+.pathCard:focus-visible .frameInner {
+  box-shadow: inset 0 0 0 1px var(--color-snc-gold-400);
+}
+
+.pathIcon {
+  width: clamp(1.75rem, 8.5vw, 3.5rem);
+  height: auto;
+}
+
+/* On a wide screen the five panels are nearly square, as in the reference, not tall and empty. */
+@media (min-width: 64rem) {
+  .pathCard {
+    aspect-ratio: 1.08;
+    gap: 0.75rem;
+  }
+}
+
+.pathLabel {
+  max-width: 100%;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: clamp(0.58rem, 2.3vw, 1rem);
+  line-height: 1.1;
+  text-align: center;
+  color: color-mix(in oklab, var(--color-snc-parchment) 88%, var(--color-snc-gold-500));
+  overflow-wrap: anywhere;
+}
+
+/* With no reading in the tab, the card is quiet — it opens the chamber instead. */
+.pathQuiet {
+  color: color-mix(in oklab, var(--color-snc-gold-600) 92%, transparent);
+}
+
+.pathQuiet .pathLabel {
+  color: color-mix(in oklab, var(--color-snc-parch-edge) 72%, transparent);
+}
+
+.pathQuiet .frameOuter {
+  opacity: 0.6;
+}
+
+.pathList[data-snc-reading="absent"] .whenPresent,
+.pathList[data-snc-reading="present"] .whenAbsent {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* C6 — WISDOM OF THE DAY                                                   */
+/* ---------------------------------------------------------------------- */
+
+.wisdom {
+  min-width: 0;
+}
+
+.wisdomLeaf {
+  width: 100%;
+}
+
+.wisdomBody {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.35rem 1.25rem 1.4rem;
+}
+
+@media (min-width: 34rem) {
+  .wisdomBody {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2rem;
+    padding: 1.9rem 2.4rem;
+  }
+}
+
+.wisdomText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.wisdomTitle {
+  margin: 0;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 1.4rem;
+  line-height: 1.15;
+  color: var(--color-snc-ink);
+}
+
+.verse {
+  margin: 0;
+  font-family: var(--font-snc-devanagari);
+  font-size: clamp(1.02rem, 4vw, 1.3rem);
+  line-height: 1.75;
+  letter-spacing: normal;
+  color: var(--color-snc-ink);
+}
+
+/* The real italic cut — never a slanted upright. */
+.translation {
+  margin: 0;
+  font-family: var(--font-snc-serif-italic);
+  font-style: italic;
+  font-size: clamp(1.02rem, 3.8vw, 1.18rem);
+  line-height: 1.5;
+  color: var(--color-snc-ink);
+}
+
+.attribution {
+  margin: 0;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--color-snc-ink) 78%, var(--color-snc-parch-edge));
+}
+
+/* On a phone the lotus sits in the leaf's top corner, beside the short title, rather than taking a column. */
+.lotus {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  width: 5rem;
+  height: auto;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+@media (min-width: 34rem) {
+  .lotus {
+    position: static;
+    width: clamp(6rem, 14vw, 9.5rem);
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* THE COLOPHON                                                             */
+/* ---------------------------------------------------------------------- */
+
+.colophon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  padding-top: 0.5rem;
+  text-align: center;
+}
+
+.disclaimer {
+  margin: 0;
+  max-width: 38rem;
+  font-family: var(--font-snc-serif);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--color-snc-parch-edge);
+}
+
+.colophonLinks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.8rem;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-snc-gold-600) 90%, transparent);
+}
+
+.colophonLinks a {
+  color: color-mix(in oklab, var(--color-snc-gold-500) 85%, transparent);
+  text-decoration: none;
+  transition: color 250ms var(--snc-ease);
+}
+
+.colophonLinks a:hover,
+.colophonLinks a:focus-visible {
+  color: var(--color-snc-gold-400);
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}

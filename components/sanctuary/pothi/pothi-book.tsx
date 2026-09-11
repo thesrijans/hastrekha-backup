@@ -463,6 +463,12 @@ export interface PothiBookProps {
   readonly backHref?: string;
   /** Classes for the book's outer box. The stylesheet is in @layer components, so a utility still wins. */
   readonly className?: string;
+  /**
+   * The leaf to open at, as an index into the chapters — Home's path cards send
+   * a reader to their chapter. Read once, when the book first opens; anything
+   * the book cannot honour opens at leaf I, exactly as no value does.
+   */
+  readonly initialIndex?: number;
 }
 
 /* ================================ THE BOOK ================================ */
@@ -480,13 +486,16 @@ export function PothiBook({
   sessionId,
   backHref,
   className,
+  initialIndex = 0,
 }: PothiBookProps): ReactElement {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() =>
+    Number.isInteger(initialIndex) && initialIndex >= 0 && initialIndex < POTHI_CHAPTERS.length ? initialIndex : 0,
+  );
   const [drag, setDrag] = useState<number | null>(null);
   const [flightLeaf, setFlightLeaf] = useState<number | null>(null);
   const [degraded, setDegraded] = useState(false);
 
-  const indexRef = useRef(0);
+  const indexRef = useRef(index);
   const inFlightRef = useRef(false);
   const flightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sampledRef = useRef(false);

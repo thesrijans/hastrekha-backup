@@ -98,9 +98,8 @@ export function clearSessionCookie(response: NextResponse): void {
   response.cookies.set(SESSION_COOKIE, "", cookieOptions(0));
 }
 
-/** Reads and verifies the session JWT on an incoming request. Returns null for absent/forged/expired. */
-async function readClaims(request: NextRequest): Promise<SessionClaims | null> {
-  const raw = request.cookies.get(SESSION_COOKIE)?.value;
+/** Verifies a raw session JWT, wherever it was read from. Returns null for absent/forged/expired. */
+async function verifyClaims(raw: string | undefined): Promise<SessionClaims | null> {
   if (raw === undefined || raw === "") return null;
   try {
     const { payload } = await jwtVerify(raw, SECRET_KEY, { algorithms: [JWT_ALG] });
@@ -109,6 +108,11 @@ async function readClaims(request: NextRequest): Promise<SessionClaims | null> {
     // Bad signature, wrong alg, or past `exp` — all of these mean "not logged in", never an error.
     return null;
   }
+}
+
+/** Reads and verifies the session JWT on an incoming request. Returns null for absent/forged/expired. */
+async function readClaims(request: NextRequest): Promise<SessionClaims | null> {
+  return verifyClaims(request.cookies.get(SESSION_COOKIE)?.value);
 }
 
 /**
@@ -149,7 +153,25 @@ export async function createSession(userId: string): Promise<string> {
 export async function getSessionUser(request: NextRequest): Promise<SessionUser | null> {
   const claims = await readClaims(request);
   if (claims === null) return null;
+  return resolveSessionUser(claims);
+}
 
+/**
+ * {@link getSessionUser} for Server Components, which are handed no `NextRequest`: the same cookie,
+ * read through `next/headers`, and the same checks. Calling it opts the route into dynamic rendering.
+ *
+ * With no cookie it returns before touching the database, so an anonymous page view costs one
+ * header read and nothing else.
+ */
+export async function getSessionUserFromCookies(): Promise<SessionUser | null> {
+  const store = await cookies();
+  const claims = await verifyClaims(store.get(SESSION_COOKIE)?.value);
+  if (claims === null) return null;
+  return resolveSessionUser(claims);
+}
+
+/** The row behind verified claims, with every revocation check. Shared so the two readers cannot drift. */
+async function resolveSessionUser(claims: SessionClaims): Promise<SessionUser | null> {
   const session = await db.session.findUnique({
     where: { id: claims.sid },
     select: {

@@ -141,10 +141,35 @@ export const sanctuaryDevanagari = Tiro_Devanagari_Hindi({
  * order, or that Tiro is the one that is not preloaded — they apply one
  * className and every `var(--font-snc-*)` below it resolves.
  */
+/**
+ * Cormorant Garamond ITALIC — deferred, for the one line that is set in it.
+ *
+ * C6 sets the Wisdom of the Day's English in Cormorant italic, and the body face
+ * above ships the normal style only. A browser asked for italic from a face with
+ * no italic synthesises one by slanting the upright, which is a different and
+ * visibly worse letter; so the real italic cut is declared here as its own face.
+ *
+ * `preload: false`, and that is what keeps R1 intact: R1 caps NEW PRELOADED bytes,
+ * and a deferred face adds none. The browser fetches the file only when it has
+ * italic text to set, which on every sanctuary route today is one card below the
+ * fold of Home — so the swap happens off-screen.
+ */
+export const sanctuarySerifItalic = Cormorant_Garamond({
+  weight: "variable",
+  style: "italic",
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-snc-serif-italic",
+  // Literal mirror of SANCTUARY_FONT_FALLBACKS.serifBody — next/font needs literals.
+  fallback: ["Iowan Old Style", "Palatino Linotype", "Palatino", "Georgia", "Times New Roman", "serif"],
+});
+
 export const SANCTUARY_FONT_CLASS: string = [
   sanctuaryDisplay.variable,
   sanctuarySerif.variable,
   sanctuaryDevanagari.variable,
+  sanctuarySerifItalic.variable,
 ].join(" ");
 
 /**
@@ -162,6 +187,8 @@ export const SANCTUARY_FONT_BUDGET_KB = {
   serifPreloaded: 36.9,
   /** Tiro Devanagari Hindi, devanagari 400 — second wave, NOT in the preload sum. */
   devanagariDeferred: 62.1,
+  /** Cormorant italic, latin variable — measured 11 Sep 2026 on the file next/font itself fetched (39,300 B). */
+  serifItalicDeferred: 38.4,
   /** Inter + Space Grotesk, already spent on every route by the untouched root layout. */
   rootLayoutBaseline: 69.1,
   /** [R1] ceiling on NEW preloaded bytes for a sanctuary route. */

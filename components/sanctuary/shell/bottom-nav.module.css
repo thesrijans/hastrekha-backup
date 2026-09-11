@@ -1,0 +1,111 @@
+/*
+ * THE BOTTOM BAR — dark brown, one fading gold rule, the emblem floating.
+ *
+ * obsidian is the palette's "nav rail, glass panels over stone": the darkest
+ * brown in the set, and the one a surface laid over the room is made of. It is
+ * held nearly opaque rather than blurred — no glassmorphism anywhere in this
+ * language — so the page scrolling under it simply goes dark.
+ */
+
+.bar {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  height: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  padding-inline: 0.35rem;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background-color: color-mix(in oklab, var(--color-snc-obsidian) 97%, transparent);
+  box-shadow: 0 -14px 26px -16px color-mix(in oklab, var(--color-snc-ink) 90%, transparent);
+}
+
+@media (min-width: 48rem) {
+  .bar {
+    display: none;
+  }
+}
+
+/* The token layer's rule — brightest at the centre, gone at both ends — laid along the top edge. */
+.rule {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  min-width: 0;
+  padding-top: 0.2rem;
+  text-decoration: none;
+  color: color-mix(in oklab, var(--color-snc-gold-500) 85%, transparent);
+  transition: color 250ms var(--snc-ease);
+}
+
+.slot:focus-visible {
+  outline: var(--snc-stroke-secondary-width) solid var(--color-snc-gold-400);
+  outline-offset: -3px;
+}
+
+.slotLabel {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.78rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Crimson-gold: the gold mixed toward the ruby, over a low crimson glow. */
+.slotActive {
+  color: color-mix(in oklab, var(--color-snc-gold-500) 52%, var(--color-snc-ruby));
+  background-image: radial-gradient(
+    70% 62% at 50% 100%,
+    color-mix(in oklab, var(--color-snc-ruby) 18%, transparent),
+    transparent 72%
+  );
+}
+
+.slotSoon {
+  color: color-mix(in oklab, var(--color-snc-gold-600) 95%, transparent);
+}
+
+/*
+ * THE CENTRE — larger, circular, floating above the bar's edge.
+ *
+ * The token layer's dark medallion, with two extra rings outside it: a band of
+ * the bar's own brown that cuts the disc out of the rule, and a hairline of old
+ * gold around that, so the emblem sits in a setting rather than on the bar.
+ */
+.centre {
+  justify-self: center;
+  align-self: start;
+  width: 4.5rem;
+  margin-top: -1.65rem;
+  box-shadow:
+    inset 0 0 0 1px var(--color-snc-gold-500),
+    0 0 0 5px var(--color-snc-obsidian),
+    0 0 0 6px color-mix(in oklab, var(--color-snc-gold-600) 70%, transparent),
+    0 12px 22px color-mix(in oklab, var(--color-snc-ink) 80%, transparent);
+  transition: box-shadow 250ms var(--snc-ease);
+}
+
+.centre:hover,
+.centre:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px var(--color-snc-gold-400),
+    0 0 0 5px var(--color-snc-obsidian),
+    0 0 0 6px var(--color-snc-gold-500),
+    0 0 18px color-mix(in oklab, var(--color-snc-flame-warm) 30%, transparent),
+    0 12px 22px color-mix(in oklab, var(--color-snc-ink) 80%, transparent);
+  outline: none;
+}

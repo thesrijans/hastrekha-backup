@@ -1,0 +1,134 @@
+/*
+ * The tradition's palm — an engraved print, deliberately cooler and thinner
+ * than anything that marks a real reading.
+ *
+ * `--snc-tradition-ink` is the gold pulled a third of the way toward the moon's
+ * blue-grey: still of this world's metal, visibly not the warm foil a traced
+ * result is drawn in. Every stroke is a non-scaling hairline under 1px, the
+ * weight of an engraver's line, never the active rung of the stroke ladder.
+ */
+
+.plate {
+  --snc-tradition-ink: color-mix(in oklab, var(--color-snc-gold-500) 68%, var(--color-snc-moon));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  min-width: 0;
+}
+
+/* Side padding is where the names sit; the drawing is the box inside it. */
+.stage {
+  position: relative;
+  width: min(100%, 25rem);
+  padding-inline: 3.9rem;
+}
+
+.handBox {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 216 / 290;
+}
+
+.ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 142%;
+  height: auto;
+  translate: -50% -50%;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.hand {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.outline,
+.crease,
+.line,
+.leader {
+  fill: none;
+  stroke: var(--snc-tradition-ink);
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.outline {
+  stroke-width: 0.95;
+  stroke-opacity: 0.9;
+}
+
+.crease {
+  stroke-width: 0.6;
+  stroke-opacity: 0.45;
+}
+
+.line {
+  stroke-width: 0.8;
+  stroke-opacity: 0.82;
+}
+
+.leader {
+  stroke-width: 0.55;
+  stroke-opacity: 0.5;
+}
+
+.anchorDot {
+  fill: var(--snc-tradition-ink);
+}
+
+/* Devanagari is never letter-spaced. */
+.lineName {
+  position: absolute;
+  font-family: var(--font-snc-devanagari);
+  font-size: clamp(0.7rem, 2.9vw, 0.84rem);
+  line-height: 1;
+  letter-spacing: normal;
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--color-snc-parch-edge) 82%, var(--color-snc-moon));
+  translate: 0 -55%;
+}
+
+.labelLeft {
+  margin-right: 0.3rem;
+}
+
+.labelRight {
+  margin-left: 0.3rem;
+}
+
+.labelBottom {
+  translate: -50% -10%;
+}
+
+.caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.15rem 0.6rem;
+}
+
+.captionHi {
+  font-family: var(--font-snc-devanagari);
+  font-size: 0.92rem;
+  letter-spacing: normal;
+  color: color-mix(in oklab, var(--color-snc-gold-500) 78%, transparent);
+}
+
+.captionEn {
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.64rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-snc-gold-600) 95%, transparent);
+}

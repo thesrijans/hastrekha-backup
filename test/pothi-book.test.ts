@@ -539,16 +539,27 @@ ok(
   routeCode.includes("robots") && routeCode.includes("index: false"),
   "with robots noindex beside the gate, for the case where a preview branch is ever built with NODE_ENV=development",
 );
-for (const mounted of ["SanctuaryDefs", "SanctuaryGround", "SanctuaryHeader"]) {
-  ok(routeCode.includes(`<${mounted}`), `the route mounts <${mounted} />`);
+/* U3 (A1): the assembly moved into <SanctuaryShell>, which every sanctuary route but the chamber is
+ * built on. The contract did not change — it is asserted where it now lives, and the route is
+ * asserted to be built on it. */
+const shellCode = withoutComments(
+  readFileSync(path.resolve(__dirname, "..", "components", "sanctuary", "shell", "sanctuary-shell.tsx"), "utf8"),
+);
+ok(routeCode.includes("<SanctuaryShell"), "the route is assembled by <SanctuaryShell />, which owns the sprite, the ground, the rail, the bar and the header");
+for (const mounted of ["SanctuaryDefs", "SanctuaryGround", "SanctuaryHeader", "NavRail", "BottomNav"]) {
+  ok(shellCode.includes(`<${mounted}`), `the shell mounts <${mounted} />`);
 }
 ok(
-  routeCode.indexOf("<SanctuaryDefs") < routeCode.indexOf("<SanctuaryGround"),
+  shellCode.indexOf("<SanctuaryDefs") < shellCode.indexOf("<SanctuaryGround"),
   "and the sprite is mounted BEFORE anything that references it — a url(#…) resolving to nothing renders unfiltered and silent, which looks like a design decision",
 );
 ok(
+  routeCode.includes("SANCTUARY_FONT_CLASS") && !/from\s+["']@\/lib\/sanctuary\/fonts["']/.test(shellCode),
+  "the route hands the shell its font class, and the shell does not import the font module — next/font throws outside the compiler, which would make the shell unrenderable in a test",
+);
+ok(
   routeCode.includes('activeHref="/read/pothi"'),
-  "the header is told which route it is on, because it is a server component and cannot ask usePathname() — and the route it names is the SANCTUARY one, so the nav marks the page the reader is actually standing on rather than the pre-sanctuary page of the same name",
+  "the shell is told which room this is, because it is a server component and cannot ask usePathname() — and the room it names is the SANCTUARY one, so the rail and the bar light the page the reader is actually standing on rather than the pre-sanctuary page of the same name",
 );
 ok(
   !routeCode.includes('"use client"'),
