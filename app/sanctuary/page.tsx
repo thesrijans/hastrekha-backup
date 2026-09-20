@@ -67,7 +67,19 @@ async function visitorOrNull(): Promise<SessionUser | null> {
 }
 
 export default async function SanctuaryHomePage(): Promise<ReactElement> {
-  if (process.env.NODE_ENV !== "development") notFound();
+  // The gate stays exactly as strict as it was, with one lift: `SNC_MEASURE=1`
+  // also opens the route. The loop harness (docs/specs/loop-harness.md §1) has
+  // to measure this page under a PRODUCTION build — dev carries HMR and an
+  // unminified React, so a frame number taken there measures the dev server
+  // rather than the room — and a production build is precisely the case this
+  // gate closes. scripts/capture/ sets the variable for the life of one
+  // `next start` it owns and never writes it to a file.
+  //
+  // Why an explicit "1" and not merely "set": an empty or accidental value
+  // must not open a dev route in a real deploy. The variable has no
+  // NEXT_PUBLIC_ prefix, so it is server-only and never inlined into a client
+  // bundle, and the `robots: noindex` above still covers the route regardless.
+  if (process.env.NODE_ENV !== "development" && process.env.SNC_MEASURE !== "1") notFound();
 
   const visitor = await visitorOrNull();
   const signedIn = visitor !== null;

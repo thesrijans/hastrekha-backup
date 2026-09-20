@@ -94,6 +94,10 @@ function rules(css: string): { selector: string; body: string }[] {
   const raw = read("app", "sanctuary", "page.tsx");
   const page = withoutComments(raw);
   ok(page.includes('process.env.NODE_ENV !== "development"') && page.includes("notFound()"), "Home is behind the same hard development gate as every sanctuary route");
+  ok(
+    page.includes('process.env.SNC_MEASURE !== "1"'),
+    "with exactly one lift — SNC_MEASURE=1 — so scripts/capture/ can measure a production build (loop-harness §1); comparing against the literal \"1\" is what stops an empty or accidental value opening a dev route in a real deploy",
+  );
   ok(/robots:\s*\{\s*index:\s*false/.test(page), "with noindex beside it");
   ok(/viewportFit:\s*"cover"/.test(page), "and a viewport that extends under the home indicator, so the bar's safe-area padding is real");
   ok(!/["']use client["']/.test(raw), "the page itself is a server component");
