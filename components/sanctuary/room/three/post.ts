@@ -33,9 +33,10 @@
  * what the reader sees rather than 3% of an HDR value later squashed by the
  * tone curve.
  */
-import { ShaderMaterial, Vector2, type PerspectiveCamera, type Scene, type WebGLRenderer } from "three";
+import { ShaderMaterial, Vector2, type PerspectiveCamera, type Scene, type WebGLRenderer, type WebGLRenderTarget } from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
@@ -49,6 +50,62 @@ export const FILM_GRAIN = 0.03;
  * nothing else does.
  */
 export const BLOOM_LAYER = 1;
+
+/**
+ * [R11] The layer the window drapes live on, ALONE — the cinematographer's flag.
+ *
+ * P2.1. The moonlight is a shaft from the window onto the far shelves (P2
+ * ruling 3), and its path passes the drapes that frame the window, 1.4-2 m from
+ * its source; inverse square handed them most of its light, and the one behind
+ * the masthead glowed pink straight through the headline. On a set, a flag is
+ * put between the lamp and what it must not touch. Three.js has no per-object
+ * light linking — a light's layers only decide whether a camera includes it at
+ * all — so the flag is made with layers and two draws: the drapes render first,
+ * on this layer only, lit by every light that also enables it (the key, the
+ * ambient, the candles and the sconces; world.ts) and not by the moon; the rest
+ * of the room then renders over them without clearing.
+ */
+export const DRAPE_LAYER = 2;
+
+/**
+ * The scene, drawn in the two passes [R11] needs.
+ *
+ * First the drapes alone, clearing to the scene's background; then everything
+ * else on the camera's own layers, WITHOUT clearing, so the drapes keep their
+ * pixels and depth and every transparent thing drawn afterwards — dust, haze,
+ * the hologram — still blends over them as it should.
+ */
+class FlaggedRenderPass extends Pass {
+  constructor(
+    private readonly scene: Scene,
+    private readonly camera: PerspectiveCamera,
+  ) {
+    super();
+    this.needsSwap = false;
+  }
+
+  override render(renderer: WebGLRenderer, _writeBuffer: WebGLRenderTarget, readBuffer: WebGLRenderTarget): void {
+    const mask = this.camera.layers.mask;
+    const autoClear = renderer.autoClear;
+    const background = this.scene.background;
+    renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
+    renderer.autoClear = true;
+    this.camera.layers.set(DRAPE_LAYER);
+    renderer.render(this.scene, this.camera);
+    // The second draw must not clear. autoClear alone is not enough: when the
+    // scene's background is a Color, Three FORCES a clear at the start of every
+    // render regardless of autoClear — which is how P2.1's first iteration
+    // wiped the drapes it had just drawn, and made the flag look as if it had
+    // worked because the drapes, and their glow, were simply gone. The
+    // background is already painted by the first draw's clear.
+    this.scene.background = null;
+    renderer.autoClear = false;
+    this.camera.layers.mask = mask;
+    renderer.render(this.scene, this.camera);
+    this.scene.background = background;
+    renderer.autoClear = autoClear;
+  }
+}
 
 /**
  * Luminance, in linear HDR, above which a pixel ON THE BLOOM LAYER blooms.
@@ -103,9 +160,9 @@ export function buildPost(renderer: WebGLRenderer, scene: Scene, camera: Perspec
   const bloom = new UnrealBloomPass(new Vector2(width, height), BLOOM_STRENGTH, BLOOM_RADIUS, BLOOM_THRESHOLD);
   bloomComposer.addPass(bloom);
 
-  /* The final image: the whole scene, the bloom added over it. */
+  /* The final image: the whole scene, drapes flagged [R11], the bloom added over it. */
   const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new FlaggedRenderPass(scene, camera));
   const mix = new ShaderPass(
     new ShaderMaterial({
       uniforms: { baseTexture: { value: null }, bloomTexture: { value: bloomComposer.renderTarget2.texture }, uBloom: { value: 1 } },

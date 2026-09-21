@@ -44,9 +44,12 @@ const REPO = resolve(import.meta.dirname, "..", "..");
 /** Fixed before the first score. See the header. */
 export const THRESHOLDS = {
   keyDominance: 2.0, //        key contribution >= 2x any other single light
-  rimFraction: 0.25, //        moon <= 25% of key, on the pedestal AND over the frame
-  //                              (Amendment 2; the frame half added with P2 ruling 3,
-  //                              which reads the cap literally — stricter, not looser)
+  rimFraction: 0.25, //        moon <= 25% of the key on the SUBJECTS — pedestal, hand
+  //                              column, book (Amendment 2 as the spec wrote it). P2
+  //                              iteration 6 added a whole-frame half; P2.1 reverted
+  //                              it on the product owner's ruling: a window is meant
+  //                              to be brighter than the pedestal, and a frame
+  //                              average would forbid any visible window.
   rimVisible: 0.0008, //       and the rim must actually light something: added
   //                              after iteration 1, when the rim measured 0.00% and
   //                              passed the cap vacuously. This makes the check
@@ -63,6 +66,11 @@ export const THRESHOLDS = {
   handVolume: 0.2, //          hand interior >= 20% of its silhouette (a volume, A1)
   bookVisible: 0.04, //        book region mean luminance >= 4% (parchment reads)
   drapesVisible: 0.015, //     drape regions mean luminance >= 1.5% (velvet, not void)
+  // P2.1, set before the first run: the masthead lines over a drape must be
+  // readable — at least 90% of each line's glyph-core pixels at >= 7:1 against
+  // the pixel behind them (WCAG contrast, measured on the composited page).
+  mastheadContrast: 7,
+  mastheadCoverage: 0.9,
 };
 
 /**
@@ -120,135 +128,9 @@ async function scoreInPage({ regions }) {
     return idx.reduce((sum, i) => sum + lumAt(img, i), 0) / Math.max(1, idx.length);
   };
   const frameLum = (img) => meanLum(img, [0, 0, 1600, 900]);
-
-  /* ---- lights ------------------------------------------------------- */
-  const lights = [];
-  world.scene.traverse((node) => {
-    if (node.isLight) lights.push(node);
-  });
-  // Intensities are set AFTER the tick. renderAt() runs world.tick(), and the
-  // candles' tick writes their flicker intensity back — the first version of
-  // this scorer set intensities before rendering, so the candles came back on
-  // in every render, including the all-dark baseline, and cancelled out of
-  // every comparison: they read 0.0000 and the key read 973x dominant. That was
-  // a measurement artefact. Tick first, then override, then render the post
-  // stack directly.
-  const saved = lights.map((l) => l.intensity);
-  const lit = (setup) => {
-    world.tick(T);
-    setup();
-    post.render(T);
-    return grab();
-  };
-  const only = (target) => () => lights.forEach((l, i) => (l.intensity = l === target ? saved[i] : 0));
-  const none = () => lights.forEach((l) => (l.intensity = 0));
-  const restore = () => lights.forEach((l, i) => (l.intensity = saved[i]));
-
-  const darkImg = lit(none);
-  const dark = frameLum(darkImg);
-  const darkPedestal = meanLum(darkImg, regions.pedestalFace);
-  restore();
-
-  const contribution = lights.map((light) => {
-    const img = lit(only(light));
-    const c = {
-      name: light.name || light.type,
-      type: light.type,
-      colour: `#${light.color.getHexString()}`,
-      frame: frameLum(img) - dark,
-      pedestal: meanLum(img, regions.pedestalFace) - darkPedestal,
-    };
-    restore();
-    return c;
-  });
-
-  const key = contribution.find((c) => c.name === "key");
-  const others = contribution.filter((c) => c !== key && c.type !== "AmbientLight");
-  const strongestOther = Math.max(0, ...others.map((c) => c.frame));
-  const warmPoints = lights.filter((l) => l.isPointLight && l.color.r > l.color.b && l.name === "key");
-
-  /* ---- bloom: WHAT crosses the threshold, object by object ---------- */
-  // ITERATION 3. The first version measured where bloom's HALO landed, inside
-  // hand-drawn stage boxes. But the "floor" box contains the candle flames,
-  // which are ALLOWED to bloom, so their halos were counted as surface bloom.
-  // Amendment 2 says bloom is "confined to candles and the ring": a statement
-  // about which things BLOOM, i.e. which pixels cross the threshold. So this
-  // renders linear HDR — what the bloom pass itself reads — and asks, of every
-  // pixel above the threshold, whether it belongs to a candle, the hologram
-  // (whose base ring is "the ring"), or the zodiac face; anything else is a
-  // violation. The 10% bar is unchanged.
-  const threshold = post.bloom.threshold;
   const BW = gl.drawingBufferWidth;
   const BH = gl.drawingBufferHeight;
-  const target = room.hdrTarget(BW, BH);
-  const readHdr = () => {
-    renderer.setRenderTarget(target);
-    renderer.render(world.scene, world.camera);
-    const buf = new Float32Array(BW * BH * 4);
-    renderer.readRenderTargetPixels(target, 0, 0, BW, BH, buf);
-    renderer.setRenderTarget(null);
-    return buf;
-  };
-  const hdrLum = (buf, i) => 0.2126 * buf[i] + 0.7152 * buf[i + 1] + 0.0722 * buf[i + 2];
-  // STRICTER in iteration 5: "candles and the ring", read literally. Earlier
-  // iterations also allowed the whole hologram; the hand is meant to be a FAINT
-  // volume (Amendment 1), and blooming would contradict that.
-  const allowedAncestor = (node) => {
-    for (let n = node; n; n = n.parent) {
-      if (n.name === "candle" || n.name === "ring") return true;
-      if (n.name === "pedestal" && node.geometry?.type === "CircleGeometry") return true;
-    }
-    return false;
-  };
-
-  // Read what the bloom pass actually sees: the scene through BLOOM_LAYER.
-  // ITERATION 5 — bloom is confined by construction (post.ts), so the honest
-  // measurement is of that pass's input, not of the whole frame.
-  const BLOOM_LAYER = 1;
-  let offLayer = 0;
-  world.scene.traverse((node) => {
-    if ((node.isMesh || node.isPoints) && node.layers.isEnabled(BLOOM_LAYER) && !allowedAncestor(node)) offLayer += 1;
-  });
-  world.tick(T);
-  const layersWas = world.camera.layers.mask;
-  world.camera.layers.set(BLOOM_LAYER);
-  const hdrFull = readHdr();
-  world.camera.layers.mask = layersWas;
-
-  // The hdrAllowed mask: only candles, the hologram and the zodiac face, drawn on
-  // black with no fog, so any lit pixel is theirs.
-  const drawn = [];
-  world.scene.traverse((node) => {
-    if (node.isMesh || node.isPoints) drawn.push([node, node.visible]);
-  });
-  const background = world.scene.background;
-  const fogDensity = world.scene.fog.density;
-  world.scene.background = null;
-  world.scene.fog.density = 0;
-  for (const [node] of drawn) node.visible = allowedAncestor(node);
-  const hdrAllowed = readHdr();
-  for (const [node, was] of drawn) node.visible = was;
-  world.scene.background = background;
-  world.scene.fog.density = fogDensity;
-  target.dispose();
-
-  let totalBloom = 0;
-  let bloomOnSurfaces = 0;
-  let sourcePx = 0;
-  let violationPx = 0;
-  let worstViolation = 0;
-  for (let i = 0; i < hdrFull.length; i += 4) {
-    const l = hdrLum(hdrFull, i);
-    if (l <= threshold) continue;
-    const energy = l - threshold;
-    totalBloom += energy;
-    sourcePx += 1;
-    if (hdrLum(hdrAllowed, i) < 1e-4) {
-      bloomOnSurfaces += energy;
-      violationPx += 1;
-      if (l > worstViolation) worstViolation = l;
-    }
-  }
+  const meanOver = (img, indices) => indices.reduce((sum, i) => sum + lumAt(img, i), 0) / Math.max(1, indices.length);
 
   /* ---- object ID and world position, per pixel ---------------------- */
   // P2 rulings 1 and 2: every measured region is derived from the scene, not
@@ -256,7 +138,7 @@ async function scoreInPage({ regions }) {
   // surface it shows (rgb) and which object that surface belongs to (alpha).
   // Things that do not occlude — additive light, dust, haze, decals — are left
   // out, so a pixel is attributed to the surface a reader actually sees there.
-  const ID = { background: 0, other: 1, floor: 2, drum: 3, lecternTop: 4, parchment: 5, candle: 6, drape: 10 };
+  const ID = { background: 0, other: 1, floor: 2, drum: 3, lecternTop: 4, parchment: 5, candle: 6, pedestal: 7, column: 8, drape: 10 };
   const idTarget = room.hdrTarget(BW, BH);
   const swapped = [];
   let drapeIndex = 0;
@@ -267,6 +149,8 @@ async function scoreInPage({ regions }) {
     if (node.name === "drum") return ID.drum;
     if (node.name === "lectern-top") return ID.lecternTop;
     if (node.name === "parchment") return ID.parchment;
+    if (node.name === "column") return ID.column;
+    for (let n = node.parent; n; n = n.parent) if (n.name === "pedestal") return ID.pedestal;
     if (node.name === "drape") {
       const id = ID.drape + drapeIndex;
       drapeIds.push({ id, node });
@@ -285,7 +169,9 @@ async function scoreInPage({ regions }) {
   world.scene.traverse((node) => {
     if (!(node.isMesh || node.isPoints)) return;
     const material = node.material;
-    const occludes = node.isMesh && (!material.transparent || material.alphaTest > 0);
+    // The hologram's column is transparent light, but it is one of the subjects
+    // the moonlight cap is measured on (P2.1), so it is drawn here as a shape.
+    const occludes = node.isMesh && (!material.transparent || material.alphaTest > 0 || node.name === "column");
     swapped.push([node, node.material, node.visible]);
     if (!occludes) {
       node.visible = false;
@@ -315,9 +201,13 @@ async function scoreInPage({ regions }) {
   world.scene.background = null;
   const clearAlphaWas = renderer.getClearAlpha();
   renderer.setClearAlpha(0);
+  // [R11] The flagged drapes live on their own layer; the ID render must see them.
+  const idLayersWas = world.camera.layers.mask;
+  world.camera.layers.enable(2);
   renderer.setRenderTarget(idTarget);
   renderer.clear();
   renderer.render(world.scene, world.camera);
+  world.camera.layers.mask = idLayersWas;
   const geo = new Float32Array(BW * BH * 4);
   renderer.readRenderTargetPixels(idTarget, 0, 0, BW, BH, geo);
   renderer.setRenderTarget(null);
@@ -395,11 +285,206 @@ async function scoreInPage({ regions }) {
     for (const [i, d] of bookCandidates) if (d <= bookNearCut) bookNear.push(i);
   }
   const parchmentPx = [];
+  const subjectPx = [];
   const drapePx = new Map(drapeIds.map(({ id }) => [id, []]));
   for (let i = 0; i < geo.length; i += 4) {
     const id = idAt(i);
     if (id === ID.parchment) parchmentPx.push(i);
     else if (drapePx.has(id)) drapePx.get(id).push(i);
+    // P2.1: the subjects the moonlight cap is measured on — the pedestal, the
+    // hand's column, the book — as the spec wrote it. Not the whole frame: a
+    // window is meant to be brighter than the pedestal.
+    if (id === ID.drum || id === ID.pedestal || id === ID.column || id === ID.parchment) subjectPx.push(i);
+  }
+
+  /* ---- the masthead, and whether it sits over a drape --------------- */
+  // Mapped from CSS pixels into the canvas's drawing buffer, so each line's
+  // box can be tested against the drape silhouettes from the ID render.
+  const heading = document.querySelector("#snc-room h1");
+  const mastheadEls = heading ? [heading, heading.nextElementSibling, heading.nextElementSibling?.nextElementSibling, heading.nextElementSibling?.nextElementSibling?.nextElementSibling].filter(Boolean) : [];
+  const canvasBox = renderer.domElement.getBoundingClientRect();
+  const drapeSet = new Set(drapeIds.map(({ id }) => id));
+  const masthead = mastheadEls.map((el, index) => {
+    const r = el.getBoundingClientRect();
+    const sx = BW / canvasBox.width;
+    const sy = BH / canvasBox.height;
+    let covered = 0;
+    let total = 0;
+    for (let y = Math.max(0, Math.floor((r.top - canvasBox.top) * sy)); y < Math.min(BH, Math.ceil((r.bottom - canvasBox.top) * sy)); y += 2) {
+      for (let x = Math.max(0, Math.floor((r.left - canvasBox.left) * sx)); x < Math.min(BW, Math.ceil((r.right - canvasBox.left) * sx)); x += 2) {
+        total += 1;
+        if (drapeSet.has(idAt(((BH - 1 - y) * BW + x) * 4))) covered += 1;
+      }
+    }
+    // Which pixels of this line's screenshot clip have a drape behind them —
+    // in the clip's own grid, so the contrast pass can keep only those.
+    const clip = { x: Math.max(0, Math.floor(r.left)), y: Math.max(0, Math.floor(r.top)), width: Math.ceil(r.width), height: Math.ceil(r.height) };
+    const drapeMask = new Array(clip.width * clip.height).fill(0);
+    for (let cy = 0; cy < clip.height; cy += 1) {
+      for (let cx = 0; cx < clip.width; cx += 1) {
+        const bx = Math.floor((clip.x + cx - canvasBox.left) * sx);
+        const by = Math.floor((clip.y + cy - canvasBox.top) * sy);
+        if (bx < 0 || by < 0 || bx >= BW || by >= BH) continue;
+        if (drapeSet.has(idAt(((BH - 1 - by) * BW + bx) * 4))) drapeMask[cy * clip.width + cx] = 1;
+      }
+    }
+    return {
+      line: ["wordmark", "devanagari", "motto", "story"][index] ?? `line ${index}`,
+      text: el.textContent.trim().slice(0, 40),
+      rect: { x: r.left, y: r.top, width: r.width, height: r.height },
+      overDrape: total ? covered / total : 0,
+      drapeMask,
+    };
+  });
+
+
+
+  /* ---- lights ------------------------------------------------------- */
+  const lights = [];
+  world.scene.traverse((node) => {
+    if (node.isLight) lights.push(node);
+  });
+  // Intensities are set AFTER the tick. renderAt() runs world.tick(), and the
+  // candles' tick writes their flicker intensity back — the first version of
+  // this scorer set intensities before rendering, so the candles came back on
+  // in every render, including the all-dark baseline, and cancelled out of
+  // every comparison: they read 0.0000 and the key read 973x dominant. That was
+  // a measurement artefact. Tick first, then override, then render the post
+  // stack directly.
+  const saved = lights.map((l) => l.intensity);
+  const lit = (setup) => {
+    world.tick(T);
+    setup();
+    post.render(T);
+    return grab();
+  };
+  const only = (target) => () => lights.forEach((l, i) => (l.intensity = l === target ? saved[i] : 0));
+  const none = () => lights.forEach((l) => (l.intensity = 0));
+  const restore = () => lights.forEach((l, i) => (l.intensity = saved[i]));
+
+  const darkImg = lit(none);
+  const dark = frameLum(darkImg);
+  const darkPedestal = meanLum(darkImg, regions.pedestalFace);
+  const darkSubject = meanOver(darkImg, subjectPx);
+  // Diagnostic only (no verdict reads it): which light brightens what.
+  const mastheadPx = masthead.map((line) => {
+    const sx = BW / canvasBox.width;
+    const sy = BH / canvasBox.height;
+    const px = [];
+    for (let y = Math.max(0, Math.floor((line.rect.y - canvasBox.top) * sy)); y < Math.min(BH, Math.ceil((line.rect.y + line.rect.height - canvasBox.top) * sy)); y += 2) {
+      for (let x = Math.max(0, Math.floor((line.rect.x - canvasBox.left) * sx)); x < Math.min(BW, Math.ceil((line.rect.x + line.rect.width - canvasBox.left) * sx)); x += 2) {
+        px.push(((BH - 1 - y) * BW + x) * 4);
+      }
+    }
+    return px;
+  });
+  const diagSets = [
+    ...mastheadPx.map((px, k) => [`bg:${masthead[k].line}`, px]),
+    ["parchment", parchmentPx],
+    ...[...drapePx.values()].map((px, k) => [`drape${k}`, px]),
+  ];
+  const diagDark = diagSets.map(([, px]) => meanOver(darkImg, px));
+  restore();
+
+  const contribution = lights.map((light) => {
+    const img = lit(only(light));
+    const c = {
+      name: light.name || light.type,
+      type: light.type,
+      colour: `#${light.color.getHexString()}`,
+      frame: frameLum(img) - dark,
+      pedestal: meanLum(img, regions.pedestalFace) - darkPedestal,
+      subject: meanOver(img, subjectPx) - darkSubject,
+      diag: Object.fromEntries(diagSets.map(([name, px], k) => [name, meanOver(img, px) - diagDark[k]])),
+    };
+    restore();
+    return c;
+  });
+
+  const key = contribution.find((c) => c.name === "key");
+  const others = contribution.filter((c) => c !== key && c.type !== "AmbientLight");
+  const strongestOther = Math.max(0, ...others.map((c) => c.frame));
+  const warmPoints = lights.filter((l) => l.isPointLight && l.color.r > l.color.b && l.name === "key");
+
+  /* ---- bloom: WHAT crosses the threshold, object by object ---------- */
+  // ITERATION 3. The first version measured where bloom's HALO landed, inside
+  // hand-drawn stage boxes. But the "floor" box contains the candle flames,
+  // which are ALLOWED to bloom, so their halos were counted as surface bloom.
+  // Amendment 2 says bloom is "confined to candles and the ring": a statement
+  // about which things BLOOM, i.e. which pixels cross the threshold. So this
+  // renders linear HDR — what the bloom pass itself reads — and asks, of every
+  // pixel above the threshold, whether it belongs to a candle, the hologram
+  // (whose base ring is "the ring"), or the zodiac face; anything else is a
+  // violation. The 10% bar is unchanged.
+  const threshold = post.bloom.threshold;
+  const target = room.hdrTarget(BW, BH);
+  const readHdr = () => {
+    renderer.setRenderTarget(target);
+    renderer.render(world.scene, world.camera);
+    const buf = new Float32Array(BW * BH * 4);
+    renderer.readRenderTargetPixels(target, 0, 0, BW, BH, buf);
+    renderer.setRenderTarget(null);
+    return buf;
+  };
+  const hdrLum = (buf, i) => 0.2126 * buf[i] + 0.7152 * buf[i + 1] + 0.0722 * buf[i + 2];
+  // STRICTER in iteration 5: "candles and the ring", read literally. Earlier
+  // iterations also allowed the whole hologram; the hand is meant to be a FAINT
+  // volume (Amendment 1), and blooming would contradict that.
+  const allowedAncestor = (node) => {
+    for (let n = node; n; n = n.parent) {
+      if (n.name === "candle" || n.name === "ring") return true;
+      if (n.name === "pedestal" && node.geometry?.type === "CircleGeometry") return true;
+    }
+    return false;
+  };
+
+  // Read what the bloom pass actually sees: the scene through BLOOM_LAYER.
+  // ITERATION 5 — bloom is confined by construction (post.ts), so the honest
+  // measurement is of that pass's input, not of the whole frame.
+  const BLOOM_LAYER = 1;
+  let offLayer = 0;
+  world.scene.traverse((node) => {
+    if ((node.isMesh || node.isPoints) && node.layers.isEnabled(BLOOM_LAYER) && !allowedAncestor(node)) offLayer += 1;
+  });
+  world.tick(T);
+  const layersWas = world.camera.layers.mask;
+  world.camera.layers.set(BLOOM_LAYER);
+  const hdrFull = readHdr();
+  world.camera.layers.mask = layersWas;
+
+  // The hdrAllowed mask: only candles, the hologram and the zodiac face, drawn on
+  // black with no fog, so any lit pixel is theirs.
+  const drawn = [];
+  world.scene.traverse((node) => {
+    if (node.isMesh || node.isPoints) drawn.push([node, node.visible]);
+  });
+  const background = world.scene.background;
+  const fogDensity = world.scene.fog.density;
+  world.scene.background = null;
+  world.scene.fog.density = 0;
+  for (const [node] of drawn) node.visible = allowedAncestor(node);
+  const hdrAllowed = readHdr();
+  for (const [node, was] of drawn) node.visible = was;
+  world.scene.background = background;
+  world.scene.fog.density = fogDensity;
+  target.dispose();
+
+  let totalBloom = 0;
+  let bloomOnSurfaces = 0;
+  let sourcePx = 0;
+  let violationPx = 0;
+  let worstViolation = 0;
+  for (let i = 0; i < hdrFull.length; i += 4) {
+    const l = hdrLum(hdrFull, i);
+    if (l <= threshold) continue;
+    const energy = l - threshold;
+    totalBloom += energy;
+    sourcePx += 1;
+    if (hdrLum(hdrAllowed, i) < 1e-4) {
+      bloomOnSurfaces += energy;
+      violationPx += 1;
+      if (l > worstViolation) worstViolation = l;
+    }
   }
 
   /* ---- flicker on surfaces ----------------------------------------- */
@@ -418,7 +503,6 @@ async function scoreInPage({ regions }) {
   const low = shotCandles(0.69);
   const high = shotCandles(0.95);
   candles.forEach((l, i) => (l.intensity = candleSaved[i]));
-  const meanOver = (img, indices) => indices.reduce((sum, i) => sum + lumAt(img, i), 0) / Math.max(1, indices.length);
   const swing = (indices) => {
     const a = meanOver(low, indices);
     const b = meanOver(high, indices);
@@ -594,7 +678,171 @@ async function scoreInPage({ regions }) {
     handVolume: { interior: interiorN ? interiorSum / interiorN : 0, edge: edgeN ? edgeSum / edgeN : 0 },
     book,
     drapes,
+    masthead,
+    subjectPixels: subjectPx.length,
   };
+}
+
+/**
+ * WCAG contrast of each masthead line against what is actually behind it.
+ *
+ * Each line is photographed twice — glyphs showing, glyphs hidden — so the
+ * background is the composited page (the room, the vignette over it,
+ * everything) and the text is exactly what the reader sees: the wordmark's
+ * gold gradient, the motto's 88% alpha, the emboss hairline. Glyph-core pixels
+ * are those whose luminance moves at least half as far as the line's strongest
+ * 5% when the glyphs are hidden, which keeps whole-pixel cores and drops
+ * antialiased fringes at any font size. Each is compared with the pixel behind
+ * it. Decoded in the page: Node has no image decoder here and none is added.
+ */
+async function mastheadContrast(page, lines) {
+  const all = await page.evaluate(() => {
+    const h = document.querySelector("#snc-room h1");
+    return h ? [h, h.nextElementSibling, h.nextElementSibling?.nextElementSibling, h.nextElementSibling?.nextElementSibling?.nextElementSibling].length : 0;
+  });
+  if (all === 0) return lines;
+  await page.evaluate(() => window.__sncRoom.renderAt(1.0));
+  await page.waitForTimeout(200);
+  const setHidden = (hidden) =>
+    page.evaluate((hide) => {
+      const h = document.querySelector("#snc-room h1");
+      for (const el of [h, h.nextElementSibling, h.nextElementSibling.nextElementSibling, h.nextElementSibling.nextElementSibling.nextElementSibling]) {
+        el.style.visibility = hide ? "hidden" : "";
+      }
+    }, hidden);
+  // INFORMATION ONLY, no verdict reads it: the WCAG ratio as WCAG defines it —
+  // each line's SPECIFIED colour (its computed CSS colour, alpha composited in
+  // sRGB) against the measured background behind its glyphs over the drape.
+  // The verdict above measures rendered glyph pixels instead, which also counts
+  // antialiasing: a 12 px glyph's pixels never reach the specified colour, so
+  // the per-pixel number falls short of this one on small text even over black.
+  const colours = await page.evaluate(() => {
+    const h = document.querySelector("#snc-room h1");
+    return [h, h.nextElementSibling, h.nextElementSibling.nextElementSibling, h.nextElementSibling.nextElementSibling.nextElementSibling].map(
+      (el) => getComputedStyle(el).color,
+    );
+  });
+  // rgb()/rgba(), and oklab() — the motto's colour is a color-mix in oklab,
+  // which the browser reports as such. OKLab -> linear sRGB by Ottosson's
+  // published matrices, then encoded to sRGB bytes.
+  const parse = (css) => {
+    const rgb = css.match(/rgba?\(([^)]+)\)/);
+    if (rgb) {
+      const [r, g, b, a = "1"] = rgb[1].split(/[ ,/]+/).filter(Boolean);
+      return { r: Number(r), g: Number(g), b: Number(b), a: Number(a) };
+    }
+    const lab = css.match(/oklab\(([^)]+)\)/);
+    if (lab) {
+      const [L, A, B, alpha = "1"] = lab[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+      const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+      const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+      const q = (L - 0.0894841775 * A - 1.291485548 * B) ** 3;
+      const lin = [
+        4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * q,
+        -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * q,
+        -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * q,
+      ].map((v) => Math.min(1, Math.max(0, v)));
+      const [r, g, b] = lin.map((v) => toSrgb(v));
+      return { r, g, b, a: alpha };
+    }
+    return null;
+  };
+  const toLinear = (v) => {
+    const x = v / 255;
+    return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  };
+  const toSrgb = (lin) => 255 * (lin <= 0.0031308 ? lin * 12.92 : 1.055 * lin ** (1 / 2.4) - 0.055);
+  const wcag = (css, background) => {
+    const c = parse(css);
+    if (!c || c.a === 0) return null;
+    const grey = toSrgb(background);
+    const mix = (v) => c.a * v + (1 - c.a) * grey;
+    const l = 0.2126 * toLinear(mix(c.r)) + 0.7152 * toLinear(mix(c.g)) + 0.0722 * toLinear(mix(c.b));
+    return (Math.max(l, background) + 0.05) / (Math.min(l, background) + 0.05);
+  };
+
+  const out = [];
+  for (const [index, line] of lines.entries()) {
+    const clip = {
+      x: Math.max(0, Math.floor(line.rect.x)),
+      y: Math.max(0, Math.floor(line.rect.y)),
+      width: Math.ceil(line.rect.width),
+      height: Math.ceil(line.rect.height),
+    };
+    const shown = (await page.screenshot({ clip })).toString("base64");
+    await setHidden(true);
+    const bare = (await page.screenshot({ clip })).toString("base64");
+    await setHidden(false);
+    const result = await page.evaluate(
+      async ([a, b, minimum, mask]) => {
+        const load = (b64) =>
+          new Promise((done) => {
+            const img = new Image();
+            img.onload = () => done(img);
+            img.src = `data:image/png;base64,${b64}`;
+          });
+        const [va, vb] = await Promise.all([load(a), load(b)]);
+        const c = document.createElement("canvas");
+        c.width = va.width;
+        c.height = va.height;
+        const ctx = c.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(va, 0, 0);
+        const pa = ctx.getImageData(0, 0, c.width, c.height).data;
+        ctx.clearRect(0, 0, c.width, c.height);
+        ctx.drawImage(vb, 0, 0);
+        const pb = ctx.getImageData(0, 0, c.width, c.height).data;
+        const channel = (v) => {
+          const x = v / 255;
+          return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+        };
+        const rl = (p, i) => 0.2126 * channel(p[i]) + 0.7152 * channel(p[i + 1]) + 0.0722 * channel(p[i + 2]);
+        const diffs = [];
+        for (let i = 0; i < pa.length; i += 4) diffs.push(Math.abs(rl(pa, i) - rl(pb, i)));
+        const sortedDiffs = [...diffs].sort((x, y) => x - y);
+        const cut = 0.5 * sortedDiffs[Math.floor(sortedDiffs.length * 0.95)];
+        const ratios = [];
+        const behind = [];
+        const onDrape = [];
+        const behindDrape = [];
+        for (let k = 0; k < diffs.length; k += 1) {
+          if (diffs[k] < cut || cut <= 0) continue;
+          const lt = rl(pa, k * 4);
+          const lb = rl(pb, k * 4);
+          const ratio = (Math.max(lt, lb) + 0.05) / (Math.min(lt, lb) + 0.05);
+          ratios.push(ratio);
+          behind.push(lb);
+          if (mask[k]) {
+            onDrape.push(ratio);
+            behindDrape.push(lb);
+          }
+        }
+        const sortUp = (arr) => arr.sort((x, y) => x - y);
+        sortUp(ratios);
+        sortUp(behind);
+        sortUp(onDrape);
+        sortUp(behindDrape);
+        const at = (arr, p) => (arr.length ? arr[Math.min(arr.length - 1, Math.floor(arr.length * p))] : 0);
+        const share = (arr) => (arr.length ? arr.filter((r) => r >= minimum).length / arr.length : 0);
+        return {
+          corePixels: ratios.length,
+          p10: at(ratios, 0.1),
+          median: at(ratios, 0.5),
+          atLeast: share(ratios),
+          backgroundP95: at(behind, 0.95),
+          drapeCorePixels: onDrape.length,
+          drapeAtLeast: share(onDrape),
+          drapeMedian: at(onDrape, 0.5),
+          drapeP10: at(onDrape, 0.1),
+          drapeBackgroundP95: at(behindDrape, 0.95),
+        };
+      },
+      [shown, bare, THRESHOLDS.mastheadContrast, line.drapeMask],
+    );
+    const entry = { ...line, ...result, colour: colours[index], wcagOverDrape: wcag(colours[index] ?? "", result.drapeBackgroundP95) };
+    delete entry.drapeMask;
+    out.push(entry);
+  }
+  return out;
 }
 
 function verdicts(m) {
@@ -612,13 +860,12 @@ function verdicts(m) {
   // Two halves, both required: Amendment 2 asks for a cold rim that EXISTS and
   // stays under 25% of the key. The first version tested only the cap, which a
   // rim of zero meets vacuously — and iteration 1's rim measured 0.00%.
-  const rimRatio = (m.rim?.pedestal ?? 0) / Math.max(1e-6, m.key?.pedestal ?? 0);
   const rimFrame = m.rim?.frame ?? 0;
-  const rimFrameRatio = rimFrame / Math.max(1e-6, m.key?.frame ?? 0);
+  const rimSubject = Math.max(0, m.rim?.subject ?? 0) / Math.max(1e-6, m.key?.subject ?? 0);
   add(
-    "the cold moonlight exists, and is <= 25% of the key",
-    rimFrame >= t.rimVisible && rimRatio <= t.rimFraction && rimFrameRatio <= t.rimFraction,
-    `moon lights the frame ${rimFrame.toFixed(4)} (need ${t.rimVisible}); ${pct(rimFrameRatio)} of the key over the frame, ${pct(rimRatio)} on the pedestal (max ${pct(t.rimFraction)} each)`,
+    "the cold moonlight exists, and is <= 25% of the key on the subjects",
+    rimFrame >= t.rimVisible && rimSubject <= t.rimFraction,
+    `moon lights the frame ${rimFrame.toFixed(4)} (need ${t.rimVisible}); on the subjects (pedestal, column, book; ${m.subjectPixels} px) it is ${pct(rimSubject)} of the key (max ${pct(t.rimFraction)})`,
   );
   const bloomShare = m.bloom.onSurfaces / Math.max(1e-6, m.bloom.total);
   add(
@@ -671,6 +918,19 @@ function verdicts(m) {
     m.drapes.length > 0 && m.drapes.every((d) => d.pixels > 0) && darkest >= t.drapesVisible,
     `${m.drapes.length} drapes by silhouette; darkest ${pct(darkest)} (need ${pct(t.drapesVisible)}) — ${m.drapes.map((d) => `${pct(d.lum)} over ${d.pixels} px at stage x ${d.at}`).join("; ")}`,
   );
+  // P2.1: readability of the masthead OVER THE DRAPE, on the composited page.
+  // Iteration 3 scopes the count to glyph pixels with a drape behind them —
+  // the instruction's words. Iterations 1-2 counted each whole line, most of
+  // which sits over the moonlit wall and the window's night sky instead; those
+  // are reported for information, not judged here.
+  const over = (m.masthead ?? []).filter((line) => line.drapeCorePixels > 0);
+  const describe = (line) =>
+    `${line.line} ${(line.drapeAtLeast * 100).toFixed(0)}% of ${line.drapeCorePixels} glyph px over the drape >= ${t.mastheadContrast}:1 (median ${line.drapeMedian.toFixed(1)}:1, p10 ${line.drapeP10.toFixed(1)}:1)`;
+  add(
+    "masthead text over the drape reads at >= 7:1",
+    (m.masthead ?? []).length > 0 && over.length > 0 && over.every((line) => line.drapeAtLeast >= t.mastheadCoverage),
+    over.length ? over.map(describe).join("; ") : "no masthead glyph sits over a drape",
+  );
   return rows;
 }
 
@@ -690,6 +950,7 @@ async function main() {
     await page.waitForFunction(() => Boolean(window.__sncRoom), null, { timeout: 30_000 });
 
     const measured = await page.evaluate(scoreInPage, { regions: REGIONS });
+    measured.masthead = await mastheadContrast(page, measured.masthead ?? []);
     const rows = verdicts(measured);
 
     console.log(`GPU: ${gpu.renderer}`);
@@ -699,8 +960,19 @@ async function main() {
     const fails = rows.filter((r) => !r.pass).length;
     console.log(`\n${rows.length - fails}/${rows.length} pass, ${fails} FAIL`);
 
-    console.log("\nlight contributions (frame luminance, pedestal-face luminance):");
-    for (const c of measured.contribution) console.log(`  ${c.name.padEnd(16)} ${c.colour}  frame ${c.frame.toFixed(4)}  pedestal ${c.pedestal.toFixed(4)}`);
+    console.log("\nlight contributions (frame, pedestal face, subjects):");
+    for (const c of measured.contribution) console.log(`  ${c.name.padEnd(16)} ${c.colour}  frame ${c.frame.toFixed(4)}  pedestal ${c.pedestal.toFixed(4)}  subjects ${c.subject.toFixed(4)}`);
+    const diagNames = Object.keys(measured.contribution[0]?.diag ?? {});
+    console.log(`\nper light, canvas luminance added over: ${diagNames.join(" | ")}`);
+    for (const c of measured.contribution) {
+      console.log(`  ${c.name.padEnd(16)} ${diagNames.map((n) => (c.diag[n] ?? 0).toFixed(4).padStart(7)).join("  ")}`);
+    }
+    console.log("\nmasthead readability (all lines):");
+    for (const line of measured.masthead ?? []) {
+      console.log(
+        `  ${line.line.padEnd(11)} whole line ${(line.atLeast * 100).toFixed(0).padStart(3)}% >= 7:1 (median ${line.median?.toFixed(1)}, behind p95 ${line.backgroundP95?.toFixed(4)})  |  over the drape ${(line.drapeAtLeast * 100).toFixed(0).padStart(3)}% of ${line.drapeCorePixels} px (median ${line.drapeMedian?.toFixed(1)}, p10 ${line.drapeP10?.toFixed(1)}, behind p95 ${line.drapeBackgroundP95?.toFixed(4)})  |  WCAG, specified colour ${line.colour}: ${line.wcagOverDrape === null ? "n/a (a gradient fill: no single colour)" : `${line.wcagOverDrape.toFixed(2)}:1`}`,
+      );
+    }
 
     const dir = join(REPO, "captures", "ui", "scores");
     await mkdir(dir, { recursive: true });

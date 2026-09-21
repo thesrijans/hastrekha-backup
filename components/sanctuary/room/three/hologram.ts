@@ -152,6 +152,8 @@ export function buildHologram(layout: RoomLayout): BuiltHologram {
   // The column: an open cylinder of warm light rising from the drum.
   const columnMaterial = keep(hologramMaterial(0.55));
   const column = new Mesh(keep(new CylinderGeometry(radius, radius, height, 64, 1, true)), columnMaterial);
+  // Named for the scorer: the column is one of the subjects the moonlight cap is measured on.
+  column.name = "column";
   column.position.y = height / 2;
   group.add(column);
 

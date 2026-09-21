@@ -36,6 +36,7 @@ import {
   buildWindow,
   type Built,
 } from "./props";
+import { DRAPE_LAYER } from "./post";
 import { makeRoomCamera } from "./stage-projection";
 
 /**
@@ -101,6 +102,11 @@ export function buildWorld(): RoomWorld {
     buildAtmosphere(layout),
   ];
   for (const part of parts) scene.add(part.object);
+
+  // [R11] Every light but the moon also lights the flagged drapes' layer.
+  scene.traverse((node) => {
+    if ("isLight" in node && node.isLight && node !== windowBuilt.moonlight) node.layers.enable(DRAPE_LAYER);
+  });
 
   // The zodiac: optional. If the texture is missing the drum is still brass.
   let zodiacTexture: { dispose: () => void } | null = null;

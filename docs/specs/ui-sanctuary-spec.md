@@ -1,7 +1,7 @@
 # HastRekha — The Sanctuary
 ## Complete UI/UX specification for the immersive palmistry experience
 
-**Version:** 1.4 · 21 Sep 2026
+**Version:** 1.5 · 21 Sep 2026
 **Supersedes:** ui-nadi-pothi.md (folded in below); v1.0 and v1.1 of this file
 **Status:** build-ready. Every section states what ships, what it costs, and
 what it must never claim.
@@ -90,6 +90,43 @@ lands; §6.2, §10 and §13 are amended to agree.
   | the book | the lectern top and the page edge NEAREST its candle: of the visible lectern-top and parchment pixels, the nearest quarter of their range of distance from the flame — not the page centre |
 
   Enforced by `scripts/capture/score-room.mjs`.
+
+**v1.5 — P2.1, on the product owner's rulings.** One amendment, `[R11]`; one
+clarification of where the moonlight's cap is measured; two items deferred and
+recorded here so they are not lost.
+
+- **[R11] The window drapes are flagged from the moonlight.** The one cold light
+  is a shaft from the window onto the far shelves (P2 ruling 3), and its path
+  passes the two drapes that frame the window, 1.4–2 m from its source against
+  ~6 m to the shelves: the square law handed them most of its light, and the
+  drape behind the masthead glowed pink through the headline. On a set a flag
+  goes between the lamp and what it must not touch. Three.js has no per-object
+  light linking — a light's layers decide only whether a camera includes it — so
+  the flag is built from layers and two draws: the two window drapes live alone
+  on `DRAPE_LAYER`, lit by every light that also enables it (the key, the
+  ambient, the candles, the sconces) and not by the moon; they are drawn first,
+  and the rest of the room over them without clearing (`post.ts`
+  `FlaggedRenderPass`). The drape over the library keeps the moonlight. Measured
+  after: the moon adds 0.0000 to either window drape, and the background behind
+  the masthead's glyphs where they cross a drape is p95 0.0047–0.0077 relative
+  luminance, against 0.027–0.029 where they cross the moonlit wall or the
+  window's night sky.
+
+- **The moonlight's 25% cap is measured on the subjects** — the pedestal, the
+  hand's column and the book — as the brief wrote it. P2's iteration 6 had added
+  a whole-frame average and P2.1 reverted it: a window is meant to be brighter
+  than the pedestal, and a frame average would forbid any visible window.
+  Measured: 5.63% of the key on the subjects.
+
+- **Deferred: the book's palm illustration as line art from the hand mesh**
+  (Amendment 1 [A2], second half — the same mesh rendered orthographically to
+  line art, classical lines at engraved weight, captioned पारंपरिक चित्र). It
+  will be built by the Rekha Atlas, Part B, as `<AtlasFigure>` (B1), and reused
+  in the sanctuary rather than built twice.
+
+- **Deferred: the phone's 3D vignette** — pedestal and hologram only, at `MID`
+  and above, ≤ 30 fps, suspended off-screen (§6.2 [R7]). Added to U3b P6's
+  scope. Until then a phone shows the CSS vignette.
 
 U3 ships in two commits: **U3a** — shell, navigation, the CSS composition, the
 Threshold in CSS and the Home content, with no WebGL anywhere — and **U3b** —

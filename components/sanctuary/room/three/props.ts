@@ -51,7 +51,7 @@ import {
   type Material,
 } from "three";
 import type { RoomLayout } from "./layout";
-import { BLOOM_LAYER } from "./post";
+import { BLOOM_LAYER, DRAPE_LAYER } from "./post";
 import { BACK_WALL_Z, DRAPE_Z } from "./layout";
 import { albedo, FLAME, FLAME_WARM, GOLD_400, GOLD_500, GOLD_600, INK_RED, MOON, PARCHMENT, REFLECTANCE, STONE_700, STONE_800, WOOD } from "./palette";
 import {
@@ -479,6 +479,29 @@ function bendPages(geometry: BufferGeometry, width: number, lift: number): void 
  */
 const LECTERN_TILT = 0.45;
 
+/**
+ * The lectern top's width, metres.
+ *
+ * P2.1: 1.42 -> 1.9. The book's candle now stands ON the lectern (see below),
+ * and 1.42 left only 10 cm of top beyond the pages — too little for a flame to
+ * stand 15-25 cm from their near edge.
+ */
+const LECTERN_TOP_WIDTH = 1.9;
+
+/** Where the book's candle stands: this far beyond the near page edge (P2.1: 15-25 cm). */
+const BOOK_CANDLE_FROM_EDGE = 0.22;
+
+/**
+ * How far above the page edge's own height the flame sits, metres.
+ *
+ * P2.1 iteration 3. Exactly level with the raised outer edge (iteration 1), the
+ * flame grazed the page tops — the pages rise toward that edge, so their
+ * surface faces inward, away from a candle outboard of it — and it added
+ * 0.0003 to the parchment's mean luminance: it lit the edge, not the page. A
+ * few centimetres up, still level with the page block, it reaches the surface.
+ */
+const BOOK_FLAME_ABOVE_EDGE = 0.045;
+
 export function buildBook(layout: RoomLayout): Built {
   const owned = new Owned();
   const group = new Group();
@@ -495,7 +518,7 @@ export function buildBook(layout: RoomLayout): Built {
   stand.position.y = -(spine.y - 0.04) / 2 - 0.02;
   group.add(stand);
 
-  const top = new Mesh(owned.keep(new BoxGeometry(1.42, 0.05, 0.86)), wood);
+  const top = new Mesh(owned.keep(new BoxGeometry(LECTERN_TOP_WIDTH, 0.05, 0.86)), wood);
   top.name = "lectern-top";
   top.position.y = -0.02;
   top.rotation.x = LECTERN_TILT;
@@ -557,19 +580,31 @@ export function buildBook(layout: RoomLayout): Built {
   // in depth. A flame on the lectern is what lights a book in the reference,
   // and it lights this one by candle falloff, exactly as Amendment 2 intends.
   const { wax, brass } = candleMaterials(owned);
-  // ITERATION 4: from the lectern top to the desk beside it. On the lectern it
-  // stood 5 cm from the pages' upturned outer edge, which a point light turns
-  // into a white-hot spot on bright parchment — the leaf blooming, which is
-  // not "candles and the ring". The reference's candle-holder stands on the
-  // desk beside its book; from there it is ~0.5 m from the pages and lights
-  // them warmly without scorching them.
+  // P2.1: back ON the lectern, on a small brass holder, flame at page level.
+  //
+  // Iteration 4 moved it to the desk because, on the lectern, it stood 5 cm
+  // from the pages and scorched them into a bloom hotspot. On the desk its
+  // flame sat ~0.19 m BELOW the lectern top, so every lectern-top and page
+  // surface nearest it faced away from it and caught exactly nothing: the [R10]
+  // book flicker measured 0.00%. Bloom is now confined by layer (post.ts), so
+  // a bright page edge cannot bloom whatever lights it; the candle can stand
+  // where a reader would put one — on the lectern, flame level with the page
+  // edge, 22 cm from it.
+  const edge = -(pageWidth + 0.01);
+  const holderX = edge - BOOK_CANDLE_FROM_EDGE;
+  // The page edge rises to ~0.165 m; the candle's flame is at base + 1.26 h.
+  const candleHeight = 0.08;
+  const stemHeight = 0.165 + BOOK_FLAME_ABOVE_EDGE - 1.26 * candleHeight - 0.005;
+  const stem = new Mesh(owned.keep(new CylinderGeometry(0.012, 0.022, stemHeight, 12)), brass);
+  stem.position.set(holderX, 0.005 + stemHeight / 2, 0);
+  group.add(stem);
   const lecternCandle = makeCandle(owned, wax, brass, {
-    base: new Vector3(-0.92, -spine.y, 0.28),
-    height: 0.3,
+    base: new Vector3(holderX, 0.005 + stemHeight, 0),
+    height: candleHeight,
     periodMs: 401,
     seed: 4.1,
-    reach: 2.2,
-    intensity: 0.75,
+    reach: 1.6,
+    intensity: 0.6,
     label: "lectern",
   });
   group.add(lecternCandle.object);
@@ -784,6 +819,28 @@ const SCONCES = [
   { side: 1, periodMs: 479, seed: 8.3 },
 ] as const;
 
+/**
+ * P2.1: one more sconce, beside the right drape — the same bracket and candle
+ * as the other two. Its bracket reaches FORWARD of the drape's plane: the
+ * first two stand on 16 cm brackets, behind the drapes that hang 25 cm out, so
+ * they light only the drapes' backs and the edges of their folds. The right
+ * drape measured 0.27% after moving inward into the safe band, away from them.
+ */
+const DRAPE_SCONCE = { fromDrapeEdge: 0.18, depth: 0.42, height: 0.1, periodMs: 353, seed: 9.1 } as const;
+
+/**
+ * P2.1 iteration 3: where each window sconce stands, window-local.
+ *
+ * After the flag the drapes are lit only by these, and iteration 2 measured
+ * them at 0.77% and 0.62% against 1.5%. The left one moves forward of its
+ * drape's plane (it stood behind it, lighting only its back) and lower, so it
+ * lights the drape's lower length strongly and, by the square law, the part
+ * behind the masthead far less. The right drape's lower half is hidden behind
+ * the lectern, so its sconce moves up to the part that shows.
+ */
+const SCONCE_Y = { left: -0.6, right: -0.455 } as const;
+const SCONCE_Z = { left: 0.42, right: 0.16 } as const;
+
 /** The window's glass, metres. */
 export const WINDOW_WIDTH = 1.7;
 export const WINDOW_HEIGHT = 2.5;
@@ -863,13 +920,24 @@ export function buildWindow(layout: RoomLayout): BuiltWindow {
   moonlight.target.position.copy(layout.library.centre);
 
   const { wax, brass } = candleMaterials(owned);
-  const sconces = SCONCES.map((spot) => {
-    const x = spot.side * (width / 2 + 0.2);
-    const bracket = new Mesh(owned.keep(new BoxGeometry(0.16, 0.03, 0.18)), brass);
-    bracket.position.set(x, -0.47, 0.16);
+  const drapeEdge = layout.rightDrape.x + rightDrapeWidth(layout) / 2 - centre.x;
+  const placements = [
+    ...SCONCES.map((spot) => ({
+      x: spot.side * (width / 2 + 0.2),
+      y: spot.side < 0 ? SCONCE_Y.left : SCONCE_Y.right,
+      z: spot.side < 0 ? SCONCE_Z.left : SCONCE_Z.right,
+      periodMs: spot.periodMs,
+      seed: spot.seed,
+    })),
+    { x: drapeEdge + DRAPE_SCONCE.fromDrapeEdge, y: DRAPE_SCONCE.height, z: DRAPE_SCONCE.depth, periodMs: DRAPE_SCONCE.periodMs, seed: DRAPE_SCONCE.seed },
+  ];
+  const sconces = placements.map((spot) => {
+    const x = spot.x;
+    const bracket = new Mesh(owned.keep(new BoxGeometry(0.16, 0.03, spot.z + 0.02)), brass);
+    bracket.position.set(x, spot.y - 0.015, spot.z / 2);
     group.add(bracket);
     const built = makeCandle(owned, wax, brass, {
-      base: new Vector3(x, -0.455, 0.16),
+      base: new Vector3(x, spot.y, spot.z),
       height: 0.13,
       periodMs: spot.periodMs,
       seed: spot.seed,
@@ -945,6 +1013,8 @@ export function buildDrapes(layout: RoomLayout): Built {
   // always did, inside the safe band.
   const leftOfWindow = drape(owned, velvet, 0.9, 3.4, 5);
   leftOfWindow.name = "drape";
+  // [R11] Flagged from the moon: on its own layer (post.ts DRAPE_LAYER).
+  leftOfWindow.layers.set(DRAPE_LAYER);
   leftOfWindow.position.set(centre.x - 1.35, centre.y + 0.3, DRAPE_Z);
   group.add(leftOfWindow);
 
@@ -955,6 +1025,7 @@ export function buildDrapes(layout: RoomLayout): Built {
   const rightWidth = rightDrapeWidth(layout);
   const rightOfWindow = drape(owned, velvet, rightWidth, 3.4, Math.max(3, Math.round((5 * 0.9) / rightWidth)));
   rightOfWindow.name = "drape";
+  rightOfWindow.layers.set(DRAPE_LAYER);
   rightOfWindow.position.set(layout.rightDrape.x, centre.y + 0.3, DRAPE_Z);
   group.add(rightOfWindow);
 
