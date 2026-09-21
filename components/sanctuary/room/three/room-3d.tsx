@@ -105,7 +105,9 @@ export function Room3D({ roomId }: Room3DProps): React.ReactElement | null {
   return (
     <div
       aria-hidden="true"
-      data-snc-room-scene=""
+      // "live" once the first frame is up: the island (home-island.tsx) reads it
+      // to move the 3D camera instead of CSS-scaling a canvas that has its own.
+      data-snc-room-scene={shown ? "live" : "loading"}
       style={{
         position: "absolute",
         inset: 0,

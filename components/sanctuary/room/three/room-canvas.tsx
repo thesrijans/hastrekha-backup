@@ -17,14 +17,25 @@
  * scrolls away or the tab hides; the frame loop then does not run at all
  * rather than rendering frames no one sees.
  *
+ * THE CAMERA FOLLOWS THE ISLAND. app/sanctuary/home-island.tsx owns the click
+ * that moves the camera before a route opens: it marks the room's set with
+ * `data-snc-camera`. This canvas watches that attribute, moves its rig
+ * (camera-rig.ts) over ROOM_CAMERA_MOVE_MS, and from the frame that draws the
+ * camera at its destination dispatches ROOM_CAMERA_ARRIVED_EVENT on the set —
+ * which is what the island routes on, so the route never opens over a camera
+ * still short of where it was going. Pointer and tilt drive the rig's parallax
+ * with the island's own mapping.
+ *
  * A LOST CONTEXT DEGRADES, IT DOES NOT BREAK. The CSS composition is still in
  * the DOM beneath this canvas and still painted. On `webglcontextlost` the loop
  * stops and the gate fades the canvas out, leaving that composition showing.
  */
 import { useEffect, useRef } from "react";
 import { ACESFilmicToneMapping, FloatType, SRGBColorSpace, WebGLRenderer, WebGLRenderTarget } from "three";
+import { CameraRig, ROOM_CAMERA_NAMES, TILT_FULL_DEFLECTION_DEG, TILT_NEUTRAL_BETA_DEG, type RoomCameraName } from "./camera-rig";
 import { buildPost } from "./post";
 import { buildWorld } from "./world";
+import { ROOM_CAMERA_ARRIVED_EVENT, roomCameraTransform } from "@/lib/sanctuary/room-composition";
 
 export const ROOM_MAX_DPR = 2;
 
@@ -67,6 +78,7 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     element.appendChild(renderer.domElement);
+    const gl = renderer.getContext();
 
     const world = buildWorld();
     const size = (): { w: number; h: number } => ({
@@ -76,6 +88,63 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
     const initial = size();
     renderer.setSize(initial.w, initial.h, false);
     const post = buildPost(renderer, world.scene, world.camera, initial.w, initial.h);
+    const rig = new CameraRig(world.camera, world.layout);
+
+    /* The camera before the route: follow the island's mark on the set. */
+    const set = element.closest<HTMLElement>("[data-snc-room-set]");
+    const isName = (value: string | undefined): value is RoomCameraName =>
+      value !== undefined && (ROOM_CAMERA_NAMES as string[]).includes(value);
+    /* The words over the room are HTML, not scene: with no CSS push over a
+       live scene they would only fade in place (`.set[data-snc-camera]
+       .overlay`) while the room moved behind them. So the scene pushes them as
+       the CSS camera would have — scaled about the same stage point, over the
+       same move — and they leave the frame as they do in the drawn room. The
+       origin is that point in their own box, from layout offsets (which no
+       transform moves): the stage point, less their offset, less their own
+       translate — read once here, as a fraction of their box, while still. */
+    const words = set?.querySelector<HTMLElement>("[data-snc-room-overlay]") ?? null;
+    const shift =
+      set && words
+        ? {
+            x: (words.getBoundingClientRect().left - set.getBoundingClientRect().left - words.offsetLeft) / words.offsetWidth,
+            y: (words.getBoundingClientRect().top - set.getBoundingClientRect().top - words.offsetTop) / words.offsetHeight,
+          }
+        : null;
+    const pushWords = (name: RoomCameraName): void => {
+      if (!set || !words || !shift) return;
+      if (name === "sanctuary") {
+        words.style.scale = "";
+        return;
+      }
+      const { originX, originY, scale } = roomCameraTransform(name);
+      const x = (parseFloat(originX) / 100) * set.offsetWidth - words.offsetLeft - shift.x * words.offsetWidth;
+      const y = (parseFloat(originY) / 100) * set.offsetHeight - words.offsetTop - shift.y * words.offsetHeight;
+      words.style.transformOrigin = `${x}px ${y}px`;
+      words.style.scale = String(scale);
+    };
+
+    let arriving: RoomCameraName | null = null;
+    const follow = (): void => {
+      const name = set?.dataset.sncCamera;
+      rig.goTo(isName(name) ? name : "sanctuary", performance.now());
+      pushWords(rig.destination);
+      arriving = rig.destination;
+      wake.current?.();
+    };
+    const marks = set ? new MutationObserver(follow) : null;
+    if (set && marks) marks.observe(set, { attributes: true, attributeFilter: ["data-snc-camera"] });
+
+    /* Parallax, as the island maps it: pointer (not touch), and device tilt. */
+    const onPointer = (event: PointerEvent): void => {
+      if (event.pointerType === "touch") return;
+      rig.look((event.clientX / window.innerWidth) * 2 - 1, (event.clientY / window.innerHeight) * 2 - 1);
+    };
+    const onTilt = (event: DeviceOrientationEvent): void => {
+      if (event.gamma === null || event.beta === null) return;
+      rig.look(event.gamma / TILT_FULL_DEFLECTION_DEG, (event.beta - TILT_NEUTRAL_BETA_DEG) / TILT_FULL_DEFLECTION_DEG);
+    };
+    window.addEventListener("pointermove", onPointer, { passive: true });
+    window.addEventListener("deviceorientation", onTilt, { passive: true });
 
     // The canvas is the 16:9 `.set` box by its own CSS; resizing it changes
     // resolution, never the camera's aspect, so the stage registration holds.
@@ -92,9 +161,24 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
     let lost = false;
 
     const draw = (): void => {
-      const seconds = (performance.now() - started) / 1000;
+      const now = performance.now();
+      const seconds = (now - started) / 1000;
+      rig.apply(now);
       world.tick(seconds);
       post.render(seconds);
+      // Hand the frame to the GPU now. Without this the commands of a frame's
+      // six passes waited in the command buffer, and on ANGLE/D3D11 the room
+      // stalled for ~200 ms every half second — at rest and in motion alike,
+      // 5-7 stalls in every 4 s, where the same loop with this flush dropped
+      // none in three alternating runs (scripts/capture/probe-stalls.mjs,
+      // "full" vs "full+flush"). Found in U3b P3; the P2 capture's 216.8 ms
+      // worst frame was this.
+      gl.flush();
+      if (arriving !== null && rig.progress(now) >= 1) {
+        const camera = arriving;
+        arriving = null;
+        set?.dispatchEvent(new CustomEvent(ROOM_CAMERA_ARRIVED_EVENT, { detail: { camera } }));
+      }
       if (first) {
         first = false;
         callbacks.current.onFirstFrame?.();
@@ -135,11 +219,18 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
         renderer,
         world,
         post,
-        /** Stop the loop, so a measurement owns every frame it reads. */
+        rig,
+        /** Stop the loop, and put the camera exactly at rest, so a measurement owns every frame it reads. */
         pause: () => {
           activeRef.current = false;
           cancelAnimationFrame(frame);
           frame = 0;
+          rig.rest();
+        },
+        /** Run the loop again (a camera measurement needs the real frames). */
+        resume: () => {
+          activeRef.current = true;
+          wake.current?.();
         },
         /** Render the room as it is at `seconds`, deterministically. */
         renderAt: (seconds: number) => {
@@ -166,6 +257,10 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
       lost = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
+      marks?.disconnect();
+      if (words) words.style.scale = "";
+      window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("deviceorientation", onTilt);
       renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
       post.dispose();
       world.dispose();

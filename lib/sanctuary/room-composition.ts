@@ -78,6 +78,22 @@ export type RoomCssCamera = keyof typeof ROOM_CSS_CAMERAS;
 export const ROOM_CAMERA_MOVE_MS = 1400;
 
 /**
+ * The 3D room's word that its camera has arrived, dispatched on the set (the
+ * element carrying `data-snc-room-set`) with `{ camera }` as its detail, from
+ * the first frame that draws the camera at its destination.
+ *
+ * Home's island routes on it rather than on a timer when a live scene is
+ * present (U3b P3). A timer is right for the CSS push, whose transition runs on
+ * the compositor for exactly ROOM_CAMERA_MOVE_MS; the scene's move runs in
+ * frames, and a frame that comes late — a GPU shared with other windows — left
+ * the timer opening the route with the camera drawn at 93% of its move.
+ */
+export const ROOM_CAMERA_ARRIVED_EVENT = "snc-room-camera-arrived";
+
+/** How long past ROOM_CAMERA_MOVE_MS the island waits for that word before routing anyway (a scene lost mid-move). */
+export const ROOM_CAMERA_ARRIVAL_GRACE_MS = 600;
+
+/**
  * The three candles (B3): where each stands and its flicker period.
  *
  * Periods inside the token band (250–500 ms, i.e. 2–4 Hz) and pairwise

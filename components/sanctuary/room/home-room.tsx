@@ -41,7 +41,7 @@ export interface HomeRoomProps {
 
 export function HomeRoom({ id, className, profile }: HomeRoomProps): ReactElement {
   const overlay = (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} data-snc-room-overlay="">
       <h1 className={`${styles.overlayWordmark} snc-gold-text`}>{SANCTUARY_WORDMARK_LATIN}</h1>
       <p className={styles.overlayHi} lang="hi">
         {SANCTUARY_WORDMARK_DEVANAGARI}

@@ -409,8 +409,55 @@ function rules(css: string): { selector: string; body: string }[] {
       island.ROOM_TILT_NEUTRAL_BETA_DEG === constant("TILT_NEUTRAL_BETA_DEG"),
     "the parallax follows with <ScenePlate>'s own constants",
   );
+  const rig = read("components", "sanctuary", "room", "three", "camera-rig.ts");
+  const rigConstant = (name: string): number => Number(new RegExp(`export const ${name} = ([0-9.]+);`).exec(rig)?.[1]);
+  ok(
+    rigConstant("FOLLOW_TIME_CONSTANT_MS") === island.ROOM_FOLLOW_TIME_CONSTANT_MS &&
+      rigConstant("MAX_FRAME_DT_MS") === island.ROOM_MAX_FRAME_DT_MS &&
+      rigConstant("TILT_FULL_DEFLECTION_DEG") === island.ROOM_TILT_FULL_DEFLECTION_DEG &&
+      rigConstant("TILT_NEUTRAL_BETA_DEG") === island.ROOM_TILT_NEUTRAL_BETA_DEG,
+    "and the 3D camera's parallax follows and tilts with the same constants (U3b P3), so the two rooms answer the hand alike",
+  );
   const code = withoutComments(read("app", "sanctuary", "home-island.tsx"));
+  ok(
+    /const live = set\.querySelector\('\[data-snc-room-scene="live"\]'\) !== null;[\s\S]*?if \(!live\) \{\s*const \{ originX, originY, scale \} = roomCameraTransform\(camera\);\s*set\.style\.transformOrigin = `\$\{originX\} \$\{originY\}`;\s*set\.style\.scale = String\(scale\);\s*\}/.test(code) &&
+      code.indexOf("set.dataset.sncCamera = camera;") < code.indexOf(`set.querySelector('[data-snc-room-scene="live"]')`),
+    "over a live 3D scene the island marks the set but does not CSS-zoom it — the scene moves its own camera, and a zoom on top would blur the canvas and double the push (U3b P3)",
+  );
+  const canvas = withoutComments(read("components", "sanctuary", "room", "three", "room-canvas.tsx"));
+  ok(
+    /const words = set\?\.querySelector<HTMLElement>\("\[data-snc-room-overlay\]"\) \?\? null;/.test(canvas) &&
+      /words\.style\.transformOrigin = `\$\{x\}px \$\{y\}px`;\s*words\.style\.scale = String\(scale\);/.test(canvas) &&
+      /if \(name === "sanctuary"\) \{\s*words\.style\.scale = "";/.test(canvas) &&
+      /pushWords\(rig\.destination\);/.test(canvas) &&
+      /marks\?\.disconnect\(\);\s*if \(words\) words\.style\.scale = "";/.test(canvas) &&
+      !code.includes("data-snc-room-overlay") &&
+      read("components", "sanctuary", "room", "home-room.tsx").includes("<div className={styles.overlay} data-snc-room-overlay=\"\">") &&
+      rules(read("components", "sanctuary", "room", "room-stage.module.css")).some((rule) => rule.selector === ".overlay" && /scale 1400ms var\(--snc-ease\)/.test(rule.body)),
+    "over a live scene the words over the room still leave with the camera — the scene pushes them about the stage point the set would have been, over the same 1400 ms, and home again; from the 3D chunk, not Home's first load (U3b P3)",
+  );
+  ok(
+    /const gl = renderer\.getContext\(\);/.test(canvas) && /post\.render\(seconds\);\s*gl\.flush\(\);/.test(canvas),
+    "the room hands each frame to the GPU as soon as it is drawn — unflushed, it stalled ~200 ms every half second on ANGLE/D3D11, at rest and in motion (found in U3b P3)",
+  );
+  ok(
+    /post\.render\(seconds\);\s*gl\.flush\(\);\s*if \(arriving !== null && rig\.progress\(now\) >= 1\) \{[\s\S]*?set\?\.dispatchEvent\(new CustomEvent\(ROOM_CAMERA_ARRIVED_EVENT, \{ detail: \{ camera \} \}\)\);/.test(canvas),
+    "the scene says its camera has arrived from the frame that draws it there — after that frame's render, never before (U3b P3)",
+  );
+  ok(
+    /if \(live\) set\.addEventListener\(ROOM_CAMERA_ARRIVED_EVENT, onArrived\);/.test(code) &&
+      /\.detail\.camera === camera\) settle\(\);/.test(code) &&
+      /window\.setTimeout\(settle, live \? travel \+ ROOM_CAMERA_ARRIVAL_GRACE_MS : travel\)/.test(code) &&
+      code.includes("whenArrived(set, camera, live, travel, () => router.push(href));") &&
+      !/setTimeout\(\(\) => router\.push/.test(code),
+    "over a live scene the route opens on the scene's word that the camera arrived, not on a timer — a late frame once let the timer route with the camera at 93% of its move; the CSS push keeps its timer, and a scene lost mid-move falls back to one (U3b P3)",
+  );
   ok(code.includes('addEventListener("click", onClick, true)'), "the camera listens in the capture phase, ahead of a Link's own click, so the Link can stand down");
+  const stageCss = rules(read("components", "sanctuary", "room", "room-stage.module.css"));
+  ok(
+    stageCss.some((rule) => rule.selector === ".near" && /pointer-events:\s*none/.test(rule.body)),
+    "the near layer — haze and dust, over the labels — takes no clicks; without it the scanner and reading labels could not be clicked (found in U3b P3)",
+  );
   ok(/if \(href !== null\) {\s*event\.preventDefault\(\);/.test(code), "it takes over only real links — a not-yet-built room's note still opens natively");
   ok(code.includes('if (tier === "FLOOR") return;'), "and it does nothing at FLOOR, which is also where reduced motion lands");
   ok(code.includes('if (tier !== "HIGH" && tier !== "MID") return;'), "parallax runs at MID and HIGH only");

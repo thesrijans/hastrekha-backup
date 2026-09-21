@@ -106,7 +106,9 @@ function main() {
     if (only && entry.route !== only) continue;
     const gz = entry.firstLoadChunkPaths.reduce((sum, rel) => sum + gzipOf(join(REPO, rel.replaceAll("\\", "/"))), 0);
     const budget = BUDGETS[entry.route];
-    const verdict = budget ? (kb(gz) <= budget.firstLoadKb ? ` PASS <= ${budget.firstLoadKb}` : ` FAIL > ${budget.firstLoadKb}`) : "";
+    // Judged on exact bytes, not the 0.1 kB display: 140.02 kB once printed "140 PASS" (U3b P3).
+    const headroom = budget ? budget.firstLoadKb * 1024 - gz : 0;
+    const verdict = budget ? (headroom >= 0 ? ` PASS <= ${budget.firstLoadKb} (${headroom} B spare)` : ` FAIL > ${budget.firstLoadKb} (${-headroom} B over)`) : "";
     console.log(`  ${entry.route.padEnd(22)} ${String(kb(gz)).padStart(7)} kB gz   (${kb(entry.firstLoadUncompressedJsBytes)} kB raw)${verdict}`);
   }
 

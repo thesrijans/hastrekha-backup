@@ -12,7 +12,7 @@
  *     hidden. Each layer's `translate` is written directly, scaled by its own
  *     depth and the token's clamp. It is NOT a custom property on the room:
  *     every SVG node in the room would inherit it and be restyled every frame;
- *  3. the CAMERA BEFORE THE ROUTE (B4, in its CSS form): a click on anything
+ *  3. the CAMERA BEFORE THE ROUTE (B4): a click on anything
  *     marked `data-snc-camera` while a room is on screen pushes the room toward
  *     that object first — 1.4 s at MID/HIGH, a 0.7 s crossfade at LOW, nothing
  *     at FLOOR — and only then opens the route. A room that is not built still
@@ -30,6 +30,8 @@ import { useCapabilityTier } from "@/components/sanctuary/use-capability-tier";
 import { POTHI_READING_SESSION_KEY } from "@/lib/sanctuary/pothi-reading-store";
 import { READING_PRESENCE_ATTRIBUTE, readingPresenceOf } from "@/lib/sanctuary/reading-presence";
 import {
+  ROOM_CAMERA_ARRIVAL_GRACE_MS,
+  ROOM_CAMERA_ARRIVED_EVENT,
   ROOM_CAMERA_MOVE_MS,
   ROOM_CSS_CAMERAS,
   roomCameraTransform,
@@ -175,6 +177,27 @@ export function SanctuaryHomeIsland({ roomIds, pathsId }: SanctuaryHomeIslandPro
     const rooms = roomsFor(ids);
     const timers: number[] = [];
 
+    /* When the camera is there. The CSS push is a compositor transition of
+       exactly `travel`, so a timer is its clock. A live scene moves in frames,
+       and a late frame (a GPU shared with other windows) once left the timer
+       routing with the camera drawn at 93% of its move — so over a scene the
+       island waits for the scene's own word, with a timer only as the fallback
+       for a scene lost mid-move. The word must name this camera: a look that
+       is still coming home says "sanctuary" when it gets there. */
+    const whenArrived = (set: HTMLElement, camera: RoomCssCamera, live: boolean, travel: number, then: () => void): void => {
+      const settle = (): void => {
+        set.removeEventListener(ROOM_CAMERA_ARRIVED_EVENT, onArrived);
+        window.clearTimeout(fallback);
+        then();
+      };
+      const onArrived = (event: Event): void => {
+        if ((event as CustomEvent<{ camera: string }>).detail.camera === camera) settle();
+      };
+      if (live) set.addEventListener(ROOM_CAMERA_ARRIVED_EVENT, onArrived);
+      const fallback = window.setTimeout(settle, live ? travel + ROOM_CAMERA_ARRIVAL_GRACE_MS : travel);
+      timers.push(fallback);
+    };
+
     const onClick = (event: MouseEvent): void => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const trigger = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-snc-camera]") : null;
@@ -185,25 +208,33 @@ export function SanctuaryHomeIsland({ roomIds, pathsId }: SanctuaryHomeIslandPro
       const set = room?.querySelector<HTMLElement>("[data-snc-room-set]") ?? null;
       if (set === null || set.dataset.sncCamera !== undefined) return;
 
-      const { originX, originY, scale } = roomCameraTransform(camera);
-      set.style.transformOrigin = `${originX} ${originY}`;
       set.dataset.sncCamera = camera;
-      set.style.scale = String(scale);
+      /* The 3D room (U3b P3) moves its own camera when it sees this mark, so a
+         set carrying a live scene is not scaled: a CSS zoom on top would blur
+         the canvas and double the push. Otherwise the CSS camera pushes. */
+      const live = set.querySelector('[data-snc-room-scene="live"]') !== null;
+      if (!live) {
+        const { originX, originY, scale } = roomCameraTransform(camera);
+        set.style.transformOrigin = `${originX} ${originY}`;
+        set.style.scale = String(scale);
+      }
 
       const href = trigger instanceof HTMLAnchorElement ? trigger.getAttribute("href") : null;
       const travel = tier === "LOW" ? ROOM_CROSSFADE_MS : ROOM_CAMERA_MOVE_MS;
       if (href !== null) {
         /* The Link sees this and stands down; the route opens when the camera arrives. */
         event.preventDefault();
-        timers.push(window.setTimeout(() => router.push(href), travel));
+        whenArrived(set, camera, live, travel, () => router.push(href));
       } else {
         /* Not built: the note opens on its own; the camera looks, then comes home. */
-        timers.push(
-          window.setTimeout(() => {
-            delete set.dataset.sncCamera;
-            set.style.scale = "";
-          }, travel + 1200),
-        );
+        whenArrived(set, camera, live, travel, () => {
+          timers.push(
+            window.setTimeout(() => {
+              delete set.dataset.sncCamera;
+              set.style.scale = "";
+            }, 1200),
+          );
+        });
       }
     };
 

@@ -61,6 +61,15 @@
   inset: 0;
 }
 
+/* The near layer is haze and dust — decoration only — and it lies over the mid
+   layer, which carries the object labels ("The Scanner", "Your Reading"). With
+   no rule of its own its full-stage SVGs took every click meant for those
+   labels: found in U3b P3, when a click on the scanner label landed on the
+   dust. Nothing in it is meant to be touched. */
+.near {
+  pointer-events: none;
+}
+
 /* Small drawings laid exactly over the plates, so a thing that moves is its own element. */
 .part {
   position: absolute;
@@ -619,7 +628,11 @@
   width: 30cqw;
   translate: -50% 0;
   text-align: center;
-  transition: opacity 500ms var(--snc-ease);
+  /* scale: over a live 3D scene the set is not scaled, so the scene pushes the
+     words on their own, over the set's own camera move (room-canvas.tsx) — U3b P3. */
+  transition:
+    opacity 500ms var(--snc-ease),
+    scale 1400ms var(--snc-ease);
 }
 
 .overlayWordmark {
