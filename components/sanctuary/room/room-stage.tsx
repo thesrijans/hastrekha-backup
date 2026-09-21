@@ -105,9 +105,20 @@ export interface RoomStageProps {
   readonly labels?: ReactNode;
   /** Things pinned to the hero rather than the room: the profile control, the scroll cue. */
   readonly chrome?: ReactNode;
+  /**
+   * The 3D room, on the tiers that get one (§6.2 [R7]).
+   *
+   * It mounts INSIDE the set and over the drawn layers, but under the shade and
+   * the overlay, so the vignette still darkens it and B5's words still read
+   * against it. Absolutely positioned and `aria-hidden`, so a device that never
+   * qualifies loses nothing but the pixels: the layers below it are the same
+   * room, already painted, and nothing reflows when the scene arrives or fails
+   * to.
+   */
+  readonly scene?: ReactNode;
 }
 
-export function RoomStage({ id, variant, className, overlay, labels, chrome }: RoomStageProps): ReactElement {
+export function RoomStage({ id, variant, className, overlay, labels, chrome, scene }: RoomStageProps): ReactElement {
   const room = variant === "room";
   const classes = [styles.stageBox, room ? styles.room : styles.vignette, className].filter(Boolean).join(" ");
   return (
@@ -197,6 +208,8 @@ export function RoomStage({ id, variant, className, overlay, labels, chrome }: R
               ))
             : null}
         </div>
+
+        {scene}
 
         <div className={styles.shade} aria-hidden="true" />
         {overlay}

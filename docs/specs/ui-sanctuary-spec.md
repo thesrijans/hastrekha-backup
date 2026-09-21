@@ -1,7 +1,7 @@
 # HastRekha — The Sanctuary
 ## Complete UI/UX specification for the immersive palmistry experience
 
-**Version:** 1.2 · 11 Sep 2026
+**Version:** 1.4 · 21 Sep 2026
 **Supersedes:** ui-nadi-pothi.md (folded in below); v1.0 and v1.1 of this file
 **Status:** build-ready. Every section states what ships, what it costs, and
 what it must never claim.
@@ -38,9 +38,62 @@ build.** Both are marked `[R7]` and `[R8]` where they land, and §1, §8, §10 a
   the product owner's direction, the doorway is a scene object with the room
   behind it and the camera travels through it.
 
+**v1.3 — one U3b reversal, forced by a measurement.** Marked `[R9]` where it
+lands; §6.2, §10 and §13 are amended to agree.
+
+- **[R9] §6.2, §10, §13 — the room is Three.js, not React Three Fiber.** R7
+  named R3F and §10 gave "the R3F chunk" a 200 kB gz ceiling. Both cannot hold.
+  Measured on 21 Sep 2026 with `scripts/capture/bundle-report.mjs`, against the
+  real Turbopack production build:
+
+  | Lazy 3D chunk | kB gz |
+  |---|---:|
+  | R3F, an empty `<Canvas>` holding one ambient light | 227.6 |
+  | R3F, the first scene slice (floor, pedestal, three lit candles, dust, fog, shadows) | 229.5 |
+  | Three.js alone, importing by name every class the room uses | **129.4** |
+
+  The scene code itself was +1.9 kB; the other 227.6 kB was the library floor.
+  R3F's `Canvas` registers every Three.js class as a JSX element through
+  `import * as THREE`, which defeats tree-shaking, so no scene optimisation
+  could have reached the ceiling. On the product owner's direction the room is
+  written against Three.js directly and the budget stays as written.
+
+  **The one GLTF.** R7 justified the budget partly with "no GLTF". Amendment 1
+  of the U3b brief then required a genuine hand mesh, so the room now loads
+  exactly one: `public/models/hand.glb`, 53.7 kB, CC0 (docs/reference/
+  LICENSES.md). It is fetched by the 3D chunk alone and is not JavaScript, so it
+  is not counted against the chunk's ceiling.
+
+**v1.4 — one measurement correction, ruled by the product owner.** Marked
+`[R10]`; it changes where a check looks, not what it asks.
+
+- **[R10] Candle flicker is measured where candles physically light.** The U3b
+  brief asks that "flicker lands on the pedestal and the book, not only the
+  flame", at a 2% luminance swing between the bottom and the top of the
+  candles' flicker. Through P2's first five iterations it was measured over a
+  box on the drum's upper face and over the book's centre. Those are not where
+  a candle's light lands: the drum's upper face is lit by the key above it, and
+  a candle standing on the desk beside the lectern lights the lectern's edge
+  and the page block's end, not the middle of the page. The swing was measured
+  where the light isn't. Iteration 4 "passed" on the drum only because the
+  drum's brass specular bloomed and the bloom flickered; once bloom was
+  confined to the candles and the ring (iteration 5), the drum-face swing
+  measured 0.99% and the page-centre swing 0.39%.
+
+  In the product owner's words: *a measurement-location correction against
+  physics, not a threshold change.* The bar stays 2%. The regions are derived
+  from the scene — an object-ID and world-position render — never drawn by eye:
+
+  | Surface | Where it is measured |
+  |---|---|
+  | the pedestal | the drum's FOOT — its lower third, on the arc within ±45° of each pedestal candle — and the FLOOR POOL round each of those candles: the disc within which the candle's own floor illuminance is at least 10% of its peak (the IES *field* convention), radius 1.91× the flame's height above the floor |
+  | the book | the lectern top and the page edge NEAREST its candle: of the visible lectern-top and parchment pixels, the nearest quarter of their range of distance from the flame — not the page centre |
+
+  Enforced by `scripts/capture/score-room.mjs`.
+
 U3 ships in two commits: **U3a** — shell, navigation, the CSS composition, the
 Threshold in CSS and the Home content, with no WebGL anywhere — and **U3b** —
-the R3F room, the camera system and the `HIGH`-tier doorway push.
+the Three.js room [R9], the camera system and the `HIGH`-tier doorway push.
 
 ---
 
@@ -298,7 +351,9 @@ LAYER 1 (dust)  drifting gold particles, incense haze
 
 **[R7] The room is a real scene first, and a CSS composition second.** On
 `HIGH`, and on `MID` where WebGL2 is available, the room above is rendered in
-Three.js (React Three Fiber): procedural geometry, ONE warm point source at the
+Three.js — written against the library directly, not through React Three
+Fiber, because R3F alone exceeds the chunk ceiling [R9] — with procedural
+geometry, ONE warm point source at the
 pedestal, no baked environment map and no GLTF. Lazy chunk, loaded after idle;
 never on the scan route, and zero WebGL on any route while the camera is
 scanning — MediaPipe owns the GPU. Phones at `MID`+ get a compact vignette
@@ -587,9 +642,9 @@ four smaller chunks. Every new route inherits it before rendering anything.
 
 | Metric | Budget |
 |---|---|
-| Threshold JS | **no new JS beyond the shared 135.5 kB floor**, no WebGL. (v1.0 said "≤ 60 KB gz", which is below the floor and therefore unreachable without changing the shared runtime.) [R8]: the Threshold is the first-visit state of `/sanctuary`, so its JS is counted in the Sanctuary budget below; the `HIGH`-tier doorway push rides the R3F chunk. |
+| Threshold JS | **no new JS beyond the shared 135.5 kB floor**, no WebGL. (v1.0 said "≤ 60 KB gz", which is below the floor and therefore unreachable without changing the shared runtime.) [R8]: the Threshold is the first-visit state of `/sanctuary`, so its JS is counted in the Sanctuary budget below; the `HIGH`-tier doorway push rides the 3D chunk. |
 | Sanctuary initial JS | ≤ 140 KB gz (the fallback layers are SVG markup, not JS; the Threshold is counted inside this) |
-| R3F chunk | lazy, after idle; ≤ 180 KB gz target, 200 KB gz ceiling; `HIGH` and `MID`-with-WebGL2 only — the desktop room and the phone vignette [R7] |
+| 3D chunk | lazy, after idle; ≤ 180 KB gz target, 200 KB gz ceiling; `HIGH` and `MID`-with-WebGL2 only — the desktop room and the phone vignette [R7]. Three.js written directly, not R3F: R3F's own floor is 227.6 kB gz [R9] |
 | Chamber added per-frame cost | **≤ 3 ms** over current scan (measured on mid-range Android) |
 | Pothi page flip | ≥ 55 fps; auto-degrade to crossfade below |
 | First leaf visible | < 1.5 s after route load |
@@ -597,7 +652,7 @@ four smaller chunks. Every new route inherits it before rendering anything.
 | Audio | ≤ 400 KB, lazy, only after opt-in |
 | Battery | scan session battery draw must not regress vs today |
 
-**Capability tiers:** HIGH (R3F + full particles) · MID (R3F where WebGL2 is
+**Capability tiers:** HIGH (the 3D room + full particles) · MID (the 3D room where WebGL2 is
 available, otherwise the CSS composition; parallax + particles) · LOW (the CSS
 composition, no particles, crossfade transitions) · FLOOR (static, no motion —
 also the `prefers-reduced-motion` target). [R7]
@@ -666,9 +721,9 @@ live until parity is signed off.
 | **U0** | Tokens, fonts, plate pipeline (Blender → AVIF ×3), capability tiers, sound scaffold | Tokens applied to one existing page with no visual regressions |
 | **U1** | **The Pothi** — page turn, leaf layout, palm crop with measured line, marginalia, fold-out evidence, **Sealed Leaf** | A real reading renders end-to-end; flip ≥ 55 fps; sealed leaves appear for every unmeasured feature |
 | **U2** | **The Chamber** — canvas overlays, zodiac ring, progressive line reveal, stage copy, reveal beat | Added frame cost ≤ 3 ms on a mid-range Android; no pipeline file edited |
-| **U3** | **The Sanctuary** — U3a: shell, nav rail and bottom bar, the CSS composition, the Threshold in CSS, the Home content. U3b: the R3F room, the camera positions, the `HIGH`-tier doorway push [R7][R8] | Initial JS ≤ 140 KB gz; entrance skippable and remembered; R3F chunk ≤ 200 KB gz; 60 fps on a 2022 laptop |
+| **U3** | **The Sanctuary** — U3a: shell, nav rail and bottom bar, the CSS composition, the Threshold in CSS, the Home content. U3b: the Three.js room, the camera positions, the `HIGH`-tier doorway push [R7][R8][R9] | Initial JS ≤ 140 KB gz; entrance skippable and remembered; 3D chunk ≤ 200 KB gz; 60 fps on a 2022 laptop |
 | **U4** | **The Guru** — scroll UI, tool-grounded answers, tier badges | Grounding audit: 0 untraceable claims across 50 test conversations |
-| **U5** | Shelf, Timeline diff, Daily Guidance, sound + haptics (the R3F room moved to U3 under [R7]) | Budgets hold; parity sign-off; old routes retired |
+| **U5** | Shelf, Timeline diff, Daily Guidance, sound + haptics (the 3D room moved to U3 under [R7]) | Budgets hold; parity sign-off; old routes retired |
 
 **U1 first, deliberately.** A working manuscript with honest sealed leaves is
 worth more than a beautiful empty room, and it can be built against the

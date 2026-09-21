@@ -50,6 +50,16 @@ import { GPU_ARGS, readRenderer, isSoftware } from "./gpu-probe.mjs";
 
 const REPO = resolve(import.meta.dirname, "..", "..");
 
+/**
+ * The Threshold's memory (lib/sanctuary/threshold.ts). A fresh headless browser
+ * is always a first visit, so /sanctuary shows the entrance over the room; a
+ * capture of the ROOM has to arrive as a returning visitor. Restated rather
+ * than imported because this is a plain .mjs script and that module is
+ * TypeScript; test/capture-harness.test.ts asserts the two still agree.
+ */
+export const THRESHOLD_STORAGE_KEY = "hastrekha:threshold:v1";
+export const THRESHOLD_SEEN = "seen";
+
 /** The four widths the E pass names (Amendment 4). */
 export const DEFAULT_VIEWPORTS = [390, 430, 768, 1440];
 
@@ -99,6 +109,9 @@ function parseArgs(argv) {
     headed: false,
     label: null,
     build: false,
+    waitFor: null,
+    settle: 2500,
+    storage: [],
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -111,6 +124,12 @@ function parseArgs(argv) {
     else if (arg === "--headed") out.headed = true;
     else if (arg === "--label") out.label = next();
     else if (arg === "--build") out.build = true;
+    else if (arg === "--wait-for") out.waitFor = next();
+    else if (arg === "--settle") out.settle = Number(next());
+    else if (arg === "--storage") {
+      const [key, ...rest] = next().split("=");
+      out.storage.push([key, rest.join("=")]);
+    } else if (arg === "--returning") out.storage.push([THRESHOLD_STORAGE_KEY, THRESHOLD_SEEN]);
     else if (arg === "--help") out.help = true;
   }
   return out;
@@ -151,7 +170,7 @@ async function exists(path) {
  * lifted the page reaches the session cookie, becomes dynamic, and is rendered
  * per request as the measurement needs.
  */
-async function buildProduction() {
+export async function buildProduction() {
   const nextBin = join(REPO, "node_modules", "next", "dist", "bin", "next");
   await new Promise((done, fail) => {
     const child = spawn(process.execPath, [nextBin, "build"], {
@@ -164,7 +183,7 @@ async function buildProduction() {
 }
 
 /** Start `next start` with the measurement gate lifted, and resolve once it answers. */
-async function startServer() {
+export async function startServer() {
   if (!(await exists(join(REPO, ".next")))) {
     throw new Error("No production build found at .next — run with --build, or `SNC_MEASURE=1 npm run build` first.");
   }
@@ -225,12 +244,19 @@ async function sampleFrames(page, frames, warmup) {
 }
 
 /** One route, one width: navigate, settle, sample, shoot. */
-async function captureOne(browser, { base, route, width, cpu, frames, outDir }) {
+async function captureOne(browser, { base, route, width, cpu, frames, outDir, waitFor, settle, storage }) {
   const context = await browser.newContext({
     viewport: { width, height: HEIGHT_FOR(width) },
     deviceScaleFactor: 1,
     colorScheme: "dark",
   });
+  // Seed localStorage before any page script runs, so the pre-paint script
+  // that decides whether to show the Threshold sees a returning visitor.
+  if (storage.length > 0) {
+    await context.addInitScript((pairs) => {
+      for (const [key, value] of pairs) window.localStorage.setItem(key, value);
+    }, storage);
+  }
   const page = await context.newPage();
   const consoleErrors = [];
   page.on("console", (msg) => {
@@ -260,8 +286,22 @@ async function captureOne(browser, { base, route, width, cpu, frames, outDir }) 
     };
   }
 
-  // Let fonts land and any after-idle chunk mount before the window opens.
-  await page.waitForTimeout(2500);
+  // Wait for the thing being measured to exist, not for a guessed duration.
+  // The 3D room loads after idle, fetches a chunk and a mesh, draws a first
+  // frame and only then fades in, so a fixed wait either wastes time or
+  // photographs the CSS room underneath and calls it the scene.
+  let waited = null;
+  if (waitFor) {
+    const t0 = Date.now();
+    try {
+      await page.waitForSelector(waitFor, { timeout: 30_000, state: "attached" });
+      waited = Date.now() - t0;
+    } catch {
+      waited = -1;
+    }
+  }
+  // Then let the fade finish and fonts settle.
+  await page.waitForTimeout(settle);
 
   const gpu = await readRenderer(page);
 
@@ -285,13 +325,13 @@ async function captureOne(browser, { base, route, width, cpu, frames, outDir }) 
   await page.screenshot({ path: shot, fullPage: false });
 
   await context.close();
-  return { width, cpu, status, gpu, frame, cpuCalibrationMs, screenshot: shot, consoleErrors };
+  return { width, cpu, status, gpu, frame, cpuCalibrationMs, waitFor, waitedMs: waited, screenshot: shot, consoleErrors };
 }
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help) {
-    console.log("node scripts/capture/capture.mjs [--route /sanctuary] [--viewport 390,1440] [--cpu 4] [--frames 240] [--base-url URL] [--headed] [--label name] [--build]");
+    console.log("node scripts/capture/capture.mjs [--route /sanctuary] [--viewport 390,1440] [--cpu 4] [--frames 240] [--base-url URL] [--headed] [--label name] [--build] [--wait-for selector] [--settle ms] [--returning] [--storage key=value]");
     return;
   }
 
@@ -334,6 +374,9 @@ async function main() {
         cpu: opts.cpu,
         frames: opts.frames,
         outDir,
+        waitFor: opts.waitFor,
+        settle: opts.settle,
+        storage: opts.storage,
       });
       results.push(result);
       const f = result.frame;

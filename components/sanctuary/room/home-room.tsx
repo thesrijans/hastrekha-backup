@@ -21,6 +21,7 @@ import { roomPercent } from "@/lib/sanctuary/room-composition";
 import { SANCTUARY_CHAMBER_HREF, SANCTUARY_POTHI_HREF } from "@/lib/sanctuary/routes";
 import { HOME_CONTENT_ID } from "@/components/sanctuary/home/home-content";
 import { ROOM_LABEL_POINTS } from "./room-props";
+import { Room3D } from "./three/room-3d";
 import { RoomStage } from "./room-stage";
 import styles from "./room-stage.module.css";
 
@@ -99,5 +100,15 @@ export function HomeRoom({ id, className, profile }: HomeRoomProps): ReactElemen
     </>
   );
 
-  return <RoomStage id={id} variant="room" className={className} overlay={overlay} labels={labels} chrome={chrome} />;
+  return (
+    <RoomStage
+      id={id}
+      variant="room"
+      className={className}
+      overlay={overlay}
+      labels={labels}
+      chrome={chrome}
+      scene={<Room3D roomId={id} />}
+    />
+  );
 }

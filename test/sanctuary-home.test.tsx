@@ -426,9 +426,44 @@ function rules(css: string): { selector: string; body: string }[] {
       const full = path.join(dir, entry);
       return statSync(full).isDirectory() ? walk(full) : /\.(ts|tsx)$/.test(entry) ? [full] : [];
     });
-  const u3a = [...walk(path.join(ROOT, "components", "sanctuary")), ...walk(path.join(ROOT, "app", "sanctuary"))];
-  const webgl = u3a.filter((file) => /from\s+["'](three|@react-three\/[^"']+)["']|import\(\s*["'](three|@react-three)/.test(readFileSync(file, "utf8")));
-  ok(webgl.length === 0, `U3a is a complete Home with NO WebGL — nothing in the sanctuary imports three or @react-three yet (${webgl.map((f) => path.relative(ROOT, f)).join(", ")})`);
+  // U3b. The U3a guard here read "nothing in the sanctuary imports three or
+  // @react-three YET". U3b is that "yet": the room is now a Three.js scene
+  // (spec [R7], written directly rather than through React Three Fiber per
+  // [R9]). What replaces the guard is not permission but confinement — where
+  // Three.js may live, and the one lazy door into it — because a single stray
+  // static import would move the whole library into the Sanctuary's 140 kB
+  // first load, or onto a scan route whose GPU belongs to MediaPipe.
+  const sanctuary = [...walk(path.join(ROOT, "components", "sanctuary")), ...walk(path.join(ROOT, "app", "sanctuary"))];
+  const threeDir = path.join(ROOT, "components", "sanctuary", "room", "three") + path.sep;
+  const importsThree = (text: string): boolean => /from\s+["']three(\/[^"']*)?["']|import\(\s*["']three/.test(text);
+  const importsR3F = (text: string): boolean => /["']@react-three\//.test(text);
+
+  const threeFiles = sanctuary.filter((file) => importsThree(readFileSync(file, "utf8")));
+  const strays = threeFiles.filter((file) => !file.startsWith(threeDir));
+  ok(
+    threeFiles.length > 0 && strays.length === 0,
+    `U3b: Three.js is imported only inside components/sanctuary/room/three/ (${threeFiles.length} files there; strays: ${strays.map((f) => path.relative(ROOT, f)).join(", ") || "none"})`,
+  );
+  const r3f = sanctuary.filter((file) => importsR3F(readFileSync(file, "utf8")));
+  ok(r3f.length === 0, `and nothing imports React Three Fiber — its own floor is 227.6 kB gz against the 200 kB ceiling [R9] (${r3f.map((f) => path.relative(ROOT, f)).join(", ") || "none"})`);
+
+  const gate = readFileSync(path.join(threeDir, "room-3d.tsx"), "utf8");
+  ok(!importsThree(gate), "the gate, room-3d.tsx, does not import Three.js itself");
+  ok(/import\(\s*["']\.\/room-canvas["']\s*\)/.test(gate), "it reaches the canvas only through a dynamic import(), so Three.js is a lazy chunk and never first-load JS");
+  ok(!/^import\s+(?!type\b)[^;]*from\s+["']\.\/room-canvas["']/m.test(gate), "with no static, non-type import of the canvas beside it");
+
+  const outside = sanctuary.filter((file) => !file.startsWith(threeDir));
+  const doors = outside.filter((file) => /from\s+["'][^"']*\/?three\/(?!room-3d["'])[^"']*["']/.test(readFileSync(file, "utf8")) && /room\/three|\.\/three\//.test(readFileSync(file, "utf8")));
+  ok(doors.length === 0, `outside room/three/, the only module anything imports is the gate (${doors.map((f) => path.relative(ROOT, f)).join(", ") || "none"})`);
+
+  // "Zero WebGL on any scanning route" (§6.2 [R7], the U3b brief): the scan
+  // routes, sanctuary chamber included, never reach Three.js or the room.
+  const scan = walk(path.join(ROOT, "app", "scan"));
+  const scanLeaks = scan.filter((file) => {
+    const text = readFileSync(file, "utf8");
+    return importsThree(text) || /room\/three/.test(text);
+  });
+  ok(scanLeaks.length === 0, `no file under app/scan imports Three.js or the 3D room (${scanLeaks.map((f) => path.relative(ROOT, f)).join(", ") || "none"})`);
 }
 
 console.log(`SANCTUARY HOME ASSERTIONS PASSED (${assertions})`);
