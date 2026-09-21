@@ -1,0 +1,173 @@
+@layer components {
+  /*
+   * THE PANEL — the right side of the chamber on a desktop.
+   *
+   * A dark leaf over the camera, not a parchment: the plate draws gold lines,
+   * and gold on parchment measures 1.03:1 (see palm-plate.tsx) while gold on
+   * stone is what the ladder was tuned for. Solid translucency, never a
+   * backdrop blur: a blur over a live video re-filters every frame of it.
+   */
+  .monitor {
+    --snc-monitor-width: 22rem;
+    position: fixed;
+    inset-inline-end: 1.5rem;
+    inset-block-start: 50%;
+    z-index: 2;
+    inline-size: var(--snc-monitor-width);
+    padding: 0.9rem 1rem 1rem;
+    border: 1px solid color-mix(in oklab, var(--color-snc-gold-500) 32%, transparent);
+    border-radius: 2px;
+    background: color-mix(in oklab, var(--color-snc-stone-900) 84%, transparent);
+    translate: 0 -50%;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  .monitor[data-snc-monitor="in"] {
+    opacity: 1;
+    transition: opacity 380ms ease;
+  }
+
+  .monitor[data-snc-monitor="out"] {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 240ms ease;
+  }
+
+  /*
+   * THE LEDGER. On the desktop panel it is a caption under the plate and the
+   * button does nothing visible; on a phone it is the sheet's handle.
+   */
+  .ledger {
+    display: block;
+    inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-snc-gold-400);
+    text-align: center;
+    cursor: default;
+  }
+
+  .ledgerLine {
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    /* Devanagari is never letter-spaced: tracking takes its conjuncts apart. */
+    letter-spacing: normal;
+  }
+
+  .entry[data-snc-state="none"] {
+    color: color-mix(in oklab, var(--color-snc-gold-400) 45%, transparent);
+  }
+
+  .dot {
+    color: color-mix(in oklab, var(--color-snc-gold-500) 55%, transparent);
+  }
+
+  /* THE PLATE. */
+  .plate {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    overflow: visible;
+  }
+
+  /* The hand: context, at the secondary rung, in the cool moon token — a different hue from a found line. */
+  .palm {
+    fill: none;
+    stroke: var(--color-snc-moon);
+    stroke-width: var(--snc-stroke-secondary-width);
+    stroke-opacity: var(--snc-stroke-secondary-opacity);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* A found line. Width and opacity come per line from its state (rekha-monitor.tsx). */
+  .line {
+    fill: none;
+    stroke: var(--color-snc-gold-400);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition:
+      stroke-width 420ms ease,
+      stroke-opacity 420ms ease;
+  }
+
+  /* CONFIRMED carries the active rung's glow, and only it does. */
+  .confirmed {
+    filter: var(--snc-stroke-active-glow);
+  }
+
+  .leaderLine {
+    fill: none;
+    stroke: var(--color-snc-gold-500);
+    stroke-width: var(--snc-stroke-secondary-width);
+    stroke-opacity: 0.6;
+  }
+
+  .name {
+    font-family: var(--font-snc-devanagari);
+    font-size: 7.5px;
+    letter-spacing: normal;
+    fill: var(--color-snc-gold-400);
+  }
+
+  .leader {
+    animation: sncMonitorName 520ms ease both;
+  }
+
+  @keyframes sncMonitorName {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /*
+   * THE PHONE — a pull-up sheet, collapsed to the ledger. The litany docks at
+   * the bottom too, so the chamber lifts it by the handle's height
+   * (--snc-monitor-handle, set in chamber.module.css).
+   */
+  @media (max-width: 899px) {
+    .monitor {
+      inset-inline: 0;
+      inset-block-start: auto;
+      inset-block-end: 0;
+      inline-size: auto;
+      padding: 0 1rem max(0.75rem, env(safe-area-inset-bottom));
+      border-inline: 0;
+      border-block-end: 0;
+      translate: 0 calc(100% - 3rem - env(safe-area-inset-bottom));
+      flex-direction: column;
+      transition: translate 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .monitor[data-snc-sheet="open"] {
+      translate: 0 0;
+    }
+
+    .ledger {
+      min-block-size: 3rem;
+      cursor: pointer;
+    }
+
+    .plate {
+      max-inline-size: 22rem;
+      margin-inline: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .monitor,
+    .line,
+    .leader {
+      transition: none;
+      animation: none;
+    }
+  }
+}

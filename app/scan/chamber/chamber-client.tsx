@@ -7,11 +7,19 @@
  *
  * A SECOND SURFACE, NOT A REPLACEMENT. `/scan` is untouched and stays live;
  * this route mounts the very same `useHandScan` and draws a different room
- * around it. Not one file under lib/scan is edited by this work, and all nine
- * scan flags keep their defaults — which is why the pipeline's own cost is
- * unchanged by construction and everything §10 budgets is the drawing this
- * route adds. See lib/sanctuary/frame-cost.ts for how that is measured, and the
- * readout below for where the number comes out.
+ * around it. §10's frame budget covers the drawing this route adds; see
+ * lib/sanctuary/frame-cost.ts for how that is measured, and the readout below
+ * for where the number comes out.
+ *
+ * ── THE THREE FLAGS THIS ROUTE, AND ONLY THIS ROUTE, TURNS ON (S1.1) ──
+ *
+ * rekhaPersist, corridorSearch and superRes (CHAMBER_SCAN_FLAGS): evidence
+ * that accumulates across frames and holds a confirmed line, the corridor
+ * fill-in that persistence releases, and the super-resolution fusion that feeds
+ * it sharper evidence. Switched on in one mount effect and put back on unmount
+ * to whatever each was before — /scan keeps its defaults. The pipeline's own
+ * per-frame cost grows by the accumulator's (≤ 3 ms, S1.5, printed under
+ * `?cost=1`), and the Rekha Monitor draws what it finds.
  *
  * ── WHAT THIS FILE OWNS, AND WHAT IT DELIBERATELY DOES NOT ──
  *
@@ -49,6 +57,8 @@ import {
 } from "@/lib/sanctuary/chamber-stages";
 import { formatFrameCost, withinFrameBudget, type FrameCostSummary } from "@/lib/sanctuary/frame-cost";
 import { ChamberCanvas } from "@/components/sanctuary/chamber/chamber-canvas";
+import { RekhaMonitor, rekhaLedger } from "@/components/sanctuary/chamber/rekha-monitor";
+import { CHAMBER_SCAN_FLAGS, withScanFlags } from "@/lib/scan/flags";
 import { ScanLitany } from "@/components/sanctuary/chamber/scan-litany";
 import { RevealBeat } from "@/components/sanctuary/chamber/reveal-beat";
 import { Parchment } from "@/components/sanctuary/material";
@@ -94,6 +104,9 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
       mountedRef.current = false;
     };
   }, []);
+
+  /* S1.1 — the chamber's flags on for as long as it is mounted, and back as they were after. */
+  useEffect(() => withScanFlags(CHAMBER_SCAN_FLAGS), []);
 
   /*
    * The rescan ask, read through a store with a NULL SERVER SNAPSHOT.
@@ -220,6 +233,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     error: cameraError,
     quality,
     observation,
+    rekha,
     rectified,
     extraction,
     traces,
@@ -384,6 +398,9 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         </div>
       )}
 
+      {/* S1.4 — the lines found so far, by state, and nothing below CANDIDATE. Detection only. */}
+      <RekhaMonitor snapshot={rekha} visible={status === "running" && blocked === null && phase === "scanning"} />
+
       <ScanLitany
         line={line}
         hint={status === "running" && !quality.ok ? quality.hint : null}
@@ -402,6 +419,9 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
       {showCost ? (
         <p className={styles.cost} data-snc-budget={withinFrameBudget(cost) ? "within" : "over"}>
           {formatFrameCost(cost)}
+          {rekha === null
+            ? null
+            : ` · rekha ${rekha.costMs.toFixed(2)} ms/frame · ${rekhaLedger(rekha)} · flicker ${Object.values(rekha.flicker).join("/")}`}
         </p>
       ) : null}
     </div>

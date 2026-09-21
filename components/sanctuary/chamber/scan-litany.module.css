@@ -25,7 +25,8 @@
   .dock {
     position: fixed;
     inset-inline: 0;
-    inset-block-end: max(1.25rem, env(safe-area-inset-bottom));
+    /* --snc-monitor-handle: the Rekha Monitor's collapsed sheet on a phone (S1.4) sits under the leaf. */
+    inset-block-end: calc(max(1.25rem, env(safe-area-inset-bottom)) + var(--snc-monitor-handle, 0px));
     z-index: 2;
     display: flex;
     justify-content: center;

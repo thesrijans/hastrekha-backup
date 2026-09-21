@@ -6,7 +6,7 @@
  * easy to break silently:
  *
  *   · the existing /scan is untouched, and this route is additive
- *   · the pipeline is consumed, never edited, and no scan flag is read
+ *   · the pipeline is consumed, never edited, and steered only by S1.1's three flags
  *   · the ceremony's copy never claims a stage it has not earned (A2)
  *   · nothing here is a toast, an alert or a dialog
  *
@@ -145,14 +145,33 @@ const stage = (id: string) => CHAMBER_STAGES.find((s) => s.id === id) ?? CHAMBER
   ok(pageCode.includes("SANCTUARY_FONT_CLASS"), "the font class is applied, which is also how the canvas resolves a Devanagari family");
 }
 
-/* ============ 4. The pipeline is consumed, never edited or steered ======== */
+/* ===== 4. The pipeline is consumed, never edited; steered only by S1.1 ====== */
 
 {
   ok(clientSource.includes("useHandScan"), "the chamber mounts the very same hook /scan mounts");
   ok(
-    !/from "@\/lib\/scan\/flags"|scanFlags/.test(clientSource) && !/scanFlags/.test(canvasSource),
-    "and reads no scan flag: all nine keep their defaults, so this route cannot change what the pipeline does",
+    /useEffect\(\(\) => withScanFlags\(CHAMBER_SCAN_FLAGS\), \[\]\);/.test(clientSource) &&
+      !/scanFlags\.(set|toggle|reset)/.test(clientSource) &&
+      !/scanFlags/.test(canvasSource),
+    "S1.1: the chamber switches its flags on in ONE mount effect and restores them on unmount — never a bare scanFlags.set — and the canvas reads none",
   );
+  {
+    const flags = require_("../lib/scan/flags") as typeof import("../lib/scan/flags");
+    ok(
+      JSON.stringify(flags.CHAMBER_SCAN_FLAGS) === JSON.stringify(["rekhaPersist", "corridorSearch", "superRes"]),
+      "and those flags are exactly rekhaPersist, corridorSearch and superRes (S1.1)",
+    );
+    const store = new flags.FlagStore();
+    store.set("superRes", true);
+    const undo = flags.withScanFlags(flags.CHAMBER_SCAN_FLAGS, store);
+    const during = store.snapshot();
+    undo();
+    const after = store.snapshot();
+    ok(
+      during.rekhaPersist && during.corridorSearch && during.superRes && !after.rekhaPersist && !after.corridorSearch && after.superRes,
+      "on unmount each flag returns to the value it had BEFORE — superRes, already on, stays on; the other two go back off — and /scan's own defaults are never touched",
+    );
+  }
   ok(
     !/kbDocument|loadKnowledgeBase|evaluateRules/.test(clientSource),
     "the knowledge base is not loaded a second time — the rules-fired signal comes from the reading the server returns, which keeps a 106 KB parse out of a 45 KB budget",

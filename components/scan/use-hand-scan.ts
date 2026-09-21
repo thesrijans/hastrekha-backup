@@ -14,7 +14,8 @@ import {
   SPAN_HISTORY_FRAMES,
   type PoseProfile,
 } from "@/lib/scan/quality";
-import { canonicalAnchors, palmAnchors, rectifyPalm, solveHomography, type RectifyResult } from "@/lib/scan/rectify";
+import { canonicalAnchors, conventionRemap, palmAnchors, rectifyPalm, solveHomography, type RectifyResult } from "@/lib/scan/rectify";
+import type { RekhaPersistence, RekhaSnapshot } from "@/lib/scan/rekha-persist";
 import { derivePalmEdge } from "@/lib/scan/landmarks";
 import { emptyStabiliser, resetStabiliser, stabiliseAnchors, type AnchorStabiliser } from "@/lib/scan/stabilise";
 import { scanFlags } from "@/lib/scan/flags";
@@ -132,6 +133,13 @@ const SUPERRES_FUSE_INTERVAL_MS = 2000;
  */
 const SUPERRES_STALE_MS = 5000;
 
+/**
+ * rekhaPersist + superRes: the weight a super-resolution fusion carries into the evidence
+ * accumulator. Half, because the fusion is built from ring frames the accumulator has already taken
+ * one by one — at full weight the same light would be counted twice.
+ */
+const REKHA_SUPERRES_WEIGHT = 0.5;
+
 const IDLE_QUALITY: QualityVerdict = {
   ok: false,
   issues: ["no_hand"],
@@ -232,6 +240,21 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const superResResultAtRef = useRef(0);
   /** The live path's most recent UNet plane, kept (flag superRes only) so the fused detection can blend it. */
   const lastUnetRef = useRef<Float32Array | null>(null);
+  /**
+   * rekhaPersist (flag): the evidence accumulator, its extraction field and the line hold
+   * (lib/scan/rekha-persist.ts), created on the first rectified frame the flag is on — with it off
+   * nothing is constructed. Reset at the same touch points as the fusion accumulators, remapped
+   * with them across a convention change. `rekhaGrayRef` is the last frame's working-size gray,
+   * so a super-resolution result can be folded in without a spurious alignment shift.
+   *
+   * The module itself is fetched the first time the flag is seen on (`rekhaModuleRef`), not
+   * imported at the top: /scan never turns the flag on, and a static import put 4.2 kB gz of code
+   * it never runs into its first load. The frame that starts the fetch is simply not accumulated.
+   */
+  const rekhaRef = useRef<RekhaPersistence | null>(null);
+  const rekhaModuleRef = useRef<typeof import("@/lib/scan/rekha-persist") | null>(null);
+  const rekhaLoadingRef = useRef(false);
+  const rekhaGrayRef = useRef<Float32Array | null>(null);
   /**
    * Landmark jitter slides the same skin a few crop pixels between frames — more than a crease is
    * wide — which is what smears the accumulated mask into an unthinnable band. Filtering the anchors
@@ -379,6 +402,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const [corridorAttempts, setCorridorAttempts] = useState<readonly CorridorAttempt[]>([]);
   /** superRes readout (flag superRes); null until the first fusion result arrives. */
   const [superRes, setSuperRes] = useState<SuperResReadout | null>(null);
+  /** rekhaPersist (flag): per-line state, hold and flicker — what the Rekha Monitor draws. Null with the flag off. */
+  const [rekha, setRekha] = useState<RekhaSnapshot | null>(null);
   /** Raw per-detector fields from the last inference, for the debug HUD's three-way mask toggle. */
   const [stageMasks, setStageMasks] = useState<{
     unet: Float32Array | null;
@@ -417,6 +442,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     superResFuserRef.current?.dispose();
     superResFuserRef.current = null;
     superResRingRef.current?.reset();
+    rekhaRef.current?.reset();
     previousLandmarksRef.current = null;
     spanHistoryRef.current = [];
   }, []);
@@ -543,6 +569,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         fusionSuperResRef.current = { ...resetFusion(fusionSuperResRef.current), handedness: next?.handedness ?? null };
         superResRingRef.current?.reset();
         superResResultAtRef.current = 0;
+        // rekhaPersist: a hand gone for HAND_LOSS_RESET_MS, or the other hand, is a new palm —
+        // held lines belong to the old one. (A pose commit, below, deliberately does NOT reset it.)
+        if (rekhaRef.current !== null) {
+          rekhaRef.current.reset();
+          setRekha(null);
+        }
         resetStabiliser(stabiliserRef.current);
         if (otherHand) {
           resetPhotometric(photometricRef.current);
@@ -608,6 +640,14 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         const vocabV2 = flagsAtExtract.featureVocabV2;
         const found = extractLines(activeFusion.ema, activeFusion.size, vocabV2);
         /*
+         * rekhaPersist: measure this extraction against the accumulator's ladder. A CONFIRMED line
+         * is held from here on, and rides along in what is published even when this extraction
+         * missed it; the corridor fill-in below waits for the first confirmed line.
+         */
+        const rekha = flagsAtExtract.rekhaPersist ? rekhaRef.current : null;
+        const rekhaSnap = rekha === null ? null : rekha.extracted(found, at);
+        if (rekhaSnap !== null) setRekha(rekhaSnap);
+        /*
          * Everything else on the palm. The four completed lines are the headline, but a
          * reader looks at the minor creases too, and dropping them was throwing away most of
          * what the detector had already found. The faint tier is gated on the accumulator’s
@@ -626,9 +666,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
          */
         let allTraces = all;
         let corridorFound: ReturnType<typeof corridorTraces> = [];
-        if (flagsAtExtract.corridorSearch && fusionContractRef.current.frames > 0) {
+        if (flagsAtExtract.corridorSearch && (rekhaSnap === null || rekhaSnap.anyConfirmed) && fusionContractRef.current.frames > 0) {
           const attempts: CorridorAttempt[] = [];
           corridorFound = corridorTraces(fusionContractRef.current.ema, fusionContractRef.current.size, found, all, attempts);
+          // A held fate is found; filling it in again from the corridor would draw it twice.
+          if (rekha?.hold.isHeld("fate")) corridorFound = corridorFound.filter((trace) => trace.class !== "fate");
           setCorridorAttempts(attempts);
           if (corridorFound.length > 0) allTraces = { ...all, traces: [...all.traces, ...corridorFound] };
         }
@@ -704,7 +746,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           // Refused while the hand is clipped: the crop was fitted to extrapolated
           // landmarks, so any line placed from it is a claim about guessed geometry.
           if (named && !degradedRef.current) onLineFeatures?.(forFeatures, at);
-          setExtraction(found);
+          setExtraction(rekha === null ? found : { ...found, lines: { ...found.lines, ...rekha.hold.heldMissingFrom(found) } });
           setPolys(drawable);
           setPolySegments(
             named
@@ -935,6 +977,35 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               warps: aligned.state.warps,
             });
 
+            /*
+             * rekhaPersist (flag, default off): follow the EMA through the same alignment, and
+             * measure this frame for the accumulator — its working-size gray (for the translation
+             * search) and its weight (palm-box sharpness at camera resolution; below the ramp the
+             * frame is skipped outright). Computed here, at fire time, because the mask that comes
+             * back belongs to THIS frame. Nothing in this block runs with the flag off.
+             */
+            let rekhaGray: Float32Array | null = null;
+            let rekhaWeight = 0;
+            const rekhaModule = rekhaModuleRef.current;
+            if (scanFlags.snapshot().rekhaPersist && rekhaModule === null && !rekhaLoadingRef.current) {
+              rekhaLoadingRef.current = true;
+              void import("@/lib/scan/rekha-persist").then((loaded) => {
+                rekhaModuleRef.current = loaded;
+              });
+            }
+            if (scanFlags.snapshot().rekhaPersist && rekhaModule !== null) {
+              const rekha = rekhaRef.current ?? (rekhaRef.current = new rekhaModule.RekhaPersistence(MASK_SIZE));
+              if (aligned.outcome === "remapped" && underPrevious !== null) {
+                const pull = conventionRemap(underPrevious, warped.toCrop);
+                if (pull === null) rekha.reset();
+                else rekha.remap(pull);
+              } else if (aligned.outcome === "dropped") {
+                rekha.reset();
+              }
+              rekhaGray = rekhaModule.rekhaGray(warped.image, MASK_SIZE);
+              rekhaWeight = rekhaModule.rekhaFrameWeight(source, next.landmarks).weight;
+            }
+
             recordStage(telemetryRef.current, "cropsSentToWorker", now);
             // Fire and forget: the segmenter drops this frame if one is already in flight.
             const epochAtFire = fusionEpochRef.current;
@@ -1044,6 +1115,20 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   : fusionRef.current.confidence,
               );
               setFusedField(fusionRef.current.ema);
+              /*
+               * rekhaPersist: the same frame, folded into the evidence accumulator — the contract
+               * plane when fieldContract is on (un-boosted, as the contract EMA takes it), else the
+               * legacy field exactly as the EMA just took it. `rekhaGray` is non-null only when the
+               * flag was on at fire time.
+               */
+              const rekha = rekhaRef.current;
+              if (rekhaGray !== null && rekha !== null) {
+                const plane = scanFlags.snapshot().fieldContract && mask.contract !== undefined ? mask.contract : mask.all;
+                if (plane.length === rekha.field.length) {
+                  setRekha(rekha.observe(plane, rekhaGray, rekhaWeight, performance.now()));
+                  rekhaGrayRef.current = rekhaGray;
+                }
+              }
               // superRes: keep the live UNet plane so the fused detection can blend it (flag-gated write).
               if (mask.stages?.unet != null && scanFlags.snapshot().superRes) lastUnetRef.current = mask.stages.unet;
               setStageMasks(
@@ -1067,7 +1152,13 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               setBackend(mask.backend ?? segmenterRef.current?.backend ?? "wasm");
 
               const at = performance.now();
-              if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS && !superResFresh(at)) {
+              /*
+               * rekhaPersist: the accumulator is the extraction input, and a fresh super-resolution
+               * fusion no longer supersedes it — the fusion is folded INTO the accumulator instead
+               * (below), so extraction always reads the one field that remembers.
+               */
+              const persisting = rekhaGray !== null && rekhaRef.current !== null;
+              if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS && (persisting || !superResFresh(at))) {
                 lastExtractAtRef.current = at;
                 const flagsAtExtract = scanFlags.snapshot();
                 /*
@@ -1076,7 +1167,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                  * overlay) is field-agnostic; the flag decides which plane is "the field".
                  */
                 const activeFusion = flagsAtExtract.fieldContract ? fusionContractRef.current : fusionRef.current;
-                extractAndPublish(activeFusion, at, anchorsAtFire, conventionAtFire);
+                extractAndPublish(
+                  persisting && rekhaRef.current !== null ? { ...activeFusion, ema: rekhaRef.current.field } : activeFusion,
+                  at,
+                  anchorsAtFire,
+                  conventionAtFire,
+                );
               }
             });
 
@@ -1152,6 +1248,22 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                       fuseMs: result.fuseMs,
                       totalMs: result.totalMs,
                     });
+                    /*
+                     * rekhaPersist: the fusion is evidence, not a replacement. It is folded into the
+                     * accumulator at REKHA_SUPERRES_WEIGHT — half, because it is made of frames the
+                     * accumulator has already counted once — aligned on the last frame's own gray so
+                     * no shift is invented, and only while it is addressed to the same convention.
+                     * The per-frame path then extracts from the accumulator as usual.
+                     */
+                    const rekhaNow = scanFlags.snapshot().rekhaPersist ? rekhaRef.current : null;
+                    if (rekhaNow !== null) {
+                      const plane = contractPlane ?? result.mask.all;
+                      const gray = rekhaGrayRef.current;
+                      if (gray !== null && plane.length === rekhaNow.field.length && result.convention === fusionRef.current.convention) {
+                        setRekha(rekhaNow.observe(plane, gray, REKHA_SUPERRES_WEIGHT, at));
+                      }
+                      return;
+                    }
                     lastExtractAtRef.current = at;
                     extractAndPublish(state, at, reference?.anchors ?? anchorsAtFire, result.convention);
                   });
@@ -1230,6 +1342,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         }
 
         // Each pose starts from a clean average; the merged mask is assembled at the end.
+        // (rekhaPersist's accumulator is NOT reset here: it is the live evidence, in the canonical
+        // space every pose shares, and holding confirmed lines across poses is its whole purpose.)
         fusionRef.current = resetFusion(fusionRef.current);
         fusionContractRef.current = resetFusion(fusionContractRef.current);
         fusionSuperResRef.current = resetFusion(fusionSuperResRef.current);
@@ -1467,6 +1581,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     fusionSuperResRef.current = resetFusion(fusionSuperResRef.current);
     superResRingRef.current?.reset();
     superResResultAtRef.current = 0;
+    rekhaRef.current?.reset();
+    setRekha(null);
     fusionEpochRef.current += 1;
     setFusedConfidence(0);
     setPolys([]);
@@ -1480,6 +1596,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     error,
     quality,
     observation,
+    /** rekhaPersist (flag): per-line detection state for the Rekha Monitor; null with the flag off. */
+    rekha,
     features,
     rectified,
     stats,

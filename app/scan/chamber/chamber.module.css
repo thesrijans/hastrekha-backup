@@ -30,6 +30,14 @@
     overscroll-behavior: none;
   }
 
+  /* S1.4: on a phone the Rekha Monitor is a sheet collapsed to its ledger at the bottom edge; the
+     litany's leaf rides above that handle rather than on it. */
+  @media (max-width: 899px) {
+    .chamber {
+      --snc-monitor-handle: 3rem;
+    }
+  }
+
   /*
    * THE FEED. `object-fit: cover`, which the canvas's own cover transform is
    * built to match: any other fit and every projected crease lands beside the

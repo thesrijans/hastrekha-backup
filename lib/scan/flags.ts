@@ -51,6 +51,32 @@ export interface ScanFlags {
    * invented — no single-image upscaler anywhere on this path.
    */
   readonly superRes: boolean;
+  /**
+   * Rekha persistence (S1): evidence accumulates across frames and a confirmed line is HELD.
+   *
+   * Every accepted frame's field — the contract plane when fieldContract is on, else the legacy
+   * `mask.all` — is folded into `EvidenceAccumulator` (per-pixel log-odds, decay, deadband,
+   * CANDIDATE → TRACKING → CONFIRMED hysteresis, translation compensation on), weighted by the
+   * frame's sharpness; its probability map replaces the per-frame field as extraction input, and
+   * `RekhaLineHold` keeps a CONFIRMED major line through short losses. Corridor search waits for
+   * the first confirmed line. See lib/scan/rekha-persist.ts.
+   *
+   * CALIBRATION, measured (scripts/scan/calibrate-rekha-null.ts, worker-equivalent chain, UNet on
+   * every 6th frame as the worker runs it). Creaseless skin in the per-frame legacy field:
+   *   lines-current-02       p50 0.083 · p95 0.483 (classical frames p95 0.538, UNet 0.296)
+   *   lines-missing-tilt-03  p50 0.102 · p95 0.576 (classical 0.648, UNet 0.371)
+   *   session still 0        p50 0.058 · p95 0.169 (classical 0.177, UNet 0.108)
+   *   pooled, equal weight   p90 0.266 · p95 0.427
+   * The library default (0.06) sat under the MEDIAN of that skin: nearly every pixel would have
+   * argued for a crease. The null is `REKHA_PERSIST_NULL_LEVEL` (lib/scan/rekha-persist.ts),
+   * chosen on the S1.5 replay (scripts/scan/replay-persist.ts) — see that constant for the sweep.
+   *
+   * Frame weight is sharpness on the capture harness's palm box at camera resolution (palm-box
+   * VoL): 395 and 426 on the two sharp fixtures (weight 1), 50 on the overexposed legacy frame
+   * (weight 0 — skipped as unusable). On the rectified crop the same frames measured 14–17 and
+   * would all have weighed zero.
+   */
+  readonly rekhaPersist: boolean;
 }
 
 export const DEFAULT_SCAN_FLAGS: ScanFlags = {
@@ -64,11 +90,12 @@ export const DEFAULT_SCAN_FLAGS: ScanFlags = {
   fieldContract: false,
   corridorSearch: false,
   superRes: false,
+  rekhaPersist: false,
 };
 
 export type ScanFlagName = keyof ScanFlags;
 
-export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch", "superRes"];
+export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch", "superRes", "rekhaPersist"];
 
 /** Human labels for the HUD toggles, in the app's register. */
 export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
@@ -82,6 +109,7 @@ export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
   fieldContract: "Field contract",
   corridorSearch: "Corridor search",
   superRes: "Super-resolution",
+  rekhaPersist: "Rekha persistence",
 };
 
 type Listener = (flags: ScanFlags) => void;
@@ -94,7 +122,7 @@ type Listener = (flags: ScanFlags) => void;
  * `useSyncExternalStore` on the HUD side gets the React half right without a `useEffect` that
  * mirrors state into a ref.
  */
-class FlagStore {
+export class FlagStore {
   private flags: ScanFlags = DEFAULT_SCAN_FLAGS;
   private readonly listeners = new Set<Listener>();
 
@@ -124,6 +152,26 @@ class FlagStore {
 }
 
 export const scanFlags = new FlagStore();
+
+/**
+ * The flags the chamber runs with, and only the chamber (S1.1): persistence, the corridor fill-in
+ * it releases, and the super-resolution fusion that feeds it sharper evidence. /scan keeps every
+ * default.
+ */
+export const CHAMBER_SCAN_FLAGS: readonly ScanFlagName[] = ["rekhaPersist", "corridorSearch", "superRes"];
+
+/**
+ * Switch `names` on and return the undo, which puts each flag back to the value it had BEFORE — not
+ * to off. A flag a developer had already switched on in /scan's HUD is still on after visiting the
+ * chamber, and one they had off is off again.
+ */
+export function withScanFlags(names: readonly ScanFlagName[], store: FlagStore = scanFlags): () => void {
+  const before = names.map((name) => [name, store.snapshot()[name]] as const);
+  for (const name of names) store.set(name, true);
+  return () => {
+    for (const [name, value] of before) store.set(name, value);
+  };
+}
 
 /** True when every flag is off — the state the identity test pins. */
 export function allFlagsOff(flags: ScanFlags): boolean {

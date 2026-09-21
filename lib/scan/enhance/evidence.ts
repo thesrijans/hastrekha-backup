@@ -66,6 +66,19 @@ export interface EvidenceOptions {
    * texture is an aperture problem: motion along it is unobservable).
    */
   readonly motionShiftPenalty: number;
+  /**
+   * Coarse-to-fine translation search. Off (the default), the shift is found
+   * exhaustively at ±`motionSearch` on the `motionDownsample` grid. On, the
+   * same range is searched at ±ceil(motionSearch / 2) on a grid twice as
+   * coarse, refined ±1 on the `motionDownsample` grid, then ±`motionRefine` at
+   * full resolution — the same reach for about a third of the comparisons.
+   * Its limit: a texture that repeats faster than twice the coarse cell (under
+   * ~8 px at the default downsample) aliases on the coarse grid and can lead
+   * the search to a false minimum; one with an 18 px period or longer is found
+   * exactly. Rectified palm luma — broad shading, thin creases, unperiodic skin —
+   * is the second kind.
+   */
+  readonly motionPyramid: boolean;
 }
 
 export const DEFAULT_EVIDENCE_OPTIONS: EvidenceOptions = {
@@ -86,6 +99,7 @@ export const DEFAULT_EVIDENCE_OPTIONS: EvidenceOptions = {
   motionRefine: 1,
   motionMinGain: 0.85,
   motionShiftPenalty: 0.02,
+  motionPyramid: false,
 };
 
 function logit(p: number): number {
@@ -161,6 +175,9 @@ export class EvidenceAccumulator {
   private readonly lowSize: number;
   private readonly lowCur: Float32Array;
   private readonly lowPrev: Float32Array;
+  private readonly coarseSize: number;
+  private readonly coarseCur: Float32Array;
+  private readonly coarsePrev: Float32Array;
   private readonly logitNull: number;
   private hasPrev = false;
 
@@ -178,6 +195,9 @@ export class EvidenceAccumulator {
     this.lowSize = Math.max(1, Math.floor(size / this.options.motionDownsample));
     this.lowCur = new Float32Array(this.lowSize * this.lowSize);
     this.lowPrev = new Float32Array(this.lowSize * this.lowSize);
+    this.coarseSize = this.options.motionPyramid ? Math.max(1, Math.floor(this.lowSize / 2)) : 0;
+    this.coarseCur = new Float32Array(this.coarseSize * this.coarseSize);
+    this.coarsePrev = new Float32Array(this.coarseSize * this.coarseSize);
     this.logitNull = logit(this.options.nullLevel);
   }
 
@@ -264,6 +284,60 @@ export class EvidenceAccumulator {
     this.frameCount += 1;
   }
 
+  /**
+   * Resample all evidence through a pull homography — `m` maps a destination
+   * pixel centre to its source position, in this accumulator's own pixel
+   * space: the matrix and the convention `fusion.ts` `warpField` use, so an
+   * accumulator remapped here stays registered with the EMA remapped there.
+   * Log-odds resample bilinearly; the state and the confirmation count
+   * nearest-neighbour, because a state is a label and a count is a count.
+   * Cells pulled from outside the field become NONE with zero evidence —
+   * newly revealed skin has no history. Motion history is dropped: the
+   * previous frame lives in the old space, so the next update does not align.
+   */
+  remap(m: readonly number[]): void {
+    const { size, logOdds, state, confirmCount, scratchF, scratchU } = this;
+    const [a = 1, b = 0, c = 0, d = 0, e = 1, f = 0, g = 0, h = 0, i = 1] = m;
+    const counts = new Uint8Array(size * size);
+    for (let y = 0; y < size; y += 1) {
+      const py = y + 0.5;
+      for (let x = 0; x < size; x += 1) {
+        const px = x + 0.5;
+        const at = y * size + x;
+        const w = g * px + h * py + i;
+        const sx = Math.abs(w) < 1e-12 ? -1 : (a * px + b * py + c) / w - 0.5;
+        const sy = Math.abs(w) < 1e-12 ? -1 : (d * px + e * py + f) / w - 0.5;
+        if (!(sx >= 0 && sy >= 0 && sx <= size - 1 && sy <= size - 1)) {
+          scratchF[at] = 0;
+          scratchU[at] = PIXEL_NONE;
+          counts[at] = 0;
+          continue;
+        }
+        const x0 = sx | 0;
+        const y0 = sy | 0;
+        const x1 = x0 + 1 > size - 1 ? size - 1 : x0 + 1;
+        const y1 = y0 + 1 > size - 1 ? size - 1 : y0 + 1;
+        const fx = sx - x0;
+        const fy = sy - y0;
+        const l00 = logOdds[y0 * size + x0] ?? 0;
+        const top = l00 + ((logOdds[y0 * size + x1] ?? 0) - l00) * fx;
+        const l01 = logOdds[y1 * size + x0] ?? 0;
+        const bottom = l01 + ((logOdds[y1 * size + x1] ?? 0) - l01) * fx;
+        scratchF[at] = top + (bottom - top) * fy;
+        const near = Math.round(sy) * size + Math.round(sx);
+        scratchU[at] = state[near] ?? PIXEL_NONE;
+        counts[at] = confirmCount[near] ?? 0;
+      }
+    }
+    logOdds.set(scratchF);
+    state.set(scratchU);
+    confirmCount.set(counts);
+    for (let k = 0; k < logOdds.length; k += 1) this.probability[k] = 1 / (1 + Math.exp(-(logOdds[k] ?? 0)));
+    this.hasPrev = false;
+    this.lastShiftX = 0;
+    this.lastShiftY = 0;
+  }
+
   private downsample(gray: Float32Array, out: Float32Array): void {
     const { size, lowSize } = this;
     const d = this.options.motionDownsample;
@@ -290,6 +364,8 @@ export class EvidenceAccumulator {
     let shiftX = 0;
     let shiftY = 0;
 
+    if (this.options.motionPyramid) this.halve(lowCur, this.coarseCur, lowSize, this.coarseSize);
+
     if (this.hasPrev) {
       const search = options.motionSearch;
       const d = options.motionDownsample;
@@ -298,8 +374,36 @@ export class EvidenceAccumulator {
       let bestDx = 0;
       let bestDy = 0;
       let zero = Number.POSITIVE_INFINITY;
-      for (let dy = -search; dy <= search; dy += 1) {
-        for (let dx = -search; dx <= search; dx += 1) {
+      // Candidates on the motionDownsample grid: every offset within ±search, or — coarse-to-fine —
+      // the ±1 neighbourhood of the best offset found at half that resolution.
+      let cx0 = -search;
+      let cx1 = search;
+      let cy0 = -search;
+      let cy1 = search;
+      if (options.motionPyramid) {
+        const cs = Math.ceil(search / 2);
+        let cBest = Number.POSITIVE_INFINITY;
+        let cDx = 0;
+        let cDy = 0;
+        for (let dy = -cs; dy <= cs; dy += 1) {
+          for (let dx = -cs; dx <= cs; dx += 1) {
+            const sad = meanAbsDiff(this.coarseCur, this.coarsePrev, this.coarseSize, dx, dy);
+            const score = sad * (1 + penalty * 2 * d * (Math.abs(dx) + Math.abs(dy)));
+            if (score < cBest) {
+              cBest = score;
+              cDx = dx;
+              cDy = dy;
+            }
+          }
+        }
+        cx0 = Math.max(-search, 2 * cDx - 1);
+        cx1 = Math.min(search, 2 * cDx + 1);
+        cy0 = Math.max(-search, 2 * cDy - 1);
+        cy1 = Math.min(search, 2 * cDy + 1);
+        zero = meanAbsDiff(lowCur, lowPrev, lowSize, 0, 0);
+      }
+      for (let dy = cy0; dy <= cy1; dy += 1) {
+        for (let dx = cx0; dx <= cx1; dx += 1) {
           const sad = meanAbsDiff(lowCur, lowPrev, lowSize, dx, dy);
           if (dx === 0 && dy === 0) zero = sad;
           const score = sad * (1 + penalty * d * (Math.abs(dx) + Math.abs(dy)));
@@ -344,5 +448,18 @@ export class EvidenceAccumulator {
     this.lastShiftX = shiftX;
     this.lastShiftY = shiftY;
     lowPrev.set(lowCur);
+    if (options.motionPyramid) this.coarsePrev.set(this.coarseCur);
+  }
+
+  /** 2×2 box average of a square `size` grid into a `half` grid. */
+  private halve(src: Float32Array, dst: Float32Array, size: number, half: number): void {
+    for (let y = 0; y < half; y += 1) {
+      const a = 2 * y * size;
+      const b = a + size;
+      for (let x = 0; x < half; x += 1) {
+        const at = 2 * x;
+        dst[y * half + x] = ((src[a + at] ?? 0) + (src[a + at + 1] ?? 0) + (src[b + at] ?? 0) + (src[b + at + 1] ?? 0)) * 0.25;
+      }
+    }
   }
 }
