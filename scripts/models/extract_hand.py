@@ -23,6 +23,15 @@ hologram wants: a hand reaching up out of the frame, not a severed lump.
 
     python scripts/models/extract_hand.py            # fetch, cut, decimate, write
     python scripts/models/extract_hand.py --keep-src # leave the source obj on disk
+
+DEPENDENCIES are pinned in the lab repo, at
+C:/Projects/hastrekha-lab/requirements.txt — trimesh, fast-simplification,
+numpy and pillow, at the versions the committed hand.glb was produced with.
+Install with `python -m pip install -r requirements.txt` from there. The pins
+are not decoration: trimesh delegates decimation to fast-simplification, and a
+different simplifier build can return a different triangle set at the same
+target count, which would leave the mesh no longer matching the measurements
+recorded in docs/reference/LICENSES.md.
 """
 
 from __future__ import annotations
