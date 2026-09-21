@@ -1,0 +1,72 @@
+{
+ "id": "cheiro-plate-xxii",
+ "image": "cheiro-plate-xxii.png",
+ "width": 1305,
+ "height": 1400,
+ "bytes": 55588,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XXII",
+ "caption": "Plate XXII. THE ISLAND, THE CIRCLE, THE SPOT, THE GRILLE, THE STAR, THE SQUARE.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Puts XXIL TBM I8LAMD» TBB CIRCLB, THB SPOTt THB ORHXB, IBB STAXf THE SQUAU^",
+ "page": 102,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 141,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n141/mode/1up",
+  "crop": [
+   281,
+   695,
+   2462,
+   3034
+  ]
+ },
+ "variations": [
+  {
+   "variation": "heart.island@on_heart_line",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-MARK-003"
+   ]
+  },
+  {
+   "variation": "life.square@on_life_line",
+   "positions": [
+    13
+   ],
+   "ruleIds": [
+    "PALM-SIGN-017"
+   ]
+  },
+  {
+   "variation": "life.island@on_life_line",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-MARK-002"
+   ]
+  },
+  {
+   "variation": "fate.island@on_fate_line",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-MARK-004"
+   ]
+  }
+ ],
+ "overviewLines": [],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

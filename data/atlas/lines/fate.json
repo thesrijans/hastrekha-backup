@@ -1,0 +1,3316 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "fate",
+  "title_hi": "शनि रेखा",
+  "title_en": "Fate line"
+ },
+ "variations": [
+  {
+   "id": "fate.present=true",
+   "line": "fate",
+   "number": 1,
+   "title_hi": "शनि रेखा उपस्थित",
+   "title_en": "Fate line present",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.present",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-TIME-001"
+   ],
+   "rules": [
+    {
+     "id": "PALM-TIME-001",
+     "category": "timing",
+     "polarity": "neutral",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Cheiro ki timing paddhati: jeevan, bhagya aur mastishk rekha — teenon ko saat-saat saal ke khandon mein padha jaata hai, kyunki har saat varsh mein swabhav ka ek naya chakra shuru hota hai. Rekha par jo bhi chinh jis khand mein hai, ghatna usi umra-daur ki maani jaati hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XIX — seven-year periods on Life, Fate, and Head lines (Plate XXVI)",
+     "year": 1916,
+     "ruleId": "PALM-TIME-001"
+    }
+   ],
+   "areas": [],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical fate line, wrist to the base of Saturn (completion.ts CORRIDORS.fate)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xxvi",
+     "positions": [],
+     "ruleIds": [
+      "PALM-TIME-001"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.origin=wrist",
+   "line": "fate",
+   "number": 2,
+   "title_hi": "मणिबंध से आरंभ",
+   "title_en": "Rising from the wrist",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.origin",
+     "op": "eq",
+     "value": "wrist"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-132",
+    "PALM-FATE-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-132",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.72,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-FATE-002",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.sun.present",
+       "op": "eq",
+       "value": true
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Bhagya rekha kalai se seedhi Shani parvat tak jaati hai aur saath mein Surya rekha bhi hai — bhagyashali destiny ka sabse sundar combination. Kismat, chamak aur safalta teeno aapke path par hain. Jab Saturn ki line poori tarah mount of Saturn tak clearly jaati hai, yeh sanket deta hai ki aap apne faislon mein gehri soch aur samajhdari laate hain. Aksar aisi line career aur counsels mein achhe nateeje favour karti hai. Yeh ek mazboot nishani hai ki aap apne kaam mein focused aur purposeful rehte hain. (2 classical sources is baat par sehmat hain.)",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-FATE-002",
+     "when": [
+      {
+       "feature": "lines.sun.present",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "text_hi": "Bhagya rekha kalai se seedhi Shani parvat tak jaati hai aur saath mein Surya rekha bhi hai — bhagyashali destiny ka sabse sundar combination. Kismat, chamak aur safalta teeno aapke path par hain."
+    },
+    {
+     "ruleId": "PALM-DALE-132",
+     "when": [
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Jab Saturn ki line poori tarah mount of Saturn tak clearly jaati hai, yeh sanket deta hai ki aap apne faislon mein gehri soch aur samajhdari laate hain. Aksar aisi line career aur counsels mein achhe nateeje favour karti hai. Yeh ek mazboot nishani hai ki aap apne kaam mein focused aur purposeful rehte hain."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Saturn — line fully protracted to middle finger",
+     "year": 1895,
+     "ruleId": "PALM-DALE-132"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XI positions 1 & 4, p.50",
+     "year": 1916,
+     "ruleId": "PALM-FATE-002"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the wrist: the corridor's start knot (0.5, 0.93) sits in EDGE_ZONES.wrist, the fate origin lines.ts names first."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xi",
+     "positions": [
+      1,
+      4
+     ],
+     "ruleIds": [
+      "PALM-FATE-002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.origin=life_line",
+   "line": "fate",
+   "number": 3,
+   "title_hi": "जीवन रेखा से आरंभ",
+   "title_en": "Rising from the life line",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.origin",
+     "op": "eq",
+     "value": "life_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-134",
+    "PALM-FATE-001"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-134",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "lines.health.form",
+       "op": "eq",
+       "value": "crossing_to_life"
+      },
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-FATE-001",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha jeevan rekha se uthti hai — self-made kahani. Shuruati saal tang aur pariwar/paristhitiyon se bandhe rahe, lekin rekha jahan se saaf hoti hai, wahan se safalta apni mehnat aur merit se aati hai — kismat se nahi. Jis umra par rekha jeevan rekha se alag hoti hai, wahi aapki azaadi ka saal hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-134",
+     "when": [
+      {
+       "feature": "lines.health.form",
+       "op": "eq",
+       "value": "crossing_to_life"
+      },
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Jab fate line, life line se shuru hokar health line ko cross karti hui Saturn ke mount tak jaati hai, yeh sanket deta hai ki life mein significant constraints aur bandishein aa sakti hain. Yeh ek challenging phase ki taraf ishara karta hai, lekin yeh sthayi nahi hai — awareness aur sahi decisions se is dauran ko navigate kiya ja sakta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Saturn — line from life through liver to Saturn mount — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-134"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XI position 2, p.50",
+     "year": 1916,
+     "ruleId": "PALM-FATE-001"
+    }
+   ],
+   "areas": [
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.origin",
+      "op": "eq",
+      "value": "life_line",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:752-762; head_line needs v2 and is structurally unreachable through extractLines (test/feature-vocab.test.ts banner, fix #4)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.418,
+        0.7083
+       ],
+       [
+        0.4185,
+        0.6984
+       ],
+       [
+        0.4247,
+        0.6783
+       ],
+       [
+        0.4356,
+        0.658
+       ],
+       [
+        0.4688,
+        0.607
+       ],
+       [
+        0.4811,
+        0.5768
+       ],
+       [
+        0.4822,
+        0.5668
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the life line: the fate line begins on the life line (drawn in context) where the two corridors overlap, low in the palm, nearest to the life_line anchor of lines.ts:752-757."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xi",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-FATE-001"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.origin=mount_luna",
+   "line": "fate",
+   "number": 4,
+   "title_hi": "चंद्र पर्वत से आरंभ",
+   "title_en": "Rising from the Mount of the Moon",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.origin",
+     "op": "eq",
+     "value": "mount_luna"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-003",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha Chandra parvat se uthti hai — aapki unnati doosron ke sahyog, pasand aur samarthan se judi hai. Jeevan-saathi, sasural paksh, public ya prabhavshali log — aapki taraqqi mein doosron ka haath spashth rahega. Rishton mein invest karna aapke liye career-strategy hai. (2 classical sources is baat par sehmat hain.)",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XI position 3, p.51",
+     "year": 1916,
+     "ruleId": "PALM-FATE-003"
+    },
+    {
+     "text": "Samudrika tradition (cross-verification pending Hindi source pass)",
+     "loc": "bhagya rekha",
+     "year": null,
+     "ruleId": "PALM-FATE-003"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.origin",
+      "op": "eq",
+      "value": "mount_luna",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:752-762; head_line needs v2 and is structurally unreachable through extractLines (test/feature-vocab.test.ts banner, fix #4)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6032,
+        0.7372
+       ],
+       [
+        0.6014,
+        0.7273
+       ],
+       [
+        0.5909,
+        0.7078
+       ],
+       [
+        0.5736,
+        0.6884
+       ],
+       [
+        0.509,
+        0.6305
+       ],
+       [
+        0.4928,
+        0.6111
+       ],
+       [
+        0.484,
+        0.5915
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the Moon side: the line starts at the corridor's palm-side edge a third of the way up, the nearest the fate corridor comes to the Mount of the Moon, and bends in toward Saturn.",
+    "knownLimit": "The fate corridor keeps the Moon itself out (its wrist half-width stops at EDGE_ZONES.wrist.r, completion.ts:112-119), so the line begins at the corridor edge nearest the Moon rather than on the mount."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xi",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-FATE-003"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.origin=plain_of_mars",
+   "line": "fate",
+   "number": 5,
+   "title_hi": "हथेली के मध्य से आरंभ",
+   "title_en": "Rising from the middle of the palm",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.origin",
+     "op": "eq",
+     "value": "plain_of_mars"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-060",
+    "PALM-FATE-011"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-060",
+     "category": "travel",
+     "polarity": "neutral",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-FATE-011",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha hatheli ke beech (Mangal kshetra) se shuru hoti hai — shuruati zindagi sangharsh bhari, har cheez ladkar paani padi. Lekin agar rekha yahan se majboot uthti hai (aur Surya ki or shakha ho), toh aap apni kismat ke khud architect hain — bina kisi sahare ke, sirf mehnat aur merit se. Jab fate line plain of Mars se neeche bracelet lines ki taraf aur Mount of Moon ke neeche khatam hoti ho, yeh travel aur door ke journeys ka sanket deta hai. Aksar aisi journeys life mein nayi opportunities lekar aati hain. Yeh sanket exploration aur peregrination ki taraf ek natural inclination dikhata hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Planet Mars. Courage, War — journey line from plain of Mars to bracelet lines below Moon mount",
+     "year": 1895,
+     "ruleId": "PALM-DALE-060"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V Rising from the Middle of the Palm, p.55",
+     "year": 1916,
+     "ruleId": "PALM-FATE-011"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.origin",
+      "op": "eq",
+      "value": "plain_of_mars",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:752-762; head_line needs v2 and is structurally unreachable through extractLines (test/feature-vocab.test.ts banner, fix #4)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4831,
+        0.5817
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the middle of the palm: the line starts at 0.55 of its corridor, in EDGE_ZONES.plainOfMars (0.5, 0.5)."
+   },
+   "plates": []
+  },
+  {
+   "id": "fate.origin=head_line",
+   "line": "fate",
+   "number": 6,
+   "title_hi": "मस्तिष्क रेखा से आरंभ",
+   "title_en": "Rising from the head line",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.origin",
+     "op": "eq",
+     "value": "head_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-012"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-012",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha mastishk rekha se uthti hai — safalta der se aayegi, lekin poori tarah aapke dimaag ki kamai hogi. Yeh late-bloomer ka nahi, deep-thinker ka sanket hai: jab aayega, bada aayega.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, p.55",
+     "year": 1916,
+     "ruleId": "PALM-FATE-012"
+    }
+   ],
+   "areas": [
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.origin",
+      "op": "eq",
+      "value": "head_line",
+      "status": "inert:featureVocabV2",
+      "evidence": "lib/scan/lines.ts:752-762; head_line needs v2 and is structurally unreachable through extractLines (test/feature-vocab.test.ts banner, fix #4)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4737,
+        0.3865
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the head line: a short fate line from where the head line (context) crosses its corridor up to Saturn."
+   },
+   "plates": []
+  },
+  {
+   "id": "fate.stopped_at=head_line",
+   "line": "fate",
+   "number": 7,
+   "title_hi": "मस्तिष्क रेखा पर रुकती",
+   "title_en": "Stopping at the head line",
+   "facets": [
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.stopped_at",
+     "op": "eq",
+     "value": "head_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-059",
+    "PALM-FATE-013"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-059",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-FATE-013",
+     "category": "career",
+     "polarity": "negative",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha mastishk rekha par jaakar ruk jaati hai — savdhaan: career ka sabse bada khatra bahar se nahi, apne hi kisi galat faisle se hai. Bade decisions par thanda dimaag, doosri raay aur data — yeh teen aapke bodyguard hain. Jab Saturn ya fate line Mars ke hollow (plain of Mars) par ruk jaaye ya toot jaaye, yeh ek kisi badi rukaawat ya downfall ka sanket deta hai us dauraan. Yeh sthayi nahi hai — is sanket ko samajhkar saavdhani se kaam lena faydemand ho sakta hai. Is par dhyan dena aur conscious decisions lena situation ko better kar sakta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Planet Mars. Courage, War — fate line stopping on mount of Mars indicates setback",
+     "year": 1895,
+     "ruleId": "PALM-DALE-059"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XII position 4, p.55",
+     "year": 1916,
+     "ruleId": "PALM-FATE-013"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": true,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2066,
+        0.2528
+       ],
+       [
+        0.3941,
+        0.2837
+       ],
+       [
+        0.5064,
+        0.3073
+       ],
+       [
+        0.6214,
+        0.3203
+       ],
+       [
+        0.8089,
+        0.35
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The fate line stops where it meets the head line: here the head line (context) runs high in its corridor, so the fate line's end under Saturn meets it (within 0.06, lines.ts:764-770)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xii",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-FATE-013"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.stopped_at=heart_line",
+   "line": "fate",
+   "number": 8,
+   "title_hi": "हृदय रेखा पर रुकती",
+   "title_en": "Stopping at the heart line",
+   "facets": [
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.stopped_at",
+     "op": "eq",
+     "value": "heart_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-014"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-014",
+     "category": "career",
+     "polarity": "negative",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha hriday rekha par ruk jaati hai — dil ke galat jagah lagne se career ko dhakka lagne ka sanket. Pyaar karna galti nahi hai; galat vyakti ke liye apne sapne chhodna galti hai. Rishta wahi sahi jo aapke lakshya ko bada kare, chhota nahi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, p.54",
+     "year": 1916,
+     "ruleId": "PALM-FATE-014"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.4793,
+        0.504
+       ],
+       [
+        0.4811,
+        0.2251
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.1938,
+        0.3834
+       ],
+       [
+        0.3408,
+        0.3898
+       ],
+       [
+        0.4129,
+        0.3987
+       ],
+       [
+        0.4848,
+        0.4103
+       ],
+       [
+        0.5538,
+        0.4347
+       ],
+       [
+        0.6214,
+        0.4613
+       ],
+       [
+        0.7527,
+        0.525
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The fate line runs up past the head line (context, low in its corridor) and stops on the heart line under Saturn. With the head line at its usual height the piece of fate line above it is under the tracer's 0.12 minimum and is dropped, so the fate's end is never seen."
+   },
+   "plates": []
+  },
+  {
+   "id": "fate.structure=faint",
+   "line": "fate",
+   "number": 9,
+   "title_hi": "क्षीण",
+   "title_en": "Faint",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.structure",
+     "op": "eq",
+     "value": "faint"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-096",
+    "PALM-DALE-122",
+    "PALM-DALE-133",
+    "PALM-FATE-018"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-096",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.62,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.6
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-122",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-DALE-133",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-FATE-018",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.head.quality",
+       "op": "gte",
+       "value": 0.6
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Jab Saturn ki line kamzor ya adhuri ho, yeh sanket deta hai ki life mein kuch rukawatein aur mushkilein aa sakti hain. Yeh sthayi nahi hai — doosre hath ke nishaan agar majboot hon toh yeh prabhav kam ho sakta hai. Is par kaam kiya ja sakta hai apni mehnat aur awareness se. Jab fate line kaafi jagah se kata hua ya tuta hua dikhta hai — jise purane texts mein Via Combusta kaha jaata hai — yeh sanket deta hai ki jeevan mein kuch rukawatein ya interruptions aa sakti hain. Yeh sthayi nahi hai, aur sahi koshish se in chunautiyon se paar paaya ja sakta hai. Apni planning aur consistency par dhyaan dein.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-FATE-018",
+     "when": [
+      {
+       "feature": "lines.head.quality",
+       "op": "gte",
+       "value": 0.6
+      }
+     ],
+     "text_hi": "Bhagya rekha halki hai lekin mastishk rekha zabardast — aap kismat ko maanne walon mein se nahi hain, aur aapko zaroorat bhi nahi. Aapki safalta shudh roop se aapke dimaag ki den hogi. Destiny aapke liye likhi nahi gayi; aap use roz likhte hain."
+    },
+    {
+     "ruleId": "PALM-DALE-096",
+     "when": [
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.6
+      }
+     ],
+     "text_hi": "Jab Saturn ki line saaf aur seedhi chalti hai aur mount of Saturn achhi tarah se prominent hai, tab yeh sanket deta hai ki vyakti provident, gambhir, aur sochne-samajhne wala hai. Career mein patience aur depth ki wajah se respect milti hai. Yeh log aksar deep thinkers hote hain aur apne kaam mein mehnat karte hain."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Thinkers, Inventors, etc — Saturn fortunate: clear fate line to Saturn mount",
+     "year": 1895,
+     "ruleId": "PALM-DALE-096"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Lines — fate line cut or severed called Via Combusta",
+     "year": 1895,
+     "ruleId": "PALM-DALE-122"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Saturn — line deficient as evil sign",
+     "year": 1895,
+     "ruleId": "PALM-DALE-133"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, p.58",
+     "year": 1916,
+     "ruleId": "PALM-FATE-018"
+    }
+   ],
+   "areas": [
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "faint",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A faint fate line: the canonical line drawn faint (lines.ts:774, depth < 0.5 with no break)."
+   },
+   "plates": []
+  },
+  {
+   "id": "fate.structure=broken_with_overlap",
+   "line": "fate",
+   "number": 10,
+   "title_hi": "टूटी — सिरे एक-दूसरे पर चढ़े",
+   "title_en": "Broken, the ends overlapping",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.structure",
+     "op": "eq",
+     "value": "broken_with_overlap"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-016"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-016",
+     "category": "timing",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha tooti hai lekin nayi rekha purani ke khatam hone se PEHLE shuru ho jaati hai — yeh break nahi, upgrade hai. Jagah, kaam ya position ka poora badlav, aur nayi rekha jahan se shuru hoti hai wahan se pragati. Planned transition aapke favour mein hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, p.57",
+     "year": 1916,
+     "ruleId": "PALM-FATE-016"
+    }
+   ],
+   "areas": [],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.structure",
+      "op": "eq",
+      "value": "broken_with_overlap",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:773-774; double via fateDoubleOverride, components/scan/use-hand-scan.ts:670"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4361,
+        0.9333
+       ],
+       [
+        0.4476,
+        0.581
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5255,
+        0.6366
+       ],
+       [
+        0.5049,
+        0.4593
+       ],
+       [
+        0.492,
+        0.2991
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Broken, but one piece begins before the other ends: the lower piece and the upper piece overlap side by side for a tenth of the corridor."
+   },
+   "plates": []
+  },
+  {
+   "id": "fate.structure=double",
+   "line": "fate",
+   "number": 11,
+   "title_hi": "दोहरी",
+   "title_en": "Double",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.structure",
+     "op": "eq",
+     "value": "double"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-121",
+    "PALM-FATE-017"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-121",
+     "category": "wealth",
+     "polarity": "neutral",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-FATE-017",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Do bhagya rekhayein — do samanantar careers ka yog: ek mukhya kaam, ek passion project (ya do alag duniya ek saath). Agar aage jaakar dono milti hain, toh jo rukavat do raahon ko alag rakhti thi, woh us mod par hat jaayegi. Jab fate line haath ke beech mein double ho jaati hai, yeh sanket deta hai ki vyakti dusron ki madad aur bhalaai mein zyada dhyaan deta hai, kabhi kabhi apne khud ke fayde se bhi zyada. Yeh ek noble gun hai, lekin apna khayal rakhna bhi zaroori hai. Is balance par thoda dhyaan dena aapko aur zyada aage le ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Lines — fate line double in middle of palm, more good to others than yourself",
+     "year": 1895,
+     "ruleId": "PALM-DALE-121"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V Double Lines of Fate, Plate XIV position 2, pp.57-58",
+     "year": 1916,
+     "ruleId": "PALM-FATE-017"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines",
+     "featureVocabV2"
+    ],
+    "blocking": [
+     {
+      "feature": "lines.fate.structure",
+      "op": "eq",
+      "value": "double",
+      "status": "behind_flag:emitMinorLines+featureVocabV2",
+      "evidence": "lib/scan/lines.ts:773-774; double via fateDoubleOverride, components/scan/use-hand-scan.ts:670"
+     }
+    ],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4281,
+        0.9337
+       ],
+       [
+        0.4337,
+        0.7747
+       ],
+       [
+        0.4427,
+        0.606
+       ],
+       [
+        0.4455,
+        0.4671
+       ],
+       [
+        0.4453,
+        0.3011
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5828,
+        0.8934
+       ],
+       [
+        0.5374,
+        0.6187
+       ],
+       [
+        0.5156,
+        0.4613
+       ],
+       [
+        0.5032,
+        0.3308
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Two fate lines side by side up the middle of the palm, both inside the fate corridor."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xiv",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-FATE-017"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.special=luna_origin_joins_heart",
+   "line": "fate",
+   "number": 12,
+   "title_hi": "चंद्र से उठकर हृदय रेखा में मिलती",
+   "title_en": "From the Moon, joining the heart line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.special",
+     "op": "eq",
+     "value": "luna_origin_joins_heart"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-004",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Chandra parvat se uthti bhagya rekha hriday rekha se jud jaati hai — sukhad aur samriddh vivah ka prachin sanket. Prem, romance aur saubhagya ka aisa sangam jisme jeevan-saathi ki pasand aur sahyog aapki kismat ko nayi disha dega.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XII position 1, pp.51-52",
+     "year": 1916,
+     "ruleId": "PALM-FATE-004"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.special",
+      "op": "eq",
+      "value": "luna_origin_joins_heart",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6032,
+        0.7372
+       ],
+       [
+        0.6014,
+        0.7273
+       ],
+       [
+        0.5909,
+        0.7078
+       ],
+       [
+        0.5736,
+        0.6884
+       ],
+       [
+        0.509,
+        0.6305
+       ],
+       [
+        0.4928,
+        0.6111
+       ],
+       [
+        0.484,
+        0.5915
+       ],
+       [
+        0.4762,
+        0.4298
+       ],
+       [
+        0.4811,
+        0.2251
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "From the Moon side up to join the heart line: the fate line starts at its corridor's Moon-side edge and runs up into the heart line (context).",
+    "knownLimit": "As with fate from the Moon, the corridor keeps the mount itself out; the start is the corridor edge nearest to it."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xii",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-FATE-004"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.special=joins_heart_ascends_jupiter",
+   "line": "fate",
+   "number": 13,
+   "title_hi": "हृदय रेखा से मिलकर गुरु पर्वत तक",
+   "title_en": "Joining the heart line and rising to Jupiter",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.special",
+     "op": "eq",
+     "value": "joins_heart_ascends_jupiter"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-015"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-015",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya aur hriday rekha milkar Jupiter parvat par chadhti hain — prem se prapti ka sarvottam yog. Aapka pyaar aapki ambition ka fuel banega; jeevan-saathi aur apne log aapko oopar uthayenge. Kismat aapke rishton ke raaste aayegi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XII position 1, pp.54-55",
+     "year": 1916,
+     "ruleId": "PALM-FATE-015"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.special",
+      "op": "eq",
+      "value": "joins_heart_ascends_jupiter",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.4793,
+        0.504
+       ],
+       [
+        0.4811,
+        0.2251
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4811,
+        0.2251
+       ],
+       [
+        0.4254,
+        0.1801
+       ],
+       [
+        0.3898,
+        0.1548
+       ],
+       [
+        0.3587,
+        0.1412
+       ],
+       [
+        0.3321,
+        0.1452
+       ],
+       [
+        0.3067,
+        0.1603
+       ],
+       [
+        0.27,
+        0.19
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The fate line joins the heart line under Saturn, and the two go on together up onto the Mount of Jupiter."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xii",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-FATE-015"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.square@on_fate_line",
+   "line": "fate",
+   "number": 14,
+   "title_hi": "रेखा पर वर्ग",
+   "title_en": "Square on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.square.locations",
+     "op": "eq",
+     "value": "on_fate_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SIGN-018"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SIGN-018",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha par square — nuksan se raksha ka sanket: career ya paise par aaya sankat poori tarah dooba nahi payega. Setback aayega toh bhi recovery likhi hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XVI — Square on Line of Fate: preservation from loss",
+     "year": 1916,
+     "ruleId": "PALM-SIGN-018"
+    }
+   ],
+   "areas": [
+    "karm",
+    "sehat"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.square.locations",
+      "op": "eq",
+      "value": "on_fate_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "square",
+      "x": 0.4848,
+      "y": 0.615,
+      "angle": -92.8,
+      "size": 0.03
+     }
+    ],
+    "note": "A square on the fate line in the middle of the palm."
+   },
+   "plates": []
+  },
+  {
+   "id": "fate.special=island_at_head_junction",
+   "line": "fate",
+   "number": 15,
+   "title_hi": "मस्तिष्क रेखा के संगम पर द्वीप",
+   "title_en": "Island where it meets the head line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.special",
+     "op": "eq",
+     "value": "island_at_head_junction"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-019"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-019",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya aur mastishk rekha ke sangam par island — us daur mein apni hi soch se hue ek nuksaan (aksar paison ka) ka sanket. Yeh warning system hai, sazaa nahi: us phase mein bade financial faisle double-check karo, akele mat lo.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XIV position 6, p.60",
+     "year": 1916,
+     "ruleId": "PALM-FATE-019"
+    }
+   ],
+   "areas": [
+    "dhan"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.special",
+      "op": "eq",
+      "value": "island_at_head_junction",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.4732,
+      "y": 0.3756,
+      "angle": -92.4,
+      "size": 0.03
+     }
+    ],
+    "note": "An island on the fate line just where the head line (context) crosses it."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xiv",
+     "positions": [
+      6
+     ],
+     "ruleIds": [
+      "PALM-FATE-019"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.island@on_fate_line",
+   "line": "fate",
+   "number": 16,
+   "title_hi": "रेखा पर द्वीप",
+   "title_en": "Island on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.island.locations",
+     "op": "eq",
+     "value": "on_fate_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARK-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARK-004",
+     "category": "wealth",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha par island hai — us daur mein career/dhan mein setback aur bhavishya ko lekar chinta ka sanket. Iska smart jawab: us daur mein conservative raho — badi risky bets mat lagao, emergency fund rakho, aur skill par invest karo. Island khatam, dhaara wapas — yeh daur hai, destiny nahi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XV — island on Fate line (4, Plate XXII): heavy worldly loss, worry, anxiety about destiny",
+     "year": 1916,
+     "ruleId": "PALM-MARK-004"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.island.locations",
+      "op": "eq",
+      "value": "on_fate_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.4876,
+      "y": 0.678,
+      "angle": -92.5,
+      "size": 0.03
+     }
+    ],
+    "note": "An island on the fate line, low in the palm."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xxii",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-MARK-004"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.special=island_plain_of_mars",
+   "line": "fate",
+   "number": 17,
+   "title_hi": "हथेली के मध्य में द्वीप",
+   "title_en": "Island in the plain of Mars",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.special",
+     "op": "eq",
+     "value": "island_plain_of_mars"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-020"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-020",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha par Mangal kshetra mein island — ek daur aisa jisme career mein rukavat aur kharcha aamdani se aage nikal sakta hai. Us window mein reserve fund banaye rakhna aur naye bade daanv taalna hi samajhdari hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XIV position 3, pp.59-60",
+     "year": 1916,
+     "ruleId": "PALM-FATE-020"
+    }
+   ],
+   "areas": [
+    "dhan"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.special",
+      "op": "eq",
+      "value": "island_plain_of_mars",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.4809,
+      "y": 0.5394,
+      "angle": -93,
+      "size": 0.03
+     }
+    ],
+    "note": "An island on the fate line in the plain of Mars (EDGE_ZONES.plainOfMars, 0.5, 0.5)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xiv",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-FATE-020"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.after_union_quality=stronger",
+   "line": "fate",
+   "number": 18,
+   "title_hi": "प्रभाव रेखा मिलने के बाद अधिक प्रबल",
+   "title_en": "Stronger after the influence line joins",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.after_union_quality",
+     "op": "eq",
+     "value": "stronger"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-024"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-024",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Union ke milan-bindu ke BAAD bhagya rekha aur majboot dikhti hai — vivah se unnati ka pakka sanket. Jeevansaathi aapke liye bhagyashali hai: union ke baad dhan, pad aur pragati badhegi. Aur agar usi daur mein Surya rekha bhi ubharti hai, toh yeh sasural/saathi se saubhagya ka sabse prabal yog hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII cont. — Fate line stronger after Influence joins; accentuated if Sun line appears",
+     "year": 1916,
+     "ruleId": "PALM-MARR-024"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.after_union_quality",
+      "op": "eq",
+      "value": "stronger",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "faint",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.4848,
+        0.6162
+       ]
+      ]
+     },
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.4847,
+        0.6138
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "influence",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.71,
+        0.7
+       ],
+       [
+        0.4848,
+        0.615
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An influence line comes in from the Mount of the Moon and joins the fate line halfway up; above the join the fate line is deep, below it faint."
+   },
+   "plates": []
+  },
+  {
+   "id": "fate.influence_line=merges",
+   "line": "fate",
+   "number": 19,
+   "title_hi": "प्रभाव रेखा आकर मिलती",
+   "title_en": "An influence line merging in",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.influence_line",
+     "op": "eq",
+     "value": "merges"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-005"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-005",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Ek prabhav-rekha (influence line) bhagya rekha se aakar mil jaati hai — jis samay yeh milan hota hai, us samay kisi khaas vyakti ka aapke jeevan mein pravesh, aksar vivah ya sthayi saath ke roop mein. Yeh rekha jitni saaf, milan utna hi majboot.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V Influence Lines, Plate XIII position 3, p.57",
+     "year": 1916,
+     "ruleId": "PALM-FATE-005"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.influence_line",
+      "op": "eq",
+      "value": "merges",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "influence",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.71,
+        0.72
+       ],
+       [
+        0.4862,
+        0.6465
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An influence line from the Mount of the Moon runs in and merges with the fate line."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xiii",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-FATE-005"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.offshoot_to=jupiter",
+   "line": "fate",
+   "number": 20,
+   "title_hi": "गुरु पर्वत की ओर शाखा",
+   "title_en": "Offshoot to Jupiter",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.offshoot_to",
+     "op": "eq",
+     "value": "jupiter"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-016",
+    "PALM-FATE-008"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-016",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-FATE-008",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha se ek shakha Jupiter parvat ki or — jis umra par yeh shakha nikalti hai, wahan se adhikar, uchch pad aur logon par command ki shuruaat. Agar shakha parvat tak poori pahunchti hai, toh yeh us lakshya ke liye safalta ka sarvashreshth sanket hai. Jupiter mount par honours ki nishani clearly dikhti hai — yeh sanket deta hai ki bade aur powerful logon ka saath aur unka favour milna aapke career ko uplift kar sakta hai. Recognition aapke kaam ki wajah se aati hai. Yeh rekha ek kushal, diplomatik svabhaav ka bhi sanket deti hai — logon ko samajh kar apna raasta banane ki kshamata. (2 classical sources is baat par sehmat hain.)",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. References to Hand (1/2) — No. 8, Line of Fortune branch on Jupiter denotes honours; also Sec. Hand — vertical line on mount of Jupiter",
+     "year": 1895,
+     "ruleId": "PALM-DALE-016"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XI position 6, pp.52-53",
+     "year": 1916,
+     "ruleId": "PALM-FATE-008"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.offshoot_to",
+      "op": "eq",
+      "value": "jupiter",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4777,
+        0.4764
+       ],
+       [
+        0.29,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An offshoot leaves the fate line in the upper palm and rises to the Mount of Jupiter."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xi",
+     "positions": [
+      6
+     ],
+     "ruleIds": [
+      "PALM-FATE-008"
+     ]
+    },
+    {
+     "plate": "dale-plate-i",
+     "positions": [
+      8
+     ],
+     "ruleIds": [
+      "PALM-DALE-016"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.after_union_quality=weaker",
+   "line": "fate",
+   "number": 21,
+   "title_hi": "प्रभाव रेखा मिलने के बाद क्षीण",
+   "title_en": "Weaker after the influence line joins",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.after_union_quality",
+     "op": "eq",
+     "value": "weaker"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-025"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-025",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.75,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Union ke baad bhagya rekha halki ya asthir dikhti hai — is union ne (ya yeh union) aapki pragati ko dheema kar sakta hai. Yeh saathi ke bure hone ka nahi, galat FIT ka sanket hai. Rishtey mein imandaar hisaab: kya yeh saath aapko badha raha hai ya rok raha hai? Jawab aapko pata hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII cont. — Fate line weaker after union (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-025"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.after_union_quality",
+      "op": "eq",
+      "value": "weaker",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.4848,
+        0.6162
+       ]
+      ]
+     },
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "faint",
+      "texture": "solid",
+      "points": [
+       [
+        0.4847,
+        0.6138
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "influence",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.71,
+        0.7
+       ],
+       [
+        0.4848,
+        0.615
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An influence line from the Moon joins the fate line halfway up; above the join the fate line is faint, below it deep."
+   },
+   "plates": []
+  },
+  {
+   "id": "fate.influence_line=parallel_no_merge",
+   "line": "fate",
+   "number": 22,
+   "title_hi": "प्रभाव रेखा साथ चलती, मिलती नहीं",
+   "title_en": "An influence line alongside, never joining",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.influence_line",
+     "op": "eq",
+     "value": "parallel_no_merge"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-006"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-006",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Prabhav-rekha bhagya rekha ke saath-saath chalti hai par milti nahi — koi vyakti aapke jeevan mein gehri jagah rakhta hai, lekin dono ki zindagiyan alag rehti hain. Jab tak rekha saath chalti hai, prabhav rahega; rishton mein clarity rakhna aapke hi haath mein hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XII position 2, p.52",
+     "year": 1916,
+     "ruleId": "PALM-FATE-006"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.influence_line",
+      "op": "eq",
+      "value": "parallel_no_merge",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "influence",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.72,
+        0.74
+       ],
+       [
+        0.7017,
+        0.7304
+       ],
+       [
+        0.6885,
+        0.7202
+       ],
+       [
+        0.6732,
+        0.7014
+       ],
+       [
+        0.6532,
+        0.6672
+       ],
+       [
+        0.5909,
+        0.5463
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An influence line from the Moon runs up beside the fate line and never joins it."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xii",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-FATE-006"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.offshoot_to=sun",
+   "line": "fate",
+   "number": 23,
+   "title_hi": "सूर्य पर्वत की ओर शाखा",
+   "title_en": "Offshoot to the Sun",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.offshoot_to",
+     "op": "eq",
+     "value": "sun"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-009"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-009",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha se shakha Surya parvat ki or — dhan aur public pehchan dono ek saath. Naam bhi, daam bhi. Yeh un logon ka sanket hai jinki safalta chhupti nahi, chamakti hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XI position 7, p.53",
+     "year": 1916,
+     "ruleId": "PALM-FATE-009"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.offshoot_to",
+      "op": "eq",
+      "value": "sun",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4789,
+        0.5016
+       ],
+       [
+        0.66,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An offshoot leaves the fate line and rises to the Mount of the Sun."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xi",
+     "positions": [
+      7
+     ],
+     "ruleIds": [
+      "PALM-FATE-009"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.influence_line=cuts_toward_jupiter",
+   "line": "fate",
+   "number": 24,
+   "title_hi": "प्रभाव रेखा काटकर गुरु की ओर",
+   "title_en": "An influence line cutting across toward Jupiter",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.influence_line",
+     "op": "eq",
+     "value": "cuts_toward_jupiter"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-007"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-007",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Prabhav-rekha bhagya rekha ko kaat kar Jupiter ki or nikal jaati hai — savdhaan: koi vyakti aapke rishte ko apni mahatvakanksha ki seedhi bana sakta hai. Iska matlab sab par shak karna nahi — bas jo aapko use kare aur value na kare, use samay rehte pehchan lena.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XII position 3, p.52",
+     "year": 1916,
+     "ruleId": "PALM-FATE-007"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.influence_line",
+      "op": "eq",
+      "value": "cuts_toward_jupiter",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "influence",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.7,
+        0.68
+       ],
+       [
+        0.6012,
+        0.647
+       ],
+       [
+        0.538,
+        0.6202
+       ],
+       [
+        0.4832,
+        0.5835
+       ],
+       [
+        0.4368,
+        0.5273
+       ],
+       [
+        0.393,
+        0.4557
+       ],
+       [
+        0.33,
+        0.34
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An influence line from the Moon cuts across the fate line and carries on toward Jupiter."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xii",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-FATE-007"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fate.offshoot_to=mercury",
+   "line": "fate",
+   "number": 25,
+   "title_hi": "बुध पर्वत की ओर शाखा",
+   "title_en": "Offshoot to Mercury",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.fate.offshoot_to",
+     "op": "eq",
+     "value": "mercury"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-038",
+    "PALM-FATE-010"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-038",
+     "category": "travel",
+     "polarity": "neutral",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-FATE-010",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bhagya rekha se shakha Budh parvat ki or — vigyan, vyapar ya technology mein koi khaas uplabdhi ka sanket. Aapki safalta ka raasta buddhi aur len-den ki samajh se hokar jaata hai. Mercury ke mount par ek saaf vertical rekha hona aksar videsh mein rehne ya kaam karne ki sambhavana ka sanket deta hai. Yeh vyakti apni zindagi ka ek bada hissa kisi doosre desh mein gujarne ke liye naturally taiyaar hota hai. Yeh rukawat nahi, balki ek nayi duniya khulne jaisi baat hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Hand — vertical line on mount of Mercury and foreign country",
+     "year": 1895,
+     "ruleId": "PALM-DALE-038"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XI position 8, pp.53-54",
+     "year": 1916,
+     "ruleId": "PALM-FATE-010"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.fate.offshoot_to",
+      "op": "eq",
+      "value": "mercury",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4796,
+        0.5142
+       ],
+       [
+        0.81,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An offshoot leaves the fate line and runs to the Mount of Mercury."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xi",
+     "positions": [
+      8
+     ],
+     "ruleIds": [
+      "PALM-FATE-010"
+     ]
+    }
+   ]
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-xi",
+   "src": "/atlas/plates/cheiro-plate-xi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XI",
+   "caption": "Plate XI. THE LINE OF DESTINY AND ITS MODIFICATIONS.",
+   "page": 51,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1322,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "variations": [
+    "fate.origin=wrist",
+    "fate.origin=life_line",
+    "fate.origin=mount_luna",
+    "fate.offshoot_to=jupiter",
+    "fate.offshoot_to=sun",
+    "fate.offshoot_to=mercury"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xii",
+   "src": "/atlas/plates/cheiro-plate-xii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XII",
+   "caption": "Plate XII. THE LINE OF DESTINY AND ITS VARIATIONS.",
+   "page": 53,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1286,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "variations": [
+    "fate.stopped_at=head_line",
+    "fate.special=luna_origin_joins_heart",
+    "fate.special=joins_heart_ascends_jupiter",
+    "fate.influence_line=parallel_no_merge",
+    "fate.influence_line=cuts_toward_jupiter"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xiii",
+   "src": "/atlas/plates/cheiro-plate-xiii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xiii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XIII",
+   "caption": "Plate XIII. THE LINE OF DESTINY AND ITS MODIFICATIONS.",
+   "page": 56,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1350,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "variations": [
+    "fate.influence_line=merges"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xiv",
+   "src": "/atlas/plates/cheiro-plate-xiv.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xiv.json",
+   "book": "cheiro-1916",
+   "label": "Plate XIV",
+   "caption": "Plate XIV. THE LINE OF DESTINY, ISLANDS, AND OTHER SIGNS.",
+   "page": 59,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1321,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "variations": [
+    "fate.structure=double",
+    "fate.special=island_at_head_junction",
+    "fate.special=island_plain_of_mars"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxii",
+   "src": "/atlas/plates/cheiro-plate-xxii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXII",
+   "caption": "Plate XXII. THE ISLAND, THE CIRCLE, THE SPOT, THE GRILLE, THE STAR, THE SQUARE.",
+   "page": 102,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1305,
+   "height": 1400,
+   "overviewLines": [],
+   "variations": [
+    "fate.island@on_fate_line"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxvi",
+   "src": "/atlas/plates/cheiro-plate-xxvi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxvi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXVI",
+   "caption": "Plate XXVI. TIME AND DATES OF PRINCIPAL EVENTS.",
+   "page": 113,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1118,
+   "height": 1400,
+   "overviewLines": [],
+   "variations": [
+    "fate.present=true"
+   ]
+  },
+  {
+   "id": "dale-plate-i",
+   "src": "/atlas/plates/dale-plate-i.png",
+   "sidecar": "/atlas/plates/dale-plate-i.json",
+   "book": "dale-1895",
+   "label": "Plate I",
+   "caption": "PLATE I.—THE REFERENCE HAND.",
+   "page": null,
+   "pageNote": "frontispiece",
+   "width": 795,
+   "height": 1280,
+   "overviewLines": [],
+   "variations": [
+    "fate.offshoot_to=jupiter"
+   ]
+  }
+ ]
+}

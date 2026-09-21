@@ -1,0 +1,56 @@
+{
+ "id": "cheiro-plate-v",
+ "image": "cheiro-plate-v.png",
+ "width": 1222,
+ "height": 1400,
+ "bytes": 46286,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate V",
+ "caption": "Plate V. MORE VARIATIONS OF THE LINE OF HEAD.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb V. MOSB VAEIATXONS OP THB LIMB OP BBAD,",
+ "page": 27,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 66,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n66/mode/1up",
+  "crop": [
+   131,
+   740,
+   2302,
+   3228
+  ]
+ },
+ "variations": [
+  {
+   "variation": "head.termination=upturn_mercury",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-HEAD-011"
+   ]
+  },
+  {
+   "variation": "head.marks=rising_branch",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-HEAD-014"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "head"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

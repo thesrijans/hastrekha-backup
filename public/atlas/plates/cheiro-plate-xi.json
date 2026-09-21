@@ -1,0 +1,103 @@
+{
+ "id": "cheiro-plate-xi",
+ "image": "cheiro-plate-xi.png",
+ "width": 1322,
+ "height": 1400,
+ "bytes": 56112,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XI",
+ "caption": "Plate XI. THE LINE OF DESTINY AND ITS MODIFICATIONS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plati XL THB UNS OF DBSTINY AND ITS MODIFICATIONS,",
+ "page": 51,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 90,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n90/mode/1up",
+  "crop": [
+   41,
+   902,
+   2236,
+   3226
+  ]
+ },
+ "variations": [
+  {
+   "variation": "fate.origin=wrist",
+   "positions": [
+    1,
+    4
+   ],
+   "ruleIds": [
+    "PALM-FATE-002"
+   ]
+  },
+  {
+   "variation": "fate.origin=life_line",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-FATE-001"
+   ]
+  },
+  {
+   "variation": "fate.origin=mount_luna",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-FATE-003"
+   ]
+  },
+  {
+   "variation": "fate.offshoot_to=jupiter",
+   "positions": [
+    6
+   ],
+   "ruleIds": [
+    "PALM-FATE-008"
+   ]
+  },
+  {
+   "variation": "fate.offshoot_to=sun",
+   "positions": [
+    7
+   ],
+   "ruleIds": [
+    "PALM-FATE-009"
+   ]
+  },
+  {
+   "variation": "fate.offshoot_to=mercury",
+   "positions": [
+    8
+   ],
+   "ruleIds": [
+    "PALM-FATE-010"
+   ]
+  },
+  {
+   "variation": "sun.present=true",
+   "positions": [
+    1,
+    4
+   ],
+   "ruleIds": [
+    "PALM-FATE-002"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "fate"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

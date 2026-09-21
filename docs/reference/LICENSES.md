@@ -87,6 +87,55 @@ off the palm plane than the index, 40.0° abduction.
 
 ---
 
+## `public/atlas/plates/*.png` · `public/atlas/plates/*.json`
+
+**Asset** — the Rekha Atlas plates: 26 figures from two nineteenth- and
+early-twentieth-century palmistry books, each a cropped, greyscale reduction of
+one printed plate, with a sidecar giving its caption, page and scan location.
+`data/atlas/atlas.json` points at them; it is our own derived data (the KB's
+rules arranged per line, plus our drawings) and is not a third-party asset.
+
+**Upstream** — two public-domain books, taken from the Internet Archive's
+scans. The full record — every file's URL, size and SHA-256 — is rendered by
+`atlas/acquire.py` into the lab repo's `atlas/LICENSES.md`.
+
+| | Cheiro, *Palmistry for All* | Mrs. J. B. Dale, *Indian Palmistry* |
+|---|---|---|
+| Published | G. P. Putnam's Sons, New York and London, May 1916 (the scanned copy is a later impression of that edition) | Theosophical Publishing Society, London, 1895 |
+| Record | `https://archive.org/details/palmistryforall00cheigoog` | `https://archive.org/details/indianpalmistry00daleiala` |
+| Archive status | `possible-copyright-status: NOT_IN_COPYRIGHT` | `possible-copyright-status: NOT_IN_COPYRIGHT` |
+| Files used | `palmistryforall00cheigoog.pdf` (4,905,780 B, SHA-256 `842b5b651a25b9dcaa9d82d03f41eb095ec728ea264fda54a6d3cd65e69c949f`), with page images from the archive's renderer of that PDF | `indianpalmistry00daleiala_jp2.zip` (16,574,457 B, SHA-256 `59f489d78d63fe0d8330211697f7410f666669ef081ee1a105001c56e538beb7`) |
+| Retrieved | 21 September 2026 | 21 September 2026 |
+| Licence | **Public domain** | **Public domain** |
+
+### Why public domain
+
+- **Cheiro** (William John Warner, 1866–1936). The book was first published in
+  the United States in 1916, and US copyright in works published before 1931
+  has expired. The author died in 1936, so the work is also out of copyright
+  in life+70 countries (since 2007) and in India (life+60, since 1997). The
+  scanned copy is a 1978 University Microfilms xerographic facsimile of a
+  later impression; a photographic facsimile adds no authorship.
+- **Dale.** Published in 1895, so out of US copyright. The author's death date
+  is not recorded, but a life+70 term would still be running only if she had
+  died after 1955 — sixty years after publishing this book. The same text is
+  also distributed as public domain by Project Gutenberg (#52523), and the
+  KB's Dale rules cite that edition.
+
+Caption text for the Cheiro plates is taken from Project Gutenberg #20480, a
+transcription of the same edition (`https://archive.org/details/palmistryforall20480gut`,
+"Public domain in the USA"); only the words are used, not the eBook file.
+
+### What we did to them
+
+`atlas/plates.py` in the lab finds each figure on its scanned page. It blanks
+the running text using the OCR's own line boxes, keeps the large ink blobs
+that remain, and trims off the printed caption. `atlas/export.py` then reduces
+each crop to a 16-level greyscale PNG no larger than 120 kB. Nothing is drawn
+on or retouched. Every plate is the printed figure, only cropped and reduced.
+
+---
+
 ## Assets already in the tree, recorded for completeness
 
 | Asset | Origin | Licence |

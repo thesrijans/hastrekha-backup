@@ -30,3 +30,5 @@ fixtures/golden/**/snapshots/
 
 # Upstream source downloads for scripts/models (re-fetched on demand, see docs/reference/LICENSES.md)
 .cache/
+
+next-env.d.ts

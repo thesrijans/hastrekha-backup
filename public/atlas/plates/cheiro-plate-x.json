@@ -1,0 +1,65 @@
+{
+ "id": "cheiro-plate-x",
+ "image": "cheiro-plate-x.png",
+ "width": 1231,
+ "height": 1400,
+ "bytes": 49513,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate X",
+ "caption": "Plate X. THE LINE OF LIFE, THE LINE OF MARS, AND OTHER SIGNS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plate X fflS LINB OF UFB, TBB UNX OP MASS, AND OTHSK tZGNS,",
+ "page": 45,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 84,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n84/mode/1up",
+  "crop": [
+   185,
+   685,
+   2333,
+   3128
+  ]
+ },
+ "variations": [
+  {
+   "variation": "life.ascending_branch_target=mount_jupiter",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-LIFE-008"
+   ]
+  },
+  {
+   "variation": "life.ascending_branch_target=stops_at_head_line",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-LIFE-009"
+   ]
+  },
+  {
+   "variation": "life.ascending_branch_target=joins_fate_line",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-LIFE-011"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "life"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

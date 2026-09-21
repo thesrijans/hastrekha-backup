@@ -1,0 +1,54 @@
+{
+ "id": "cheiro-plate-xxi",
+ "image": "cheiro-plate-xxi.png",
+ "width": 1133,
+ "height": 1400,
+ "bytes": 48174,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XXI",
+ "caption": "Plate XXI. TRAVELS, VOYAGES, ACCIDENTS AND DESCENDING LINES PROM THE MOUNTS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb XXL fXAVBLSi VOTAGBi, ACCIDENTS AND DBSCBNDINO LIMBS TBB MOUNTS.",
+ "page": 99,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 138,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n138/mode/1up",
+  "crop": [
+   51,
+   416,
+   2521,
+   3467
+  ]
+ },
+ "variations": [
+  {
+   "variation": "life.tight_venus_arc=true",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-TRVL-004"
+   ]
+  },
+  {
+   "variation": "life.branch_to_luna=true",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-TRVL-002"
+   ]
+  }
+ ],
+ "overviewLines": [],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

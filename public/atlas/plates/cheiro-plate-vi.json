@@ -1,0 +1,60 @@
+{
+ "id": "cheiro-plate-vi",
+ "image": "cheiro-plate-vi.png",
+ "width": 1300,
+ "height": 1400,
+ "bytes": 41512,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate VI",
+ "caption": "Plate VI. THE LINE OF HEAD AND THE LINE OF HEART RUNNING TOGETHER.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb VL UNB OF BBAD AND THB LINB OF HXAST aUMimfO TOCBTHBK.",
+ "page": 29,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 68,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n68/mode/1up",
+  "crop": [
+   0,
+   519,
+   2286,
+   2980
+  ]
+ },
+ "variations": [
+  {
+   "variation": "heart.head_heart_blended_single=true",
+   "positions": [],
+   "ruleIds": [
+    "PALM-HEART-016"
+   ]
+  },
+  {
+   "variation": "head.head_heart_blended_single=true",
+   "positions": [],
+   "ruleIds": [
+    "PALM-HEART-016"
+   ]
+  },
+  {
+   "variation": "head.marks=fused_with_heart",
+   "positions": [],
+   "ruleIds": [
+    "PALM-HEAD-012"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "heart",
+  "head"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

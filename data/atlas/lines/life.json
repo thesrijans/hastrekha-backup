@@ -1,0 +1,2821 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "life",
+  "title_hi": "जीवन रेखा",
+  "title_en": "Life line"
+ },
+ "variations": [
+  {
+   "id": "life.rise_origin=jupiter_side",
+   "line": "life",
+   "number": 1,
+   "title_hi": "ऊँचे, गुरु पर्वत की ओर से",
+   "title_en": "Rising high, on the Jupiter side",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.rise_origin",
+     "op": "eq",
+     "value": "jupiter_side"
+    }
+   ],
+   "ruleIds": [
+    "PALM-LIFE-006"
+   ],
+   "rules": [
+    {
+     "id": "PALM-LIFE-006",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha upar Jupiter ki taraf se uthti hai — mahatvakanksha aapke jeevan ki steering hai. Self-control zabardast hai; aap apni zindagi goals ke hisaab se chalate hain, mood ke hisaab se nahi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, Plate IX position 4, p.41",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-006"
+    }
+   ],
+   "areas": [
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.1696,
+        0.2917
+       ],
+       [
+        0.2275,
+        0.3981
+       ],
+       [
+        0.2619,
+        0.4728
+       ],
+       [
+        0.2876,
+        0.5407
+       ],
+       [
+        0.3206,
+        0.6484
+       ],
+       [
+        0.3354,
+        0.7084
+       ],
+       [
+        0.3446,
+        0.7586
+       ],
+       [
+        0.3467,
+        0.8094
+       ],
+       [
+        0.3468,
+        0.9276
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The life line beginning high, on the Jupiter side (start y under 0.3, lines.ts:741), drawn on the thumb side of its corridor so its start stands clear of the heart line's end."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-ix",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-LIFE-006"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.rise_origin=mars_low",
+   "line": "life",
+   "number": 2,
+   "title_hi": "नीचे, मंगल क्षेत्र से",
+   "title_en": "Rising low, from Mars",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.rise_origin",
+     "op": "eq",
+     "value": "mars_low"
+    }
+   ],
+   "ruleIds": [
+    "PALM-LIFE-007"
+   ],
+   "rules": [
+    {
+     "id": "PALM-LIFE-007",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha neeche Mangal kshetra se uthti hai — jawani mein gussa tez aur zid pakki. Umra aur anushasan ke saath yahi aag aapka fuel ban jaati hai. Trigger points pehchano, react karne se pehle 10 second ruko.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, Plate IX position 5, p.41",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-007"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.life.rise_origin",
+      "op": "eq",
+      "value": "mars_low",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:741, observed start"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2667,
+        0.3321
+       ],
+       [
+        0.3068,
+        0.3986
+       ],
+       [
+        0.3365,
+        0.4581
+       ],
+       [
+        0.3626,
+        0.5193
+       ],
+       [
+        0.3916,
+        0.6031
+       ],
+       [
+        0.4114,
+        0.6781
+       ],
+       [
+        0.4259,
+        0.7543
+       ],
+       [
+        0.433,
+        0.8205
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The life line begins lower, from Mars: it starts 0.12 along its corridor (y about 0.33), under the head line's start."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-ix",
+     "positions": [
+      5
+     ],
+     "ruleIds": [
+      "PALM-LIFE-007"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.sweeps_to_luna=true",
+   "line": "life",
+   "number": 3,
+   "title_hi": "चंद्र पर्वत की ओर घूमती",
+   "title_en": "Sweeping out toward the Moon",
+   "facets": [
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.sweeps_to_luna",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-TRVL-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-TRVL-003",
+     "category": "travel",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Aapki jeevan rekha apna raasta chhod kar poori tarah Chandra parvat ki ore beh gayi hai — jeevan ek lagataar safar hoga. Ek thikane par basna mushkil, aur parampara ke anusaar aapka sthayi ghar janmabhoomi se door kisi aur desh/pradesh mein banega. Pakka pravaas yog — NRI wali kismat.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XIV — Life line sweeping to Luna: continual travel, settles far from birthplace; end-of-life clause excluded per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-TRVL-003"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.3008,
+        0.3796
+       ],
+       [
+        0.3443,
+        0.4575
+       ],
+       [
+        0.3856,
+        0.5494
+       ],
+       [
+        0.4151,
+        0.6341
+       ],
+       [
+        0.4626,
+        0.7283
+       ],
+       [
+        0.5256,
+        0.8728
+       ],
+       [
+        0.5442,
+        0.9115
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The lower end swings out toward the Moon: at the wrist the line runs to the palm-side edge of its corridor, past the palm's midline (x > 0.5, lines.ts:742)."
+   },
+   "plates": []
+  },
+  {
+   "id": "life.texture=clear_deep",
+   "line": "life",
+   "number": 4,
+   "title_hi": "स्पष्ट और गहरी",
+   "title_en": "Clear and deep",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.texture",
+     "op": "eq",
+     "value": "clear_deep"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-053",
+    "PALM-DALE-099",
+    "PALM-DALE-101",
+    "PALM-DALE-163",
+    "PALM-LIFE-001"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-053",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-DALE-099",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.72,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-101",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.68,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.health.form",
+       "op": "eq",
+       "value": "straight_free"
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-163",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.mars.present",
+       "op": "eq",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": "PALM-LIFE-001",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha lambi, gehri aur bina rukavat ke hai — majboot jeevan-shakti, achhi rog-pratirodhak kshamata aur mazboot constitution ka sanket. Aapki energy ka tank bada hai; use sahi kaam mein lagao. Jab life line strong aur clear ho, yeh Mars ki shakti ko darshata hai — himmat, dridh irada aur jasaadat ka sanket hai. Aisa vyakti aksar apne lakshyon mein sthir rehta hai. Yeh ek achha sanket hai jo aatma-bal ko favour karta hai. (2 classical sources is baat par sehmat hain.)",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-099",
+     "when": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ],
+     "text_hi": "Jeevan rekha jo gehri, saaf aur achhe rang ki ho, yeh sanket deta hai ki vyakti ka swaasthya aur urja achi tarah se tikhi rehti hai. Aksar yeh log sharirik roop se mazboot aur bimariyon se door rehte hain. Yeh ek shubh sanket hai jo aapki samarthya ko darshata hai."
+    },
+    {
+     "ruleId": "PALM-DALE-163",
+     "when": [
+      {
+       "feature": "lines.mars.present",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "text_hi": "Jab Mars line Life line ke saath milkar saaf aur gehri dono lines dikh rahi hain, toh yeh ek dohra suraksha kavach ki tarah hai jo aapki urja aur fortitude ko badhata hai. Is combination mein aapki Life line ki har acchi cheez aur bhi strengthen ho jaati hai. Yeh sthayi nahi hai agar aap apna khayal rakhen toh yeh energy aur bhi nikharta hai."
+    },
+    {
+     "ruleId": "PALM-DALE-101",
+     "when": [
+      {
+       "feature": "lines.health.form",
+       "op": "eq",
+       "value": "straight_free"
+      }
+     ],
+     "text_hi": "Jab jeevan rekha ek sundar angle banaate hue liver rekha ki taraf jhukti hai, toh yeh ek tez, samajhdar aur sthir swabhav wale vyakti ka sanket deta hai. Aisi logon mein business sense aur quick decision lene ki khoobiyan aksar payi jaati hain. Yeh ek bahut hi shubh sanket hai un logon ke liye jo vyapar ya kisi profession mein naam banana chahte hain."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Planet Mars. Courage, War — strong life line as Mars fortune condition",
+     "year": 1895,
+     "ruleId": "PALM-DALE-053"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Life — broad, uniform, lively colour life line",
+     "year": 1895,
+     "ruleId": "PALM-DALE-099"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Life — life line sloping to liver line with angle, good wit and business sense",
+     "year": 1895,
+     "ruleId": "PALM-DALE-101"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Mars. Courage and Fortitude — Mars line strengthens life line",
+     "year": 1895,
+     "ruleId": "PALM-DALE-163"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, Plate VIII, pp.36-38 (vitality framing per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-001"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical life line drawn clear and deep (lines.ts:740 band > 0.72)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-viii",
+     "positions": [],
+     "ruleIds": [
+      "PALM-LIFE-001"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.texture=broad_shallow",
+   "line": "life",
+   "number": 5,
+   "title_hi": "चौड़ी और उथली",
+   "title_en": "Broad and shallow",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.texture",
+     "op": "eq",
+     "value": "broad_shallow"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-100",
+    "PALM-LIFE-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-100",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pale"
+      }
+     ]
+    },
+    {
+     "id": "PALM-LIFE-003",
+     "category": "vitality",
+     "polarity": "neutral",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Chaudi lekin uthli jeevan rekha — sharirik taakat zyada, lekin dabav mein tikne wali nerve-force thodi kam. Aap mehnat ke ghode hain; bas lambi race ke liye stamina ke saath-saath mansik resilience bhi train karo.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-100",
+     "when": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pale"
+      }
+     ],
+     "text_hi": "Jeevan rekha jo pale ya dhundli ho aur texture mein kamzor lage, yeh sanket deta hai ki sharirik urja ya stamina mein kami ho sakti hai. Yeh sthayi nahi hai — sehat ka dhyan rakhna aur apni dainandini dincharya sudharna is par kaam kiya ja sakta hai. Yeh ek sanket hai sochne aur zyada dhyan dene ka, ghabraane ka nahi."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Life — slender, pale life line indicating feebleness — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-100"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, pp.38-39",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-003"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "broad",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Broad and shallow: drawn broad; its detector depth sits in lines.ts's 0.55-0.72 band."
+   },
+   "plates": []
+  },
+  {
+   "id": "life.texture=chained",
+   "line": "life",
+   "number": 6,
+   "title_hi": "श्रृंखलाकार",
+   "title_en": "Chained",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.texture",
+     "op": "eq",
+     "value": "chained"
+    }
+   ],
+   "ruleIds": [
+    "PALM-LIFE-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-LIFE-002",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha kadi-jaisi (chained) hai — energy ke utaar-chadhav aur pachan/thakan par dhyan dene ka sanket. Yeh bhavishya ki sazaa nahi, sirf body ka manual hai: neend, khana aur recovery ko priority banao, tank bhara rahega.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, Plate IX position 1, pp.37-39 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-002"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": true,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "broad",
+      "texture": "chained",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Made of links like a chain: the canonical line in the chain texture, shallow (lines.ts:740 band <= 0.55)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-ix",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-LIFE-002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.arc=wide_into_palm",
+   "line": "life",
+   "number": 7,
+   "title_hi": "हथेली में चौड़ा घेरा",
+   "title_en": "Wide arc into the palm",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.arc",
+     "op": "eq",
+     "value": "wide_into_palm"
+    }
+   ],
+   "ruleIds": [
+    "PALM-LIFE-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-LIFE-004",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha ka ghera chauda hai, Shukra parvat khula hai — garam-josh, magnetic vyaktitva aur doosron ko apni or kheenchne wali energy. Aapki maujoodgi kamre ka mahaul badal deti hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, Plate IX position 3, pp.39-41",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-004"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.2929,
+        0.3584
+       ],
+       [
+        0.3306,
+        0.4144
+       ],
+       [
+        0.3698,
+        0.483
+       ],
+       [
+        0.4094,
+        0.5651
+       ],
+       [
+        0.4323,
+        0.653
+       ],
+       [
+        0.4465,
+        0.7311
+       ],
+       [
+        0.4555,
+        0.8101
+       ],
+       [
+        0.4619,
+        0.9182
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A wide sweep into the palm: the arc bulges toward the palm-side edge of its corridor, well past lines.ts's 0.42 split."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-ix",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-LIFE-004"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.tight_venus_arc=true",
+   "line": "life",
+   "number": 8,
+   "title_hi": "शुक्र पर्वत के चारों ओर अखंड अर्धवृत्त",
+   "title_en": "Unbroken semicircle round Venus",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.tight_venus_arc",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-TRVL-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-TRVL-004",
+     "category": "travel",
+     "polarity": "neutral",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Aapki jeevan rekha bina kisi shakha ke Shukra parvat ke chaaron ore saaf ardh-vritt banati hai — jeevan mein sthirta ka yog. Badlaav aur bhatkav kam, apni mitti apne log zyada. Ghar, community aur jadein — yahi aapki taqat hai. Duniya ghoomne walon ko aakhir mein wapas aisi hi zindagi chahiye hoti hai jo aapke paas pehle se hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XIV — Life line in unbroken semi-circle round Venus (3-3, Plate XXI): life free from change, remains in land of birth",
+     "year": 1916,
+     "ruleId": "PALM-TRVL-004"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "featureVocabV2"
+    ],
+    "blocking": [
+     {
+      "feature": "lines.life.tight_venus_arc",
+      "op": "eq",
+      "value": true,
+      "status": "behind_flag:featureVocabV2",
+      "evidence": "lib/scan/lines.ts:736"
+     }
+    ],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2082,
+        0.2675
+       ],
+       [
+        0.2306,
+        0.3323
+       ],
+       [
+        0.2465,
+        0.3866
+       ],
+       [
+        0.2561,
+        0.43
+       ],
+       [
+        0.2622,
+        0.4727
+       ],
+       [
+        0.2969,
+        0.5695
+       ],
+       [
+        0.3206,
+        0.6484
+       ],
+       [
+        0.3354,
+        0.7084
+       ],
+       [
+        0.3452,
+        0.7681
+       ],
+       [
+        0.3468,
+        0.9276
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An unbroken semicircle close round Venus: the arc keeps to the thumb-side edge of its corridor all the way, never passing x 0.42 (LIFE_TIGHT_ARC_MAX_EXCURSION)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xxi",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-TRVL-004"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.arc=narrow_hugging_thumb",
+   "line": "life",
+   "number": 9,
+   "title_hi": "अंगूठे से सटी, संकरी",
+   "title_en": "Narrow, hugging the thumb",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.arc",
+     "op": "eq",
+     "value": "narrow_hugging_thumb"
+    }
+   ],
+   "ruleIds": [
+    "PALM-LIFE-005"
+   ],
+   "rules": [
+    {
+     "id": "PALM-LIFE-005",
+     "category": "vitality",
+     "polarity": "neutral",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha angushtha se sati hui chalti hai — energy reserve seemit hai, isliye aap selective rehte hain ki kisme oorja lagani hai. Yeh smart hai; bas overcommitment se bacho aur recharge time ko non-negotiable rakho.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, Plate IX position 2, pp.39-40 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-005"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": true,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2082,
+        0.2675
+       ],
+       [
+        0.2524,
+        0.383
+       ],
+       [
+        0.2647,
+        0.4252
+       ],
+       [
+        0.2739,
+        0.467
+       ],
+       [
+        0.3068,
+        0.5548
+       ],
+       [
+        0.3286,
+        0.6246
+       ],
+       [
+        0.3448,
+        0.6851
+       ],
+       [
+        0.3555,
+        0.7362
+       ],
+       [
+        0.3595,
+        0.7662
+       ],
+       [
+        0.3633,
+        0.9263
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Narrow, hugging the thumb: the arc stays on the thumb side of its corridor (max x under 0.42)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-ix",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-LIFE-005"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.breaks_count>=1",
+   "line": "life",
+   "number": 10,
+   "title_hi": "टूटी हुई",
+   "title_en": "Broken",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.breaks_count",
+     "op": "gte",
+     "value": 1
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARS-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARS-002",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "lines.mars.present",
+       "op": "eq",
+       "value": true
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Jeevan rekha mein rukavat hai, lekin peeche Mangal rekha khadi hai — matlab jis daur mein jhatka aayega, wahin se recovery bhi hogi. Aapki bounce-back power aapki sabse badi property hai.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-MARS-002",
+     "when": [
+      {
+       "feature": "lines.mars.present",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "text_hi": "Jeevan rekha mein rukavat hai, lekin peeche Mangal rekha khadi hai — matlab jis daur mein jhatka aayega, wahin se recovery bhi hogi. Aapki bounce-back power aapki sabse badi property hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.IV, p.46 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARS-002"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.life.breaks_count",
+      "op": "gte",
+      "value": 1,
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:738"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "gaps": [
+       [
+        0.45,
+        0.53
+       ]
+      ],
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical life line with a break about halfway down."
+   },
+   "plates": []
+  },
+  {
+   "id": "life.quality.tasselled_life_end=true",
+   "line": "life",
+   "number": 11,
+   "title_hi": "अंत में झालरदार",
+   "title_en": "Tasselled at the end",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.quality.tasselled_life_end",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-LINQ-007"
+   ],
+   "rules": [
+    {
+     "id": "PALM-LINQ-007",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha ke ant mein jhaalar (tassel) jaisi bikhri rekhayein hain — parampara mein iska arth: jeevan ke aakhri padav mein oorja-sanchay ki zaroorat. Iska aaj se matlab: retirement sirf paise ka plan nahi, SEHAT ka plan bhi hai — abhi se strength, neend aur habits build karo taaki baad ke saal thake hue nahi, jame hue hon.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XVII — tasselled lines weaken indications; at end of Life line foreshadow loss of nervous energy; softened per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-LINQ-007"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.quality.tasselled_life_end",
+      "op": "eq",
+      "value": true,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "tassel",
+      "x": 0.44,
+      "y": 0.92,
+      "angle": 85.3,
+      "size": 0.03
+     }
+    ],
+    "note": "The canonical life line ending in a tassel of fine strands at the wrist."
+   },
+   "plates": []
+  },
+  {
+   "id": "life.spot@on_life_line",
+   "line": "life",
+   "number": 12,
+   "title_hi": "रेखा पर बिंदु",
+   "title_en": "Spot on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.spot.locations",
+     "op": "eq",
+     "value": "on_life_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARK-009"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARK-009",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.5,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha par spot hai — parampara mein us bindu ko sehat ke achanak chhote jhatke ka daur maana jaata hai. Practical matlab: us daur mein body ke signals ignore mat karo, aaram ko kaam jitni izzat do. Spot chhota hai, aur uske aage rekha apni raftar wapas pakad leti hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XV — spot on Life line: sudden illness; softened per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-MARK-009"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.spot.locations",
+      "op": "eq",
+      "value": "on_life_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "spot",
+      "x": 0.3819,
+      "y": 0.5727,
+      "angle": 71.5,
+      "size": 0.03
+     }
+    ],
+    "note": "A spot on the life line about halfway down."
+   },
+   "plates": []
+  },
+  {
+   "id": "life.square@on_life_line",
+   "line": "life",
+   "number": 13,
+   "title_hi": "रेखा पर वर्ग",
+   "title_en": "Square on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.square.locations",
+     "op": "eq",
+     "value": "on_life_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SIGN-017"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SIGN-017",
+     "category": "protection",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha par square — kathin samay mein raksha-kavach ka sanket: sehat ya suraksha par bada sankat aaye bhi toh nikal jaane ka yog. Parampara ise sabse mazboot protective chinhon mein ginti hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XVI — Square on Line of Life (13, Plate XXII); wording softened per safety policy (no lifespan claims)",
+     "year": 1916,
+     "ruleId": "PALM-SIGN-017"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.square.locations",
+      "op": "eq",
+      "value": "on_life_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "square",
+      "x": 0.3819,
+      "y": 0.5727,
+      "angle": 71.5,
+      "size": 0.03
+     }
+    ],
+    "note": "A square on the life line about halfway down."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xxii",
+     "positions": [
+      13
+     ],
+     "ruleIds": [
+      "PALM-SIGN-017"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.island@on_life_line",
+   "line": "life",
+   "number": 14,
+   "title_hi": "रेखा पर द्वीप",
+   "title_en": "Island on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.island.locations",
+     "op": "eq",
+     "value": "on_life_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARK-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARK-002",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha par island hai — parampara mein us umra-daur ko sehat ke liye 'extra dhyan wala samay' maana jaata hai: oorja kam, recovery dheemi. Practical matlab: us daur mein neend-poshan-checkup ko priority do aur body ko overload mat karo. Island ke baad rekha saaf hai toh wapas full form ka sanket bhi saath likha hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XV — island on Life line: delicacy/illness at that date (1, Plate XXII); softened per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-MARK-002"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.island.locations",
+      "op": "eq",
+      "value": "on_life_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.3702,
+      "y": 0.5394,
+      "angle": 69.6,
+      "size": 0.03
+     }
+    ],
+    "note": "An island on the life line a little above halfway."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xxii",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-MARK-002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.ascending_branch_target=mount_jupiter",
+   "line": "life",
+   "number": 15,
+   "title_hi": "गुरु पर्वत तक उठती शाखा",
+   "title_en": "Branch rising to Jupiter",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.ascending_branch_target",
+     "op": "eq",
+     "value": "mount_jupiter"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-067",
+    "PALM-LIFE-008"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-067",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-LIFE-008",
+     "category": "timing",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha se upar Jupiter ki or uthti rekhayein — har rekha ek milestone effort hai: aage badhne, authority paane aur naam banane ki thos koshish. Jis umra par yeh rekha uthti hai, wahi aapke bade push ka samay hai. Jab life line se ek branch clearly Jupiter ke mount tak jaati ho, yeh Jupiter ke shubh hone ka ek sanket hai — honours, recognition aur material success ki probability badh jaati hai. Yeh vyakti ke ambitious endeavors mein support milne ka sanket deta hai. Ek positive indicator hai financial aur social elevation ke liye.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Planet Mars. Courage, War — line from life to Jupiter mount as fortune condition",
+     "year": 1895,
+     "ruleId": "PALM-DALE-067"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III Ascending Lines, Plate X position 1, pp.41-42",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-008"
+    }
+   ],
+   "areas": [
+    "dhan"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.life.ascending_branch_target",
+      "op": "eq",
+      "value": "mount_jupiter",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2958,
+        0.3793
+       ],
+       [
+        0.28,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A branch rises from the upper life line onto the Mount of Jupiter (MOUNT_ZONES.jupiter)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-x",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-LIFE-008"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.branch_to_luna=true",
+   "line": "life",
+   "number": 16,
+   "title_hi": "विभाजित — एक शाखा चंद्र पर्वत को",
+   "title_en": "Divides, one branch to the Moon",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.branch_to_luna",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-TRVL-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-TRVL-002",
+     "category": "travel",
+     "polarity": "neutral",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Aapki jeevan rekha do bhaagon mein bat-ti hai aur ek shakha Chandra parvat ki ore jhukti hai — poora jeevan badlaav aur yatra se bhara hoga. Ek jagah tik kar rehna aapki kismat mein kam, duniya dekhna zyada likha hai. Videsh ya door-desh ke avsar aate rahenge — bags ready rakho.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XIV — Life line dividing with branch to Luna (1, Plate XXI): life full of change and travel",
+     "year": 1916,
+     "ruleId": "PALM-TRVL-002"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.life.branch_to_luna",
+      "op": "eq",
+      "value": true,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4057,
+        0.6541
+       ],
+       [
+        0.6437,
+        0.756
+       ],
+       [
+        0.6698,
+        0.7639
+       ],
+       [
+        0.6817,
+        0.7643
+       ],
+       [
+        0.69,
+        0.76
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The life line divides low down, one branch curving away across the palm to the Mount of the Moon (MOUNT_ZONES.moon)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xxi",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-TRVL-002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.ascending_branch_target=stops_at_head_line",
+   "line": "life",
+   "number": 17,
+   "title_hi": "मस्तिष्क रेखा पर रुकती उठती शाखा",
+   "title_en": "Rising branch stopping at the head line",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.ascending_branch_target",
+     "op": "eq",
+     "value": "stops_at_head_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-102",
+    "PALM-LIFE-009"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-102",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-LIFE-009",
+     "category": "timing",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha ki upar ki taraf jaane wali chhoti shaakhein jo liver rekha ki disha mein ho, yeh sanket deta hai ki jeevan mein dhan aur izzat dono milne ki sambhavana hai. Yeh ek positive sanket hai jo mehnat aur samay ke saath fal deta hai. Aksar aisi logon ke liye fortune aur samman dono aate hain. Ek koshish-rekha mastishk rekha par ruk gayi — us daur mein ek achhi shuruaat galat faisle se adhoori reh gayi (ya reh sakti hai). Sabak: bade decision par doosri raay lena aapke liye luxury nahi, zaroorat hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Life — little branches in upper part branching toward liver line signifying riches and honour",
+     "year": 1895,
+     "ruleId": "PALM-DALE-102"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, Plate X position 2, p.42",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-009"
+    }
+   ],
+   "areas": [
+    "dhan"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.life.ascending_branch_target",
+      "op": "eq",
+      "value": "stops_at_head_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3288,
+        0.4418
+       ],
+       [
+        0.3772,
+        0.3392
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A branch rises from the life line and stops on the head line (drawn in context)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-x",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-LIFE-009"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "life.ascending_branch_target=stops_at_heart_line",
+   "line": "life",
+   "number": 18,
+   "title_hi": "हृदय रेखा पर रुकती उठती शाखा",
+   "title_en": "Rising branch stopping at the heart line",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.ascending_branch_target",
+     "op": "eq",
+     "value": "stops_at_heart_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-124",
+    "PALM-LIFE-010"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-124",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-LIFE-010",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Ek koshish-rekha hriday rekha par jaakar rukti hai — us daur mein dil ke maamle career ke raaste mein aaye (ya aayenge). Yeh galat nahi hai; bas yeh jaan lo ki aapke liye pyaar aur ambition ko alag rakhna mushkil hai — dono ka balance hi aapka formula hai. Jab life line se ek line uthkar ring finger ki taraf jaati hai, yeh sanket deta hai ki kisi influential ya uchch-sthar ki mahila ke zariye maan-samman ya labh milne ki sambhavna hoti hai. Yeh favour aur social connections ke zariye tarakki ka ek accha sanket hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Time of Events — line from life to ring finger, honours through lady of rank",
+     "year": 1895,
+     "ruleId": "PALM-DALE-124"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, p.42",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-010"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.life.ascending_branch_target",
+      "op": "eq",
+      "value": "stops_at_heart_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3349,
+        0.4546
+       ],
+       [
+        0.6177,
+        0.2402
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A branch rises from the life line across the palm and stops on the heart line (drawn in context) under the ring finger."
+   },
+   "plates": []
+  },
+  {
+   "id": "life.ascending_branch_target=joins_fate_line",
+   "line": "life",
+   "number": 19,
+   "title_hi": "भाग्य रेखा से मिलती उठती शाखा",
+   "title_en": "Rising branch joining the fate line",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.life.ascending_branch_target",
+     "op": "eq",
+     "value": "joins_fate_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-123",
+    "PALM-LIFE-011"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-123",
+     "category": "timing",
+     "polarity": "negative",
+     "weight": 0.5,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-LIFE-011",
+     "category": "timing",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jeevan rekha se uthti rekha bhagya rekha se jud jaati hai — behad shubh sanket. Us umra par aapne (ya aap) bandhan tod kar apni kismat khud likhne ka faisla kiya. Prachin niyam kehta hai: aisi hi swatantrata ki ghatna lagbhag dugni umra par dobara aati hai. Jab life line se ek line upar uthke Saturn line ko milti hai, yeh sanket deta hai ki us vyakti mein dusron ke baare mein jalous ya envious hone ki tendency aksar hoti hai. Yeh sthayi character nahi hai — is par gaur karke is par kaam kiya ja sakta hai aur apne nazariye ko wider banaya ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Time of Events — line from life to Saturn, envious tendency — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-123"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.III, Plate X position 3, pp.42-43",
+     "year": 1916,
+     "ruleId": "PALM-LIFE-011"
+    }
+   ],
+   "areas": [],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.life.ascending_branch_target",
+      "op": "eq",
+      "value": "joins_fate_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3574,
+        0.5064
+       ],
+       [
+        0.4832,
+        0.5835
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A branch rises from the life line and runs into the fate line (drawn in context)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-x",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-LIFE-011"
+     ]
+    }
+   ]
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-ii",
+   "src": "/atlas/plates/cheiro-plate-ii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-ii.json",
+   "book": "cheiro-1916",
+   "label": "Plate II",
+   "caption": "Plate II. THE LINE OF HEAD JOINED TO THE LINE OF LIFE AND ITS TERMINATIONS.",
+   "page": 18,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1282,
+   "height": 1400,
+   "overviewLines": [
+    "head",
+    "life"
+   ],
+   "variations": []
+  },
+  {
+   "id": "cheiro-plate-iii",
+   "src": "/atlas/plates/cheiro-plate-iii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-iii.json",
+   "book": "cheiro-1916",
+   "label": "Plate III",
+   "caption": "Plate III. THE LINE OF HEAD SEPARATED FROM THE LINE OF LIFE.",
+   "page": 20,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1295,
+   "height": 1400,
+   "overviewLines": [
+    "head",
+    "life"
+   ],
+   "variations": []
+  },
+  {
+   "id": "cheiro-plate-viii",
+   "src": "/atlas/plates/cheiro-plate-viii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-viii.json",
+   "book": "cheiro-1916",
+   "label": "Plate VIII",
+   "caption": "Plate VIII. THE LINE OF LIFE AND SECTIONS OF INFLUENCES FROM THE MOUNTS.",
+   "page": 37,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1400,
+   "height": 1374,
+   "overviewLines": [
+    "life"
+   ],
+   "variations": [
+    "life.texture=clear_deep"
+   ]
+  },
+  {
+   "id": "cheiro-plate-ix",
+   "src": "/atlas/plates/cheiro-plate-ix.png",
+   "sidecar": "/atlas/plates/cheiro-plate-ix.json",
+   "book": "cheiro-1916",
+   "label": "Plate IX",
+   "caption": "Plate IX. THE LINE OF LIFE AND ITS VARIATIONS.",
+   "page": 40,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1302,
+   "height": 1400,
+   "overviewLines": [
+    "life"
+   ],
+   "variations": [
+    "life.rise_origin=jupiter_side",
+    "life.rise_origin=mars_low",
+    "life.texture=chained",
+    "life.arc=wide_into_palm",
+    "life.arc=narrow_hugging_thumb"
+   ]
+  },
+  {
+   "id": "cheiro-plate-x",
+   "src": "/atlas/plates/cheiro-plate-x.png",
+   "sidecar": "/atlas/plates/cheiro-plate-x.json",
+   "book": "cheiro-1916",
+   "label": "Plate X",
+   "caption": "Plate X. THE LINE OF LIFE, THE LINE OF MARS, AND OTHER SIGNS.",
+   "page": 45,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1231,
+   "height": 1400,
+   "overviewLines": [
+    "life"
+   ],
+   "variations": [
+    "life.ascending_branch_target=mount_jupiter",
+    "life.ascending_branch_target=stops_at_head_line",
+    "life.ascending_branch_target=joins_fate_line"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxi",
+   "src": "/atlas/plates/cheiro-plate-xxi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXI",
+   "caption": "Plate XXI. TRAVELS, VOYAGES, ACCIDENTS AND DESCENDING LINES PROM THE MOUNTS.",
+   "page": 99,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1133,
+   "height": 1400,
+   "overviewLines": [],
+   "variations": [
+    "life.tight_venus_arc=true",
+    "life.branch_to_luna=true"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxii",
+   "src": "/atlas/plates/cheiro-plate-xxii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXII",
+   "caption": "Plate XXII. THE ISLAND, THE CIRCLE, THE SPOT, THE GRILLE, THE STAR, THE SQUARE.",
+   "page": 102,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1305,
+   "height": 1400,
+   "overviewLines": [],
+   "variations": [
+    "life.square@on_life_line",
+    "life.island@on_life_line"
+   ]
+  },
+  {
+   "id": "dale-plate-iv",
+   "src": "/atlas/plates/dale-plate-iv.png",
+   "sidecar": "/atlas/plates/dale-plate-iv.json",
+   "book": "dale-1895",
+   "label": "Plate IV",
+   "caption": "PLATE IV.—THE LINE OF LIFE.",
+   "page": null,
+   "pageNote": "inserted leaf, facing p. 39",
+   "width": 786,
+   "height": 1400,
+   "overviewLines": [
+    "life"
+   ],
+   "variations": []
+  }
+ ]
+}

@@ -1,0 +1,574 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "bracelets",
+  "title_hi": "मणिबंध रेखाएँ",
+  "title_en": "Bracelets"
+ },
+ "variations": [
+  {
+   "id": "bracelets.count>=1",
+   "line": "bracelets",
+   "number": 1,
+   "title_hi": "कम से कम एक मणिबंध रेखा",
+   "title_en": "At least one bracelet",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.bracelets.count",
+     "op": "gte",
+     "value": 1
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-105",
+    "PALM-DALE-107",
+    "PALM-DALE-108",
+    "PALM-DALE-109"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-105",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-107",
+     "category": "travel",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.mercury",
+       "op": "gte",
+       "value": 0.6
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-108",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.sun",
+       "op": "gte",
+       "value": 0.6
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-109",
+     "category": "personality",
+     "polarity": "neutral",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.6
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Bracelet line jo thumb ke sabse paas ho, saaf rang ki aur tuti hui na ho, yeh dhan aur samriddhi ka sanket deta hai. Yeh sthayi nahi hai lekin yeh ek favourable pattern hai jo prosperity ko support karta hai. Jab bracelet line Sun mount tak pahunche — ek ya do baar — yeh bade aur important affairs mein leadership aur governance ki kshamata ka sanket deta hai. Yeh ek strong career aur influence ka indicator hai. Jab bracelet line Mercury mount tak pahunche, yeh sanket deta hai ki vyakti videsh mein izzat aur samman paata hai. Yeh line foreign land mein safalta aur recognition ki sambhavna bataati hai. Jab bracelet line seedhi Saturn mount tak jaye, yeh Saturn ki achi position ka sanket deta hai — ek disciplined aur methodical nature. Agar yeh line tedi ho aur doosri lines se kaati ho, toh yeh zyada kathor aur laborious swabhav dikhata hai, lekin is par kaam kiya ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-105",
+     "when": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ],
+     "text_hi": "Bracelet line jo thumb ke sabse paas ho, saaf rang ki aur tuti hui na ho, yeh dhan aur samriddhi ka sanket deta hai. Yeh sthayi nahi hai lekin yeh ek favourable pattern hai jo prosperity ko support karta hai."
+    },
+    {
+     "ruleId": "PALM-DALE-108",
+     "when": [
+      {
+       "feature": "mounts.sun",
+       "op": "gte",
+       "value": 0.6
+      }
+     ],
+     "text_hi": "Jab bracelet line Sun mount tak pahunche — ek ya do baar — yeh bade aur important affairs mein leadership aur governance ki kshamata ka sanket deta hai. Yeh ek strong career aur influence ka indicator hai."
+    },
+    {
+     "ruleId": "PALM-DALE-107",
+     "when": [
+      {
+       "feature": "mounts.mercury",
+       "op": "gte",
+       "value": 0.6
+      }
+     ],
+     "text_hi": "Jab bracelet line Mercury mount tak pahunche, yeh sanket deta hai ki vyakti videsh mein izzat aur samman paata hai. Yeh line foreign land mein safalta aur recognition ki sambhavna bataati hai."
+    },
+    {
+     "ruleId": "PALM-DALE-109",
+     "when": [
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.6
+      }
+     ],
+     "text_hi": "Jab bracelet line seedhi Saturn mount tak jaye, yeh Saturn ki achi position ka sanket deta hai — ek disciplined aur methodical nature. Agar yeh line tedi ho aur doosri lines se kaati ho, toh yeh zyada kathor aur laborious swabhav dikhata hai, lekin is par kaam kiya ja sakta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Bracelets Line — nearest line good colour unbroken promises riches",
+     "year": 1895,
+     "ruleId": "PALM-DALE-105"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Bracelets Line — line continuing to mount of Mercury, living in foreign country in great esteem",
+     "year": 1895,
+     "ruleId": "PALM-DALE-107"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Bracelets Line — line to mount of Sun single or double denotes great good and ability to govern",
+     "year": 1895,
+     "ruleId": "PALM-DALE-108"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Bracelets Line — line ascending to mount of Saturn, good position or crooked denotes hard covetous nature",
+     "year": 1895,
+     "ruleId": "PALM-DALE-109"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines"
+    ],
+    "blocking": [
+     {
+      "feature": "signs.bracelets.count",
+      "op": "gte",
+      "value": 1,
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:127; clamp01 at lib/hastrekha/sanitize.ts:45-51 caps the count at 1 (DETECTOR_AUDIT.md section 6 row 12)"
+     }
+    ],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "bracelets",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3,
+        0.908
+       ],
+       [
+        0.7,
+        0.908
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "One bracelet across the wrist (BRACELETS corridor, foundry/corridors.py from classify.ts's bracelet zones)."
+   },
+   "plates": []
+  },
+  {
+   "id": "bracelets.count>=2",
+   "line": "bracelets",
+   "number": 2,
+   "title_hi": "दो या अधिक मणिबंध रेखाएँ",
+   "title_en": "Two or more bracelets",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.bracelets.count",
+     "op": "gte",
+     "value": 2
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-104"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-104",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab do ya teen bracelet lines saaf aur continuous hoon, yeh achhi body constitution aur physical well-being ka sanket deta hai. Is nishani se vyakti ki sehat mein ek natural balance dikhai deta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Bracelets Line — double or treble continuous tract promises good composure of body",
+     "year": 1895,
+     "ruleId": "PALM-DALE-104"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.bracelets.count",
+      "op": "gte",
+      "value": 2,
+      "status": "above_ceiling",
+      "evidence": "lib/scan/minor-lines.ts:127; clamp01 at lib/hastrekha/sanitize.ts:45-51 caps the count at 1 (DETECTOR_AUDIT.md section 6 row 12)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "bracelets",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3,
+        0.89
+       ],
+       [
+        0.7,
+        0.89
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "bracelets",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3,
+        0.95
+       ],
+       [
+        0.7,
+        0.95
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Two bracelets across the wrist, one under the other."
+   },
+   "plates": []
+  },
+  {
+   "id": "bracelets.count>=3",
+   "line": "bracelets",
+   "number": 3,
+   "title_hi": "तीन मणिबंध रेखाएँ",
+   "title_en": "Three bracelets",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.bracelets.count",
+     "op": "gte",
+     "value": 3
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-013",
+    "PALM-DALE-014",
+    "PALM-DALE-050",
+    "PALM-GIRD-006"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-013",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-DALE-014",
+     "category": "travel",
+     "polarity": "positive",
+     "weight": 0.68,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.influence.origin",
+       "op": "eq",
+       "value": "mount_luna"
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-050",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.58,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "signs.star.locations",
+       "op": "eq",
+       "value": "mount_luna"
+      }
+     ]
+    },
+    {
+     "id": "PALM-GIRD-006",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Teen ya zyada bracelets clearly formed hain — yeh health, wealth aur prosperity ka ek classical sanket hai. Aksar aisa hath wale log materially stable aur well-regarded hote hain apne circles mein. Aapki kalai par teenon bracelets (manibandh rekhayein) hain — Greek parampara inhe Swasthya, Dhan aur Sukh ke kangan kehti thi. Cheiro khud maante hain ki teenon ek saath milna durlabh hai, kyunki jeevan mein yeh teenon cheezein ek saath kam hi milti hain. Aapke haath mein teeno ka vaada likha hai — ab kamana aapka kaam hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-014",
+     "when": [
+      {
+       "feature": "lines.influence.origin",
+       "op": "eq",
+       "value": "mount_luna"
+      }
+     ],
+     "text_hi": "Bracelet se Moon ya Mercury ki taraf ek line nikal rahi hai — yeh foreign lands mein esteem aur ek meaningful life jeene ka sanket deta hai. Aapke liye desh se bahar ka safar ya vasaa faydemand ho sakta hai."
+    },
+    {
+     "ruleId": "PALM-DALE-050",
+     "when": [
+      {
+       "feature": "signs.star.locations",
+       "op": "eq",
+       "value": "mount_luna"
+      }
+     ],
+     "text_hi": "Bracelets par ya Dragon's Head line par star ka nishaan zindagi mein sukoon aur stability ka sanket deta hai. Yeh ek positive nishaan hai jo aapke life path mein sthirta aur tranquillity ko favour karta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. References to Hand (1/2) — No. 17, Dragon lines or Bracelets, thrice",
+     "year": 1895,
+     "ruleId": "PALM-DALE-013"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. References to Hand (1/2) — No. 17, Dragon lines, line extends to mount of Moon or Mercury",
+     "year": 1895,
+     "ruleId": "PALM-DALE-014"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. References to Hand (2/2) — No. 27, Dragon's Head",
+     "year": 1895,
+     "ruleId": "PALM-DALE-050"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XI — the three Bracelets: Health, Wealth, Happiness (Greek tradition, 3-3, Plate XX)",
+     "year": 1916,
+     "ruleId": "PALM-GIRD-006"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.bracelets.count",
+      "op": "gte",
+      "value": 3,
+      "status": "above_ceiling",
+      "evidence": "lib/scan/minor-lines.ts:127; clamp01 at lib/hastrekha/sanitize.ts:45-51 caps the count at 1 (DETECTOR_AUDIT.md section 6 row 12)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "bracelets",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3,
+        0.878
+       ],
+       [
+        0.7,
+        0.878
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "bracelets",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3,
+        0.926
+       ],
+       [
+        0.7,
+        0.926
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "bracelets",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3,
+        0.974
+       ],
+       [
+        0.7,
+        0.974
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Three bracelets across the wrist."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xx",
+     "positions": [],
+     "ruleIds": [
+      "PALM-GIRD-006"
+     ]
+    },
+    {
+     "plate": "dale-plate-i",
+     "positions": [
+      17,
+      27
+     ],
+     "ruleIds": [
+      "PALM-DALE-013",
+      "PALM-DALE-014",
+      "PALM-DALE-050"
+     ]
+    }
+   ]
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-xx",
+   "src": "/atlas/plates/cheiro-plate-xx.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xx.json",
+   "book": "cheiro-1916",
+   "label": "Plate XX",
+   "caption": "Plate XX. THE GIRDLE OF VENUS, THE RING OF SATURN, THE THREE BRACELETS, THE LINE OF INTUITION AND THE VIA LASCIVA.",
+   "page": 89,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1200,
+   "height": 1400,
+   "overviewLines": [
+    "girdle",
+    "bracelets"
+   ],
+   "variations": [
+    "bracelets.count>=3"
+   ]
+  },
+  {
+   "id": "dale-plate-i",
+   "src": "/atlas/plates/dale-plate-i.png",
+   "sidecar": "/atlas/plates/dale-plate-i.json",
+   "book": "dale-1895",
+   "label": "Plate I",
+   "caption": "PLATE I.—THE REFERENCE HAND.",
+   "page": null,
+   "pageNote": "frontispiece",
+   "width": 795,
+   "height": 1280,
+   "overviewLines": [],
+   "variations": [
+    "bracelets.count>=3"
+   ]
+  }
+ ]
+}

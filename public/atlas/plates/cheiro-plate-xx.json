@@ -1,0 +1,55 @@
+{
+ "id": "cheiro-plate-xx",
+ "image": "cheiro-plate-xx.png",
+ "width": 1200,
+ "height": 1400,
+ "bytes": 51080,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XX",
+ "caption": "Plate XX. THE GIRDLE OF VENUS, THE RING OF SATURN, THE THREE BRACELETS, THE LINE OF INTUITION AND THE VIA LASCIVA.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb XX, • * TdB GISDLB OF VENUS, THB RING OF SATURN, TBB THIBS",
+ "page": 89,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 128,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n128/mode/1up",
+  "crop": [
+   159,
+   736,
+   2389,
+   3338
+  ]
+ },
+ "variations": [
+  {
+   "variation": "bracelets.count>=3",
+   "positions": [],
+   "ruleIds": [
+    "PALM-GIRD-006"
+   ]
+  },
+  {
+   "variation": "girdle.span=jupiter_to_mercury",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-GIRD-001"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "girdle",
+  "bracelets"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

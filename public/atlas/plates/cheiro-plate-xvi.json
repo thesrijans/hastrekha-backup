@@ -1,0 +1,103 @@
+{
+ "id": "cheiro-plate-xvi",
+ "image": "cheiro-plate-xvi.png",
+ "width": 1291,
+ "height": 1400,
+ "bytes": 46741,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XVI",
+ "caption": "Plate XVI. THE LINE OF HEART AND ITS VARIATIONS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plate XVL m uvn or bbart and rts variations.",
+ "page": 68,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 107,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n107/mode/1up",
+  "crop": [
+   289,
+   761,
+   2483,
+   3140
+  ]
+ },
+ "variations": [
+  {
+   "variation": "heart.origin=mount_jupiter_outer",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-HEART-002"
+   ]
+  },
+  {
+   "variation": "heart.origin=between_jupiter_saturn",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-HEART-004"
+   ]
+  },
+  {
+   "variation": "heart.origin=mount_saturn_face",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-HEART-005"
+   ]
+  },
+  {
+   "variation": "heart.origin=under_saturn_base",
+   "positions": [
+    5
+   ],
+   "ruleIds": [
+    "PALM-HEART-006"
+   ]
+  },
+  {
+   "variation": "heart.length_norm>=0.95",
+   "positions": [
+    2,
+    6
+   ],
+   "ruleIds": [
+    "PALM-HEART-008",
+    "PALM-HEART-009"
+   ]
+  },
+  {
+   "variation": "heart.curvature=downward_curve_at_jupiter",
+   "positions": [
+    7
+   ],
+   "ruleIds": [
+    "PALM-HEART-010"
+   ]
+  },
+  {
+   "variation": "head.curvature=sloping_to_luna",
+   "positions": [
+    6
+   ],
+   "ruleIds": [
+    "PALM-HEART-009"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "heart"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

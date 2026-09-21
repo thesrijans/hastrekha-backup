@@ -1,0 +1,65 @@
+{
+ "id": "cheiro-plate-i",
+ "image": "cheiro-plate-i.png",
+ "width": 1257,
+ "height": 1400,
+ "bytes": 45036,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate I",
+ "caption": "Plate I. THE THREE PRINCIPAL POSITIONS FOR THE COMMENCEMENT OF THE LINE OF HEAD.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb L- ras THKEB PltlNCTPAL POSmONS FOR THB COUIIBMCBIIBNT OT THB UNB OF HBAD.",
+ "page": 11,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 50,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n50/mode/1up",
+  "crop": [
+   82,
+   763,
+   2250,
+   3178
+  ]
+ },
+ "variations": [
+  {
+   "variation": "head.origin=inside_life_line",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-HEAD-001"
+   ]
+  },
+  {
+   "variation": "head.origin=joined_life_line",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-HEAD-003"
+   ]
+  },
+  {
+   "variation": "head.origin=separated_narrow",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-HEAD-006"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "head"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

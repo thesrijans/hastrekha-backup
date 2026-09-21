@@ -1,0 +1,101 @@
+{
+ "id": "cheiro-plate-xvii",
+ "image": "cheiro-plate-xvii.png",
+ "width": 1240,
+ "height": 1400,
+ "bytes": 52033,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XVII",
+ "caption": "Plate XVII. MARRIAGE LINES. THE LINE OF MARRIAGE.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "PUtb XVII. /. ICARSXAGB LXifES. THB LIMB OF ICARRUGB.",
+ "page": 74,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 113,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n113/mode/1up",
+  "crop": [
+   281,
+   477,
+   2538,
+   3026
+  ]
+ },
+ "variations": [
+  {
+   "variation": "marriage.presence=clear_deep",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-MARR-001"
+   ]
+  },
+  {
+   "variation": "marriage.presence=short_faint_marks",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-MARR-002"
+   ]
+  },
+  {
+   "variation": "marriage.shape=straight_clear",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-MARR-005"
+   ]
+  },
+  {
+   "variation": "marriage.shape=upturn",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-MARR-006"
+   ]
+  },
+  {
+   "variation": "marriage.marks=drop_lines",
+   "positions": [
+    5
+   ],
+   "ruleIds": [
+    "PALM-MARR-007"
+   ]
+  },
+  {
+   "variation": "marriage.interference_from=mount_mars",
+   "positions": [
+    6
+   ],
+   "ruleIds": [
+    "PALM-MARR-019"
+   ]
+  },
+  {
+   "variation": "marriage.interference_from=mount_venus",
+   "positions": [
+    7
+   ],
+   "ruleIds": [
+    "PALM-MARR-020"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "marriage"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

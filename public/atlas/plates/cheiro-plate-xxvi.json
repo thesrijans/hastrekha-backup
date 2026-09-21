@@ -1,0 +1,43 @@
+{
+ "id": "cheiro-plate-xxvi",
+ "image": "cheiro-plate-xxvi.png",
+ "width": 1118,
+ "height": 1400,
+ "bytes": 55737,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XXVI",
+ "caption": "Plate XXVI. TIME AND DATES OF PRINCIPAL EVENTS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb XXVt. TDIB AND DATES OP PRINCIPAL BVBNT8. January, will find the following years of their lives",
+ "page": 113,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 152,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n152/mode/1up",
+  "crop": [
+   190,
+   545,
+   2556,
+   3507
+  ]
+ },
+ "variations": [
+  {
+   "variation": "fate.present=true",
+   "positions": [],
+   "ruleIds": [
+    "PALM-TIME-001"
+   ]
+  }
+ ],
+ "overviewLines": [],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

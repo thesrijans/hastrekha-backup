@@ -1,0 +1,48 @@
+{
+ "id": "cheiro-plate-iii",
+ "image": "cheiro-plate-iii.png",
+ "width": 1295,
+ "height": 1400,
+ "bytes": 47379,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate III",
+ "caption": "Plate III. THE LINE OF HEAD SEPARATED FROM THE LINE OF LIFE.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb IIL THB LINB OF BBAD 8BPAKATBD FROM THB LINK OF LtFB.",
+ "page": 20,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 59,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n59/mode/1up",
+  "crop": [
+   355,
+   633,
+   2536,
+   2991
+  ]
+ },
+ "variations": [
+  {
+   "variation": "head.origin=separated_wide",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-HEAD-008"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "head",
+  "life"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

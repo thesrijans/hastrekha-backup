@@ -1,0 +1,54 @@
+{
+ "id": "cheiro-plate-vii",
+ "image": "cheiro-plate-vii.png",
+ "width": 1245,
+ "height": 1400,
+ "bytes": 50179,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate VII",
+ "caption": "Plate VII. DOUBLE LINES OF HEAD, ALSO CROSSES AND SQUARES.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb VIL DOUBLB LINES OF HBAD, ALSO CROSSBS AND 8QUABB8,",
+ "page": 32,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 71,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n71/mode/1up",
+  "crop": [
+   337,
+   619,
+   2471,
+   3018
+  ]
+ },
+ "variations": [
+  {
+   "variation": "head.marks=double_line",
+   "positions": [],
+   "ruleIds": [
+    "PALM-HEAD-013"
+   ]
+  },
+  {
+   "variation": "head.marks=square_touching",
+   "positions": [
+    5
+   ],
+   "ruleIds": [
+    "PALM-HEAD-015"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "head"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

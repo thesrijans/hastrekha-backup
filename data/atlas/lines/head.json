@@ -1,0 +1,4534 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "head",
+  "title_hi": "मस्तिष्क रेखा",
+  "title_en": "Head line"
+ },
+ "variations": [
+  {
+   "id": "head.origin=inside_life_line",
+   "line": "head",
+   "number": 1,
+   "title_hi": "जीवन रेखा के भीतर, मंगल से",
+   "title_en": "From inside the life line, on Mars",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "inside_life_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-001"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-001",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha jeevan rekha ke andar se shuru hoti hai — ati-samvedansheel aur jaldi excite hone wala swabhav. Chhoti baatein dil par lag jaati hain. Apni is teevra oorja ko disha dena hi aapki asli jeet hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate I position 1, pp.14-15",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-001"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2432,
+        0.3851
+       ],
+       [
+        0.344,
+        0.3833
+       ],
+       [
+        0.4172,
+        0.388
+       ],
+       [
+        0.4902,
+        0.3961
+       ],
+       [
+        0.6227,
+        0.4322
+       ],
+       [
+        0.7672,
+        0.48
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.1696,
+        0.2917
+       ],
+       [
+        0.2275,
+        0.3981
+       ],
+       [
+        0.2619,
+        0.4728
+       ],
+       [
+        0.2876,
+        0.5407
+       ],
+       [
+        0.3206,
+        0.6484
+       ],
+       [
+        0.3354,
+        0.7084
+       ],
+       [
+        0.3446,
+        0.7586
+       ],
+       [
+        0.3467,
+        0.8094
+       ],
+       [
+        0.3468,
+        0.9276
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The head line begins inside the life line, on Mars: its start sits at the wrist-side edge of the head corridor, below the life line's start (the life line drawn on the thumb side of its corridor), then joins the usual course. lines.ts:702-713 reads this as inside_life_line (separation >= 0.08, below the life start)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-i",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-HEAD-001"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.origin=joined_life_line",
+   "line": "head",
+   "number": 2,
+   "title_hi": "आरंभ में जीवन रेखा से जुड़ी",
+   "title_en": "Joined to the life line at the start",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "joined_life_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-003",
+     "category": "personality",
+     "polarity": "neutral",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha jeevan rekha se judi hui hai — gehri samvedansheelta aur savdhaani ka sanket. Aap apni pratibha ko kam aankte hain. Sach yeh hai ki aap jitna sochte hain usse kahin zyada capable hain.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate I position 2, p.16",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-003"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2062,
+        0.2566
+       ],
+       [
+        0.3748,
+        0.2835
+       ],
+       [
+        0.5057,
+        0.3102
+       ],
+       [
+        0.6395,
+        0.3268
+       ],
+       [
+        0.8073,
+        0.355
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.915,
+        0.238
+       ],
+       [
+        0.7864,
+        0.2163
+       ],
+       [
+        0.644,
+        0.195
+       ],
+       [
+        0.4905,
+        0.177
+       ],
+       [
+        0.3915,
+        0.1687
+       ],
+       [
+        0.2197,
+        0.1478
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The head and life lines start together: the head runs along the finger-side edge of its corridor, which puts its start on the life line's start (separation under 0.03); the heart line (context) sits high, clear of it."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-i",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-HEAD-003"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.origin=separated_narrow",
+   "line": "head",
+   "number": 3,
+   "title_hi": "जीवन रेखा से थोड़ी अलग",
+   "title_en": "Slightly apart from the life line",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "separated_narrow"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-006"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-006",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha jeevan rekha se thodi alag shuru hoti hai — utkrisht sanket. Swatantra soch, turant nirnay aur mansik saahas aapko bheed se alag karta hai. Aap flash mein woh samajh lete hain jo doosre mehnat se seekhte hain.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate I position 3, pp.19-21",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-006"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.1696,
+        0.2917
+       ],
+       [
+        0.2275,
+        0.3981
+       ],
+       [
+        0.2619,
+        0.4728
+       ],
+       [
+        0.2876,
+        0.5407
+       ],
+       [
+        0.3206,
+        0.6484
+       ],
+       [
+        0.3354,
+        0.7084
+       ],
+       [
+        0.3446,
+        0.7586
+       ],
+       [
+        0.3467,
+        0.8094
+       ],
+       [
+        0.3468,
+        0.9276
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Slightly apart from the life line: the head's own start knot, and the life line starting a little toward the thumb — lines.ts's separated_narrow band (0.03-0.08)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-i",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-HEAD-006"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.origin=separated_wide",
+   "line": "head",
+   "number": 4,
+   "title_hi": "जीवन रेखा से काफ़ी अलग",
+   "title_en": "Widely apart from the life line",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "separated_wide"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-008"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-008",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Rekhaon ke beech zyada doori — bejhijhak, impulsive aur suriyon mein rehne ki chaah. Himmat kamaal ki hai, lekin plans baar-baar badalna aapki pragati rok sakta hai. Ek cheez pakdo, poora karo.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate III position 4, pp.21-22",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-008"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.origin",
+      "op": "eq",
+      "value": "separated_wide",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:704-713, both starts observed"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2069,
+        0.2491
+       ],
+       [
+        0.3789,
+        0.3197
+       ],
+       [
+        0.5344,
+        0.3563
+       ],
+       [
+        0.5977,
+        0.3735
+       ],
+       [
+        0.6691,
+        0.3965
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2741,
+        0.3438
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3467,
+        0.4808
+       ],
+       [
+        0.3714,
+        0.5426
+       ],
+       [
+        0.3955,
+        0.6164
+       ],
+       [
+        0.4144,
+        0.6916
+       ],
+       [
+        0.4263,
+        0.7571
+       ],
+       [
+        0.4323,
+        0.8122
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Widely apart: the head starts high at the top of its corridor, and the life line begins lower down (from 0.14 of its corridor), leaving a clear space between them above the life start."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-iii",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-HEAD-008"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.termination=gentle_slope_luna",
+   "line": "head",
+   "number": 5,
+   "title_hi": "चंद्र पर्वत की ओर हल्की ढलान",
+   "title_en": "Gentle slope toward the Moon",
+   "facets": [
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "gentle_slope_luna"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-009"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-009",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha halki si Chandra parvat ki or dhalti hai — kalpana par aapka niyantran hai. Aap imagination ko tool ki tarah use karte hain, uske gulaam nahi bante. Creative professionals ka aadarsh sanket.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate II position 1, p.18",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-009"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical head line: it falls 0.12 from start to end, lines.ts's gentle_slope_luna band (0.06-0.16)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-ii",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-HEAD-009"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.termination=deep_slope_luna",
+   "line": "head",
+   "number": 6,
+   "title_hi": "चंद्र पर्वत में गहरी ढलान",
+   "title_en": "Steep slope into the Moon",
+   "facets": [
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "deep_slope_luna"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-010"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-010",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Rekha gehri Chandra parvat mein utarti hai — kalpana ki duniya aap par haavi ho sakti hai. Mood ke hisaab se kaam hota hai aur mann kabhi-kabhi bhaari ho jaata hai. Routine, dhoop aur apne logon ka saath aapke liye dawa hai; mann zyada bojhal lage toh kisi apne se ya professional se baat karna samajhdari hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate II position 4, pp.18-19 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-010"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3555,
+        0.3508
+       ],
+       [
+        0.4365,
+        0.3707
+       ],
+       [
+        0.4987,
+        0.3886
+       ],
+       [
+        0.5676,
+        0.4168
+       ],
+       [
+        0.626,
+        0.4451
+       ],
+       [
+        0.6741,
+        0.4734
+       ],
+       [
+        0.7527,
+        0.525
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The line drifts steadily down across its corridor to end at the wrist-side edge, toward the Moon: a fall over 0.16 (deep_slope_luna)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-ii",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-HEAD-010"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.termination=upturn_mercury",
+   "line": "head",
+   "number": 7,
+   "title_hi": "बुध पर्वत की ओर ऊपर मुड़ती",
+   "title_en": "Turns up toward Mercury",
+   "facets": [
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "upturn_mercury"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-011"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-011",
+     "category": "wealth",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha ant mein Budh parvat ki or upar uthti hai — umra ke saath dhan kamane ki ichchha aur usko paane ka sankalp dono badhte jayenge. Business-mind aapke andar samay ke saath aur tez hoga.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate V position 4, p.28",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-011"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.termination",
+      "op": "eq",
+      "value": "upturn_mercury",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:716-723, observed end"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.1934,
+        0.3872
+       ],
+       [
+        0.2785,
+        0.3792
+       ],
+       [
+        0.3428,
+        0.3754
+       ],
+       [
+        0.4539,
+        0.3783
+       ],
+       [
+        0.5184,
+        0.3849
+       ],
+       [
+        0.5666,
+        0.3825
+       ],
+       [
+        0.6459,
+        0.3752
+       ],
+       [
+        0.7079,
+        0.3669
+       ],
+       [
+        0.7712,
+        0.3551
+       ],
+       [
+        0.8105,
+        0.345
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Starts low and turns up at the end toward Mercury: the end sits at the finger-side edge of the corridor, higher than the start (a drop below -0.04)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-v",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-HEAD-011"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.quality>=0.6",
+   "line": "head",
+   "number": 8,
+   "title_hi": "स्पष्ट और सुगठित (गुणवत्ता ≥ 0.6)",
+   "title_en": "Clear and well marked (quality ≥ 0.6)",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.quality",
+     "op": "gte",
+     "value": 0.6
+    }
+   ],
+   "ruleIds": [
+    "PALM-FATE-018",
+    "PALM-MJUP-002",
+    "PALM-MJUP-013",
+    "PALM-MMAR-008",
+    "PALM-MMAR-014",
+    "PALM-MMER-002",
+    "PALM-MMER-014"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FATE-018",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.fate.structure",
+       "op": "eq",
+       "value": "faint"
+      }
+     ]
+    },
+    {
+     "id": "PALM-MJUP-002",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.jupiter",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-MJUP-013",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "user.birth_window",
+       "op": "eq",
+       "value": "JUP_NEG"
+      }
+     ]
+    },
+    {
+     "id": "PALM-MMAR-008",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.mars_inner",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-MMAR-014",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "user.birth_window",
+       "op": "eq",
+       "value": "MARS_NEG"
+      }
+     ]
+    },
+    {
+     "id": "PALM-MMER-002",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.mercury",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-MMER-014",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "user.birth_window",
+       "op": "eq",
+       "value": "MER_NEG"
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Jupiter strong + Head line lambi aur saaf — Cheiro kehta hai isse behtar koi mount nahi hai. Aapki success kismat se nahi, character aur purpose ki taqat se aayegi. Ek bada lakshya chuno aur usse chipak jao — baaki sab follow karega. Inner Mars strong + Head line clear = sanyam wala yoddha. Cheiro ke mutabik aise log life mein kisi bhi unchaai tak ja sakte hain aur doosron ke liye bada kaam karte hain. Aapka asli hathiyaar himmat nahi, self-control hai — usse roz sharpen karo. Mercury strong + Head line lambi aur saaf = mental aptitude ka best combo. Cheiro kehta hai yeh success ka promise badha deta hai — business, science, law, media, tech, kahin bhi. Aapke paas raw speed bhi hai aur steering bhi; ab bas destination chuno. Jupiter Negative + clear, strong Head line = sensitivity ko will power se jeetne ki capacity. Cheiro kehta hai yahi line tay karti hai ki aapke talents bahar aayenge ya nahi — aur aapke paas hai. Ab bas consistently dikhna shuru karo. Mercury Negative + clear seedhi Head line — Cheiro kehta hai mushkil waqt mein aapki best qualities khud aapko bachane aati hain: practicality, consistency, clear thinking. Aap crisis mein bikharte nahi, organise karte ho. Bhagya rekha halki hai lekin mastishk rekha zabardast — aap kismat ko maanne walon mein se nahi hain, aur aapko zaroorat bhi nahi. Aapki safalta shudh roop se aapke dimaag ki den hogi. Destiny aapke liye likhi nahi gayi; aap use roz likhte hain. Mars Negative window + clear Head line — Cheiro ke shabdon mein 'mental endeavour ki duniya mein koi cheez nahi jisme aap safal na ho sako'. Field chunne ki tension mat lo; jo bhi chuno, usme top tak ja sakte ho.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-MJUP-002",
+     "when": [
+      {
+       "feature": "mounts.jupiter",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Jupiter strong + Head line lambi aur saaf — Cheiro kehta hai isse behtar koi mount nahi hai. Aapki success kismat se nahi, character aur purpose ki taqat se aayegi. Ek bada lakshya chuno aur usse chipak jao — baaki sab follow karega."
+    },
+    {
+     "ruleId": "PALM-MMAR-008",
+     "when": [
+      {
+       "feature": "mounts.mars_inner",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Inner Mars strong + Head line clear = sanyam wala yoddha. Cheiro ke mutabik aise log life mein kisi bhi unchaai tak ja sakte hain aur doosron ke liye bada kaam karte hain. Aapka asli hathiyaar himmat nahi, self-control hai — usse roz sharpen karo."
+    },
+    {
+     "ruleId": "PALM-MMER-002",
+     "when": [
+      {
+       "feature": "mounts.mercury",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Mercury strong + Head line lambi aur saaf = mental aptitude ka best combo. Cheiro kehta hai yeh success ka promise badha deta hai — business, science, law, media, tech, kahin bhi. Aapke paas raw speed bhi hai aur steering bhi; ab bas destination chuno."
+    },
+    {
+     "ruleId": "PALM-FATE-018",
+     "when": [
+      {
+       "feature": "lines.fate.structure",
+       "op": "eq",
+       "value": "faint"
+      }
+     ],
+     "text_hi": "Bhagya rekha halki hai lekin mastishk rekha zabardast — aap kismat ko maanne walon mein se nahi hain, aur aapko zaroorat bhi nahi. Aapki safalta shudh roop se aapke dimaag ki den hogi. Destiny aapke liye likhi nahi gayi; aap use roz likhte hain."
+    },
+    {
+     "ruleId": "PALM-MMAR-014",
+     "when": [
+      {
+       "feature": "user.birth_window",
+       "op": "eq",
+       "value": "MARS_NEG"
+      }
+     ],
+     "text_hi": "Mars Negative window + clear Head line — Cheiro ke shabdon mein 'mental endeavour ki duniya mein koi cheez nahi jisme aap safal na ho sako'. Field chunne ki tension mat lo; jo bhi chuno, usme top tak ja sakte ho."
+    },
+    {
+     "ruleId": "PALM-MJUP-013",
+     "when": [
+      {
+       "feature": "user.birth_window",
+       "op": "eq",
+       "value": "JUP_NEG"
+      }
+     ],
+     "text_hi": "Jupiter Negative + clear, strong Head line = sensitivity ko will power se jeetne ki capacity. Cheiro kehta hai yahi line tay karti hai ki aapke talents bahar aayenge ya nahi — aur aapke paas hai. Ab bas consistently dikhna shuru karo."
+    },
+    {
+     "ruleId": "PALM-MMER-014",
+     "when": [
+      {
+       "feature": "user.birth_window",
+       "op": "eq",
+       "value": "MER_NEG"
+      }
+     ],
+     "text_hi": "Mercury Negative + clear seedhi Head line — Cheiro kehta hai mushkil waqt mein aapki best qualities khud aapko bachane aati hain: practicality, consistency, clear thinking. Aap crisis mein bikharte nahi, organise karte ho."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, p.58",
+     "year": 1916,
+     "ruleId": "PALM-FATE-018"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.VII — large Jupiter with clear long Line of Head: 'no Mount more excellent', success from sheer strength of character and purpose",
+     "year": 1916,
+     "ruleId": "PALM-MJUP-002"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.VII — a strong clear Line of Head gives the will power to overcome natural sensitiveness and carry out ambitions",
+     "year": 1916,
+     "ruleId": "PALM-MJUP-013"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.VI — higher Mars type practising self-restraint can rise to almost any height",
+     "year": 1916,
+     "ruleId": "PALM-MMAR-008"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.VI (cont.) — with a good Line of Head, success in any mental endeavour",
+     "year": 1916,
+     "ruleId": "PALM-MMAR-014"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.X — with a long well-marked Line of Head, increases all the promise of mental aptitude and success",
+     "year": 1916,
+     "ruleId": "PALM-MMER-002"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.X (cont.) — with a clear and straight Line of Head, their best qualities come to the rescue",
+     "year": 1916,
+     "ruleId": "PALM-MMER-014"
+    }
+   ],
+   "areas": [
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A clear, well-marked head line: the canonical line drawn deep and unbroken."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.quality<=0.4",
+   "line": "head",
+   "number": 9,
+   "title_hi": "कमज़ोर या अस्पष्ट (गुणवत्ता ≤ 0.4)",
+   "title_en": "Weak or poorly marked (quality ≤ 0.4)",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.quality",
+     "op": "lte",
+     "value": 0.4
+    }
+   ],
+   "ruleIds": [
+    "PALM-MJUP-003",
+    "PALM-MMAR-007",
+    "PALM-MMER-003",
+    "PALM-MMER-015"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MJUP-003",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.jupiter",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-MMAR-007",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.mars_inner",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-MMER-003",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "mounts.mercury",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-MMER-015",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "user.birth_window",
+       "op": "eq",
+       "value": "MER_NEG"
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Inner Mars strong par Head line kamzor — impulsiveness ko brake nahi mil rahi. Cheiro warn karta hai ki aise log bina soche mushkilon mein kood jaate hain aur apni leadership ka mauka gawa dete hain. Aapke liye planning system (pehle likho, phir karo) luxury nahi, zaroorat hai. Jupiter bada hai par Head line kamzor — ambition ko direction nahi mil rahi, isliye woh pride aur vanity ban jaati hai. Fix simple hai: 'main sahi hoon' bolne se pehle 'kya main sahi hoon?' poochna — roz. Yahi aapka growth hack hai. Mercury bada par Head line kamzor — tez dimaag ko steering nahi mil rahi: bechaini, focus ki kami, aur business mein shortcut lene ka lalach. Do rules apnao: ek waqt mein ek kaam, aur jo deal 'too clever' lage usse chhod do. Cleverness se lamba reputation chalta hai, shortcuts se nahi. Mercury Negative par Head line kamzor — aapki natural consistency ko support nahi mil rahi, isliye self-reference aur mood-driven faisle haavi ho sakte hain. Structure bahar se lao: accountability partner, likhit goals, weekly review. System aapki will power ka backup hai.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-MMAR-007",
+     "when": [
+      {
+       "feature": "mounts.mars_inner",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Inner Mars strong par Head line kamzor — impulsiveness ko brake nahi mil rahi. Cheiro warn karta hai ki aise log bina soche mushkilon mein kood jaate hain aur apni leadership ka mauka gawa dete hain. Aapke liye planning system (pehle likho, phir karo) luxury nahi, zaroorat hai."
+    },
+    {
+     "ruleId": "PALM-MJUP-003",
+     "when": [
+      {
+       "feature": "mounts.jupiter",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Jupiter bada hai par Head line kamzor — ambition ko direction nahi mil rahi, isliye woh pride aur vanity ban jaati hai. Fix simple hai: 'main sahi hoon' bolne se pehle 'kya main sahi hoon?' poochna — roz. Yahi aapka growth hack hai."
+    },
+    {
+     "ruleId": "PALM-MMER-003",
+     "when": [
+      {
+       "feature": "mounts.mercury",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Mercury bada par Head line kamzor — tez dimaag ko steering nahi mil rahi: bechaini, focus ki kami, aur business mein shortcut lene ka lalach. Do rules apnao: ek waqt mein ek kaam, aur jo deal 'too clever' lage usse chhod do. Cleverness se lamba reputation chalta hai, shortcuts se nahi."
+    },
+    {
+     "ruleId": "PALM-MMER-015",
+     "when": [
+      {
+       "feature": "user.birth_window",
+       "op": "eq",
+       "value": "MER_NEG"
+      }
+     ],
+     "text_hi": "Mercury Negative par Head line kamzor — aapki natural consistency ko support nahi mil rahi, isliye self-reference aur mood-driven faisle haavi ho sakte hain. Structure bahar se lao: accountability partner, likhit goals, weekly review. System aapki will power ka backup hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.VII — large Jupiter with poor badly-formed Line of Head: pride, excess of vanity, self-opinionated",
+     "year": 1916,
+     "ruleId": "PALM-MJUP-003"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.VI — impulsiveness without a good Line of Head: rush into difficulties, muddle opportunities",
+     "year": 1916,
+     "ruleId": "PALM-MMAR-007"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.X — with weak, badly marked or irregular Head Line: mental excitability, nervousness, lack of concentration, trickiness in business — softened per safety policy (integrity-caution framing; 'unreliable character' label excluded)",
+     "year": 1916,
+     "ruleId": "PALM-MMER-003"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.X (cont.) — with weak or poorly marked Head Line the weaker side may predominate — softened per safety policy ('evil side' reframed to consistency/structure)",
+     "year": 1916,
+     "ruleId": "PALM-MMER-015"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.quality",
+      "op": "lte",
+      "value": 0.4,
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:699 depth x continuity, 0-1"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "faint",
+      "texture": "solid",
+      "gaps": [
+       [
+        0.3,
+        0.36
+       ],
+       [
+        0.62,
+        0.68
+       ]
+      ],
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A weak, poorly marked head line: faint and twice broken."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.curvature=straight_clear",
+   "line": "head",
+   "number": 10,
+   "title_hi": "सीधी और स्पष्ट",
+   "title_en": "Straight and clear",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.curvature",
+     "op": "eq",
+     "value": "straight_clear"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HTYPE-015"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HTYPE-015",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "hand.shape",
+       "op": "eq",
+       "value": "mixed"
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Mixed haath ke saath saaf, seedhi mastishk rekha — Cheiro ke anusaar YAHI woh combination hai jisme versatility mein se EK talent nikhar kar champion banta hai. Aapke paas options bhi hain aur unme se chunne wala clear dimaag bhi. Ek chuno, do saal do, aur dekho.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-HTYPE-015",
+     "when": [
+      {
+       "feature": "hand.shape",
+       "op": "eq",
+       "value": "mixed"
+      }
+     ],
+     "text_hi": "Mixed haath ke saath saaf, seedhi mastishk rekha — Cheiro ke anusaar YAHI woh combination hai jisme versatility mein se EK talent nikhar kar champion banta hai. Aapke paas options bhi hain aur unme se chunne wala clear dimaag bhi. Ek chuno, do saal do, aur dekho."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II — Mixed hand + clear straight Head line: likelihood of developing one talent from versatility",
+     "year": 1916,
+     "ruleId": "PALM-HTYPE-015"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Straight and clear: the chord between the head corridor's two end knots, which stays inside the corridor (curvature 0 < 0.07)."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.curvature=sloping_to_luna",
+   "line": "head",
+   "number": 11,
+   "title_hi": "चंद्र पर्वत की ओर झुकी",
+   "title_en": "Sloping toward the Moon",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.curvature",
+     "op": "eq",
+     "value": "sloping_to_luna"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-009"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-009",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.heart.length_norm",
+       "op": "gte",
+       "value": 0.95
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Atyadhik lambi hriday rekha ke saath mastishk rekha Chandra parvat ki ore dhalti hai — jalan mein kalpana bhi shaamil ho jaati hai: bina baat ke scenarios banna, shak ka barhna. Iska tod hai seedhi baat-cheet — man mein kahani banane se pehle saathi se poochh lena.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-HEART-009",
+     "when": [
+      {
+       "feature": "lines.heart.length_norm",
+       "op": "gte",
+       "value": 0.95
+      }
+     ],
+     "text_hi": "Atyadhik lambi hriday rekha ke saath mastishk rekha Chandra parvat ki ore dhalti hai — jalan mein kalpana bhi shaamil ho jaati hai: bina baat ke scenarios banna, shak ka barhna. Iska tod hai seedhi baat-cheet — man mein kahani banane se pehle saathi se poochh lena."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — jealousy alarmingly increased when Head Line slopes to Mount of Moon (6, Plate XVI)",
+     "year": 1916,
+     "ruleId": "PALM-HEART-009"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2044,
+        0.2752
+       ],
+       [
+        0.3724,
+        0.2994
+       ],
+       [
+        0.4747,
+        0.3197
+       ],
+       [
+        0.5615,
+        0.3638
+       ],
+       [
+        0.6273,
+        0.4071
+       ],
+       [
+        0.6805,
+        0.4531
+       ],
+       [
+        0.7511,
+        0.53
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The line runs high across the palm, then curves down toward the Moon over its second half — enough to cross lines.ts's 0.07 curvature line."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvi",
+     "positions": [
+      6
+     ],
+     "ruleIds": [
+      "PALM-HEART-009"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.texture=irregular",
+   "line": "head",
+   "number": 12,
+   "title_hi": "अनियमित, लहराती",
+   "title_en": "Irregular, wavering",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.texture",
+     "op": "eq",
+     "value": "irregular"
+    }
+   ],
+   "ruleIds": [
+    "PALM-FINGR-010"
+   ],
+   "rules": [
+    {
+     "id": "PALM-FINGR-010",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.5,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "fingers.mercury.crooked",
+       "op": "eq",
+       "value": true
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Budh ungli tedhi hai aur mastishk rekha irregular — parampara is combo ko soch aur communication ki uljhan ka sanket maanti hai: vichar ghoomte hain, seedhi baat tedhi nikalti hai. Iska practical tod: LIKH KAR sochna — pehle paper par saaf karo, phir bolo. Clarity practice se aati hai, aur likhna uska sabse chhota raasta hai.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-FINGR-010",
+     "when": [
+      {
+       "feature": "fingers.mercury.crooked",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "text_hi": "Budh ungli tedhi hai aur mastishk rekha irregular — parampara is combo ko soch aur communication ki uljhan ka sanket maanti hai: vichar ghoomte hain, seedhi baat tedhi nikalti hai. Iska practical tod: LIKH KAR sochna — pehle paper par saaf karo, phir bolo. Clarity practice se aati hai, aur likhna uska sabse chhota raasta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Part II Ch.III — crooked Mercury + irregular Head line; 'evil sign of mentality' softened per safety policy to clarity-practice framing",
+     "year": 1916,
+     "ruleId": "PALM-FINGR-010"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.texture",
+      "op": "eq",
+      "value": "irregular",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:726"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "irregular",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.2184,
+        0.324
+       ],
+       [
+        0.2376,
+        0.3183
+       ],
+       [
+        0.2469,
+        0.319
+       ],
+       [
+        0.2556,
+        0.3259
+       ],
+       [
+        0.2646,
+        0.3301
+       ],
+       [
+        0.2739,
+        0.3302
+       ],
+       [
+        0.2933,
+        0.3238
+       ],
+       [
+        0.3024,
+        0.3267
+       ],
+       [
+        0.3195,
+        0.3409
+       ],
+       [
+        0.3293,
+        0.3374
+       ],
+       [
+        0.3397,
+        0.329
+       ],
+       [
+        0.3496,
+        0.3258
+       ],
+       [
+        0.3665,
+        0.3397
+       ],
+       [
+        0.3755,
+        0.3422
+       ],
+       [
+        0.3948,
+        0.3396
+       ],
+       [
+        0.4041,
+        0.3402
+       ],
+       [
+        0.4129,
+        0.3442
+       ],
+       [
+        0.4206,
+        0.3548
+       ],
+       [
+        0.4294,
+        0.358
+       ],
+       [
+        0.4512,
+        0.3422
+       ],
+       [
+        0.4605,
+        0.3436
+       ],
+       [
+        0.4678,
+        0.3549
+       ],
+       [
+        0.4759,
+        0.3624
+       ],
+       [
+        0.4851,
+        0.3636
+       ],
+       [
+        0.5057,
+        0.3561
+       ],
+       [
+        0.5145,
+        0.3593
+       ],
+       [
+        0.5225,
+        0.3666
+       ],
+       [
+        0.5312,
+        0.3702
+       ],
+       [
+        0.5594,
+        0.3724
+       ],
+       [
+        0.5683,
+        0.3754
+       ],
+       [
+        0.5836,
+        0.3908
+       ],
+       [
+        0.5939,
+        0.3881
+       ],
+       [
+        0.6055,
+        0.3806
+       ],
+       [
+        0.6157,
+        0.3787
+       ],
+       [
+        0.6302,
+        0.3965
+       ],
+       [
+        0.6386,
+        0.4008
+       ],
+       [
+        0.6591,
+        0.397
+       ],
+       [
+        0.6684,
+        0.3985
+       ],
+       [
+        0.6761,
+        0.4053
+       ],
+       [
+        0.6828,
+        0.4153
+       ],
+       [
+        0.6913,
+        0.419
+       ],
+       [
+        0.7135,
+        0.411
+       ],
+       [
+        0.7221,
+        0.4147
+       ],
+       [
+        0.729,
+        0.4234
+       ],
+       [
+        0.7373,
+        0.4282
+       ],
+       [
+        0.7647,
+        0.4342
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical head line wavering irregularly along its course (texture 'irregular', a fixed, non-random waver baked into the points)."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.head_heart_blended_single=true",
+   "line": "head",
+   "number": 13,
+   "title_hi": "हृदय और मस्तिष्क रेखा एक ही रेखा",
+   "title_en": "Head and heart as one line",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head_heart_blended_single",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-016"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-016",
+     "category": "personality",
+     "polarity": "neutral",
+     "weight": 0.75,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hatheli par mastishk aur hriday rekha mil kar ek hi gehri rekha ban gayi hai — atyant ekagra, all-or-nothing swabhav. Prem karo toh poore dimaag se, kaam karo toh poore dil se. Dar naam ki cheez kam mehsoos hoti hai aur zid prachand hai. Yehi shakti hai aur yehi khatra bhi — risk lene se pehle ek baar rukna aapke liye zaroori aadat hai; suraksha ko halke mein mat lo.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — single blended head+heart line (see also Plate VI); death/accident clause excluded per safety policy, softened to risk-awareness",
+     "year": 1916,
+     "ruleId": "PALM-HEART-016"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.21,
+        0.27
+       ],
+       [
+        0.3698,
+        0.2775
+       ],
+       [
+        0.4494,
+        0.2855
+       ],
+       [
+        0.5287,
+        0.2965
+       ],
+       [
+        0.6074,
+        0.3106
+       ],
+       [
+        0.6856,
+        0.3276
+       ],
+       [
+        0.84,
+        0.37
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The same single line as the heart book's: head and heart as one crease across the palm.",
+    "knownLimit": "The heart and head corridors never overlap mid-palm: a band about 0.02 wide separates them under Saturn and the Sun. A single crease replacing both lines has to cross that band, so it cannot lie inside either corridor there. It is drawn halfway between the two courses, the placement the probe showed the detector reads as one line."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-vi",
+     "positions": [],
+     "ruleIds": [
+      "PALM-HEART-016"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.quality.sister_line_head=true",
+   "line": "head",
+   "number": 14,
+   "title_hi": "साथ चलती बहन रेखा",
+   "title_en": "Sister line beside it",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.quality.sister_line_head",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-LINQ-010"
+   ],
+   "rules": [
+    {
+     "id": "PALM-LINQ-010",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Aapki mastishk rekha ke saath ek sister line (sahayak rekha) chal rahi hai — Cheiro ke anusaar sister lines kisi bhi rekha ki shakti DOUBLE kar deti hain, aur mastishk rekha ke paas milen toh mahaan shakti aur vaade ka chinh hai. Dimaag ka backup generator built-in hai — jahan aam log thak jaate hain, aap wahan se shuru karte ho.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XVII — sister lines double the power; beside Head line give great power and promise",
+     "year": 1916,
+     "ruleId": "PALM-LINQ-010"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.quality.sister_line_head",
+      "op": "eq",
+      "value": true,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2022,
+        0.2976
+       ],
+       [
+        0.3417,
+        0.3143
+       ],
+       [
+        0.4529,
+        0.3331
+       ],
+       [
+        0.6375,
+        0.3702
+       ],
+       [
+        0.7896,
+        0.41
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.286,
+        0.373
+       ],
+       [
+        0.3676,
+        0.3799
+       ],
+       [
+        0.4852,
+        0.398
+       ],
+       [
+        0.5983,
+        0.4355
+       ],
+       [
+        0.676,
+        0.4674
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A sister line runs close beside the head line, on its wrist side, for most of its length."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.marks=rising_branch",
+   "line": "head",
+   "number": 15,
+   "title_hi": "ऊपर उठती शाखा",
+   "title_en": "Rising branch",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.marks",
+     "op": "eq",
+     "value": "rising_branch"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-093",
+    "PALM-HEAD-014"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-093",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.mars_inner",
+       "op": "gte",
+       "value": 0.5
+      }
+     ]
+    },
+    {
+     "id": "PALM-HEAD-014",
+     "category": "timing",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha se ek mahin rekha upar uthti hai — jeevan ke us daur mein ek aisa practical breakthrough jo aapke poore character ko hamesha ke liye badal dega. Yeh nayi shakha samay ke saath doosri mastishk rekha jitni majboot ho sakti hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-093",
+     "when": [
+      {
+       "feature": "mounts.mars_inner",
+       "op": "gte",
+       "value": 0.5
+      }
+     ],
+     "text_hi": "Jab headline se ek clear rising branch ya star Mars ke kshetra ki taraf uthta hai, toh yeh boldness aur courage ka sanket deta hai. Yeh vyakti mushkil paristhitiyon mein bhi himmat se kaam leta hai. Yeh ek positive trait hai jo leadership aur brave decisions ko favour karta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of the Head and Brain — rising branch or star toward cavea martis",
+     "year": 1895,
+     "ruleId": "PALM-DALE-093"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate V position 2, p.26",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-014"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.marks",
+      "op": "eq",
+      "value": "rising_branch",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.465,
+        0.3542
+       ],
+       [
+        0.5788,
+        0.2017
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A branch rises from the middle of the head line toward the fingers."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-v",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-HEAD-014"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.quality.head_end_fork=true",
+   "line": "head",
+   "number": 16,
+   "title_hi": "अंत में द्विशाखा",
+   "title_en": "Forked at the end",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.quality.head_end_fork",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-094",
+    "PALM-DALE-095",
+    "PALM-LINQ-006"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-094",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.sun.present",
+       "op": "eq",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-095",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "signs.circle.locations",
+       "op": "eq",
+       "value": "mount_sun"
+      }
+     ]
+    },
+    {
+     "id": "PALM-LINQ-006",
+     "category": "personality",
+     "polarity": "neutral",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha ke ant mein fork hai — dual mentality ka chinh: dimaag ek saath do dhaaraon mein soch sakta hai. Fayda: versatility, har baat ke do pehlu dekhna. Keemat: ek cheez par lambi ekagrata mushkil. Deep-work ke liye time-block karna aapke liye optional nahi, zaroori hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-095",
+     "when": [
+      {
+       "feature": "signs.circle.locations",
+       "op": "eq",
+       "value": "mount_sun"
+      }
+     ],
+     "text_hi": "Jab headline ke fork mein ya uske paas ek special positive sign ho aur sun mount par circle ya circle-jaise sign hon, toh yeh ingenuity aur arts ke zariye riches aur honour ka sanket deta hai. Yeh creative aur intellectual pursuits ke through wealth ki taraf ek promising indication hai. Is potential ko develop kiya ja sakta hai."
+    },
+    {
+     "ruleId": "PALM-DALE-094",
+     "when": [
+      {
+       "feature": "lines.sun.present",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "text_hi": "Jab headline ka ant ek fork mein hota hai jo fortune ya sun line ki taraf jaata hai, toh yeh affairs mein subtlety aur clever management ka sanket deta hai. Yeh vyakti apni shrewd thinking se situations ko effectively handle karta hai. Yeh trait career aur business dono mein kaam aata hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of the Head and Brain — fork toward line of Fortune",
+     "year": 1895,
+     "ruleId": "PALM-DALE-094"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of the Head and Brain — circle sign near fork gives riches and honours",
+     "year": 1895,
+     "ruleId": "PALM-DALE-095"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XVII — fork at end of Head line: dual mentality, less concentration (Plate XXIV)",
+     "year": 1916,
+     "ruleId": "PALM-LINQ-006"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6669,
+        0.4035
+       ],
+       [
+        0.7071,
+        0.5017
+       ],
+       [
+        0.7204,
+        0.5258
+       ],
+       [
+        0.7314,
+        0.5322
+       ],
+       [
+        0.7415,
+        0.528
+       ],
+       [
+        0.7559,
+        0.515
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "fork",
+      "x": 0.6669,
+      "y": 0.4035,
+      "angle": 17.1,
+      "size": 0.03
+     }
+    ],
+    "note": "Forked at the end: toward its end the head line splits, one tine running on, the other running just beneath it to end a little below it."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xxiv",
+     "positions": [],
+     "ruleIds": [
+      "PALM-LINQ-006"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.marks=double_line",
+   "line": "head",
+   "number": 17,
+   "title_hi": "दोहरी मस्तिष्क रेखा",
+   "title_en": "Double head line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.marks",
+     "op": "eq",
+     "value": "double_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-013"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-013",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Do alag mastishk rekhayein — dohri pratibha ka durlabh sanket. Aap do bilkul alag mansik duniyaon ko ek saath safalta se chala sakte hain (jaise naukri + apna venture). Prachin granthon mein ise dhan-prapti ka yog bhi mana gaya hai — lekin yeh dhan janm se nahi, aapki buddhi se aayega.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate VII, pp.31-33",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-013"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.marks",
+      "op": "eq",
+      "value": "double_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.1971,
+        0.3499
+       ],
+       [
+        0.3448,
+        0.3608
+       ],
+       [
+        0.4178,
+        0.371
+       ],
+       [
+        0.4903,
+        0.3838
+       ],
+       [
+        0.5525,
+        0.4013
+       ],
+       [
+        0.6313,
+        0.4265
+       ],
+       [
+        0.7672,
+        0.48
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2347,
+        0.2719
+       ],
+       [
+        0.3944,
+        0.2967
+       ],
+       [
+        0.5062,
+        0.3193
+       ],
+       [
+        0.6388,
+        0.3385
+       ],
+       [
+        0.7731,
+        0.3642
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Two head lines run side by side across the palm, both inside the head corridor."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-vii",
+     "positions": [],
+     "ruleIds": [
+      "PALM-HEAD-013"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.marks=fused_with_heart",
+   "line": "head",
+   "number": 18,
+   "title_hi": "हृदय रेखा में मिलती",
+   "title_en": "Merging with the heart line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.marks",
+     "op": "eq",
+     "value": "fused_with_heart"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-012"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-012",
+     "category": "personality",
+     "polarity": "neutral",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk aur hriday rekha ek hi rekha ban gayi hai — ateev teevrata ka sanket. Jab aap kisi lakshya ya kisi vyakti ko chunte hain, toh dil-dimaag dono ki poori shakti usme jhonk dete hain. Yeh shakti akele chalne par sabse zyada kaam karti hai; sahi partner milna aapke liye life-changing hota hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate VI, pp.29-30",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-012"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.marks",
+      "op": "eq",
+      "value": "fused_with_heart",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3222,
+        0.3181
+       ],
+       [
+        0.445,
+        0.3241
+       ],
+       [
+        0.5033,
+        0.3217
+       ],
+       [
+        0.5839,
+        0.3119
+       ],
+       [
+        0.7001,
+        0.3276
+       ],
+       [
+        0.8105,
+        0.345
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.8441,
+        0.3015
+       ],
+       [
+        0.724,
+        0.3001
+       ],
+       [
+        0.6595,
+        0.302
+       ],
+       [
+        0.5559,
+        0.2848
+       ],
+       [
+        0.493,
+        0.2803
+       ],
+       [
+        0.3887,
+        0.2553
+       ],
+       [
+        0.3037,
+        0.2402
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5792,
+        0.3113
+       ],
+       [
+        0.5768,
+        0.2879
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The head line rises to meet the heart line mid-palm: both run to their facing corridor edges, and the short joining stroke bridges the 0.02 the corridors keep between them."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-vi",
+     "positions": [],
+     "ruleIds": [
+      "PALM-HEAD-012"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.marks=island_under_jupiter",
+   "line": "head",
+   "number": 19,
+   "title_hi": "गुरु पर्वत के नीचे द्वीप",
+   "title_en": "Island under Jupiter",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.marks",
+     "op": "eq",
+     "value": "island_under_jupiter"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-016"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-016",
+     "category": "personality",
+     "polarity": "neutral",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Rekha ki shuruaat (Jupiter ke neeche) mein island — bachpan/shuruati padhai mein mann kam laga hoga, energy aur ambition der se jaagi. Lekin yeh sirf shuruaat ka daur tha; rekha aage saaf hai toh asli udaan baad mein aati hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate IV position 3, pp.24-25",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-016"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.marks",
+      "op": "eq",
+      "value": "island_under_jupiter",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.2946,
+      "y": 0.3288,
+      "angle": 5.8,
+      "size": 0.03
+     }
+    ],
+    "note": "An island on the head line under the Mount of Jupiter (x about 0.27, MOUNT_ZONES.jupiter)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-iv",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-HEAD-016"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.marks=islands_chain",
+   "line": "head",
+   "number": 20,
+   "title_hi": "द्वीपों की श्रृंखला",
+   "title_en": "Chain of islands",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.marks",
+     "op": "eq",
+     "value": "islands_chain"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-017"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-017",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha jagah-jagah jhirri jaisi (chained) hai — mansik thakan aur focus toot-ne ka pattern. Yeh kamzori nahi, signal hai: neend, screen-time aur stress ka hisaab rakhna aapke liye doosron se zyada zaroori hai. Dimaag ko rest doge toh yahi rekha kamaal karegi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate IV position 1, pp.22-23 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-017"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.marks",
+      "op": "eq",
+      "value": "islands_chain",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.3772,
+      "y": 0.3392,
+      "angle": 8.6,
+      "size": 0.03
+     },
+     {
+      "glyph": "island",
+      "x": 0.4358,
+      "y": 0.3488,
+      "angle": 10.1,
+      "size": 0.03
+     },
+     {
+      "glyph": "island",
+      "x": 0.4941,
+      "y": 0.36,
+      "angle": 11.7,
+      "size": 0.03
+     },
+     {
+      "glyph": "island",
+      "x": 0.5521,
+      "y": 0.3729,
+      "angle": 13.3,
+      "size": 0.03
+     }
+    ],
+    "note": "A chain of four islands along the middle of the head line."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-iv",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-HEAD-017"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.marks=square_touching",
+   "line": "head",
+   "number": 21,
+   "title_hi": "रेखा को छूता वर्ग",
+   "title_en": "Square touching the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.marks",
+     "op": "eq",
+     "value": "square_touching"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-015"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-015",
+     "category": "protection",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mastishk rekha ko chhoota hua chaukor chinh (square) — raksha ka sanket. Jis daur mein yeh aata hai, wahan mushkilein aayengi lekin aap surakshit nikal jayenge. Ise prachin palmistry mein 'mark of preservation' kaha gaya hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, Plate VII position 5, p.31",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-015"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.marks",
+      "op": "eq",
+      "value": "square_touching",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "square",
+      "x": 0.5169,
+      "y": 0.3943,
+      "angle": 12.6,
+      "size": 0.03
+     }
+    ],
+    "note": "A small square set against the head line, touching it on its wrist side."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-vii",
+     "positions": [
+      5
+     ],
+     "ruleIds": [
+      "PALM-HEAD-015"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "head.origin=inside_life_line+termination=straight_mental_mars",
+   "line": "head",
+   "number": 22,
+   "title_hi": "जीवन रेखा के भीतर, मंगल से · सीधी, मंगल क्षेत्र तक",
+   "title_en": "From inside the life line, on Mars · Straight across to Mars",
+   "facets": [
+    "origin",
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "inside_life_line"
+    },
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "straight_mental_mars"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-002",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Shuruaat bhale hi ati-samvedansheel rahi ho, rekha aage jaakar seedhi ho jaati hai — umra ke saath aapne (ya aap) buddhi se apni bhavukta par vijay paayi hai. Yeh growth ka spashth sanket hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, p.15",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-002"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "(together)",
+      "op": "and",
+      "value": null,
+      "status": "not_emitted_together",
+      "evidence": "each condition is emitted on its own, but none of the probe's 494 distinct default_flags bags satisfies all 2 at once"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.1945,
+        0.376
+       ],
+       [
+        0.3274,
+        0.3565
+       ],
+       [
+        0.4151,
+        0.3462
+       ],
+       [
+        0.4977,
+        0.3424
+       ],
+       [
+        0.58,
+        0.3487
+       ],
+       [
+        0.6666,
+        0.3616
+       ],
+       [
+        0.7976,
+        0.385
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "From inside the life line, straight across to Mars: the start below the life start as in the inside_life_line drawing, the end held high so the whole line falls less than 0.06."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.origin=joined_life_line+termination=straight_mental_mars",
+   "line": "head",
+   "number": 23,
+   "title_hi": "आरंभ में जीवन रेखा से जुड़ी · सीधी, मंगल क्षेत्र तक",
+   "title_en": "Joined to the life line at the start · Straight across to Mars",
+   "facets": [
+    "origin",
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "joined_life_line"
+    },
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "straight_mental_mars"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-005"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-005",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Bahar se shaant, andar se chattaan — samvedansheel hote hue bhi apne usoolon ke liye ant tak ladne ki shakti. Log aapki nazaakat dekhte hain, aapki determination ka andaza nahi laga paate.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, pp.16-17",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-005"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "(together)",
+      "op": "and",
+      "value": null,
+      "status": "not_emitted_together",
+      "evidence": "each condition is emitted on its own, but none of the probe's 494 distinct default_flags bags satisfies all 2 at once"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2062,
+        0.2566
+       ],
+       [
+        0.4152,
+        0.2909
+       ],
+       [
+        0.5787,
+        0.3133
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Joined to the life line and straight across: along the corridor's finger-side edge, stopping mid-palm (0.62 of the corridor), because the corridor slopes and a line starting on the life line can stay within a 0.06 fall only that far.",
+    "knownLimit": "The head corridor falls 0.12 from web to percussion, so a head line joined to the life line (start y 0.26) cannot reach its corridor's end and still fall less than 0.06. The drawing stops mid-palm to stay straight; the scan's probe never emits the pair."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.origin=joined_life_line+termination=gentle_slope_luna",
+   "line": "head",
+   "number": 24,
+   "title_hi": "आरंभ में जीवन रेखा से जुड़ी · चंद्र पर्वत की ओर हल्की ढलान",
+   "title_en": "Joined to the life line at the start · Gentle slope toward the Moon",
+   "facets": [
+    "origin",
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "joined_life_line"
+    },
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "gentle_slope_luna"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-004",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Judi hui aur halki dhalti mastishk rekha — kalakaar ka mann. Samvedansheelta aapki kamzori nahi, aapki creative shakti ka source hai. Art, design, lekhan — inme aapka sparsh alag dikhega.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, p.16",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-004"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2062,
+        0.2566
+       ],
+       [
+        0.3748,
+        0.2835
+       ],
+       [
+        0.5057,
+        0.3102
+       ],
+       [
+        0.6395,
+        0.3268
+       ],
+       [
+        0.8073,
+        0.355
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.915,
+        0.238
+       ],
+       [
+        0.7864,
+        0.2163
+       ],
+       [
+        0.644,
+        0.195
+       ],
+       [
+        0.4905,
+        0.177
+       ],
+       [
+        0.3915,
+        0.1687
+       ],
+       [
+        0.2197,
+        0.1478
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Joined to the life line at the start, then a gentle slope toward the Moon: along the finger-side edge of its corridor the head line still falls about 0.09 (lines.ts band 0.06-0.16)."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.origin=separated_narrow+termination=straight_mental_mars",
+   "line": "head",
+   "number": 25,
+   "title_hi": "जीवन रेखा से थोड़ी अलग · सीधी, मंगल क्षेत्र तक",
+   "title_en": "Slightly apart from the life line · Straight across to Mars",
+   "facets": [
+    "origin",
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "separated_narrow"
+    },
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "straight_mental_mars"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEAD-007"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEAD-007",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Alag aur seedhi mastishk rekha — logon par prabhaav daalne ki asadharan kshamata. Public-facing role (leadership, media, apna venture) mein aapki pratibha sabse zyada khilti hai. Bas ek clear purpose chahiye — bina lakshya ke yeh shakti bikhar jaati hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.II, pp.20-21",
+     "year": 1916,
+     "ruleId": "PALM-HEAD-007"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.2937,
+        0.3195
+       ],
+       [
+        0.3596,
+        0.3218
+       ],
+       [
+        0.416,
+        0.3258
+       ],
+       [
+        0.5005,
+        0.3351
+       ],
+       [
+        0.7327,
+        0.3516
+       ],
+       [
+        0.8073,
+        0.355
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.1696,
+        0.2917
+       ],
+       [
+        0.2275,
+        0.3981
+       ],
+       [
+        0.2619,
+        0.4728
+       ],
+       [
+        0.2876,
+        0.5407
+       ],
+       [
+        0.3206,
+        0.6484
+       ],
+       [
+        0.3354,
+        0.7084
+       ],
+       [
+        0.3446,
+        0.7586
+       ],
+       [
+        0.3467,
+        0.8094
+       ],
+       [
+        0.3468,
+        0.9276
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A little apart from the life line and running straight across to Mars: the line rises steadily across its corridor to end near the finger-side edge, so it falls under 0.06."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.origin=separated_wide+termination=upturn_mercury",
+   "line": "head",
+   "number": 26,
+   "title_hi": "जीवन रेखा से काफ़ी अलग · बुध पर्वत की ओर ऊपर मुड़ती",
+   "title_en": "Widely apart from the life line · Turns up toward Mercury",
+   "facets": [
+    "origin",
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.origin",
+     "op": "eq",
+     "value": "separated_wide"
+    },
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "upturn_mercury"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-120"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-120",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab brain line Mercury ki taraf jaati hai aur haath mein triangular figure banati hai, yeh sanket deta hai ki vyakti mein kamyabi aur tej buddhi ki khaas sambhavna hai. Yeh ek shubh nishani hai jo aapki mehnat ko pehchaan dilaa sakti hai. Is pratibha ko sahi disha mein lagaana faydemand rahega.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Lines — head line toward Mercury forms triangle, sign of success",
+     "year": 1895,
+     "ruleId": "PALM-DALE-120"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.origin",
+      "op": "eq",
+      "value": "separated_wide",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:704-713, both starts observed"
+     },
+     {
+      "feature": "lines.head.termination",
+      "op": "eq",
+      "value": "upturn_mercury",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:716-723, observed end"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2069,
+        0.2491
+       ],
+       [
+        0.4003,
+        0.305
+       ],
+       [
+        0.5002,
+        0.3366
+       ],
+       [
+        0.6852,
+        0.3442
+       ],
+       [
+        0.8105,
+        0.345
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2741,
+        0.3438
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3467,
+        0.4808
+       ],
+       [
+        0.3714,
+        0.5426
+       ],
+       [
+        0.3955,
+        0.6164
+       ],
+       [
+        0.4144,
+        0.6916
+       ],
+       [
+        0.4263,
+        0.7571
+       ],
+       [
+        0.4323,
+        0.8122
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Widely apart from the life line and curving up toward Mercury at the end: Dale's head line 'toward Mercury' that forms a triangle.",
+    "knownLimit": "A start at the top of the head corridor (y 0.25) cannot be followed by an end 0.04 higher: the corridor's end sits at y 0.34-0.54. The drawing shows the upturn as far as the corridor allows; zone agreement reads it as a gentle slope."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.marks=rising_branch+termination=deep_slope_luna",
+   "line": "head",
+   "number": 27,
+   "title_hi": "ऊपर उठती शाखा · चंद्र पर्वत में गहरी ढलान",
+   "title_en": "Rising branch · Steep slope into the Moon",
+   "facets": [
+    "marks",
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.marks",
+     "op": "eq",
+     "value": "rising_branch"
+    },
+    {
+     "feature": "lines.head.termination",
+     "op": "eq",
+     "value": "deep_slope_luna"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-091"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-091",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.5,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab headline mount of Moon ki taraf unequal branches phenke, toh yeh mental restlessness ya scattered thinking ka ek ruchaan hai. Yeh sthayi nahi hai — vyakti apni mental energy ko focus karne par kaam kar sakta hai. Equal aur sooth branches bilkul opposite indicate karte hain — clear aur well-composed thinking.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of the Head and Brain — unequal branches toward mount of Moon",
+     "year": 1895,
+     "ruleId": "PALM-DALE-091"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.marks",
+      "op": "eq",
+      "value": "rising_branch",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4952,
+        0.3605
+       ],
+       [
+        0.5639,
+        0.3932
+       ],
+       [
+        0.6295,
+        0.4327
+       ],
+       [
+        0.6757,
+        0.4682
+       ],
+       [
+        0.7495,
+        0.535
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4941,
+        0.36
+       ],
+       [
+        0.6061,
+        0.1996
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A head line sloping steeply into the Moon, with a branch rising from its middle toward the fingers."
+   },
+   "plates": []
+  },
+  {
+   "id": "head.curvature=sloping_to_luna+marks=rising_branch",
+   "line": "head",
+   "number": 28,
+   "title_hi": "चंद्र पर्वत की ओर झुकी · ऊपर उठती शाखा",
+   "title_en": "Sloping toward the Moon · Rising branch",
+   "facets": [
+    "direction",
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head.curvature",
+     "op": "eq",
+     "value": "sloping_to_luna"
+    },
+    {
+     "feature": "lines.head.marks",
+     "op": "eq",
+     "value": "rising_branch"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-092"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-092",
+     "category": "travel",
+     "polarity": "positive",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Headline se mount of Moon ki taraf equal aur clear branches ka banna frequent aur successful voyages ya travel ka sanket deta hai. Yeh sanket deta hai ki vyakti mein exploration aur movement ke liye natural aptitude hai. Travel ke zyada opportunities aur experiences is person ke liye aksar favourable rahte hain.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of the Head and Brain — equal branches toward Moon presage clear brain and voyages",
+     "year": 1895,
+     "ruleId": "PALM-DALE-092"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.head.marks",
+      "op": "eq",
+      "value": "rising_branch",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4952,
+        0.3605
+       ],
+       [
+        0.5639,
+        0.3932
+       ],
+       [
+        0.6295,
+        0.4327
+       ],
+       [
+        0.6757,
+        0.4682
+       ],
+       [
+        0.7495,
+        0.535
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4358,
+        0.3488
+       ],
+       [
+        0.5392,
+        0.2058
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Sloping toward the Moon, with a branch rising toward the fingers from its first half."
+   },
+   "plates": []
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-i",
+   "src": "/atlas/plates/cheiro-plate-i.png",
+   "sidecar": "/atlas/plates/cheiro-plate-i.json",
+   "book": "cheiro-1916",
+   "label": "Plate I",
+   "caption": "Plate I. THE THREE PRINCIPAL POSITIONS FOR THE COMMENCEMENT OF THE LINE OF HEAD.",
+   "page": 11,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1257,
+   "height": 1400,
+   "overviewLines": [
+    "head"
+   ],
+   "variations": [
+    "head.origin=inside_life_line",
+    "head.origin=joined_life_line",
+    "head.origin=separated_narrow"
+   ]
+  },
+  {
+   "id": "cheiro-plate-ii",
+   "src": "/atlas/plates/cheiro-plate-ii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-ii.json",
+   "book": "cheiro-1916",
+   "label": "Plate II",
+   "caption": "Plate II. THE LINE OF HEAD JOINED TO THE LINE OF LIFE AND ITS TERMINATIONS.",
+   "page": 18,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1282,
+   "height": 1400,
+   "overviewLines": [
+    "head",
+    "life"
+   ],
+   "variations": [
+    "head.termination=gentle_slope_luna",
+    "head.termination=deep_slope_luna"
+   ]
+  },
+  {
+   "id": "cheiro-plate-iii",
+   "src": "/atlas/plates/cheiro-plate-iii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-iii.json",
+   "book": "cheiro-1916",
+   "label": "Plate III",
+   "caption": "Plate III. THE LINE OF HEAD SEPARATED FROM THE LINE OF LIFE.",
+   "page": 20,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1295,
+   "height": 1400,
+   "overviewLines": [
+    "head",
+    "life"
+   ],
+   "variations": [
+    "head.origin=separated_wide"
+   ]
+  },
+  {
+   "id": "cheiro-plate-iv",
+   "src": "/atlas/plates/cheiro-plate-iv.png",
+   "sidecar": "/atlas/plates/cheiro-plate-iv.json",
+   "book": "cheiro-1916",
+   "label": "Plate IV",
+   "caption": "Plate IV. ISLANDS ON THE LINE OF HEAD.",
+   "page": 24,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1208,
+   "height": 1400,
+   "overviewLines": [
+    "head"
+   ],
+   "variations": [
+    "head.marks=island_under_jupiter",
+    "head.marks=islands_chain"
+   ]
+  },
+  {
+   "id": "cheiro-plate-v",
+   "src": "/atlas/plates/cheiro-plate-v.png",
+   "sidecar": "/atlas/plates/cheiro-plate-v.json",
+   "book": "cheiro-1916",
+   "label": "Plate V",
+   "caption": "Plate V. MORE VARIATIONS OF THE LINE OF HEAD.",
+   "page": 27,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1222,
+   "height": 1400,
+   "overviewLines": [
+    "head"
+   ],
+   "variations": [
+    "head.termination=upturn_mercury",
+    "head.marks=rising_branch"
+   ]
+  },
+  {
+   "id": "cheiro-plate-vi",
+   "src": "/atlas/plates/cheiro-plate-vi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-vi.json",
+   "book": "cheiro-1916",
+   "label": "Plate VI",
+   "caption": "Plate VI. THE LINE OF HEAD AND THE LINE OF HEART RUNNING TOGETHER.",
+   "page": 29,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1300,
+   "height": 1400,
+   "overviewLines": [
+    "heart",
+    "head"
+   ],
+   "variations": [
+    "head.head_heart_blended_single=true",
+    "head.marks=fused_with_heart"
+   ]
+  },
+  {
+   "id": "cheiro-plate-vii",
+   "src": "/atlas/plates/cheiro-plate-vii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-vii.json",
+   "book": "cheiro-1916",
+   "label": "Plate VII",
+   "caption": "Plate VII. DOUBLE LINES OF HEAD, ALSO CROSSES AND SQUARES.",
+   "page": 32,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1245,
+   "height": 1400,
+   "overviewLines": [
+    "head"
+   ],
+   "variations": [
+    "head.marks=double_line",
+    "head.marks=square_touching"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xvi",
+   "src": "/atlas/plates/cheiro-plate-xvi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xvi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XVI",
+   "caption": "Plate XVI. THE LINE OF HEART AND ITS VARIATIONS.",
+   "page": 68,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1291,
+   "height": 1400,
+   "overviewLines": [
+    "heart"
+   ],
+   "variations": [
+    "head.curvature=sloping_to_luna"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxiv",
+   "src": "/atlas/plates/cheiro-plate-xxiv.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxiv.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXIV",
+   "caption": "Plate XXIV. MINOR MARKS AND SIGNS.",
+   "page": 108,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1400,
+   "height": 1179,
+   "overviewLines": [],
+   "variations": [
+    "head.quality.head_end_fork=true"
+   ]
+  }
+ ]
+}

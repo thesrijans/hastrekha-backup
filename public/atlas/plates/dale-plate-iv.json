@@ -1,0 +1,37 @@
+{
+ "id": "dale-plate-iv",
+ "image": "dale-plate-iv.png",
+ "width": 786,
+ "height": 1400,
+ "bytes": 40280,
+ "book": {
+  "title": "Indian Palmistry",
+  "author": "Mrs. J. B. Dale",
+  "year": 1895,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/indianpalmistry00daleiala",
+  "edition": "London: Theosophical Publishing Society; New York: The Path; Madras: The Theosophist, 1895 (title page, leaf 5)"
+ },
+ "label": "Plate IV",
+ "caption": "PLATE IV.—THE LINE OF LIFE.",
+ "captionSource": "Project Gutenberg #52523 (images edition)",
+ "captionOcr": "PLATE IV.— THE LINE OF",
+ "page": null,
+ "pageNote": "inserted leaf, facing p. 39",
+ "scan": {
+  "item": "indianpalmistry00daleiala",
+  "leaf": 45,
+  "url": "https://archive.org/details/indianpalmistry00daleiala/page/n44/mode/1up",
+  "crop": [
+   176,
+   151,
+   1430,
+   2384
+  ]
+ },
+ "variations": [],
+ "overviewLines": [
+  "life"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

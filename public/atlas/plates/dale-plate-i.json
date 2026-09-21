@@ -1,0 +1,84 @@
+{
+ "id": "dale-plate-i",
+ "image": "dale-plate-i.png",
+ "width": 795,
+ "height": 1280,
+ "bytes": 119057,
+ "book": {
+  "title": "Indian Palmistry",
+  "author": "Mrs. J. B. Dale",
+  "year": 1895,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/indianpalmistry00daleiala",
+  "edition": "London: Theosophical Publishing Society; New York: The Path; Madras: The Theosophist, 1895 (title page, leaf 5)"
+ },
+ "label": "Plate I",
+ "caption": "PLATE I.—THE REFERENCE HAND.",
+ "captionSource": "Project Gutenberg #52523 (images edition)",
+ "captionOcr": "PLATE I.— THE REFERENCE HAND.",
+ "page": null,
+ "pageNote": "frontispiece",
+ "scan": {
+  "item": "indianpalmistry00daleiala",
+  "leaf": 7,
+  "url": "https://archive.org/details/indianpalmistry00daleiala/page/n6/mode/1up",
+  "crop": [
+   72,
+   117,
+   1495,
+   2407
+  ]
+ },
+ "variations": [
+  {
+   "variation": "fate.offshoot_to=jupiter",
+   "positions": [
+    8
+   ],
+   "ruleIds": [
+    "PALM-DALE-016"
+   ]
+  },
+  {
+   "variation": "sun.present=true",
+   "positions": [
+    24
+   ],
+   "ruleIds": [
+    "PALM-DALE-051"
+   ]
+  },
+  {
+   "variation": "marriage.presence=clear_deep",
+   "positions": [
+    46
+   ],
+   "ruleIds": [
+    "PALM-DALE-052"
+   ]
+  },
+  {
+   "variation": "bracelets.count>=3",
+   "positions": [
+    17,
+    27
+   ],
+   "ruleIds": [
+    "PALM-DALE-013",
+    "PALM-DALE-014",
+    "PALM-DALE-050"
+   ]
+  },
+  {
+   "variation": "girdle.form=broken_pieces",
+   "positions": [
+    5
+   ],
+   "ruleIds": [
+    "PALM-DALE-012"
+   ]
+  }
+ ],
+ "overviewLines": [],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

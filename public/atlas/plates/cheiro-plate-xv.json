@@ -1,0 +1,74 @@
+{
+ "id": "cheiro-plate-xv",
+ "image": "cheiro-plate-xv.png",
+ "width": 1186,
+ "height": 1400,
+ "bytes": 52143,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XV",
+ "caption": "Plate XV. THE LINE OF SUN AND ITS MODIFICATIONS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb XV. ; THB UNX OF SUN AND ITS MODXFXCATZOMS,",
+ "page": 62,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 101,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n101/mode/1up",
+  "crop": [
+   335,
+   529,
+   2508,
+   3094
+  ]
+ },
+ "variations": [
+  {
+   "variation": "sun.present=true",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-SUN-001"
+   ]
+  },
+  {
+   "variation": "sun.origin=mount_luna",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-SUN-004"
+   ]
+  },
+  {
+   "variation": "sun.origin=fate_line",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-SUN-003"
+   ]
+  },
+  {
+   "variation": "sun.marks=island",
+   "positions": [
+    5
+   ],
+   "ruleIds": [
+    "PALM-SUN-007"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "sun"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

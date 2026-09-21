@@ -1,0 +1,47 @@
+{
+ "id": "cheiro-plate-xix",
+ "image": "cheiro-plate-xix.png",
+ "width": 1322,
+ "height": 1400,
+ "bytes": 48722,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XIX",
+ "caption": "Plate XIX. THE LINE OF HEALTH.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb XIX. / TBB LINB OF BBALTH.",
+ "page": 84,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 123,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n123/mode/1up",
+  "crop": [
+   337,
+   678,
+   2535,
+   3005
+  ]
+ },
+ "variations": [
+  {
+   "variation": "health.form=straight_free",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-HLTH-002"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "health"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

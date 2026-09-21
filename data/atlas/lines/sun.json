@@ -1,0 +1,1583 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "sun",
+  "title_hi": "सूर्य रेखा",
+  "title_en": "Sun line"
+ },
+ "variations": [
+  {
+   "id": "sun.present=true",
+   "line": "sun",
+   "number": 1,
+   "title_hi": "सूर्य रेखा उपस्थित",
+   "title_en": "Sun line present",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.present",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-039",
+    "PALM-DALE-051",
+    "PALM-DALE-094",
+    "PALM-DALE-144",
+    "PALM-FATE-002",
+    "PALM-FING-002",
+    "PALM-SUN-001"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-039",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-DALE-051",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.sun",
+       "op": "gte",
+       "value": 0.6
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-094",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.head_end_fork",
+       "op": "eq",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-144",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ]
+    },
+    {
+     "id": "PALM-FATE-002",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.fate.origin",
+       "op": "eq",
+       "value": "wrist"
+      }
+     ]
+    },
+    {
+     "id": "PALM-FING-002",
+     "category": "wealth",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "fingers.jupiter_vs_apollo",
+       "op": "eq",
+       "value": "apollo_much_longer"
+      }
+     ]
+    },
+    {
+     "id": "PALM-SUN-001",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha maujood hai — chumbakiya vyaktitva, logon par prabhav aur pehchan paane ki natural shakti. Yeh 'luck line' hai: jahan se yeh shuru hoti hai, wahan se zindagi mein roshni, samman aur avsar badhte jaate hain. Sun line (Apollo line) ki maujoodagi ek creative ya public-facing career ki taraf jhukav ka sanket deti hai. Yeh vyakti aksar apne kaam mein pehchaan paata hai, chahe woh kisi bhi field mein ho. Is energy ko sahi direction mein lagane se bahut achhe natije aa sakte hain. (2 classical sources is baat par sehmat hain.)",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-FATE-002",
+     "when": [
+      {
+       "feature": "lines.fate.origin",
+       "op": "eq",
+       "value": "wrist"
+      }
+     ],
+     "text_hi": "Bhagya rekha kalai se seedhi Shani parvat tak jaati hai aur saath mein Surya rekha bhi hai — bhagyashali destiny ka sabse sundar combination. Kismat, chamak aur safalta teeno aapke path par hain."
+    },
+    {
+     "ruleId": "PALM-FING-002",
+     "when": [
+      {
+       "feature": "fingers.jupiter_vs_apollo",
+       "op": "eq",
+       "value": "apollo_much_longer"
+      }
+     ],
+     "text_hi": "Anamika (Sun finger) tarjani se kaafi lambi hai aur Surya rekha bhi maujood hai — paison ke maamle mein risk lene ki prabal ichchha. Calculated risk aapko suit karta hai, lekin impulse decisions se bachna zaroori hai."
+    },
+    {
+     "ruleId": "PALM-DALE-051",
+     "when": [
+      {
+       "feature": "mounts.sun",
+       "op": "gte",
+       "value": 0.6
+      }
+     ],
+     "text_hi": "Sun line ka hona aur Sun mount ka prominent hona honours aur bade logon se fayde ka sanket deta hai — khaaskar amirzaadon ya samaj ke uche tabkon ki taraf se. Yeh apni recognition aur social capital badhane ka ek shubh nishaan hai."
+    },
+    {
+     "ruleId": "PALM-DALE-144",
+     "when": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ],
+     "text_hi": "Jab Sun line clearly present ho aur color saaf aur achha ho, to yeh sanket deta hai ki aapko samaj mein izzat aur recognition milti hai. Log aapko wise aur upright samajhte hain. Yeh ek bahut achha sanket hai jo favour aur grace deta hai, aksar powerful logon se bhi."
+    },
+    {
+     "ruleId": "PALM-DALE-094",
+     "when": [
+      {
+       "feature": "lines.quality.head_end_fork",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "text_hi": "Jab headline ka ant ek fork mein hota hai jo fortune ya sun line ki taraf jaata hai, toh yeh affairs mein subtlety aur clever management ka sanket deta hai. Yeh vyakti apni shrewd thinking se situations ko effectively handle karta hai. Yeh trait career aur business dono mein kaam aata hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Hand — line under the Sun denotes trades person",
+     "year": 1895,
+     "ruleId": "PALM-DALE-039"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. References to Hand (2/2) — No. 24, Line of Friendship",
+     "year": 1895,
+     "ruleId": "PALM-DALE-051"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of the Head and Brain — fork toward line of Fortune",
+     "year": 1895,
+     "ruleId": "PALM-DALE-094"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Brilliancy, etc — Via Solis uniform and clear colour gives favour and grace",
+     "year": 1895,
+     "ruleId": "PALM-DALE-144"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.V, Plate XI positions 1 & 4, p.50",
+     "year": 1916,
+     "ruleId": "PALM-FATE-002"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI Line of Sun, p.64",
+     "year": 1916,
+     "ruleId": "PALM-FING-002"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, Plate XV position 1, pp.61-62",
+     "year": 1916,
+     "ruleId": "PALM-SUN-001"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines"
+    ],
+    "blocking": [
+     {
+      "feature": "lines.sun.present",
+      "op": "eq",
+      "value": true,
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:104"
+     }
+    ],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.65,
+        0.46
+       ],
+       [
+        0.66,
+        0.18
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The sun line: up the SUN_CORRIDOR (corridors-minor.ts) from mid-palm onto the Mount of the Sun under the ring finger."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xi",
+     "positions": [
+      1,
+      4
+     ],
+     "ruleIds": [
+      "PALM-FATE-002"
+     ]
+    },
+    {
+     "plate": "cheiro-plate-xv",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-SUN-001"
+     ]
+    },
+    {
+     "plate": "dale-plate-i",
+     "positions": [
+      24
+     ],
+     "ruleIds": [
+      "PALM-DALE-051"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sun.origin=mount_luna",
+   "line": "sun",
+   "number": 2,
+   "title_hi": "चंद्र पर्वत से आरंभ",
+   "title_en": "Rising from the Mount of the Moon",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.origin",
+     "op": "eq",
+     "value": "mount_luna"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SUN-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SUN-004",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha Chandra parvat se uthti hai — public ki pasand se milne wali safalta. Creators, performers, speakers aur un sabka sanket jinki taraqqi audience tay karti hai. Chamak zabardast hogi, lekin public ka mood badalta hai — isliye income ke stable pillars bhi banao.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, Plate XV position 4, p.63",
+     "year": 1916,
+     "ruleId": "PALM-SUN-004"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.origin",
+      "op": "eq",
+      "value": "mount_luna",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.7514,
+        0.5455
+       ],
+       [
+        0.7495,
+        0.5364
+       ],
+       [
+        0.7394,
+        0.5166
+       ],
+       [
+        0.6728,
+        0.419
+       ],
+       [
+        0.6547,
+        0.3851
+       ],
+       [
+        0.66,
+        0.18
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the Moon side: aimed at the Mount of the Moon and held by the corridor at its nearest point, which still lies inside MOUNT_ZONES.moon."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xv",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-SUN-004"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sun.origin=fate_line",
+   "line": "sun",
+   "number": 3,
+   "title_hi": "शनि रेखा से आरंभ",
+   "title_en": "Rising from the fate line",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.origin",
+     "op": "eq",
+     "value": "fate_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SUN-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SUN-003",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha bhagya rekha se uthti hai — jis umra par yeh uthti hai, wahan se aapke career ko pakki pehchan milti hai. Yeh luck nahi, kamai hui izzat hai — apni mehnat se banayi hui.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, Plate XV position 3, p.63",
+     "year": 1916,
+     "ruleId": "PALM-SUN-003"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.origin",
+      "op": "eq",
+      "value": "fate_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.65,
+        0.46
+       ],
+       [
+        0.66,
+        0.18
+       ]
+      ]
+     },
+     {
+      "role": "extension",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4816,
+        0.552
+       ],
+       [
+        0.65,
+        0.46
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "fate",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5,
+        0.93
+       ],
+       [
+        0.47,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the fate line: the sun line leaves the fate line (context) in mid-palm and runs up to the Sun mount. Its lower part lies outside SUN_CORRIDOR and is drawn as an extension."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xv",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-SUN-003"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sun.origin=head_line",
+   "line": "sun",
+   "number": 4,
+   "title_hi": "मस्तिष्क रेखा से आरंभ",
+   "title_en": "Rising from the head line",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.origin",
+     "op": "eq",
+     "value": "head_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SUN-005"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SUN-005",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha mastishk rekha se uthti hai — safalta dimaag se aayegi, aur zindagi ke doosre half mein aayegi. Padhne-likhne, research ya kisi vishesh gyaan ke kshetra mein aapki mehnat compound hokar milegi. Sabra rakhkho, curve exponential hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, p.63",
+     "year": 1916,
+     "ruleId": "PALM-SUN-005"
+    }
+   ],
+   "areas": [
+    "karm",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.origin",
+      "op": "eq",
+      "value": "head_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6556,
+        0.3997
+       ],
+       [
+        0.655,
+        0.3455
+       ],
+       [
+        0.66,
+        0.18
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2,
+        0.32
+       ],
+       [
+        0.3483,
+        0.335
+       ],
+       [
+        0.4128,
+        0.3448
+       ],
+       [
+        0.4953,
+        0.3603
+       ],
+       [
+        0.568,
+        0.3767
+       ],
+       [
+        0.6401,
+        0.3956
+       ],
+       [
+        0.78,
+        0.44
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the head line: the sun line starts where the head line (context) crosses under the ring finger."
+   },
+   "plates": []
+  },
+  {
+   "id": "sun.origin=heart_line",
+   "line": "sun",
+   "number": 5,
+   "title_hi": "हृदय रेखा से आरंभ",
+   "title_en": "Rising from the heart line",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.origin",
+     "op": "eq",
+     "value": "heart_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-118",
+    "PALM-SUN-006"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-118",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.72,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-SUN-006",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha hriday rekha se uthti hai — jeevan ke baad ke varshon mein sukh aur samriddhi rishton ke raaste aayegi. Prachin niyam ise der se hone wale sukhi vivah aur antim varshon ke aaram ka pakka sanket maanta hai. Aapka best chapter aakhri chapters mein hai. Surya rekha jo Surya ke mount se upar ungali ke ant tak bina tute chalti ho, yeh badi aur sachchi izzat ka sanket deti hai. Yeh sanket deta hai ki vyakti apne kaam mein ek khaas muqam hasil kar sakta hai aur log unhe yaad rakhte hain. Is raah par koshish karna bahut faydemand ho sakta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Ring Finger — unbroken line ascending from mount of Sun through joints to end denotes great and noble fame",
+     "year": 1895,
+     "ruleId": "PALM-DALE-118"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, p.63",
+     "year": 1916,
+     "ruleId": "PALM-SUN-006"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.origin",
+      "op": "eq",
+      "value": "heart_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6652,
+        0.2475
+       ],
+       [
+        0.6589,
+        0.253
+       ],
+       [
+        0.66,
+        0.17
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Rising from the heart line: a short sun line from the heart line (context) up onto the Sun mount."
+   },
+   "plates": []
+  },
+  {
+   "id": "sun.marks=absent",
+   "line": "sun",
+   "number": 6,
+   "title_hi": "सूर्य रेखा दिखाई नहीं देती",
+   "title_en": "No sun line to be seen",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.marks",
+     "op": "eq",
+     "value": "absent"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SUN-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SUN-002",
+     "category": "career",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha nahi dikhti — matlab talent ki kami nahi, limelight ki hai. Aapka kaam khud nahi bolega; aapko use bulwana padega. Visibility ko skill ki tarah treat karo — apna kaam dikhana seekhna hi aapka missing piece hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, pp.66 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-SUN-002"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.marks",
+      "op": "eq",
+      "value": "absent",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": true,
+    "strokes": [
+     {
+      "role": "ghost",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.65,
+        0.46
+       ],
+       [
+        0.66,
+        0.23
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "No sun line: only the dotted ghost of SUN_CORRIDOR's centreline shows where it would be."
+   },
+   "plates": []
+  },
+  {
+   "id": "sun.marks=multiple_parallel",
+   "line": "sun",
+   "number": 7,
+   "title_hi": "कई समानांतर रेखाएँ",
+   "title_en": "Several parallel lines",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.marks",
+     "op": "eq",
+     "value": "multiple_parallel"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-117",
+    "PALM-DALE-160",
+    "PALM-SUN-011"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-117",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-DALE-160",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.72,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ]
+    },
+    {
+     "id": "PALM-SUN-011",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Do-teen Surya rekhayein saath-saath samanantar chal rahi hain — do ya teen alag kshetron mein ek saath safalta ka yog. Multi-hyphenate hona aapke liye distraction nahi, design hai. Surya ki ungali ke pehle jod par ek jaisi rekhaen milna, samman aur daulat dono ka sanket deta hai. Yeh sthayi mehnat aur achhi kismat ka mel hai jo financial stability ki taraf le ja sakta hai. Aksar yeh log apne career mein izzat bhi kamahte hain aur paisa bhi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-160",
+     "when": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ],
+     "text_hi": "Jab Sun line saaf, seedhi aur achhi tarah se coloured ho, yeh sanket deta hai ki aapko bade aur prabhavshali logon ka samarthan milega. Career mein izzat aur khushi ke mauke aksar aate hain aise haath mein. Yeh ek bahut shubh sanket hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Ring Finger — equal lines in the first joint near the mount denote honour and riches",
+     "year": 1895,
+     "ruleId": "PALM-DALE-117"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Via Solis — Sun line straight, uniformly composed, well coloured",
+     "year": 1895,
+     "ruleId": "PALM-DALE-160"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, p.65",
+     "year": 1916,
+     "ruleId": "PALM-SUN-011"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.marks",
+      "op": "eq",
+      "value": "multiple_parallel",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6554,
+        0.3328
+       ],
+       [
+        0.66,
+        0.23
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5987,
+        0.3202
+       ],
+       [
+        0.6226,
+        0.228
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.7128,
+        0.3238
+       ],
+       [
+        0.6974,
+        0.232
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Several short parallel lines side by side on the Mount of the Sun."
+   },
+   "plates": []
+  },
+  {
+   "id": "sun.marks=many_scattered",
+   "line": "sun",
+   "number": 8,
+   "title_hi": "कई बिखरी, उलझी रेखाएँ",
+   "title_en": "Many scattered, confused lines",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.marks",
+     "op": "eq",
+     "value": "many_scattered"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-145",
+    "PALM-DALE-161",
+    "PALM-SUN-009"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-145",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-DALE-161",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-SUN-009",
+     "category": "career",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab Sun line katri-phati ya uneven ho, toh career ke raaste mein rukavaten aur dushmani ka samna ho sakta hai. Yeh koi tay shuda baat nahi hai — is par dhyan dekar aur sahi logon ka saath leke halat sudhare ja sakte hain. Yeh sthayi nahi hai. Jab Sun line confused ya afflicted dikhe, to yeh sanket deta hai ki powerful ya authoritative logon se tension ya virodh aa sakta hai. Yeh ek phase hai jo aata-jaata hai — is par kaam kiya ja sakta hai patience aur diplomacy se. Yeh sthayi nahi hai. Surya parvat par bahut si chhoti rekhayein — pratibha ek nahi, kai hain. Lekin yahi problem bhi hai: bahut saare ideas, bikhra hua focus. Niyam yaad rakho — ek saaf Surya rekha sau bikhri rekhaon se behtar hai. Ek chuno, use jitao, phir agla.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Brilliancy, etc — Via Solis confused and afflicted brings trouble from powerful men",
+     "year": 1895,
+     "ruleId": "PALM-DALE-145"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Via Solis — Sun line dissected and uneven",
+     "year": 1895,
+     "ruleId": "PALM-DALE-161"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, p.65",
+     "year": 1916,
+     "ruleId": "PALM-SUN-009"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.marks",
+      "op": "eq",
+      "value": "many_scattered",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6952,
+        0.4508
+       ],
+       [
+        0.6917,
+        0.3929
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6038,
+        0.4002
+       ],
+       [
+        0.6117,
+        0.3558
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.7069,
+        0.3643
+       ],
+       [
+        0.7014,
+        0.3234
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6324,
+        0.3258
+       ],
+       [
+        0.637,
+        0.2869
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.6908,
+        0.2954
+       ],
+       [
+        0.686,
+        0.2432
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Many short, scattered pieces up the sun line's course instead of one line."
+   },
+   "plates": []
+  },
+  {
+   "id": "sun.marks=island",
+   "line": "sun",
+   "number": 9,
+   "title_hi": "रेखा पर द्वीप",
+   "title_en": "Island on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.marks",
+     "op": "eq",
+     "value": "island"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SUN-007"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SUN-007",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha par island — ek daur aisa jisme naam ya izzat par sawal uth sakte hain (galatfehmi, controversy, reputation dip). Us window mein transparency hi aapka armour hai: sab kuch record par, sab kuch saaf. Island khatam, chamak wapas.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, Plate XV position 5, pp.65-66 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-SUN-007"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.marks",
+      "op": "eq",
+      "value": "island",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.65,
+        0.46
+       ],
+       [
+        0.66,
+        0.18
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.6558,
+      "y": 0.32,
+      "angle": -88.2,
+      "size": 0.03
+     }
+    ],
+    "note": "The sun line with an island on it."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xv",
+     "positions": [
+      5
+     ],
+     "ruleIds": [
+      "PALM-SUN-007"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sun.marks=star",
+   "line": "sun",
+   "number": 10,
+   "title_hi": "रेखा पर तारा",
+   "title_en": "Star on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.marks",
+     "op": "eq",
+     "value": "star"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SUN-008"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SUN-008",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha par sitara (star) — hatheli ke sabse bhagyashali chinhon mein se ek. Asadharan pehchan, achanak bada avsar ya aisi safalta jiska sapna doosre dekhte hain. Jab yeh phase aaye, bade sapne dekhne se mat darna.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, p.66",
+     "year": 1916,
+     "ruleId": "PALM-SUN-008"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.marks",
+      "op": "eq",
+      "value": "star",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.65,
+        0.46
+       ],
+       [
+        0.66,
+        0.18
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "star",
+      "x": 0.6591,
+      "y": 0.2024,
+      "angle": -88,
+      "size": 0.03
+     }
+    ],
+    "note": "The sun line ending in a star on the Mount of the Sun."
+   },
+   "plates": []
+  },
+  {
+   "id": "sun.marks=square",
+   "line": "sun",
+   "number": 11,
+   "title_hi": "रेखा पर वर्ग",
+   "title_en": "Square on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.sun.marks",
+     "op": "eq",
+     "value": "square"
+    }
+   ],
+   "ruleIds": [
+    "PALM-SUN-010"
+   ],
+   "rules": [
+    {
+     "id": "PALM-SUN-010",
+     "category": "protection",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Surya rekha par chaukor chinh — aapki position aur naam par hamla hoga toh bhi aap surakshit rahenge. Jalne wale jalte rahenge; square ka matlab hai unki koshishein aap tak pahunch kar bhi tikengi nahi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VI, p.66",
+     "year": 1916,
+     "ruleId": "PALM-SUN-010"
+    }
+   ],
+   "areas": [
+    "karm",
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.sun.marks",
+      "op": "eq",
+      "value": "square",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.65,
+        0.46
+       ],
+       [
+        0.66,
+        0.18
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "square",
+      "x": 0.6558,
+      "y": 0.32,
+      "angle": -88.2,
+      "size": 0.03
+     }
+    ],
+    "note": "The sun line with a square on it."
+   },
+   "plates": []
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-xi",
+   "src": "/atlas/plates/cheiro-plate-xi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XI",
+   "caption": "Plate XI. THE LINE OF DESTINY AND ITS MODIFICATIONS.",
+   "page": 51,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1322,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "variations": [
+    "sun.present=true"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xv",
+   "src": "/atlas/plates/cheiro-plate-xv.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xv.json",
+   "book": "cheiro-1916",
+   "label": "Plate XV",
+   "caption": "Plate XV. THE LINE OF SUN AND ITS MODIFICATIONS.",
+   "page": 62,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1186,
+   "height": 1400,
+   "overviewLines": [
+    "sun"
+   ],
+   "variations": [
+    "sun.present=true",
+    "sun.origin=mount_luna",
+    "sun.origin=fate_line",
+    "sun.marks=island"
+   ]
+  },
+  {
+   "id": "dale-plate-i",
+   "src": "/atlas/plates/dale-plate-i.png",
+   "sidecar": "/atlas/plates/dale-plate-i.json",
+   "book": "dale-1895",
+   "label": "Plate I",
+   "caption": "PLATE I.—THE REFERENCE HAND.",
+   "page": null,
+   "pageNote": "frontispiece",
+   "width": 795,
+   "height": 1280,
+   "overviewLines": [],
+   "variations": [
+    "sun.present=true"
+   ]
+  }
+ ]
+}

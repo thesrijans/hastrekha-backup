@@ -1,0 +1,56 @@
+{
+ "id": "cheiro-plate-iv",
+ "image": "cheiro-plate-iv.png",
+ "width": 1208,
+ "height": 1400,
+ "bytes": 43566,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate IV",
+ "caption": "Plate IV. ISLANDS ON THE LINE OF HEAD.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plato IV. . ISLANDS ON THE LINK OF HBAD. to the islands in th^ Line of Head/ is to note their",
+ "page": 24,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 63,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n63/mode/1up",
+  "crop": [
+   290,
+   635,
+   2422,
+   3106
+  ]
+ },
+ "variations": [
+  {
+   "variation": "head.marks=island_under_jupiter",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-HEAD-016"
+   ]
+  },
+  {
+   "variation": "head.marks=islands_chain",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-HEAD-017"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "head"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

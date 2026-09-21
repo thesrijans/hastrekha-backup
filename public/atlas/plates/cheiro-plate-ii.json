@@ -1,0 +1,57 @@
+{
+ "id": "cheiro-plate-ii",
+ "image": "cheiro-plate-ii.png",
+ "width": 1282,
+ "height": 1400,
+ "bytes": 47272,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate II",
+ "caption": "Plate II. THE LINE OF HEAD JOINED TO THE LINE OF LIFE AND ITS TERMINATIONS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb IL tbs linb op head joined to thb linb op lipb and its TERMINATIONS.",
+ "page": 18,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 57,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n57/mode/1up",
+  "crop": [
+   363,
+   620,
+   2524,
+   2980
+  ]
+ },
+ "variations": [
+  {
+   "variation": "head.termination=gentle_slope_luna",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-HEAD-009"
+   ]
+  },
+  {
+   "variation": "head.termination=deep_slope_luna",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-HEAD-010"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "head",
+  "life"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

@@ -1,0 +1,83 @@
+{
+ "id": "cheiro-plate-xii",
+ "image": "cheiro-plate-xii.png",
+ "width": 1286,
+ "height": 1400,
+ "bytes": 53132,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XII",
+ "caption": "Plate XII. THE LINE OF DESTINY AND ITS VARIATIONS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Platb XII. THB UNB OF DESTINY AND RS VA&UTXOMS.",
+ "page": 53,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 92,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n92/mode/1up",
+  "crop": [
+   74,
+   722,
+   2254,
+   3096
+  ]
+ },
+ "variations": [
+  {
+   "variation": "fate.stopped_at=head_line",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-FATE-013"
+   ]
+  },
+  {
+   "variation": "fate.special=luna_origin_joins_heart",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-FATE-004"
+   ]
+  },
+  {
+   "variation": "fate.special=joins_heart_ascends_jupiter",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-FATE-015"
+   ]
+  },
+  {
+   "variation": "fate.influence_line=parallel_no_merge",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-FATE-006"
+   ]
+  },
+  {
+   "variation": "fate.influence_line=cuts_toward_jupiter",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-FATE-007"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "fate"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

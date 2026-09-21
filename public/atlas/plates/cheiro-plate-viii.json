@@ -1,0 +1,45 @@
+{
+ "id": "cheiro-plate-viii",
+ "image": "cheiro-plate-viii.png",
+ "width": 1400,
+ "height": 1374,
+ "bytes": 57398,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate VIII",
+ "caption": "Plate VIII. THE LINE OF LIFE AND SECTIONS OF INFLUENCES FROM THE MOUNTS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plate VIIL ihb link op lipb and 8bctions op implubncbs piom ihb . MOUNTS.",
+ "page": 37,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 76,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n76/mode/1up",
+  "crop": [
+   152,
+   669,
+   2547,
+   3020
+  ]
+ },
+ "variations": [
+  {
+   "variation": "life.texture=clear_deep",
+   "positions": [],
+   "ruleIds": [
+    "PALM-LIFE-001"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "life"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

@@ -1,0 +1,2335 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "marriage",
+  "title_hi": "विवाह रेखा",
+  "title_en": "Marriage lines"
+ },
+ "variations": [
+  {
+   "id": "marriage.presence=clear_deep",
+   "line": "marriage",
+   "number": 1,
+   "title_hi": "स्पष्ट और गहरी",
+   "title_en": "Clear and deep",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.presence",
+     "op": "eq",
+     "value": "clear_deep"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-052",
+    "PALM-MARR-001",
+    "PALM-MARR-021"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-052",
+     "category": "children",
+     "polarity": "neutral",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-MARR-001",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-MARR-021",
+     "category": "timing",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.influence.relation_to_fate",
+       "op": "eq",
+       "value": "joins_strong"
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Budh parvat par saaf, gehri vivah rekha — jeevan mein ek sachcha, pakka bandhan likha hai. Prachin niyam: sirf spashth rekha hi vivah/sthayi union ko darshati hai. Mercury ke mount par marriage lines ki taadad rishton aur zindagi mein important connections ki suchna deti hai. Jab widow line bhi saath ho to yeh multiple partnerships ka sanket de sakti hai — warna yeh strong emotional connections ko darshaati hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-MARR-021",
+     "when": [
+      {
+       "feature": "lines.influence.relation_to_fate",
+       "op": "eq",
+       "value": "joins_strong"
+      }
+     ],
+     "text_hi": "Cheiro ka khud ka cross-verification niyam: prabhav rekha bhagya rekha se MAJBOOTI se milti hai, aur usi daur ki saaf vivah rekha bhi maujood hai — toh vivah ki timing sabse zyada bharose se batayi ja sakti hai. Jis umra par milan hai (bhagya rekha ke scale par), wahi aapke union ka window hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. References to Hand (2/2) — No. 46, Marriage lines",
+     "year": 1895,
+     "ruleId": "PALM-DALE-052"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVII pos.1",
+     "year": 1916,
+     "ruleId": "PALM-MARR-001"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII cont., Plate XVIII pos.7 — double-confirmation dating method",
+     "year": 1916,
+     "ruleId": "PALM-MARR-021"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines"
+    ],
+    "blocking": [
+     {
+      "feature": "lines.marriage.presence",
+      "op": "eq",
+      "value": "clear_deep",
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:122"
+     }
+    ],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "One clear, deep marriage line on the edge of the palm under the little finger, in the upper half of classify.ts's marriage band and 0.13 of the crop long — the tracer drops anything under 0.12, and a mark lower in the band fuses with the heart line's end."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvii",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-MARR-001"
+     ]
+    },
+    {
+     "plate": "cheiro-plate-xviii",
+     "positions": [
+      7
+     ],
+     "ruleIds": [
+      "PALM-MARR-021"
+     ]
+    },
+    {
+     "plate": "dale-plate-i",
+     "positions": [
+      46
+     ],
+     "ruleIds": [
+      "PALM-DALE-052"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.presence=short_faint_marks",
+   "line": "marriage",
+   "number": 2,
+   "title_hi": "छोटे, हल्के चिह्न",
+   "title_en": "Short, faint marks",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.presence",
+     "op": "eq",
+     "value": "short_faint_marks"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-157",
+    "PALM-MARR-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-157",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.45,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-MARR-002",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Chhoti-halki rekhayein — gehri mohabbat ya aisa rishta jo vivah ki dehleez tak aaya par usme badla nahi. Har halki rekha ek aisi kahani hai jo adhoori rahi — yeh dil ki gehrai dikhati hai, kami nahi. Haath ki bahari taraf se Mercury mount tak jaane wali choti aur faint lines rishton mein kuch complexity ka sanket de sakti hain. Yeh sthayi nahi hai — in patterns ko samajhna aur rishton mein conscious effort karna bahut kaam aata hai. Yeh ek tendency hai, koi naseeb nahi. (2 classical sources is baat par sehmat hain.)",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Little Finger — small lines from outermost part of hand to mount of Mercury indicate marriage partners — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-157"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVII pos.2",
+     "year": 1916,
+     "ruleId": "PALM-MARR-002"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines"
+    ],
+    "blocking": [
+     {
+      "feature": "lines.marriage.presence",
+      "op": "eq",
+      "value": "short_faint_marks",
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:122"
+     }
+    ],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "faint",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.25
+       ],
+       [
+        0.855,
+        0.25
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "marriage",
+      "weight": "faint",
+      "texture": "solid",
+      "points": [
+       [
+        0.99,
+        0.273
+       ],
+       [
+        0.93,
+        0.274
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Only short, faint marks on the edge of the palm: two light strokes in the marriage band, the lower one too short (under 0.12 of the crop) for the tracer to keep."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvii",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-MARR-002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.shape=straight_clear",
+   "line": "marriage",
+   "number": 3,
+   "title_hi": "सीधी और स्पष्ट",
+   "title_en": "Straight and clear",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.shape",
+     "op": "eq",
+     "value": "straight_clear"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-005"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-005",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha seedhi, saaf aur bina toot ke — sukhi aur sthir vaivahik jeevan ka shreshth sanket. Prachin niyam: sukhi union ke liye Budh parvat ki rekhayein seedhi aur nirdosh honi chahiye — aur aapki hain.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVII pos.1",
+     "year": 1916,
+     "ruleId": "PALM-MARR-005"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.shape",
+      "op": "eq",
+      "value": "straight_clear",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A straight, clear marriage line."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvii",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-MARR-005"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.shape=upturn",
+   "line": "marriage",
+   "number": 4,
+   "title_hi": "ऊपर की ओर मुड़ती",
+   "title_en": "Turning upward",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.shape",
+     "op": "eq",
+     "value": "upturn"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-006"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-006",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha upar ki or mudti hai — swatantrata-priya swabhav; vivah mein vilamb ya bandhan ke prati sahaj jhijhak ka sanket. Iska matlab akela jeevan nahi — bas union tabhi hoga jab vyakti bilkul sahi ho aur aapki azaadi ka samman kare.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVII pos.4 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-006"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.shape",
+      "op": "eq",
+      "value": "upturn",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.8995,
+        0.258
+       ],
+       [
+        0.875,
+        0.256
+       ],
+       [
+        0.8612,
+        0.2498
+       ],
+       [
+        0.8531,
+        0.2406
+       ],
+       [
+        0.845,
+        0.225
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The marriage line turns upward toward the little finger at its inner end."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvii",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-MARR-006"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.shape=broken_center",
+   "line": "marriage",
+   "number": 5,
+   "title_hi": "बीच में टूटी",
+   "title_en": "Broken in the centre",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.shape",
+     "op": "eq",
+     "value": "broken_center"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-014"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-014",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Achhi-khaasi vivah rekha beech mein tooti hai — sukhi chal rahe rishtey mein ek bada jhatka aane ka sanket (galatfehmi, teesra prabhav, ya paristhiti). Jo jode is window ko pehle se jaante hain, woh toofan mein bhi haath nahi chhodte. Forewarned is forearmed.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — break at centre of Marriage line (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-014"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.shape",
+      "op": "eq",
+      "value": "broken_center",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "gaps": [
+       [
+        0.44,
+        0.56
+       ]
+      ],
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The marriage line broken in the centre."
+   },
+   "plates": []
+  },
+  {
+   "id": "marriage.shape=chained_many_islands",
+   "line": "marriage",
+   "number": 6,
+   "title_hi": "श्रृंखलाकार, द्वीपों से भरी",
+   "title_en": "Chained, full of islands",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.shape",
+     "op": "eq",
+     "value": "chained_many_islands"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-013"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-013",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.75,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha kadi-jaisi, islands se bhari — rishton mein baar-baar uljhan aur kheench-taan ka pattern. Prachin salah yahan sakht hai: jaldi ya dabav mein commitment mat karna. Aapke liye sahi formula: lamba samay, poori parakh, phir faisla. Patience hi aapki kismat sudhaarta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — chained Marriage line (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-013"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.shape",
+      "op": "eq",
+      "value": "chained_many_islands",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "chained",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.9395,
+      "y": 0.255,
+      "angle": 180,
+      "size": 0.02
+     },
+     {
+      "glyph": "island",
+      "x": 0.9005,
+      "y": 0.255,
+      "angle": 180,
+      "size": 0.02
+     }
+    ],
+    "note": "A chained marriage line full of small islands."
+   },
+   "plates": []
+  },
+  {
+   "id": "marriage.marks=island_start",
+   "line": "marriage",
+   "number": 7,
+   "title_hi": "आरंभ में द्वीप",
+   "title_en": "Island at the start",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "island_start"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-008"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-008",
+     "category": "timing",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha ki shuruaat mein island — vivah mein vilamb, aur shaadi ke shuruati daur mein doori ka yog (long-distance, kaam ki wajah se alagav, ya paristhitiyan). Yeh doori pyaar ki pariksha hai, uska ant nahi — jo jode is phase ko samajh kar chalte hain, unka bandhan aur gehra hota hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — island at beginning of Marriage line",
+     "year": 1916,
+     "ruleId": "PALM-MARR-008"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "island_start",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.9655,
+      "y": 0.255,
+      "angle": 180,
+      "size": 0.022
+     }
+    ],
+    "note": "An island at the start of the marriage line, at the edge of the palm."
+   },
+   "plates": []
+  },
+  {
+   "id": "marriage.marks=island_middle",
+   "line": "marriage",
+   "number": 8,
+   "title_hi": "बीच में द्वीप",
+   "title_en": "Island in the middle",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "island_middle"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-009"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-009",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha ke beech mein island — vaivahik jeevan ke madhya varshon mein tanav ya doori ka ek daur. Yeh warning window hai, faisla nahi: jis daur ko pehchan liya jaye, us daur ko sambhala ja sakta hai. Us phase mein rishtey pe invest karna hi asli upaay hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVIII pos.3 (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-009"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "island_middle",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.92,
+      "y": 0.255,
+      "angle": 180,
+      "size": 0.022
+     }
+    ],
+    "note": "An island in the middle of the marriage line."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xviii",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-MARR-009"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.marks=island_end",
+   "line": "marriage",
+   "number": 9,
+   "title_hi": "अंत की ओर द्वीप",
+   "title_en": "Island toward the end",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "island_end"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-010"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-010",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha ke ant mein island — baad ke varshon mein alagav ke sanket. Lekin yaad rakho: rekha tendency dikhati hai, taqdeer nahi likhti. Jinke haath mein yeh sanket hota hai aur jo samay rehte jaag jaate hain, woh is likhaavat ko badalte dekhe gaye hain.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — island toward end of Marriage line (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-010"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "island_end",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.8745,
+      "y": 0.255,
+      "angle": 180,
+      "size": 0.022
+     }
+    ],
+    "note": "An island toward the inner end of the marriage line."
+   },
+   "plates": []
+  },
+  {
+   "id": "marriage.marks=fork_end",
+   "line": "marriage",
+   "number": 10,
+   "title_hi": "अंत में द्विशाखा",
+   "title_en": "Forked at the end",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "fork_end"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-011"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-011",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.75,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha ant mein do bhaagon mein bat'ti hai (fork) — jeevansaathi se doori ya alag-alag rehne ka yog (kaam, sheher, ya mann ki doori). Fork ka rukh neeche hriday rekha ki or ho toh alagav zyada aupcharik roop le sakta hai. Communication is rekha ki kaat hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVIII pos.4-5",
+     "year": 1916,
+     "ruleId": "PALM-MARR-011"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "fork_end",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.25
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.8875,
+        0.269
+       ],
+       [
+        0.845,
+        0.274
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "fork",
+      "x": 0.8875,
+      "y": 0.2512,
+      "angle": -177.8,
+      "size": 0.03
+     }
+    ],
+    "note": "The marriage line forks at its inner end."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xviii",
+     "positions": [
+      4,
+      5
+     ],
+     "ruleIds": [
+      "PALM-MARR-011"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.marks=deep_fork_toward_mars",
+   "line": "marriage",
+   "number": 11,
+   "title_hi": "मंगल की ओर गहरी द्विशाखा",
+   "title_en": "Deep fork toward Mars",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "deep_fork_toward_mars"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-012"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-012",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.8,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Fork gehra hai aur Mangal kshetra ki or utarta hai — kanooni alagav (talak) ka prachin sanket, aur agar ek rekha poori hatheli paar karti hai toh alagav mein kadvahat bhi. Yeh sabse serious warning-class sanket hai — iska matlab yeh hai ki partner chunne aur rishta nibhane, dono mein aapko doosron se zyada savdhani chahiye. Sahi partner + imandaar communication = yeh rekha kabhi activate hi nahi hoti.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVIII pos.5 + full-palm crossing line (softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-012"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "deep_fork_toward_mars",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.892,
+        0.269
+       ],
+       [
+        0.874,
+        0.4573
+       ],
+       [
+        0.8739,
+        0.4711
+       ],
+       [
+        0.8759,
+        0.4704
+       ],
+       [
+        0.88,
+        0.46
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A deep fork: one branch drops from the marriage line down toward the outer Mount of Mars (RESERVED_EDGE_ZONES.mars_outer)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xviii",
+     "positions": [
+      5
+     ],
+     "ruleIds": [
+      "PALM-MARR-012"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.marks=drop_lines",
+   "line": "marriage",
+   "number": 12,
+   "title_hi": "नीचे गिरती छोटी रेखाएँ",
+   "title_en": "Small lines dropping from it",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "drop_lines"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-007"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-007",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha se neeche girti mahin rekhayein — jeevansaathi ki sehat aur aaram ka khayal rakhna aapke rishtey ka vishesh adhyay rahega. Care-giver banna bojh nahi, aapke prem ki gehrai ka saboot hai — bas apna khayal bhi saath mein rakhna.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVII pos.5 (heavily softened per safety policy)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-007"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "drop_lines",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.928,
+        0.2682
+       ],
+       [
+        0.9274,
+        0.3239
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9055,
+        0.269
+       ],
+       [
+        0.9014,
+        0.3291
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.883,
+        0.2691
+       ],
+       [
+        0.8822,
+        0.3338
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Small lines drop from the marriage line toward the heart line."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvii",
+     "positions": [
+      5
+     ],
+     "ruleIds": [
+      "PALM-MARR-007"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.marks=parallel_upper_companion",
+   "line": "marriage",
+   "number": 13,
+   "title_hi": "ठीक ऊपर एक हल्की साथी रेखा",
+   "title_en": "A slighter line close above it",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "parallel_upper_companion"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-018"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-018",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha ke upar, uske saath ek halki samanantar rekha — vivah ke BAAD jeevan mein kisi naye prabhav ke aane ka sanket. Yeh dost bhi ho sakta hai, mentor bhi, ya aisa aakarshan jo boundaries maange. Sanket ka kaam savdhan karna hai — rishtey ki deewarein mazboot rakhna aapke haath mein hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — slighter line close to upper side of Marriage line",
+     "year": 1916,
+     "ruleId": "PALM-MARR-018"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "parallel_upper_companion",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.259
+       ],
+       [
+        0.855,
+        0.26
+       ]
+      ]
+     },
+     {
+      "role": "companion",
+      "line": "marriage",
+      "weight": "thin",
+      "texture": "solid",
+      "points": [
+       [
+        0.97,
+        0.247
+       ],
+       [
+        0.855,
+        0.25
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A slighter line close above the marriage line, running with it."
+   },
+   "plates": []
+  },
+  {
+   "id": "marriage.marks=mercury_line_falling_in",
+   "line": "marriage",
+   "number": 14,
+   "title_hi": "बुध से उतरती रेखा इसमें मिलती",
+   "title_en": "A line from Mercury falling into it",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "mercury_line_falling_in"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-017"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-017",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Budh parvat ke upar se ek rekha vivah rekha mein girti hai — vivah ke raaste mein badi rukavatein (pariwar ki sehmati, paristhitiyan, ya samaj). Lekin niyam saaf hai: agar vivah rekha khud achhi hai, toh yeh sari rukavatein paar ho jayengi. Ladna padega, lekin jeet likhi hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — line from top of Mercury falling into Marriage line",
+     "year": 1916,
+     "ruleId": "PALM-MARR-017"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "mercury_line_falling_in",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     },
+     {
+      "role": "influence",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.85,
+        0.23
+       ],
+       [
+        0.9055,
+        0.269
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A line comes down from the top of the Mount of Mercury and falls into the marriage line."
+   },
+   "plates": []
+  },
+  {
+   "id": "marriage.marks=joins_sun_line",
+   "line": "marriage",
+   "number": 15,
+   "title_hi": "सूर्य रेखा में जा मिलती",
+   "title_en": "Running into the sun line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "joins_sun_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-015"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-015",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha (ya uski shakha) haath ke andar jaakar Surya rekha se milti/uske saath upar chadhti hai — dhanvaan ya pratishthit vyakti se vivah ka prachin yog. Jeevansaathi ke saath samriddhi, samman aur samajik uchai — sasural paksh se saubhagya ka spashth sanket.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVIII pos.6",
+     "year": 1916,
+     "ruleId": "PALM-MARR-015"
+    }
+   ],
+   "areas": [
+    "dhan",
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "joins_sun_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     },
+     {
+      "role": "extension",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.865,
+        0.27
+       ],
+       [
+        0.6581,
+        0.2645
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.65,
+        0.46
+       ],
+       [
+        0.66,
+        0.23
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The marriage line runs on across the Mercury mount and into the sun line (context); the run past the marriage corridor is an extension."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xviii",
+     "positions": [
+      6
+     ],
+     "ruleIds": [
+      "PALM-MARR-015"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.marks=cuts_sun_line",
+   "line": "marriage",
+   "number": 16,
+   "title_hi": "सूर्य रेखा को काटती",
+   "title_en": "Cutting the sun line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.marks",
+     "op": "eq",
+     "value": "cuts_sun_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-016"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-016",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha neeche mudkar Surya rekha ko KAAT-ti hai — aisa rishta jo aapki position, pratishtha ya career ko nuksan pahunchaye (status ka takrav, samaj ya pariwar ka virodh, ya galat sangat). Pyaar mein bhi hisaab rakhna: jo rishta aapko chhota kare, woh aapka rishta nahi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — Marriage line cutting Line of Sun",
+     "year": 1916,
+     "ruleId": "PALM-MARR-016"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.marks",
+      "op": "eq",
+      "value": "cuts_sun_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     },
+     {
+      "role": "extension",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.865,
+        0.27
+       ],
+       [
+        0.5625,
+        0.2594
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "sun",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.65,
+        0.46
+       ],
+       [
+        0.66,
+        0.23
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The marriage line runs on and cuts through the sun line (context); the run past the marriage corridor is an extension."
+   },
+   "plates": []
+  },
+  {
+   "id": "marriage.interference_from=mount_mars",
+   "line": "marriage",
+   "number": 17,
+   "title_hi": "मंगल से आती बाधा रेखाएँ",
+   "title_en": "Interference lines from Mars",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.interference_from",
+     "op": "eq",
+     "value": "mount_mars"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-019"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-019",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Mangal parvat se rekhayein vivah rekha ki or uthti hain — rishtey mein bahari logon ki dakhal-andazi aur jhagdon ka sanket. Jahan yeh rekhayein bhagya rekha ko kaat-ti hain, wahi umra is dakhal ki timing batati hai. Upaay purana hai: apne rishtey ki baatein sirf rishtey ke andar rakho.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVII pos.6 — interference lines from Mars, dated where they cross Destiny line",
+     "year": 1916,
+     "ruleId": "PALM-MARR-019"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.interference_from",
+      "op": "eq",
+      "value": "mount_mars",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     },
+     {
+      "role": "influence",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3,
+        0.46
+       ],
+       [
+        0.4003,
+        0.3665
+       ],
+       [
+        0.47,
+        0.3108
+       ],
+       [
+        0.5441,
+        0.2725
+       ],
+       [
+        0.6319,
+        0.2586
+       ],
+       [
+        0.7333,
+        0.259
+       ],
+       [
+        0.892,
+        0.269
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An interference line sweeps from the Mount of Mars on the thumb side across the palm up to the marriage line (Cheiro Plate XVII, 6)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvii",
+     "positions": [
+      6
+     ],
+     "ruleIds": [
+      "PALM-MARR-019"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.interference_from=mount_venus",
+   "line": "marriage",
+   "number": 18,
+   "title_hi": "शुक्र से आती बाधा रेखाएँ",
+   "title_en": "Interference lines from Venus",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.interference_from",
+     "op": "eq",
+     "value": "mount_venus"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-020"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-020",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Shukra parvat ki or se rekhayein vivah rekha tak — rishtey mein pareshaniyan aayengi, lekin Mangal wali dakhal jitni teekhi nahi; yeh zyada emotional kheench-taan hai, dushmani nahi. Thoda dhairya aur saaf baat-cheet se yeh badal chhat jaate hain.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII, Plate XVII pos.7 — annoyances from Venus, less vindictive",
+     "year": 1916,
+     "ruleId": "PALM-MARR-020"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.interference_from",
+      "op": "eq",
+      "value": "mount_venus",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.255
+       ],
+       [
+        0.855,
+        0.255
+       ]
+      ]
+     },
+     {
+      "role": "influence",
+      "line": "marriage",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.7
+       ],
+       [
+        0.4123,
+        0.5457
+       ],
+       [
+        0.4748,
+        0.5005
+       ],
+       [
+        0.5176,
+        0.4768
+       ],
+       [
+        0.5844,
+        0.4542
+       ],
+       [
+        0.6277,
+        0.4337
+       ],
+       [
+        0.6912,
+        0.3955
+       ],
+       [
+        0.8875,
+        0.269
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "An interference line from the Mount of Venus crosses the life line and the palm to reach the marriage line (Cheiro Plate XVII, 7)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvii",
+     "positions": [
+      7
+     ],
+     "ruleIds": [
+      "PALM-MARR-020"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marriage.position_norm<=0.35+presence=clear_deep",
+   "line": "marriage",
+   "number": 19,
+   "title_hi": "हृदय रेखा के पास · स्पष्ट और गहरी",
+   "title_en": "Close to the heart line · Clear and deep",
+   "facets": [
+    "position",
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.position_norm",
+     "op": "lte",
+     "value": 0.35
+    },
+    {
+     "feature": "lines.marriage.presence",
+     "op": "eq",
+     "value": "clear_deep"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-003",
+     "category": "timing",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha hriday rekha ke bilkul paas hai — jaldi vivah ka prachin sanket. Jeevan ke shuruati adhyay mein hi bandhan ka yog; exact window kundli ke dasha-vishleshan se aur pakki hogi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — line close to Heart line = early marriage",
+     "year": 1916,
+     "ruleId": "PALM-MARR-003"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.position_norm",
+      "op": "lte",
+      "value": 0.35,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     },
+     {
+      "feature": "lines.marriage.presence",
+      "op": "eq",
+      "value": "clear_deep",
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:122"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.975,
+        0.301
+       ],
+       [
+        0.825,
+        0.302
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A clear, deep marriage line lying low, close to the heart line: position about 0.2 on classify.ts's band (0 beside the heart line at y 0.30, 1 at the little finger's base at y 0.24)."
+   },
+   "plates": []
+  },
+  {
+   "id": "marriage.position_norm>=0.65+presence=clear_deep",
+   "line": "marriage",
+   "number": 20,
+   "title_hi": "ऊँची, कनिष्ठा के मूल के पास · स्पष्ट और गहरी",
+   "title_en": "High, near the base of the little finger · Clear and deep",
+   "facets": [
+    "position",
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.marriage.position_norm",
+     "op": "gte",
+     "value": 0.65
+    },
+    {
+     "feature": "lines.marriage.presence",
+     "op": "eq",
+     "value": "clear_deep"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARR-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARR-004",
+     "category": "timing",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Vivah rekha kanishtika ke aadhaar ke kareeb, hriday rekha se door — union jeevan ke baad ke daur mein aayega. Der ka matlab inkaar nahi: yeh rekha kehti hai ki aapka bandhan pakne ke baad hi bandhna likha hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VIII — position gradient between Heart line and finger base (inverse of early-marriage rule)",
+     "year": 1916,
+     "ruleId": "PALM-MARR-004"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.marriage.position_norm",
+      "op": "gte",
+      "value": 0.65,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     },
+     {
+      "feature": "lines.marriage.presence",
+      "op": "eq",
+      "value": "clear_deep",
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:122"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "marriage",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.985,
+        0.245
+       ],
+       [
+        0.855,
+        0.246
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A clear, deep marriage line lying high, near the base of the little finger: position about 0.8 on the same band."
+   },
+   "plates": []
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-xvii",
+   "src": "/atlas/plates/cheiro-plate-xvii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xvii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XVII",
+   "caption": "Plate XVII. MARRIAGE LINES. THE LINE OF MARRIAGE.",
+   "page": 74,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1240,
+   "height": 1400,
+   "overviewLines": [
+    "marriage"
+   ],
+   "variations": [
+    "marriage.presence=clear_deep",
+    "marriage.presence=short_faint_marks",
+    "marriage.shape=straight_clear",
+    "marriage.shape=upturn",
+    "marriage.marks=drop_lines",
+    "marriage.interference_from=mount_mars",
+    "marriage.interference_from=mount_venus"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xviii",
+   "src": "/atlas/plates/cheiro-plate-xviii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xviii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XVIII",
+   "caption": "Plate XVIII. MARRIAGE LINES AND INFLUENCE LINES WHICH FURTHER HELP IN DENOTING MARRIAGE.",
+   "page": 78,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1242,
+   "height": 1400,
+   "overviewLines": [
+    "marriage"
+   ],
+   "variations": [
+    "marriage.presence=clear_deep",
+    "marriage.marks=island_middle",
+    "marriage.marks=fork_end",
+    "marriage.marks=deep_fork_toward_mars",
+    "marriage.marks=joins_sun_line"
+   ]
+  },
+  {
+   "id": "dale-plate-i",
+   "src": "/atlas/plates/dale-plate-i.png",
+   "sidecar": "/atlas/plates/dale-plate-i.json",
+   "book": "dale-1895",
+   "label": "Plate I",
+   "caption": "PLATE I.—THE REFERENCE HAND.",
+   "page": null,
+   "pageNote": "frontispiece",
+   "width": 795,
+   "height": 1280,
+   "overviewLines": [],
+   "variations": [
+    "marriage.presence=clear_deep"
+   ]
+  }
+ ]
+}

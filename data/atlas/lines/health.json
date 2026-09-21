@@ -1,0 +1,1819 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "health",
+  "title_hi": "बुध रेखा",
+  "title_en": "Health (Mercury) line"
+ },
+ "variations": [
+  {
+   "id": "health.present=false",
+   "line": "health",
+   "number": 1,
+   "title_hi": "बुध रेखा का अभाव",
+   "title_en": "No health line",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.present",
+     "op": "eq",
+     "value": false
+    }
+   ],
+   "ruleIds": [
+    "PALM-HLTH-001"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HLTH-001",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Aapke haath mein swasthya rekha hai hi nahi — aur Cheiro ke anusaar yeh sabse achha sanket hai! Iski anupasthiti behad majboot constitution aur swasth nervous system ki nishani maani jaati hai. Aapki body ka default mode hi 'strong' hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.X — absence of Health line denotes extremely robust constitution",
+     "year": 1916,
+     "ruleId": "PALM-HLTH-001"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.health.present",
+      "op": "eq",
+      "value": false,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": true,
+    "strokes": [
+     {
+      "role": "ghost",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4,
+        0.85
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "No health line: only the dotted ghost of HEALTH_CORRIDOR's centreline (corridors-minor.ts)."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.deepening_with_stress=true",
+   "line": "health",
+   "number": 2,
+   "title_hi": "तनाव के साथ गहरी होती",
+   "title_en": "Deepening with strain",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.deepening_with_stress",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-HLTH-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HLTH-003",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Cheiro swasthya rekha ko jeevan ka 'thermometer' kehte hain — yeh badalti rehti hai. Jab yeh gehri dikhne lage toh iska paramparik arth hai ki nervous system par wear-and-tear badh raha hai, khaaskar mental overwork se. Signal saaf hai: aaram, neend aur stress-management ko abhi priority do — yeh rekha halki bhi ho jaati hai jab sharir sambhal jaata hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.X — line as thermometer, deepens with nervous wear and over-taxed mental strength; fades with returning strength",
+     "year": 1916,
+     "ruleId": "PALM-HLTH-003"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.health.deepening_with_stress",
+      "op": "eq",
+      "value": true,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "thin",
+      "texture": "solid",
+      "points": [
+       [
+        0.4,
+        0.85
+       ],
+       [
+        0.6092,
+        0.5761
+       ]
+      ]
+     },
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.6108,
+        0.5739
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The health line deepening along its course: thin from the base of the palm, deep toward Mercury."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.form=straight_free",
+   "line": "health",
+   "number": 3,
+   "title_hi": "सीधी, जीवन रेखा से अलग",
+   "title_en": "Straight, clear of the life line",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.form",
+     "op": "eq",
+     "value": "straight_free"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-083",
+    "PALM-DALE-101",
+    "PALM-HLTH-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-083",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-101",
+     "category": "personality",
+     "polarity": "positive",
+     "weight": 0.68,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.life.texture",
+       "op": "eq",
+       "value": "clear_deep"
+      }
+     ]
+    },
+    {
+     "id": "PALM-HLTH-002",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Swasthya rekha seedhi neeche jaati hai aur jeevan rekha ko chhooti nahi — iska matlab: constitution bhale hi bahut heavy-duty na ho, par wiry hai. Bimari se ladne ki reserve shakti gehri hai. Aap girte kam ho, aur girke uthte jaldi ho.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-101",
+     "when": [
+      {
+       "feature": "lines.life.texture",
+       "op": "eq",
+       "value": "clear_deep"
+      }
+     ],
+     "text_hi": "Jab jeevan rekha ek sundar angle banaate hue liver rekha ki taraf jhukti hai, toh yeh ek tez, samajhdar aur sthir swabhav wale vyakti ka sanket deta hai. Aisi logon mein business sense aur quick decision lene ki khoobiyan aksar payi jaati hain. Yeh ek bahut hi shubh sanket hai un logon ke liye jo vyapar ya kisi profession mein naam banana chahte hain."
+    },
+    {
+     "ruleId": "PALM-DALE-083",
+     "when": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "pink_red"
+      }
+     ],
+     "text_hi": "Jab liver line saaf, achhi tarah khinchi hui aur acche rang ki ho, toh yeh sanket deta hai ek khushmijaaj aur creative soch ka. Aisi liver line wale log aksar zindagi ko cheerful nazariye se dekhte hain aur mushkilon mein bhi rasta nikaalne ki koshish karte hain."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Liver Line — well drawn good colour shows cheerful ingenious disposition",
+     "year": 1895,
+     "ruleId": "PALM-DALE-083"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Life — life line sloping to liver line with angle, good wit and business sense",
+     "year": 1895,
+     "ruleId": "PALM-DALE-101"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.X — straight Health line not touching Life line: wiry, great reserve resistance (3-3, Plate XIX)",
+     "year": 1916,
+     "ruleId": "PALM-HLTH-002"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines"
+    ],
+    "blocking": [
+     {
+      "feature": "lines.health.form",
+      "op": "eq",
+      "value": "straight_free",
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:111-113"
+     }
+    ],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.5534,
+        0.706
+       ],
+       [
+        0.8307,
+        0.3082
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Straight and clear of the life line: a straight stroke from mid-palm to Mercury, starting well away from the life line (more than 0.06, minor-lines.ts HEALTH_CROSSING_BAND)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xix",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-HLTH-002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "health.form=touching_life",
+   "line": "health",
+   "number": 4,
+   "title_hi": "जीवन रेखा को छूती",
+   "title_en": "Touching the life line",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.form",
+     "op": "eq",
+     "value": "touching_life"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-080",
+    "PALM-DALE-089"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-080",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-DALE-089",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "geometry.triangle_upper_angle_acute",
+       "op": "eq",
+       "value": true
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Jab liver line aur life line bahut paas aayein, toh yeh sanket deta hai ki dil se judi thakaan ya aaram ki zaroorat aksar mehsoos ho sakti hai. Yeh koi badi baat nahi — lekin apne stress levels aur rest par thoda aur dhyan dena samajhdaari hogi. Yeh sthayi nahi hai aur lifestyle se is par kaam kiya ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-089",
+     "when": [
+      {
+       "feature": "geometry.triangle_upper_angle_acute",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "text_hi": "Jab triangle ka angle bahut acute ho aur liver aur life lines middle finger ke neeche milti hon, toh yeh covetousness ya lobh ki taraf ek ruchaan dikhata hai. Yeh sthayi nahi hai — is par kaam kiya ja sakta hai aur vyakti apni priorities ko rebalance kar sakta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Liver Line — very close to Life line denotes heart ailments — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-080"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of the Head and Brain — acute angle under middle finger",
+     "year": 1895,
+     "ruleId": "PALM-DALE-089"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.health.form",
+      "op": "eq",
+      "value": "touching_life",
+      "status": "no_producer",
+      "evidence": "lib/scan/minor-lines.ts:111-113"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4339,
+        0.828
+       ],
+       [
+        0.4652,
+        0.7836
+       ],
+       [
+        0.5179,
+        0.701
+       ],
+       [
+        0.5548,
+        0.6472
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The health line starts against the life line (context) near the wrist and runs up to Mercury."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.form=crossing_to_life",
+   "line": "health",
+   "number": 5,
+   "title_hi": "जीवन रेखा को काटती",
+   "title_en": "Crossing into the life line",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.form",
+     "op": "eq",
+     "value": "crossing_to_life"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-085",
+    "PALM-DALE-134"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-085",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "mounts.venus",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    },
+    {
+     "id": "PALM-DALE-134",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "lines.fate.origin",
+       "op": "eq",
+       "value": "life_line"
+      },
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.7
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Jab liver line ki ek shaakha life line ko paar karke Venus mount tak pahunche, toh yeh sanket deta hai ki kuch logon se chetna zaruri hai jo dhoka ya beimani ka irada rakh sakte hain. Yeh sthayi nahi hai — apne vishwas ko carefully rakhein aur naye rishtou mein thoda samay lekar aage badhein. Jab fate line, life line se shuru hokar health line ko cross karti hui Saturn ke mount tak jaati hai, yeh sanket deta hai ki life mein significant constraints aur bandishein aa sakti hain. Yeh ek challenging phase ki taraf ishara karta hai, lekin yeh sthayi nahi hai — awareness aur sahi decisions se is dauran ko navigate kiya ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-085",
+     "when": [
+      {
+       "feature": "mounts.venus",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Jab liver line ki ek shaakha life line ko paar karke Venus mount tak pahunche, toh yeh sanket deta hai ki kuch logon se chetna zaruri hai jo dhoka ya beimani ka irada rakh sakte hain. Yeh sthayi nahi hai — apne vishwas ko carefully rakhein aur naye rishtou mein thoda samay lekar aage badhein."
+    },
+    {
+     "ruleId": "PALM-DALE-134",
+     "when": [
+      {
+       "feature": "lines.fate.origin",
+       "op": "eq",
+       "value": "life_line"
+      },
+      {
+       "feature": "mounts.saturn",
+       "op": "gte",
+       "value": 0.7
+      }
+     ],
+     "text_hi": "Jab fate line, life line se shuru hokar health line ko cross karti hui Saturn ke mount tak jaati hai, yeh sanket deta hai ki life mein significant constraints aur bandishein aa sakti hain. Yeh ek challenging phase ki taraf ishara karta hai, lekin yeh sthayi nahi hai — awareness aur sahi decisions se is dauran ko navigate kiya ja sakta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Liver Line — branch through life line to Venus warns against deceit of enemies — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-085"
+    },
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Saturn — line from life through liver to Saturn mount — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-134"
+    }
+   ],
+   "areas": [],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines"
+    ],
+    "blocking": [
+     {
+      "feature": "lines.health.form",
+      "op": "eq",
+      "value": "crossing_to_life",
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:111-113"
+     }
+    ],
+    "roundTrip": false
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3427,
+        0.8064
+       ],
+       [
+        0.3571,
+        0.7901
+       ],
+       [
+        0.3829,
+        0.7688
+       ],
+       [
+        0.4121,
+        0.7501
+       ],
+       [
+        0.494,
+        0.7033
+       ],
+       [
+        0.5215,
+        0.6833
+       ],
+       [
+        0.5376,
+        0.6682
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The health line starts inside the life line, on Venus, and crosses it on the way to Mercury.",
+    "knownLimit": "Behind emitMinorLines the tracer splits a health line where it crosses the head line and only the Mercury-side piece is classified 'health'; that piece is far from the life line, so minorLineFeatures reports straight_free. crossing_to_life can only come from a health line that stops below the head line."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.form~touching_life|crossing_to_life",
+   "line": "health",
+   "number": 6,
+   "title_hi": "जीवन रेखा को छूती या काटती",
+   "title_en": "Touching or crossing the life line",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.form",
+     "op": "in",
+     "value": [
+      "touching_life",
+      "crossing_to_life"
+     ]
+    }
+   ],
+   "ruleIds": [
+    "PALM-HLTH-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HLTH-004",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Swasthya rekha jeevan rekha ki taraf badh rahi hai ya use chhoo rahi hai — parampara mein yeh sehat par vishesh dhyan dene ka samay maana jaata hai. Iska practical matlab: lifestyle ka audit karo (neend, khana, movement, stress) aur routine health checkup karwa lo. Yeh koi medical nishkarsh nahi hai — bas dhyan dene ka ishara.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.X — line crossing/touching Life line; softened per safety policy, no diagnosis encoded",
+     "year": 1916,
+     "ruleId": "PALM-HLTH-004"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines"
+    ],
+    "blocking": [
+     {
+      "feature": "lines.health.form",
+      "op": "in",
+      "value": [
+       "touching_life",
+       "crossing_to_life"
+      ],
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:111-113"
+     }
+    ],
+    "roundTrip": false
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3427,
+        0.8064
+       ],
+       [
+        0.3571,
+        0.7901
+       ],
+       [
+        0.3829,
+        0.7688
+       ],
+       [
+        0.4121,
+        0.7501
+       ],
+       [
+        0.494,
+        0.7033
+       ],
+       [
+        0.5215,
+        0.6833
+       ],
+       [
+        0.5376,
+        0.6682
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "life",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.22,
+        0.26
+       ],
+       [
+        0.28,
+        0.3532
+       ],
+       [
+        0.3134,
+        0.4108
+       ],
+       [
+        0.3511,
+        0.491
+       ],
+       [
+        0.3788,
+        0.5635
+       ],
+       [
+        0.4042,
+        0.6485
+       ],
+       [
+        0.4228,
+        0.7352
+       ],
+       [
+        0.4313,
+        0.8011
+       ],
+       [
+        0.44,
+        0.92
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Touching or crossing the life line: drawn crossing it, which satisfies either.",
+    "knownLimit": "Same as crossing_to_life: behind emitMinorLines the classified health piece is the one above the head line, far from the life line."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.form=cut_at_end",
+   "line": "health",
+   "number": 7,
+   "title_hi": "अंत में कटी",
+   "title_en": "Cut at the end",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.form",
+     "op": "eq",
+     "value": "cut_at_end"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-079"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-079",
+     "category": "wealth",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Agar liver line ke ant mein koi choti line use kaat rahi ho, toh yeh sanket deta hai ki bade umar mein paisa aur resources thode tight ho sakte hain. Yeh sthayi nahi hai — agar aaj se hi bachat aur planning par dhyan diya jaye, toh is phase ko kaafi had tak smooth kiya ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Liver Line — cut at end threatens poverty in old age — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-079"
+    }
+   ],
+   "areas": [
+    "dhan"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.health.form",
+      "op": "eq",
+      "value": "cut_at_end",
+      "status": "no_producer",
+      "evidence": "lib/scan/minor-lines.ts:111-113"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4,
+        0.85
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "bar",
+      "x": 0.7905,
+      "y": 0.3384,
+      "angle": -52.5,
+      "size": 0.03
+     }
+    ],
+    "note": "The health line cut by a short bar near its end on Mercury."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.form=fish_tail_end",
+   "line": "health",
+   "number": 8,
+   "title_hi": "अंत में मछली-पूँछ",
+   "title_en": "Ending in a fish-tail",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.form",
+     "op": "eq",
+     "value": "fish_tail_end"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-034"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-034",
+     "category": "wealth",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab Liver line (Hepatica) ke ant mein machhli ki poonch jaisa khulaa nishaan ho, toh yeh vyakti ke liye sukh aur samriddhi ka sanket deta hai. Yeh aksar ek aisa daur aata hai jab cheezein naturally better hone lagti hain. Is phase mein sahi kadam uthana aur zyada fayda de sakta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Hand — fish-tail end of Hepatica line",
+     "year": 1895,
+     "ruleId": "PALM-DALE-034"
+    }
+   ],
+   "areas": [
+    "dhan"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.health.form",
+      "op": "eq",
+      "value": "fish_tail_end",
+      "status": "no_producer",
+      "evidence": "lib/scan/minor-lines.ts:111-113"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4,
+        0.85
+       ],
+       [
+        0.777,
+        0.356
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.7695,
+        0.3659
+       ],
+       [
+        0.7807,
+        0.2699
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.7695,
+        0.3659
+       ],
+       [
+        0.8593,
+        0.3301
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "fork",
+      "x": 0.777,
+      "y": 0.356,
+      "angle": -52.5,
+      "size": 0.03
+     }
+    ],
+    "note": "The health line ends in a fish-tail: two short tines splaying apart at its Mercury end."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.texture=twisted_irregular",
+   "line": "health",
+   "number": 9,
+   "title_hi": "मुड़ी-तुड़ी, अनियमित",
+   "title_en": "Twisted and irregular",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.texture",
+     "op": "eq",
+     "value": "twisted_irregular"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-082"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-082",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.5,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "yellow"
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Agar liver line tedhi-medhi, uneven aur alag rang ki ho, toh yeh sanket deta hai ki swabhav mein thodi chipchipaahat ya kanjusi ki tendency aksar aa sakti hai. Yeh ek rujhaan hai, koi pakki baat nahi — self-awareness aur generosity ki practice se is par kaam kiya ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-082",
+     "when": [
+      {
+       "feature": "lines.quality.color",
+       "op": "eq",
+       "value": "yellow"
+      }
+     ],
+     "text_hi": "Agar liver line tedhi-medhi, uneven aur alag rang ki ho, toh yeh sanket deta hai ki swabhav mein thodi chipchipaahat ya kanjusi ki tendency aksar aa sakti hai. Yeh ek rujhaan hai, koi pakki baat nahi — self-awareness aur generosity ki practice se is par kaam kiya ja sakta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Liver Line — twisted unequal line denotes covetousness — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-082"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.health.texture",
+      "op": "eq",
+      "value": "twisted_irregular",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "irregular",
+      "points": [
+       [
+        0.4,
+        0.85
+       ],
+       [
+        0.415,
+        0.8341
+       ],
+       [
+        0.4222,
+        0.8123
+       ],
+       [
+        0.4287,
+        0.8036
+       ],
+       [
+        0.4401,
+        0.7986
+       ],
+       [
+        0.4493,
+        0.792
+       ],
+       [
+        0.4552,
+        0.7829
+       ],
+       [
+        0.4618,
+        0.7606
+       ],
+       [
+        0.4699,
+        0.7532
+       ],
+       [
+        0.4929,
+        0.7433
+       ],
+       [
+        0.4958,
+        0.7319
+       ],
+       [
+        0.4947,
+        0.7174
+       ],
+       [
+        0.4978,
+        0.7061
+       ],
+       [
+        0.52,
+        0.6958
+       ],
+       [
+        0.5275,
+        0.6879
+       ],
+       [
+        0.5363,
+        0.6673
+       ],
+       [
+        0.5423,
+        0.6581
+       ],
+       [
+        0.5509,
+        0.6511
+       ],
+       [
+        0.5648,
+        0.648
+       ],
+       [
+        0.5726,
+        0.6404
+       ],
+       [
+        0.5705,
+        0.6114
+       ],
+       [
+        0.5768,
+        0.6026
+       ],
+       [
+        0.5912,
+        0.5999
+       ],
+       [
+        0.6023,
+        0.5948
+       ],
+       [
+        0.6085,
+        0.5858
+       ],
+       [
+        0.6125,
+        0.5615
+       ],
+       [
+        0.6201,
+        0.5537
+       ],
+       [
+        0.631,
+        0.5483
+       ],
+       [
+        0.6388,
+        0.5407
+       ],
+       [
+        0.6551,
+        0.5121
+       ],
+       [
+        0.6624,
+        0.504
+       ],
+       [
+        0.6844,
+        0.4935
+       ],
+       [
+        0.6869,
+        0.4818
+       ],
+       [
+        0.6854,
+        0.467
+       ],
+       [
+        0.6884,
+        0.4556
+       ],
+       [
+        0.7122,
+        0.4465
+       ],
+       [
+        0.7203,
+        0.439
+       ],
+       [
+        0.726,
+        0.4161
+       ],
+       [
+        0.7316,
+        0.4067
+       ],
+       [
+        0.7416,
+        0.4006
+       ],
+       [
+        0.7542,
+        0.3966
+       ],
+       [
+        0.7615,
+        0.3885
+       ],
+       [
+        0.7634,
+        0.3626
+       ],
+       [
+        0.7706,
+        0.3545
+       ],
+       [
+        0.7821,
+        0.3496
+       ],
+       [
+        0.7903,
+        0.3422
+       ],
+       [
+        0.8078,
+        0.3146
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Twisted and irregular: the health line with a fixed irregular waver along it."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.color=yellowish",
+   "line": "health",
+   "number": 10,
+   "title_hi": "पीली-सी",
+   "title_en": "Yellowish",
+   "facets": [
+    "colour"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.color",
+     "op": "eq",
+     "value": "yellowish"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-115"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-115",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.moon",
+       "op": "lte",
+       "value": 0.3
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Jab Chandra mount chhota aur daba hua ho aur is par rekha pale ya confused dikhe, toh yeh sanket deta hai ki vyakti ke kaam-kaaj mein aur jeene ke tarike mein ek tarah ki aasthirata aa sakti hai. Yeh koi pakki baat nahi hai — samajh aur discipline se is pravitti ko sambhala ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-115",
+     "when": [
+      {
+       "feature": "mounts.moon",
+       "op": "lte",
+       "value": 0.3
+      }
+     ],
+     "text_hi": "Jab Chandra mount chhota aur daba hua ho aur is par rekha pale ya confused dikhe, toh yeh sanket deta hai ki vyakti ke kaam-kaaj mein aur jeene ke tarike mein ek tarah ki aasthirata aa sakti hai. Yeh koi pakki baat nahi hai — samajh aur discipline se is pravitti ko sambhala ja sakta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Moon. Travelling by Land and Sea — unfortunate Moon, pale confused line, flat soft small mount",
+     "year": 1895,
+     "ruleId": "PALM-DALE-115"
+    }
+   ],
+   "areas": [],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.health.color",
+      "op": "eq",
+      "value": "yellowish",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "solid",
+      "tone": "yellowish",
+      "points": [
+       [
+        0.4,
+        0.85
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A yellowish health line: drawn in its usual course, marked with tone 'yellowish' — a colour the engraved figure can only name, not show."
+   },
+   "plates": []
+  },
+  {
+   "id": "health.color=yellowish+texture=twisted_irregular",
+   "line": "health",
+   "number": 11,
+   "title_hi": "पीली-सी · मुड़ी-तुड़ी, अनियमित",
+   "title_en": "Yellowish · Twisted and irregular",
+   "facets": [
+    "colour",
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.health.color",
+     "op": "eq",
+     "value": "yellowish"
+    },
+    {
+     "feature": "lines.health.texture",
+     "op": "eq",
+     "value": "twisted_irregular"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HLTH-005"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HLTH-005",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Swasthya rekha tedhi-medhi aur peelapan liye hai — parampara ise paachan aur pitt (digestion/liver ke domain) par dhyan dene ka sanket maanti hai, jiska asar mood par bhi padta hai (chidchidapan, bhaaripan). Practical roop mein: khaan-paan halka rakho, paani zyada, tel-talan kam. Koi diagnosis nahi — sirf ek nudge.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.X — twisted, irregular, yellowish line; softened to wellness framing per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-HLTH-005"
+    }
+   ],
+   "areas": [
+    "sehat",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.health.color",
+      "op": "eq",
+      "value": "yellowish",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     },
+     {
+      "feature": "lines.health.texture",
+      "op": "eq",
+      "value": "twisted_irregular",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "health",
+      "weight": "normal",
+      "texture": "irregular",
+      "tone": "yellowish",
+      "points": [
+       [
+        0.4,
+        0.85
+       ],
+       [
+        0.415,
+        0.8341
+       ],
+       [
+        0.4222,
+        0.8123
+       ],
+       [
+        0.4287,
+        0.8036
+       ],
+       [
+        0.4401,
+        0.7986
+       ],
+       [
+        0.4493,
+        0.792
+       ],
+       [
+        0.4552,
+        0.7829
+       ],
+       [
+        0.4618,
+        0.7606
+       ],
+       [
+        0.4699,
+        0.7532
+       ],
+       [
+        0.4929,
+        0.7433
+       ],
+       [
+        0.4958,
+        0.7319
+       ],
+       [
+        0.4947,
+        0.7174
+       ],
+       [
+        0.4978,
+        0.7061
+       ],
+       [
+        0.52,
+        0.6958
+       ],
+       [
+        0.5275,
+        0.6879
+       ],
+       [
+        0.5363,
+        0.6673
+       ],
+       [
+        0.5423,
+        0.6581
+       ],
+       [
+        0.5509,
+        0.6511
+       ],
+       [
+        0.5648,
+        0.648
+       ],
+       [
+        0.5726,
+        0.6404
+       ],
+       [
+        0.5705,
+        0.6114
+       ],
+       [
+        0.5768,
+        0.6026
+       ],
+       [
+        0.5912,
+        0.5999
+       ],
+       [
+        0.6023,
+        0.5948
+       ],
+       [
+        0.6085,
+        0.5858
+       ],
+       [
+        0.6125,
+        0.5615
+       ],
+       [
+        0.6201,
+        0.5537
+       ],
+       [
+        0.631,
+        0.5483
+       ],
+       [
+        0.6388,
+        0.5407
+       ],
+       [
+        0.6551,
+        0.5121
+       ],
+       [
+        0.6624,
+        0.504
+       ],
+       [
+        0.6844,
+        0.4935
+       ],
+       [
+        0.6869,
+        0.4818
+       ],
+       [
+        0.6854,
+        0.467
+       ],
+       [
+        0.6884,
+        0.4556
+       ],
+       [
+        0.7122,
+        0.4465
+       ],
+       [
+        0.7203,
+        0.439
+       ],
+       [
+        0.726,
+        0.4161
+       ],
+       [
+        0.7316,
+        0.4067
+       ],
+       [
+        0.7416,
+        0.4006
+       ],
+       [
+        0.7542,
+        0.3966
+       ],
+       [
+        0.7615,
+        0.3885
+       ],
+       [
+        0.7634,
+        0.3626
+       ],
+       [
+        0.7706,
+        0.3545
+       ],
+       [
+        0.7821,
+        0.3496
+       ],
+       [
+        0.7903,
+        0.3422
+       ],
+       [
+        0.8078,
+        0.3146
+       ],
+       [
+        0.82,
+        0.3
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Twisted, irregular and yellowish: the irregular health line with the 'yellowish' tone."
+   },
+   "plates": []
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-xix",
+   "src": "/atlas/plates/cheiro-plate-xix.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xix.json",
+   "book": "cheiro-1916",
+   "label": "Plate XIX",
+   "caption": "Plate XIX. THE LINE OF HEALTH.",
+   "page": 84,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1322,
+   "height": 1400,
+   "overviewLines": [
+    "health"
+   ],
+   "variations": [
+    "health.form=straight_free"
+   ]
+  }
+ ]
+}

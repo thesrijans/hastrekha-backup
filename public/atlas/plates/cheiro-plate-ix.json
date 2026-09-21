@@ -1,0 +1,83 @@
+{
+ "id": "cheiro-plate-ix",
+ "image": "cheiro-plate-ix.png",
+ "width": 1302,
+ "height": 1400,
+ "bytes": 46488,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate IX",
+ "caption": "Plate IX. THE LINE OF LIFE AND ITS VARIATIONS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plate IX. THB LIKft OP LIFB AND ITS VAKIATIONS.",
+ "page": 40,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 79,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n79/mode/1up",
+  "crop": [
+   298,
+   571,
+   2492,
+   2930
+  ]
+ },
+ "variations": [
+  {
+   "variation": "life.rise_origin=jupiter_side",
+   "positions": [
+    4
+   ],
+   "ruleIds": [
+    "PALM-LIFE-006"
+   ]
+  },
+  {
+   "variation": "life.rise_origin=mars_low",
+   "positions": [
+    5
+   ],
+   "ruleIds": [
+    "PALM-LIFE-007"
+   ]
+  },
+  {
+   "variation": "life.texture=chained",
+   "positions": [
+    1
+   ],
+   "ruleIds": [
+    "PALM-LIFE-002"
+   ]
+  },
+  {
+   "variation": "life.arc=wide_into_palm",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-LIFE-004"
+   ]
+  },
+  {
+   "variation": "life.arc=narrow_hugging_thumb",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-LIFE-005"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "life"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

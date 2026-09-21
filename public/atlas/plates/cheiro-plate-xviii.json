@@ -1,0 +1,84 @@
+{
+ "id": "cheiro-plate-xviii",
+ "image": "cheiro-plate-xviii.png",
+ "width": 1242,
+ "height": 1400,
+ "bytes": 54075,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XVIII",
+ "caption": "Plate XVIII. MARRIAGE LINES AND INFLUENCE LINES WHICH FURTHER HELP IN DENOTING MARRIAGE.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plate XVIIL / mas&iagb likbs and influence lines wbich furthbe beli",
+ "page": 78,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 117,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n117/mode/1up",
+  "crop": [
+   227,
+   578,
+   2494,
+   3134
+  ]
+ },
+ "variations": [
+  {
+   "variation": "marriage.presence=clear_deep",
+   "positions": [
+    7
+   ],
+   "ruleIds": [
+    "PALM-MARR-021"
+   ]
+  },
+  {
+   "variation": "marriage.marks=island_middle",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-MARR-009"
+   ]
+  },
+  {
+   "variation": "marriage.marks=fork_end",
+   "positions": [
+    4,
+    5
+   ],
+   "ruleIds": [
+    "PALM-MARR-011"
+   ]
+  },
+  {
+   "variation": "marriage.marks=deep_fork_toward_mars",
+   "positions": [
+    5
+   ],
+   "ruleIds": [
+    "PALM-MARR-012"
+   ]
+  },
+  {
+   "variation": "marriage.marks=joins_sun_line",
+   "positions": [
+    6
+   ],
+   "ruleIds": [
+    "PALM-MARR-015"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "marriage"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

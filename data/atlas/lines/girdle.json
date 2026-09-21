@@ -1,0 +1,779 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "girdle",
+  "title_hi": "शुक्र वलय",
+  "title_en": "Girdle of Venus"
+ },
+ "variations": [
+  {
+   "id": "girdle.present=true",
+   "line": "girdle",
+   "number": 1,
+   "title_hi": "शुक्र वलय उपस्थित",
+   "title_en": "Girdle of Venus present",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.girdle_of_venus.present",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-125"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-125",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Girdle of Venus ka hona yeh sanket deta hai ki vyakti mein dusre ke liye gehri samvedanshilata aur attraction ki bhavna aksar zyada hoti hai. Yeh ek warm aur passionate nature ki nishani hai jo rishton mein gehrayi dhundhta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Morality. The Girdle of Venus",
+     "year": 1895,
+     "ruleId": "PALM-DALE-125"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "behind_flag",
+    "flags": [
+     "emitMinorLines"
+    ],
+    "blocking": [
+     {
+      "feature": "signs.girdle_of_venus.present",
+      "op": "eq",
+      "value": true,
+      "status": "behind_flag:emitMinorLines",
+      "evidence": "lib/scan/minor-lines.ts:130"
+     }
+    ],
+    "roundTrip": false
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "girdle",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.34,
+        0.16
+       ],
+       [
+        0.4507,
+        0.1921
+       ],
+       [
+        0.5662,
+        0.201
+       ],
+       [
+        0.6788,
+        0.2195
+       ],
+       [
+        0.79,
+        0.245
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The Girdle of Venus: an arc above the heart line from between the first and second fingers to between the third and fourth (GIRDLE corridor, foundry/corridors.py from classify.ts's girdle zones), held as high as the knuckle line allows under Saturn and the Sun.",
+    "knownLimit": "Between the knuckle line (index MCP 0.24,0.14 to little MCP 0.85,0.24, rectify.ts) and the heart line the crop leaves 0.04-0.05 on the ulnar side, 5-6 px at the detector's 128 px. A girdle there lies within the heart line's fusion distance, the skeleton joins them, and behind emitMinorLines no trace is classified girdle_of_venus. Drawing it higher would put it in the fingers."
+   },
+   "plates": []
+  },
+  {
+   "id": "girdle.present=false",
+   "line": "girdle",
+   "number": 2,
+   "title_hi": "शुक्र वलय का अभाव",
+   "title_en": "No Girdle of Venus",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.girdle_of_venus.present",
+     "op": "eq",
+     "value": false
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-126"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-126",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "mounts.venus",
+       "op": "lte",
+       "value": 0.3
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Girdle of Venus ka abhaav aur Venus mount ka bhi kamzor hona yeh sanket de sakta hai ki vyakti romantic ya emotional matters mein thoda reserved ya detached rehta hai. Yeh ek tendency hai, na ki koi fixed trait — is par conscious effort se kaam kiya ja sakta hai.",
+   "reading_en": null,
+   "readingScope": "all_qualified",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-126",
+     "when": [
+      {
+       "feature": "mounts.venus",
+       "op": "lte",
+       "value": 0.3
+      }
+     ],
+     "text_hi": "Girdle of Venus ka abhaav aur Venus mount ka bhi kamzor hona yeh sanket de sakta hai ki vyakti romantic ya emotional matters mein thoda reserved ya detached rehta hai. Yeh ek tendency hai, na ki koi fixed trait — is par conscious effort se kaam kiya ja sakta hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. Morality. The Girdle of Venus — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-126"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.girdle_of_venus.present",
+      "op": "eq",
+      "value": false,
+      "status": "no_producer",
+      "evidence": "lib/scan/minor-lines.ts:130"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": true,
+    "strokes": [
+     {
+      "role": "ghost",
+      "line": "girdle",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.34,
+        0.16
+       ],
+       [
+        0.4507,
+        0.1922
+       ],
+       [
+        0.5702,
+        0.2186
+       ],
+       [
+        0.6698,
+        0.2344
+       ],
+       [
+        0.79,
+        0.245
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "No Girdle of Venus: only the dotted ghost of its corridor's centreline."
+   },
+   "plates": []
+  },
+  {
+   "id": "girdle.span=jupiter_to_mercury",
+   "line": "girdle",
+   "number": 3,
+   "title_hi": "गुरु से बुध तक",
+   "title_en": "From Jupiter to Mercury",
+   "facets": [
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.girdle_of_venus.span",
+     "op": "eq",
+     "value": "jupiter_to_mercury"
+    }
+   ],
+   "ruleIds": [
+    "PALM-GIRD-001"
+   ],
+   "rules": [
+    {
+     "id": "PALM-GIRD-001",
+     "category": "personality",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Aapke haath mein Shukra Mekhala (Girdle of Venus) hai — aur yahan Cheiro doosre palmists se alag rai rakhte hain: yeh sthool bhog ka nahi, MANSIK teevrata ka chinh hai. Bhavnayein aap dimaag se jeete ho — prem, sensuality, sambandhon ko samajhne-padhne ka gehra intellectual aakarshan, par jeevan mein sanyam. Refined sensitivity ka mark.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XI — Girdle of Venus; Cheiro's contrarian mental-not-physical reading (1-1, Plate XX)",
+     "year": 1916,
+     "ruleId": "PALM-GIRD-001"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.girdle_of_venus.span",
+      "op": "eq",
+      "value": "jupiter_to_mercury",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "girdle",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3,
+        0.18
+       ],
+       [
+        0.331,
+        0.1866
+       ],
+       [
+        0.3764,
+        0.1915
+       ],
+       [
+        0.4429,
+        0.196
+       ],
+       [
+        0.4868,
+        0.1943
+       ],
+       [
+        0.5377,
+        0.198
+       ],
+       [
+        0.5662,
+        0.201
+       ],
+       [
+        0.6366,
+        0.2128
+       ],
+       [
+        0.6809,
+        0.2246
+       ],
+       [
+        0.7651,
+        0.2588
+       ],
+       [
+        0.8,
+        0.27
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The girdle runs the whole width, from the Mount of Jupiter to the Mount of Mercury."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xx",
+     "positions": [
+      1
+     ],
+     "ruleIds": [
+      "PALM-GIRD-001"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "girdle.span=saturn_to_mercury",
+   "line": "girdle",
+   "number": 4,
+   "title_hi": "शनि से बुध तक",
+   "title_en": "From Saturn to Mercury",
+   "facets": [
+    "endpoint"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.girdle_of_venus.span",
+     "op": "eq",
+     "value": "saturn_to_mercury"
+    }
+   ],
+   "ruleIds": [
+    "PALM-GIRD-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-GIRD-004",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Shukra Mekhala Shani se Budh tak bani hai — kalpana ki dhaara gehri hai par uska rukh andhere ki taraf jhukta hai: overthinking, dark scenarios, man hi man uljhan. Is oorja ko creative outlet chahiye — likhna, banana, express karna. Khali dimaag mein yeh dhaara ulti ghoomti hai, kaam mein lagao toh yahi depth aapki taqat hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XI — Saturn-to-Mercury Girdle; 'morbid unhealthy imaginings' softened per safety policy to creative-channeling framing",
+     "year": 1916,
+     "ruleId": "PALM-GIRD-004"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.girdle_of_venus.span",
+      "op": "eq",
+      "value": "saturn_to_mercury",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "girdle",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4385,
+        0.1889
+       ],
+       [
+        0.4525,
+        0.1922
+       ],
+       [
+        0.5609,
+        0.2004
+       ],
+       [
+        0.6737,
+        0.2187
+       ],
+       [
+        0.7033,
+        0.2291
+       ],
+       [
+        0.7741,
+        0.2612
+       ],
+       [
+        0.8,
+        0.27
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The girdle starts under Saturn (0.22 along its corridor) and runs to the Mount of Mercury."
+   },
+   "plates": []
+  },
+  {
+   "id": "girdle.form=broken_pieces",
+   "line": "girdle",
+   "number": 5,
+   "title_hi": "टुकड़ों में टूटा",
+   "title_en": "Broken into pieces",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.girdle_of_venus.form",
+     "op": "eq",
+     "value": "broken_pieces"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-012",
+    "PALM-GIRD-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-012",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-GIRD-002",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Girdle of Venus toot-phoot ke hisse mein hai — yeh sanket deta hai ki romantic relationships mein instability aur zyada emotional highs and lows aa sakti hain. Is energy ko consciously manage kiya ja sakta hai. Shukra Mekhala tukdon mein bani hai — mood ka utaar-chadhav aapka sabse bada pattern hai. Aaj aasman, kal zameen. Yeh sensitivity ki nishani hai, kharabi nahi — par apne mood-cycles ko track karna (aur unpe bade faisle na lena) aapke liye game-changer hoga.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. References to Hand (1/2) — No. 5, Girdle of Venus, broken — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-012"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XI — broken Girdle: hysterical temperament softened to mood-variability framing",
+     "year": 1916,
+     "ruleId": "PALM-GIRD-002"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.girdle_of_venus.form",
+      "op": "eq",
+      "value": "broken_pieces",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "girdle",
+      "weight": "normal",
+      "texture": "solid",
+      "gaps": [
+       [
+        0.2,
+        0.28
+       ],
+       [
+        0.45,
+        0.52
+       ],
+       [
+        0.7,
+        0.77
+       ]
+      ],
+      "points": [
+       [
+        0.34,
+        0.16
+       ],
+       [
+        0.4507,
+        0.1921
+       ],
+       [
+        0.5662,
+        0.201
+       ],
+       [
+        0.6788,
+        0.2195
+       ],
+       [
+        0.79,
+        0.245
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The girdle broken into four pieces."
+   },
+   "plates": [
+    {
+     "plate": "dale-plate-i",
+     "positions": [
+      5
+     ],
+     "ruleIds": [
+      "PALM-DALE-012"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "girdle.exits_through_marriage_lines=true",
+   "line": "girdle",
+   "number": 6,
+   "title_hi": "विवाह रेखाओं से होकर बाहर निकलता",
+   "title_en": "Passing out through the marriage lines",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.girdle_of_venus.exits_through_marriage_lines",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-GIRD-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-GIRD-003",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Shukra Mekhala haath ke kinare se nikal kar vivah rekhaon ko kaat-ti hai — parampara mein iska arth: badalta mood rishton par bhaari pad sakta hai. Saathi ko aapke ups-downs samajhna mushkil lagega. Bachav ek hi hai — mood ko chhupao mat, bolo: 'aaj mera din bhaari hai' kehna aadha jhagda pehle hi khatam kar deta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XI — Girdle passing out through Marriage lines; 'unusually unhappy marriage' softened per safety policy to actionable communication framing",
+     "year": 1916,
+     "ruleId": "PALM-GIRD-003"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.girdle_of_venus.exits_through_marriage_lines",
+      "op": "eq",
+      "value": true,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "girdle",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.34,
+        0.16
+       ],
+       [
+        0.4507,
+        0.1921
+       ],
+       [
+        0.5662,
+        0.201
+       ],
+       [
+        0.6788,
+        0.2195
+       ],
+       [
+        0.79,
+        0.245
+       ]
+      ]
+     },
+     {
+      "role": "extension",
+      "line": "girdle",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.79,
+        0.245
+       ],
+       [
+        0.8587,
+        0.2588
+       ],
+       [
+        0.885,
+        0.262
+       ],
+       [
+        0.912,
+        0.2626
+       ],
+       [
+        0.985,
+        0.259
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "marriage",
+      "weight": "thin",
+      "texture": "solid",
+      "points": [
+       [
+        0.975,
+        0.287
+       ],
+       [
+        0.845,
+        0.29
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The girdle runs on past Mercury and out through the marriage lines (one drawn in context) to the edge of the palm; the run past the girdle corridor is an extension."
+   },
+   "plates": []
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-xx",
+   "src": "/atlas/plates/cheiro-plate-xx.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xx.json",
+   "book": "cheiro-1916",
+   "label": "Plate XX",
+   "caption": "Plate XX. THE GIRDLE OF VENUS, THE RING OF SATURN, THE THREE BRACELETS, THE LINE OF INTUITION AND THE VIA LASCIVA.",
+   "page": 89,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1200,
+   "height": 1400,
+   "overviewLines": [
+    "girdle",
+    "bracelets"
+   ],
+   "variations": [
+    "girdle.span=jupiter_to_mercury"
+   ]
+  },
+  {
+   "id": "dale-plate-i",
+   "src": "/atlas/plates/dale-plate-i.png",
+   "sidecar": "/atlas/plates/dale-plate-i.json",
+   "book": "dale-1895",
+   "label": "Plate I",
+   "caption": "PLATE I.—THE REFERENCE HAND.",
+   "page": null,
+   "pageNote": "frontispiece",
+   "width": 795,
+   "height": 1280,
+   "overviewLines": [],
+   "variations": [
+    "girdle.form=broken_pieces"
+   ]
+  }
+ ]
+}

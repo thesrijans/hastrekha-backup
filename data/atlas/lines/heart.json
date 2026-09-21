@@ -1,0 +1,2847 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "line": {
+  "id": "heart",
+  "title_hi": "हृदय रेखा",
+  "title_en": "Heart line"
+ },
+ "variations": [
+  {
+   "id": "heart.present=false",
+   "line": "heart",
+   "number": 1,
+   "title_hi": "हृदय रेखा का अभाव",
+   "title_en": "No heart line",
+   "facets": [
+    "presence"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.present",
+     "op": "eq",
+     "value": false
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-169",
+    "PALM-HEART-019"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-169",
+     "category": "personality",
+     "polarity": "negative",
+     "weight": 0.5,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-HEART-019",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha spasht roop se dikhai nahi deti — bhavnatmak jud-aav aapke liye sahaj nahi hai; aakarshan sharirik star par zyada mehsoos hota hai, dil ke star par kam. Yeh koi kami nahi, ek banawat hai — par gehre rishte chahiye toh emotional connection par jaan-boojh kar mehnat karni hogi. Heart line ka bilkul na hona ek bahut hi unusual nishani hai jo yeh sanket deta hai ki rishton mein ya bharose ke mamle mein mushkilein ho sakti hain. Yeh koi tay shuda baat nahi — is par kaam kiya ja sakta hai, aur apne swabhav ko samajhna pehla qadam hai. Yeh sthayi nahi hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Fortune — absence of the line — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-169"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — no Line of Heart; source's harsher wording (with high Mount of Venus) softened per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-HEART-019"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": true,
+    "strokes": [
+     {
+      "role": "ghost",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "No heart line: only a dotted ghost of the heart corridor's centreline (completion.ts CORRIDORS.heart) marks where it would run."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.origin=mount_jupiter_outer",
+   "line": "heart",
+   "number": 2,
+   "title_hi": "गुरु पर्वत के बाहरी किनारे से",
+   "title_en": "From the outer edge of Jupiter",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.origin",
+     "op": "eq",
+     "value": "mount_jupiter_outer"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-002"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-002",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha Guru parvat ke bahari kinare se uthti hai — aap prem mein andhe bhakt hote hain. Jise chahte hain, usme koi kami nazar nahi aati, aur ideal itna ooncha rakhte hain ki nirasha ka khatra badh jaata hai. Prem karo, par aankhein khuli rakho.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — origin: extreme outside of Mount of Jupiter (2, Plate XVI)",
+     "year": 1916,
+     "ruleId": "PALM-HEART-002"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.origin",
+      "op": "eq",
+      "value": "mount_jupiter_outer",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:674 nearestZone(HEART_END_ZONES) on an OBSERVED terminal end"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.5939,
+        0.2369
+       ],
+       [
+        0.5189,
+        0.2283
+       ],
+       [
+        0.2748,
+        0.2059
+       ],
+       [
+        0.205,
+        0.2011
+       ],
+       [
+        0.16,
+        0.2
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Percussion to the outer edge of Jupiter: the index-side end is HEART_END_ZONES.mount_jupiter_outer (0.16, 0.2), 0.06 past the corridor's end knot along its own direction."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvi",
+     "positions": [
+      2
+     ],
+     "ruleIds": [
+      "PALM-HEART-002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heart.origin=mount_jupiter_center",
+   "line": "heart",
+   "number": 3,
+   "title_hi": "गुरु पर्वत के मध्य से",
+   "title_en": "From the centre of Jupiter",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.origin",
+     "op": "eq",
+     "value": "mount_jupiter_center"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-003",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha Guru parvat ke kendra se uthti hai — Cheiro ke anusaar iski sabse shubh sthiti. Prem mein pakke aur bharosemand, maan-maryada ka ooncha code, aur saathi ko safal dekhne ki mahatvakanksha. Ek baar dil diya toh jeevan bhar ka saath — aise log doosri shaadi ya alagav mein vishwas nahi rakhte.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — origin: centre of Mount of Jupiter",
+     "year": 1916,
+     "ruleId": "PALM-HEART-003"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The full corridor from the percussion to its Jupiter knot (0.22, 0.22), which nearestZone names mount_jupiter_center — the one heart origin the detector can report (see reachability probe)."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.origin=between_jupiter_saturn",
+   "line": "heart",
+   "number": 4,
+   "title_hi": "तर्जनी और मध्यमा के बीच से",
+   "title_en": "From between the first and second fingers",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.origin",
+     "op": "eq",
+     "value": "between_jupiter_saturn"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-004"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-004",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.8,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha pehli aur doosri ungli ke beech se uthti hai — shaant lekin bahut gehra prem swabhav. Dikhawa kam, tyaag zyada: jinse prem karte hain unke liye bade se bada balidaan kar sakte hain, aur saathi se devta jaisi ummeed nahi rakhte. Vyavharik aur gehra — santulit prem ka sunhera madhya-marg.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — origin: between first and second fingers (3, Plate XVI)",
+     "year": 1916,
+     "ruleId": "PALM-HEART-004"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.origin",
+      "op": "eq",
+      "value": "between_jupiter_saturn",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:674 nearestZone(HEART_END_ZONES) on an OBSERVED terminal end"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5404,
+        0.2299
+       ],
+       [
+        0.4118,
+        0.1953
+       ],
+       [
+        0.3687,
+        0.19
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The line stops under the gap between the first and second fingers: its end is HEART_END_ZONES.between_jupiter_saturn (0.37, 0.19), inside the corridor."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvi",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-HEART-004"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heart.origin=mount_saturn_face",
+   "line": "heart",
+   "number": 5,
+   "title_hi": "शनि पर्वत से",
+   "title_en": "From the Mount of Saturn",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.origin",
+     "op": "eq",
+     "value": "mount_saturn_face"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-005"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-005",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha Shani parvat se uthti hai — prem mein apni zarooraton ko pehle rakhne ki pravritti. Jo chahiye use paane mein zid poori, par paane ke baad komalta kam. Saathi ki galti maaf karna mushkil, apni galti par aankh band. Yeh jaankar chalna hi rishton ko bachata hai — thodi si narmi bahut kuch badal degi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — origin: Mount of Saturn (4, Plate XVI)",
+     "year": 1916,
+     "ruleId": "PALM-HEART-005"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.origin",
+      "op": "eq",
+      "value": "mount_saturn_face",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:674 nearestZone(HEART_END_ZONES) on an OBSERVED terminal end"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7427,
+        0.2622
+       ],
+       [
+        0.6047,
+        0.237
+       ],
+       [
+        0.5733,
+        0.2237
+       ],
+       [
+        0.5109,
+        0.1908
+       ],
+       [
+        0.4898,
+        0.1833
+       ],
+       [
+        0.4711,
+        0.1801
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The line rises onto the Mount of Saturn and stops there: end at HEART_END_ZONES.mount_saturn_face (0.47, 0.18)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvi",
+     "positions": [
+      4
+     ],
+     "ruleIds": [
+      "PALM-HEART-005"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heart.origin=under_saturn_base",
+   "line": "heart",
+   "number": 6,
+   "title_hi": "शनि पर्वत के मूल के नीचे से",
+   "title_en": "From under the base of Saturn",
+   "facets": [
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.origin",
+     "op": "eq",
+     "value": "under_saturn_base"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-006"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-006",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha Shani parvat ke theek neeche se uthti hai — Saturn-origin ke saare lakshan aur bhi teevra roop mein. Apni duniya mein rehne ka swabhav prabal hai; doosron ki khushi ka khayal conscious effort se hi aayega. Rishton mein jaan-boojh kar dena seekhna aapki sabse badi growth hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — origin: under base of Mount of Saturn (5, Plate XVI)",
+     "year": 1916,
+     "ruleId": "PALM-HEART-006"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.origin",
+      "op": "eq",
+      "value": "under_saturn_base",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:674 nearestZone(HEART_END_ZONES) on an OBSERVED terminal end"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.6152,
+        0.2406
+       ],
+       [
+        0.5825,
+        0.246
+       ],
+       [
+        0.5048,
+        0.2739
+       ],
+       [
+        0.4721,
+        0.2775
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The line stops under the base of Saturn: aimed at HEART_END_ZONES.under_saturn_base (0.47, 0.3) and held at the corridor's wrist-side edge, where nearestZone still names that zone."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvi",
+     "positions": [
+      5
+     ],
+     "ruleIds": [
+      "PALM-HEART-006"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heart.length_norm<=0.45",
+   "line": "heart",
+   "number": 7,
+   "title_hi": "छोटी (हथेली की ≤ 0.45)",
+   "title_en": "Short (≤ 0.45 of the palm)",
+   "facets": [
+    "length"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.length_norm",
+     "op": "lte",
+     "value": 0.45
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-007"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-007",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha chhoti hai — prem ke unche bhaav (romance, samarpan, bhavukta) kam ubharte hain. Vyavharik rishte aapko zyada suit karte hain, par saathi ko express karna conscious habit banana hoga.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — the shorter the Line of Heart, the less the higher sentiments manifest",
+     "year": 1916,
+     "ruleId": "PALM-HEART-007"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7427,
+        0.2622
+       ],
+       [
+        0.6313,
+        0.2423
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A short heart line: the first 0.4 of the corridor from the percussion, ending under the Sun mount. The detector's fit adds its 0.15 end allowance and still measures under 0.45."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.length_norm>=0.95",
+   "line": "heart",
+   "number": 8,
+   "title_hi": "पूरी हथेली पार (≥ 0.95)",
+   "title_en": "Right across the palm (≥ 0.95)",
+   "facets": [
+    "length"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.length_norm",
+     "op": "gte",
+     "value": 0.95
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-008",
+    "PALM-HEART-009"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-008",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    },
+    {
+     "id": "PALM-HEART-009",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.75,
+     "safety_class": "standard",
+     "extraConditions": [
+      {
+       "feature": "lines.head.curvature",
+       "op": "eq",
+       "value": "sloping_to_luna"
+      }
+     ]
+    }
+   ],
+   "reading_hi": "Hriday rekha hatheli ke ek kinare se doosre tak atyadhik lambi hai — prem mein adhikaar-bhaav aur jalan (jealousy) ki teevra pravritti. Yeh prem ki gehrai ka hi doosra roop hai, par bina lagaam ke rishton ko jala sakti hai. Trust-building par kaam karna aapke liye zaroori hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-HEART-009",
+     "when": [
+      {
+       "feature": "lines.head.curvature",
+       "op": "eq",
+       "value": "sloping_to_luna"
+      }
+     ],
+     "text_hi": "Atyadhik lambi hriday rekha ke saath mastishk rekha Chandra parvat ki ore dhalti hai — jalan mein kalpana bhi shaamil ho jaati hai: bina baat ke scenarios banna, shak ka barhna. Iska tod hai seedhi baat-cheet — man mein kahani banane se pehle saathi se poochh lena."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — Line of Heart in excess denotes tendency toward jealousy (2, Plate XVI)",
+     "year": 1916,
+     "ruleId": "PALM-HEART-008"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — jealousy alarmingly increased when Head Line slopes to Mount of Moon (6, Plate XVI)",
+     "year": 1916,
+     "ruleId": "PALM-HEART-009"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.length_norm",
+      "op": "gte",
+      "value": 0.95,
+      "status": "above_ceiling",
+      "evidence": "lib/scan/lines.ts:673 arc length / crop side, 0-1; ceiling = heart corridor arc 0.687 (docs/DETECTOR_AUDIT.md section 6)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.94,
+        0.32
+       ],
+       [
+        0.74,
+        0.2639
+       ],
+       [
+        0.6796,
+        0.2503
+       ],
+       [
+        0.626,
+        0.2414
+       ],
+       [
+        0.5297,
+        0.2294
+       ],
+       [
+        0.3043,
+        0.2085
+       ],
+       [
+        0.2319,
+        0.2026
+       ],
+       [
+        0.16,
+        0.2
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Right across the palm: from the percussion edge to the outer edge of Jupiter, the longest line the corridor allows.",
+    "knownLimit": "The whole palm is under 0.8 of the crop along the heart's course (this drawing measures 0.79), so 'length_norm >= 0.95' cannot be drawn inside the rectified hand, let alone measured (docs/DETECTOR_AUDIT.md section 6)."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvi",
+     "positions": [
+      2,
+      6
+     ],
+     "ruleIds": [
+      "PALM-HEART-008",
+      "PALM-HEART-009"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heart.depth=deep",
+   "line": "heart",
+   "number": 9,
+   "title_hi": "गहरी",
+   "title_en": "Deep",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.depth",
+     "op": "eq",
+     "value": "deep"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-001"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-001",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Aapki hriday rekha gehri aur saaf hai — bhavnaon mein sthirta aur prem mein spashtata ka sanket. Jo mehsoos karte ho, poori tarah karte ho.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — Line of Heart, quality baseline (chestofbooks)",
+     "year": 1916,
+     "ruleId": "PALM-HEART-001"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical heart line drawn deep (lines.ts:675-684 band: depth > 0.75)."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.depth=thin",
+   "line": "heart",
+   "number": 10,
+   "title_hi": "पतली",
+   "title_en": "Thin",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.depth",
+     "op": "eq",
+     "value": "thin"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-166"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-166",
+     "category": "vitality",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab yeh rekha choti ya tedhi ho, yeh sanket deta hai ki shareerik aur mansik sthirta mein kuch kami ho sakti hai. Yeh koi pakki baat nahi — is par kaam kiya ja sakta hai, aur dhyan dene se yeh sthiti badal sakti hai. Yeh sthayi nahi hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Fortune",
+     "year": 1895,
+     "ruleId": "PALM-DALE-166"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "thin",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical heart line drawn thin (lines.ts band 0.55 < depth <= 0.75)."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.depth=pale_broad_shallow",
+   "line": "heart",
+   "number": 11,
+   "title_hi": "फीकी, चौड़ी, बिना गहराई",
+   "title_en": "Pale, broad, without depth",
+   "facets": [
+    "depth"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.depth",
+     "op": "eq",
+     "value": "pale_broad_shallow"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-013"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-013",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.6,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha peeli, chaudi aur uthli hai — bhavnaon mein ek 'sab dekha hai' wali udaseenta. Kisi cheez mein poora dil nahi lagta. Iska ilaaj bada prem nahi, chhoti genuine khushi hai — roz ek cheez jo sach mein achhi lage.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — pale and broad without depth denotes blase, indifferent nature",
+     "year": 1916,
+     "ruleId": "PALM-HEART-013"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.depth",
+      "op": "eq",
+      "value": "pale_broad_shallow",
+      "status": "inert:featureVocabV2",
+      "evidence": "lib/scan/lines.ts:675-684; pale band <= HEART_PALE_DEPTH_MAX 0.30 is v2-only and structurally inert at LINE_THRESHOLD 0.45 (test/feature-vocab.test.ts #3)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "broad-pale",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Broad and pale, without depth: the canonical line in the broad-pale weight. The detector's pale band (<= 0.30) sits below its own binarisation threshold, so this can be drawn but not measured."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.curvature=downward_curve_at_jupiter",
+   "line": "heart",
+   "number": 12,
+   "title_hi": "गुरु पर्वत के मूल पर नीचे मुड़ती",
+   "title_en": "Curves down at the base of Jupiter",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.curvature",
+     "op": "eq",
+     "value": "downward_curve_at_jupiter"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-010"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-010",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha Guru parvat ke paas neeche ki ore mudti hai — dil sahi jagah lagane ki pehchaan kamzor padti hai, aur prem mein nirasha ka pattern ban sakta hai. Achhi baat: aapka swabhav behad dayalu aur sneh se bhara hai, aur aap status dekh kar prem nahi karte. Bas jaldi commit mat karo — samay lo, parakh lo, phir dil do.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — curving downward at base of Mount of Jupiter (7, Plate XVI); softened per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-HEART-010"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.curvature",
+      "op": "eq",
+      "value": "downward_curve_at_jupiter",
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:689"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7533,
+        0.2645
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5511,
+        0.2316
+       ],
+       [
+        0.4221,
+        0.2214
+       ],
+       [
+        0.4006,
+        0.2236
+       ],
+       [
+        0.3791,
+        0.2298
+       ],
+       [
+        0.3576,
+        0.239
+       ],
+       [
+        0.2715,
+        0.2841
+       ],
+       [
+        0.2392,
+        0.2945
+       ],
+       [
+        0.2203,
+        0.2965
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Near Jupiter the line turns down toward the head line: the last 0.3 of it bends to the corridor's wrist-side edge at the Jupiter knot. That gives the curvature > 0.08 with the end below the line's mean that lines.ts:688-689 grades."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xvi",
+     "positions": [
+      7
+     ],
+     "ruleIds": [
+      "PALM-HEART-010"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heart.position_vertical=very_low_near_head",
+   "line": "heart",
+   "number": 13,
+   "title_hi": "बहुत नीची, मस्तिष्क रेखा को लगभग छूती",
+   "title_en": "Very low, almost touching the head line",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.position_vertical",
+     "op": "eq",
+     "value": "very_low_near_head"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-014"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-014",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha bahut neeche, mastishk rekha ko chhooti hui hai — dil hamesha dimaag ke faislon mein dakhal deta hai. Career, paisa, logic — sab par bhavnayein haavi ho jaati hain. Bade faislon mein 24 ghante ka rule rakho: pehle mehsoos karo, agle din decide karo.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — very low, almost touching Line of Head: heart interferes with affairs of the head",
+     "year": 1916,
+     "ruleId": "PALM-HEART-014"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.position_vertical",
+      "op": "eq",
+      "value": "very_low_near_head",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.8947,
+        0.3219
+       ],
+       [
+        0.7234,
+        0.303
+       ],
+       [
+        0.66,
+        0.2994
+       ],
+       [
+        0.5562,
+        0.2821
+       ],
+       [
+        0.4511,
+        0.2754
+       ],
+       [
+        0.3881,
+        0.2742
+       ],
+       [
+        0.2203,
+        0.2965
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2022,
+        0.2976
+       ],
+       [
+        0.3417,
+        0.3143
+       ],
+       [
+        0.4529,
+        0.3331
+       ],
+       [
+        0.6375,
+        0.3702
+       ],
+       [
+        0.7896,
+        0.41
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The heart runs along the wrist-side edge of its corridor over its radial two-thirds, so it lies low and almost touches the head line (drawn in context, slightly raised)."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.position_vertical=very_high_head_raised",
+   "line": "heart",
+   "number": 14,
+   "title_hi": "बहुत ऊँची, मस्तिष्क रेखा भी ऊपर उठी",
+   "title_en": "Very high, with the head line raised",
+   "facets": [
+    "direction"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.position_vertical",
+     "op": "eq",
+     "value": "very_high_head_raised"
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-015"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-015",
+     "category": "love",
+     "polarity": "neutral",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha bahut oonchi hai aur mastishk rekha apni jagah se upar uthi hai — prem ke maamlon par dimaag ka raj chalta hai. Rishton mein bhi calculation pehle aati hai. Fayda: aap bhavnaon mein beh kar galti nahi karte. Dhyan: saathi ko kabhi-kabhi sirf dil chahiye hota hai, spreadsheet nahi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — line very high with Head Line abnormally high: heart ruled by head, calculating in love",
+     "year": 1916,
+     "ruleId": "PALM-HEART-015"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.position_vertical",
+      "op": "eq",
+      "value": "very_high_head_raised",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9159,
+        0.2344
+       ],
+       [
+        0.6554,
+        0.1936
+       ],
+       [
+        0.5017,
+        0.1753
+       ],
+       [
+        0.3916,
+        0.1657
+       ],
+       [
+        0.2197,
+        0.1435
+       ]
+      ]
+     },
+     {
+      "role": "context",
+      "line": "head",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.2066,
+        0.2528
+       ],
+       [
+        0.3941,
+        0.2837
+       ],
+       [
+        0.5064,
+        0.3073
+       ],
+       [
+        0.6214,
+        0.3203
+       ],
+       [
+        0.8089,
+        0.35
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Both lines sit high: the heart along the finger-side edge of its corridor, and the head line (context) raised to the top of its own corridor, as the KB value requires."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.head_heart_blended_single=true",
+   "line": "heart",
+   "number": 15,
+   "title_hi": "हृदय और मस्तिष्क रेखा एक ही रेखा",
+   "title_en": "Head and heart as one line",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.head_heart_blended_single",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-016"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-016",
+     "category": "personality",
+     "polarity": "neutral",
+     "weight": 0.75,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hatheli par mastishk aur hriday rekha mil kar ek hi gehri rekha ban gayi hai — atyant ekagra, all-or-nothing swabhav. Prem karo toh poore dimaag se, kaam karo toh poore dil se. Dar naam ki cheez kam mehsoos hoti hai aur zid prachand hai. Yehi shakti hai aur yehi khatra bhi — risk lene se pehle ek baar rukna aapke liye zaroori aadat hai; suraksha ko halke mein mat lo.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — single blended head+heart line (see also Plate VI); death/accident clause excluded per safety policy, softened to risk-awareness",
+     "year": 1916,
+     "ruleId": "PALM-HEART-016"
+    }
+   ],
+   "areas": [
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.21,
+        0.27
+       ],
+       [
+        0.3698,
+        0.2775
+       ],
+       [
+        0.4494,
+        0.2855
+       ],
+       [
+        0.5287,
+        0.2965
+       ],
+       [
+        0.6074,
+        0.3106
+       ],
+       [
+        0.6856,
+        0.3276
+       ],
+       [
+        0.84,
+        0.37
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "One line across the palm in place of two: a single crease running halfway between the heart's course and the head's. It is checked against the union of the two corridors because it belongs to both.",
+    "knownLimit": "The heart and head corridors never overlap mid-palm: a band about 0.02 wide separates them under Saturn and the Sun. A single crease replacing both lines has to cross that band, so it cannot lie inside either corridor there. It is drawn halfway between the two courses, the placement the probe showed the detector reads as one line."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-vi",
+     "positions": [],
+     "ruleIds": [
+      "PALM-HEART-016"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heart.breaks>=1",
+   "line": "heart",
+   "number": 16,
+   "title_hi": "टूटी हुई",
+   "title_en": "Broken",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.breaks",
+     "op": "gte",
+     "value": 1
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-020"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-020",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha mein toot (break) hai — jeevan mein kisi gehre bhavnatmak aaghat ka sanket, jaise dil tootne ka aisa anubhav jo lambe samay tak saath rehta hai. Yeh past ki chhaap ho sakti hai, bhavishya ka faisla nahi. Aisi gehri chot ke baad healing mein samay lagta hai — apne logon ka sahara lena kamzori nahi, samajhdari hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — broken Heart Line; source's 'never recovered' fatalism removed per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-HEART-020"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.breaks",
+      "op": "gte",
+      "value": 1,
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:686 skeleton gaps > 6px"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "gaps": [
+       [
+        0.46,
+        0.54
+       ]
+      ],
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical line with one break in the middle, under Saturn and the Sun."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.chains=true",
+   "line": "heart",
+   "number": 17,
+   "title_hi": "श्रृंखलाकार",
+   "title_en": "Chained",
+   "facets": [
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.chains",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-170",
+    "PALM-HEART-011"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-170",
+     "category": "obstacles",
+     "polarity": "negative",
+     "weight": 0.5,
+     "safety_class": "sensitive",
+     "extraConditions": [
+      {
+       "feature": "lines.quality.chained_generic",
+       "op": "eq",
+       "value": true
+      }
+     ]
+    },
+    {
+     "id": "PALM-HEART-011",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.7,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha zanjeer jaisi bani hai ya chhoti-chhoti rekhaon se bhari hai — flirtation aur badalte aakarshan ka swabhav. Naye rishton ka romanch pasand hai, tikna mushkil lagta hai. Agar lambe saath ki chah hai toh novelty ko rishte ke ANDAR dhoondhna seekhna hoga, bahar nahi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [
+    {
+     "ruleId": "PALM-DALE-170",
+     "when": [
+      {
+       "feature": "lines.quality.chained_generic",
+       "op": "eq",
+       "value": true
+      }
+     ],
+     "text_hi": "Jab heart line mein choti choti ched-khaani wali ya confused rekhaein dikhen, yeh sanket deta hai ki kuch daur mein thakaan ya bimari ka ehsaas ho sakta hai. Yeh ek chetaavni ki tarah hai — sehat ka dhyan rakhna zaroori hai, par yeh koi pakki takdeer nahi. Yeh sthayi nahi hai."
+    }
+   ],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Fortune — confused little lines denoting sickness — source's harsher claim softened per safety policy",
+     "year": 1895,
+     "ruleId": "PALM-DALE-170"
+    },
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — chained Heart Line denotes flirtations and inconstancy",
+     "year": 1916,
+     "ruleId": "PALM-HEART-011"
+    }
+   ],
+   "areas": [
+    "rishte",
+    "swabhav"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.chains",
+      "op": "eq",
+      "value": true,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "chained",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The canonical line drawn as a chain of small links (texture 'chained'; the geometry is the centreline)."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.start_fork_jupiter_and_gap=true",
+   "line": "heart",
+   "number": 18,
+   "title_hi": "आरंभ में द्विशाखा — गुरु पर्वत और तर्जनी-मध्यमा के बीच",
+   "title_en": "Forked start — on Jupiter and between the first two fingers",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.start_fork_jupiter_and_gap",
+     "op": "eq",
+     "value": true
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-017"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-017",
+     "category": "love",
+     "polarity": "positive",
+     "weight": 0.85,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha ki shuruaat mein kaanta (fork) hai — ek shakha Guru parvat par, doosri pehli-doosri ungli ke beech. Cheiro ise sabse shubh sanketon mein ginte hain: santulit, khush-mizaaj aur sneh se bharpoor swabhav, aur prem ke maamlon mein bade sukh ka vaada. Rishton mein aapko ideality aur practicality dono ka best milta hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — fork at commencement, one branch on Jupiter, other between first and second fingers",
+     "year": 1916,
+     "ruleId": "PALM-HEART-017"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.start_fork_jupiter_and_gap",
+      "op": "eq",
+      "value": true,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4536,
+        0.2231
+       ],
+       [
+        0.37,
+        0.19
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "fork",
+      "x": 0.4536,
+      "y": 0.2231,
+      "angle": -176.4,
+      "size": 0.03
+     }
+    ],
+    "note": "Forked at the index end: the line runs on to Jupiter, and a branch splits off under Saturn to end between the first and second fingers (HEART_END_ZONES.between_jupiter_saturn)."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.island@on_heart_line",
+   "line": "heart",
+   "number": 19,
+   "title_hi": "रेखा पर द्वीप",
+   "title_en": "Island on the line",
+   "facets": [
+    "marks"
+   ],
+   "conditions": [
+    {
+     "feature": "signs.island.locations",
+     "op": "eq",
+     "value": "on_heart_line"
+    }
+   ],
+   "ruleIds": [
+    "PALM-MARK-003"
+   ],
+   "rules": [
+    {
+     "id": "PALM-MARK-003",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha par island hai — parampara mein iska arth bhavnatmak thakan ka ek daur: dil bhaari, rishton mein oorja kam. Us samay khud par narmi rakho. Saath hi, parampara ise dil (heart) ke domain se bhi jodti hai — toh regular health checkup waise bhi ek achhi aadat hai, chinta ki baat nahi.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.XV — island on Heart line (3, Plate XXII); softened per safety policy, no diagnosis encoded",
+     "year": 1916,
+     "ruleId": "PALM-MARK-003"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "signs.island.locations",
+      "op": "eq",
+      "value": "on_heart_line",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [
+     {
+      "glyph": "island",
+      "x": 0.5632,
+      "y": 0.233,
+      "angle": -173.3,
+      "size": 0.03
+     }
+    ],
+    "note": "The canonical heart line with one island at its middle, under the Sun and Saturn mounts."
+   },
+   "plates": [
+    {
+     "plate": "cheiro-plate-xxii",
+     "positions": [
+      3
+     ],
+     "ruleIds": [
+      "PALM-MARK-003"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heart.offshoot_to=mount_jupiter",
+   "line": "heart",
+   "number": 20,
+   "title_hi": "गुरु पर्वत की ओर शाखा",
+   "title_en": "Branch to Jupiter",
+   "facets": [
+    "branch"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.offshoot_to",
+     "op": "eq",
+     "value": "mount_jupiter"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-167"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-167",
+     "category": "career",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab heart line se Jupiter ke mount ki taraf choti shaakhaein nikalti hain, yeh sanket deta hai ki samman aur izzat milne ke achhe mauke aate hain. Mehnat aur sahi disha se yeh sambhavna aur bhi zyada ho jaati hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Fortune — branch to Jupiter mount",
+     "year": 1895,
+     "ruleId": "PALM-DALE-167"
+    }
+   ],
+   "areas": [
+    "karm"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.offshoot_to",
+      "op": "eq",
+      "value": "mount_jupiter",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.4125,
+        0.2209
+       ],
+       [
+        0.27,
+        0.19
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A branch leaves the heart line under Saturn and rises onto the Mount of Jupiter (MOUNT_ZONES.jupiter, its upper half)."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.marks=rising_branch+origin=mount_jupiter_center",
+   "line": "heart",
+   "number": 21,
+   "title_hi": "ऊपर उठती शाखा · गुरु पर्वत के मध्य से",
+   "title_en": "Rising branch · From the centre of Jupiter",
+   "facets": [
+    "marks",
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.marks",
+     "op": "eq",
+     "value": "rising_branch"
+    },
+    {
+     "feature": "lines.heart.origin",
+     "op": "eq",
+     "value": "mount_jupiter_center"
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-168"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-168",
+     "category": "wealth",
+     "polarity": "negative",
+     "weight": 0.55,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab heart line sirf Jupiter par sada hui ho aur koi achha nishaan ya shaakh na ho, yeh sanket deta hai ki dhan aur samriddhi mein takleef aa sakti hai. Lekin yeh ek sanket hai, ek taraf dhyan dene ka — is par kaam kiya ja sakta hai aur paristhiti badal sakti hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Fortune — simple line on Jupiter, no marks",
+     "year": 1895,
+     "ruleId": "PALM-DALE-168"
+    }
+   ],
+   "areas": [
+    "dhan"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.marks",
+      "op": "eq",
+      "value": "rising_branch",
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     },
+     {
+      "role": "branch",
+      "line": "heart",
+      "weight": "normal",
+      "texture": "solid",
+      "points": [
+       [
+        0.3437,
+        0.2191
+       ],
+       [
+        0.2876,
+        0.0992
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "The line ends at the Jupiter knot (named mount_jupiter_center) with a short branch rising from it toward the fingers."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.chains=true+depth=broad_shallow+origin~mount_saturn_face|under_saturn_base",
+   "line": "heart",
+   "number": 22,
+   "title_hi": "श्रृंखलाकार · चौड़ी और उथली · शनि पर्वत या उसके मूल के नीचे से",
+   "title_en": "Chained · Broad and shallow · From Saturn or under its base",
+   "facets": [
+    "structure",
+    "depth",
+    "origin"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.chains",
+     "op": "eq",
+     "value": true
+    },
+    {
+     "feature": "lines.heart.depth",
+     "op": "eq",
+     "value": "broad_shallow"
+    },
+    {
+     "feature": "lines.heart.origin",
+     "op": "in",
+     "value": [
+      "mount_saturn_face",
+      "under_saturn_base"
+     ]
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-012"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-012",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "sensitive",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Shani se uthti chaudi, zanjeer jaisi hriday rekha — prem aur vipreet ling ke prati gehri udaseenta ya kadvahat ka sanket. Shayad puraane anubhavon ne bharosa toda hai. Yeh sthayi nahi hai — vishwas dobara banta hai, bas dheere aur sahi logon ke saath.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — chained broad line from Saturn; source's harsher claim softened per safety policy",
+     "year": 1916,
+     "ruleId": "PALM-HEART-012"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": true,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.chains",
+      "op": "eq",
+      "value": true,
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     },
+     {
+      "feature": "lines.heart.origin",
+      "op": "in",
+      "value": [
+       "mount_saturn_face",
+       "under_saturn_base"
+      ],
+      "status": "not_emitted",
+      "evidence": "lib/scan/lines.ts:674 nearestZone(HEART_END_ZONES) on an OBSERVED terminal end"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "broad",
+      "texture": "chained",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7427,
+        0.2622
+       ],
+       [
+        0.6047,
+        0.237
+       ],
+       [
+        0.5733,
+        0.2237
+       ],
+       [
+        0.5109,
+        0.1908
+       ],
+       [
+        0.4898,
+        0.1833
+       ],
+       [
+        0.4711,
+        0.1801
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Broad, shallow and chained, starting from Saturn: the line stops on HEART_END_ZONES.mount_saturn_face and is drawn broad with the chain texture."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.depth=deep+length_norm>=0.7",
+   "line": "heart",
+   "number": 23,
+   "title_hi": "गहरी · लंबी (हथेली की ≥ 0.7)",
+   "title_en": "Deep · Long (≥ 0.7 of the palm)",
+   "facets": [
+    "depth",
+    "length"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.depth",
+     "op": "eq",
+     "value": "deep"
+    },
+    {
+     "feature": "lines.heart.length_norm",
+     "op": "gte",
+     "value": 0.7
+    }
+   ],
+   "ruleIds": [
+    "PALM-DALE-165"
+   ],
+   "rules": [
+    {
+     "id": "PALM-DALE-165",
+     "category": "vitality",
+     "polarity": "positive",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Jab Line of Fortune (heart line) lambi aur saaf ho, bina kisi toote ya tedhi jagah ke, yeh sanket deta hai ki shareerik shakti aur manobal dono achhe hain. Zindagi mein ek tarah ki sthirta aur dridh-nischay ka bhav rehta hai. Yeh ek positive nishani hai jo overall wellbeing ko favour karti hai.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Dale — Indian Palmistry",
+     "loc": "Sec. The Line of Fortune",
+     "year": 1895,
+     "ruleId": "PALM-DALE-165"
+    }
+   ],
+   "areas": [
+    "sehat"
+   ],
+   "sensitive": false,
+   "reachable": true,
+   "reachability": {
+    "status": "reachable",
+    "flags": [],
+    "blocking": [],
+    "roundTrip": true
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "deep",
+      "texture": "solid",
+      "points": [
+       [
+        0.915,
+        0.238
+       ],
+       [
+        0.7864,
+        0.2163
+       ],
+       [
+        0.644,
+        0.195
+       ],
+       [
+        0.4905,
+        0.177
+       ],
+       [
+        0.3915,
+        0.1687
+       ],
+       [
+        0.2197,
+        0.1478
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "Deep and long: the full corridor, drawn deep along its finger-side edge — the outside of the curve, and the longest fit the corridor gives (about 0.70)."
+   },
+   "plates": []
+  },
+  {
+   "id": "heart.depth=thin+forks=[]",
+   "line": "heart",
+   "number": 24,
+   "title_hi": "पतली · कोई शाखा नहीं",
+   "title_en": "Thin · No branches",
+   "facets": [
+    "depth",
+    "structure"
+   ],
+   "conditions": [
+    {
+     "feature": "lines.heart.depth",
+     "op": "eq",
+     "value": "thin"
+    },
+    {
+     "feature": "lines.heart.forks",
+     "op": "eq",
+     "value": []
+    }
+   ],
+   "ruleIds": [
+    "PALM-HEART-018"
+   ],
+   "rules": [
+    {
+     "id": "PALM-HEART-018",
+     "category": "love",
+     "polarity": "negative",
+     "weight": 0.65,
+     "safety_class": "standard",
+     "extraConditions": []
+    }
+   ],
+   "reading_hi": "Hriday rekha patli hai aur usme koi shakha nahi — bhavnatmak thandak ka sanket. Andar mehsoos karte ho, par bahar tak pahunchta nahi. Rishton ko zinda rakhne ke liye express karna practice karna hoga — chhote gestures se shuru karo.",
+   "reading_en": null,
+   "readingScope": "variation",
+   "qualified": [],
+   "sources": [
+    {
+     "text": "Cheiro — Palmistry for All",
+     "loc": "Ch.VII — very thin line with no branches denotes coldness and want of heart",
+     "year": 1916,
+     "ruleId": "PALM-HEART-018"
+    }
+   ],
+   "areas": [
+    "rishte"
+   ],
+   "sensitive": false,
+   "reachable": false,
+   "reachability": {
+    "status": "unreachable",
+    "flags": [],
+    "blocking": [
+     {
+      "feature": "lines.heart.forks",
+      "op": "eq",
+      "value": [],
+      "status": "no_producer",
+      "evidence": "no emitter for this key in lib/scan (not in atlas/reachability.json)"
+     }
+    ]
+   },
+   "drawing": {
+    "absent": false,
+    "strokes": [
+     {
+      "role": "line",
+      "line": "heart",
+      "weight": "thin",
+      "texture": "solid",
+      "points": [
+       [
+        0.9,
+        0.3
+       ],
+       [
+        0.7322,
+        0.26
+       ],
+       [
+        0.6473,
+        0.2447
+       ],
+       [
+        0.5725,
+        0.2341
+       ],
+       [
+        0.4867,
+        0.2255
+       ],
+       [
+        0.4006,
+        0.2203
+       ],
+       [
+        0.22,
+        0.22
+       ]
+      ]
+     }
+    ],
+    "marks": [],
+    "note": "A thin heart line with no branches at all: the canonical line, thin, nothing leaving it."
+   },
+   "plates": []
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-vi",
+   "src": "/atlas/plates/cheiro-plate-vi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-vi.json",
+   "book": "cheiro-1916",
+   "label": "Plate VI",
+   "caption": "Plate VI. THE LINE OF HEAD AND THE LINE OF HEART RUNNING TOGETHER.",
+   "page": 29,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1300,
+   "height": 1400,
+   "overviewLines": [
+    "heart",
+    "head"
+   ],
+   "variations": [
+    "heart.head_heart_blended_single=true"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xvi",
+   "src": "/atlas/plates/cheiro-plate-xvi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xvi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XVI",
+   "caption": "Plate XVI. THE LINE OF HEART AND ITS VARIATIONS.",
+   "page": 68,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1291,
+   "height": 1400,
+   "overviewLines": [
+    "heart"
+   ],
+   "variations": [
+    "heart.origin=mount_jupiter_outer",
+    "heart.origin=between_jupiter_saturn",
+    "heart.origin=mount_saturn_face",
+    "heart.origin=under_saturn_base",
+    "heart.length_norm>=0.95",
+    "heart.curvature=downward_curve_at_jupiter"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxii",
+   "src": "/atlas/plates/cheiro-plate-xxii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXII",
+   "caption": "Plate XXII. THE ISLAND, THE CIRCLE, THE SPOT, THE GRILLE, THE STAR, THE SQUARE.",
+   "page": 102,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1305,
+   "height": 1400,
+   "overviewLines": [],
+   "variations": [
+    "heart.island@on_heart_line"
+   ]
+  }
+ ]
+}

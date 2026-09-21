@@ -1,0 +1,65 @@
+{
+ "id": "cheiro-plate-xiv",
+ "image": "cheiro-plate-xiv.png",
+ "width": 1321,
+ "height": 1400,
+ "bytes": 55802,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XIV",
+ "caption": "Plate XIV. THE LINE OF DESTINY, ISLANDS, AND OTHER SIGNS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plate XIV. LINS OF DESTINY, ISLAiq^S, AMD OTHBt SIGNa",
+ "page": 59,
+ "pageNote": "printed page = scan index - 39",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 98,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n98/mode/1up",
+  "crop": [
+   100,
+   649,
+   2363,
+   3048
+  ]
+ },
+ "variations": [
+  {
+   "variation": "fate.structure=double",
+   "positions": [
+    2
+   ],
+   "ruleIds": [
+    "PALM-FATE-017"
+   ]
+  },
+  {
+   "variation": "fate.special=island_at_head_junction",
+   "positions": [
+    6
+   ],
+   "ruleIds": [
+    "PALM-FATE-019"
+   ]
+  },
+  {
+   "variation": "fate.special=island_plain_of_mars",
+   "positions": [
+    3
+   ],
+   "ruleIds": [
+    "PALM-FATE-020"
+   ]
+  }
+ ],
+ "overviewLines": [
+  "fate"
+ ],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

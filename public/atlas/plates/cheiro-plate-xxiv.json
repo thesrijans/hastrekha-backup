@@ -1,0 +1,43 @@
+{
+ "id": "cheiro-plate-xxiv",
+ "image": "cheiro-plate-xxiv.png",
+ "width": 1400,
+ "height": 1179,
+ "bytes": 57344,
+ "book": {
+  "title": "Palmistry for All",
+  "author": "Cheiro",
+  "year": 1916,
+  "licence": "Public domain",
+  "record": "https://archive.org/details/palmistryforall00cheigoog",
+  "edition": "G. P. Putnam's Sons, New York and London; title verso (scan n11): 'Published, May, 1916', 'Twenty-second Impression'. The copy is a later printing of the 1916 edition; the text and plates are the 1916 ones, and the copyright term runs from that first publication."
+ },
+ "label": "Plate XXIV",
+ "caption": "Plate XXIV. MINOR MARKS AND SIGNS.",
+ "captionSource": "Project Gutenberg #20480 transcription of the same edition",
+ "captionOcr": "Plate XXIV. ICmOR MARKS AND SIGNS. power of any line» and when lying dose together at the",
+ "page": 108,
+ "pageNote": "printed page = scan index - 39 (running head agrees)",
+ "scan": {
+  "item": "palmistryforall00cheigoog",
+  "n": 147,
+  "url": "https://archive.org/details/palmistryforall00cheigoog/page/n147/mode/1up",
+  "crop": [
+   257,
+   703,
+   2552,
+   2635
+  ]
+ },
+ "variations": [
+  {
+   "variation": "head.quality.head_end_fork=true",
+   "positions": [],
+   "ruleIds": [
+    "PALM-LINQ-006"
+   ]
+  }
+ ],
+ "overviewLines": [],
+ "licence": "Public domain — docs/reference/LICENSES.md, 'public/atlas/plates/'"
+}

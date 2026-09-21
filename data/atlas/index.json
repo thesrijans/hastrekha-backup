@@ -1,0 +1,664 @@
+{
+ "atlasVersion": "2.0",
+ "generatedAt": "2026-09-21T14:43:06Z",
+ "generatedBy": "hastrekha-lab atlas/{variations.py, probe.ts, polylines.ts, plates.py, export.py}",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "areaMap": {
+  "version": "1.0",
+  "sha256": "26019a69b04642de383a1087ea5e53d48b1547bf86f60d3d7c10ebd05a16a2e5"
+ },
+ "space": "Drawings are polylines in 0-1 fractions of the rectified palm-quad crop (lib/scan/zones.ts): x toward the little-finger edge, y toward the wrist. Map them onto a hand with the scan's palm-quad homography (lib/scan/lines.ts projectLines). A traced user line (256 px crop) divides by RECTIFIED_SIZE to join this space.",
+ "readingContract": "reading_hi is rules' interpretation_hi_en merged exactly as lib/hastrekha/narrator.ts templateNarration merges a reading (clusters by category+polarity, the template's agreement sentence), untiered. It merges the rules that need only the variation (readingScope 'variation'); rules that also need another feature are in `qualified` with their own text and `when` conditions. If every rule is qualified, reading_hi merges them all (readingScope 'all_qualified'). reading_en is null because the KB carries no English reading. Titles are labels for the condition values (lab atlas/labels.json).",
+ "books": {
+  "cheiro-1916": {
+   "title": "Palmistry for All",
+   "author": "Cheiro",
+   "year": 1916,
+   "licence": "Public domain",
+   "record": "https://archive.org/details/palmistryforall00cheigoog"
+  },
+  "dale-1895": {
+   "title": "Indian Palmistry",
+   "author": "Mrs. J. B. Dale",
+   "year": 1895,
+   "licence": "Public domain",
+   "record": "https://archive.org/details/indianpalmistry00daleiala"
+  }
+ },
+ "lines": [
+  {
+   "id": "heart",
+   "title_hi": "हृदय रेखा",
+   "title_en": "Heart line",
+   "file": "lines/heart.json",
+   "bytes": 63928,
+   "sha256": "d074a274b5a9c4e7ef681c08d51df91c453c9bb65660c39a8589c0adef490950",
+   "variations": 24,
+   "measurable": 7,
+   "behindFlag": 0,
+   "plates": [
+    "cheiro-plate-vi",
+    "cheiro-plate-xvi",
+    "cheiro-plate-xxii"
+   ]
+  },
+  {
+   "id": "head",
+   "title_hi": "मस्तिष्क रेखा",
+   "title_en": "Head line",
+   "file": "lines/head.json",
+   "bytes": 99563,
+   "sha256": "ea95aa670f82d97762d1c5da8f3dd3202e11132c283ffc1174fb5153b5a6ea1e",
+   "variations": 28,
+   "measurable": 12,
+   "behindFlag": 0,
+   "plates": [
+    "cheiro-plate-i",
+    "cheiro-plate-ii",
+    "cheiro-plate-iii",
+    "cheiro-plate-iv",
+    "cheiro-plate-v",
+    "cheiro-plate-vi",
+    "cheiro-plate-vii",
+    "cheiro-plate-xvi",
+    "cheiro-plate-xxiv"
+   ]
+  },
+  {
+   "id": "life",
+   "title_hi": "जीवन रेखा",
+   "title_en": "Life line",
+   "file": "lines/life.json",
+   "bytes": 60482,
+   "sha256": "032d526772ee63b9c87de4ee8caacdd6a5431bcf550f7fb40c961021fe42066d",
+   "variations": 19,
+   "measurable": 7,
+   "behindFlag": 1,
+   "plates": [
+    "cheiro-plate-ii",
+    "cheiro-plate-iii",
+    "cheiro-plate-viii",
+    "cheiro-plate-ix",
+    "cheiro-plate-x",
+    "cheiro-plate-xxi",
+    "cheiro-plate-xxii",
+    "dale-plate-iv"
+   ]
+  },
+  {
+   "id": "fate",
+   "title_hi": "शनि रेखा",
+   "title_en": "Fate line",
+   "file": "lines/fate.json",
+   "bytes": 74532,
+   "sha256": "078dbef44547e826f339e3eadf9ca17a382f7660bfec5e30c57bdbc050adc80b",
+   "variations": 25,
+   "measurable": 5,
+   "behindFlag": 1,
+   "plates": [
+    "cheiro-plate-xi",
+    "cheiro-plate-xii",
+    "cheiro-plate-xiii",
+    "cheiro-plate-xiv",
+    "cheiro-plate-xxii",
+    "cheiro-plate-xxvi",
+    "dale-plate-i"
+   ]
+  },
+  {
+   "id": "sun",
+   "title_hi": "सूर्य रेखा",
+   "title_en": "Sun line",
+   "file": "lines/sun.json",
+   "bytes": 35826,
+   "sha256": "abc3eec6543630421d14bf3f57f5593fce8cf7db06f81ac679a6caddb6aad53c",
+   "variations": 11,
+   "measurable": 0,
+   "behindFlag": 1,
+   "plates": [
+    "cheiro-plate-xi",
+    "cheiro-plate-xv",
+    "dale-plate-i"
+   ]
+  },
+  {
+   "id": "health",
+   "title_hi": "बुध रेखा",
+   "title_en": "Health (Mercury) line",
+   "file": "lines/health.json",
+   "bytes": 39154,
+   "sha256": "076042ab23e89bbdbfd14a03ac708dcbdf8c93365ac3850a627a678b1a1c6815",
+   "variations": 11,
+   "measurable": 0,
+   "behindFlag": 3,
+   "plates": [
+    "cheiro-plate-xix"
+   ]
+  },
+  {
+   "id": "marriage",
+   "title_hi": "विवाह रेखा",
+   "title_en": "Marriage lines",
+   "file": "lines/marriage.json",
+   "bytes": 52454,
+   "sha256": "d61927782c2b4de54120591f70fc1d06f779b55352f774655fad490af58ef9d2",
+   "variations": 20,
+   "measurable": 0,
+   "behindFlag": 2,
+   "plates": [
+    "cheiro-plate-xvii",
+    "cheiro-plate-xviii",
+    "dale-plate-i"
+   ]
+  },
+  {
+   "id": "bracelets",
+   "title_hi": "मणिबंध रेखाएँ",
+   "title_en": "Bracelets",
+   "file": "lines/bracelets.json",
+   "bytes": 14931,
+   "sha256": "4595c45e505ee2af7657d0de77d024cadef9a0ccf09aadd874cdf3596570ff6a",
+   "variations": 3,
+   "measurable": 0,
+   "behindFlag": 1,
+   "plates": [
+    "cheiro-plate-xx",
+    "dale-plate-i"
+   ]
+  },
+  {
+   "id": "girdle",
+   "title_hi": "शुक्र वलय",
+   "title_en": "Girdle of Venus",
+   "file": "lines/girdle.json",
+   "bytes": 17915,
+   "sha256": "5e022fd141c4add45dba9dac32050bd454c72f5d7044eed9f9f4615a7397650f",
+   "variations": 6,
+   "measurable": 0,
+   "behindFlag": 1,
+   "plates": [
+    "cheiro-plate-xx",
+    "dale-plate-i"
+   ]
+  }
+ ],
+ "plates": [
+  {
+   "id": "cheiro-plate-i",
+   "src": "/atlas/plates/cheiro-plate-i.png",
+   "sidecar": "/atlas/plates/cheiro-plate-i.json",
+   "book": "cheiro-1916",
+   "label": "Plate I",
+   "caption": "Plate I. THE THREE PRINCIPAL POSITIONS FOR THE COMMENCEMENT OF THE LINE OF HEAD.",
+   "page": 11,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1257,
+   "height": 1400,
+   "overviewLines": [
+    "head"
+   ],
+   "lines": [
+    "head"
+   ]
+  },
+  {
+   "id": "cheiro-plate-ii",
+   "src": "/atlas/plates/cheiro-plate-ii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-ii.json",
+   "book": "cheiro-1916",
+   "label": "Plate II",
+   "caption": "Plate II. THE LINE OF HEAD JOINED TO THE LINE OF LIFE AND ITS TERMINATIONS.",
+   "page": 18,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1282,
+   "height": 1400,
+   "overviewLines": [
+    "head",
+    "life"
+   ],
+   "lines": [
+    "head",
+    "life"
+   ]
+  },
+  {
+   "id": "cheiro-plate-iii",
+   "src": "/atlas/plates/cheiro-plate-iii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-iii.json",
+   "book": "cheiro-1916",
+   "label": "Plate III",
+   "caption": "Plate III. THE LINE OF HEAD SEPARATED FROM THE LINE OF LIFE.",
+   "page": 20,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1295,
+   "height": 1400,
+   "overviewLines": [
+    "head",
+    "life"
+   ],
+   "lines": [
+    "head",
+    "life"
+   ]
+  },
+  {
+   "id": "cheiro-plate-iv",
+   "src": "/atlas/plates/cheiro-plate-iv.png",
+   "sidecar": "/atlas/plates/cheiro-plate-iv.json",
+   "book": "cheiro-1916",
+   "label": "Plate IV",
+   "caption": "Plate IV. ISLANDS ON THE LINE OF HEAD.",
+   "page": 24,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1208,
+   "height": 1400,
+   "overviewLines": [
+    "head"
+   ],
+   "lines": [
+    "head"
+   ]
+  },
+  {
+   "id": "cheiro-plate-v",
+   "src": "/atlas/plates/cheiro-plate-v.png",
+   "sidecar": "/atlas/plates/cheiro-plate-v.json",
+   "book": "cheiro-1916",
+   "label": "Plate V",
+   "caption": "Plate V. MORE VARIATIONS OF THE LINE OF HEAD.",
+   "page": 27,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1222,
+   "height": 1400,
+   "overviewLines": [
+    "head"
+   ],
+   "lines": [
+    "head"
+   ]
+  },
+  {
+   "id": "cheiro-plate-vi",
+   "src": "/atlas/plates/cheiro-plate-vi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-vi.json",
+   "book": "cheiro-1916",
+   "label": "Plate VI",
+   "caption": "Plate VI. THE LINE OF HEAD AND THE LINE OF HEART RUNNING TOGETHER.",
+   "page": 29,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1300,
+   "height": 1400,
+   "overviewLines": [
+    "heart",
+    "head"
+   ],
+   "lines": [
+    "heart",
+    "head"
+   ]
+  },
+  {
+   "id": "cheiro-plate-vii",
+   "src": "/atlas/plates/cheiro-plate-vii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-vii.json",
+   "book": "cheiro-1916",
+   "label": "Plate VII",
+   "caption": "Plate VII. DOUBLE LINES OF HEAD, ALSO CROSSES AND SQUARES.",
+   "page": 32,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1245,
+   "height": 1400,
+   "overviewLines": [
+    "head"
+   ],
+   "lines": [
+    "head"
+   ]
+  },
+  {
+   "id": "cheiro-plate-viii",
+   "src": "/atlas/plates/cheiro-plate-viii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-viii.json",
+   "book": "cheiro-1916",
+   "label": "Plate VIII",
+   "caption": "Plate VIII. THE LINE OF LIFE AND SECTIONS OF INFLUENCES FROM THE MOUNTS.",
+   "page": 37,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1400,
+   "height": 1374,
+   "overviewLines": [
+    "life"
+   ],
+   "lines": [
+    "life"
+   ]
+  },
+  {
+   "id": "cheiro-plate-ix",
+   "src": "/atlas/plates/cheiro-plate-ix.png",
+   "sidecar": "/atlas/plates/cheiro-plate-ix.json",
+   "book": "cheiro-1916",
+   "label": "Plate IX",
+   "caption": "Plate IX. THE LINE OF LIFE AND ITS VARIATIONS.",
+   "page": 40,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1302,
+   "height": 1400,
+   "overviewLines": [
+    "life"
+   ],
+   "lines": [
+    "life"
+   ]
+  },
+  {
+   "id": "cheiro-plate-x",
+   "src": "/atlas/plates/cheiro-plate-x.png",
+   "sidecar": "/atlas/plates/cheiro-plate-x.json",
+   "book": "cheiro-1916",
+   "label": "Plate X",
+   "caption": "Plate X. THE LINE OF LIFE, THE LINE OF MARS, AND OTHER SIGNS.",
+   "page": 45,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1231,
+   "height": 1400,
+   "overviewLines": [
+    "life"
+   ],
+   "lines": [
+    "life"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xi",
+   "src": "/atlas/plates/cheiro-plate-xi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XI",
+   "caption": "Plate XI. THE LINE OF DESTINY AND ITS MODIFICATIONS.",
+   "page": 51,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1322,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "lines": [
+    "fate",
+    "sun"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xii",
+   "src": "/atlas/plates/cheiro-plate-xii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XII",
+   "caption": "Plate XII. THE LINE OF DESTINY AND ITS VARIATIONS.",
+   "page": 53,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1286,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "lines": [
+    "fate"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xiii",
+   "src": "/atlas/plates/cheiro-plate-xiii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xiii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XIII",
+   "caption": "Plate XIII. THE LINE OF DESTINY AND ITS MODIFICATIONS.",
+   "page": 56,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1350,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "lines": [
+    "fate"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xiv",
+   "src": "/atlas/plates/cheiro-plate-xiv.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xiv.json",
+   "book": "cheiro-1916",
+   "label": "Plate XIV",
+   "caption": "Plate XIV. THE LINE OF DESTINY, ISLANDS, AND OTHER SIGNS.",
+   "page": 59,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1321,
+   "height": 1400,
+   "overviewLines": [
+    "fate"
+   ],
+   "lines": [
+    "fate"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xv",
+   "src": "/atlas/plates/cheiro-plate-xv.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xv.json",
+   "book": "cheiro-1916",
+   "label": "Plate XV",
+   "caption": "Plate XV. THE LINE OF SUN AND ITS MODIFICATIONS.",
+   "page": 62,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1186,
+   "height": 1400,
+   "overviewLines": [
+    "sun"
+   ],
+   "lines": [
+    "sun"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xvi",
+   "src": "/atlas/plates/cheiro-plate-xvi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xvi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XVI",
+   "caption": "Plate XVI. THE LINE OF HEART AND ITS VARIATIONS.",
+   "page": 68,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1291,
+   "height": 1400,
+   "overviewLines": [
+    "heart"
+   ],
+   "lines": [
+    "heart",
+    "head"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xvii",
+   "src": "/atlas/plates/cheiro-plate-xvii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xvii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XVII",
+   "caption": "Plate XVII. MARRIAGE LINES. THE LINE OF MARRIAGE.",
+   "page": 74,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1240,
+   "height": 1400,
+   "overviewLines": [
+    "marriage"
+   ],
+   "lines": [
+    "marriage"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xviii",
+   "src": "/atlas/plates/cheiro-plate-xviii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xviii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XVIII",
+   "caption": "Plate XVIII. MARRIAGE LINES AND INFLUENCE LINES WHICH FURTHER HELP IN DENOTING MARRIAGE.",
+   "page": 78,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1242,
+   "height": 1400,
+   "overviewLines": [
+    "marriage"
+   ],
+   "lines": [
+    "marriage"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xix",
+   "src": "/atlas/plates/cheiro-plate-xix.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xix.json",
+   "book": "cheiro-1916",
+   "label": "Plate XIX",
+   "caption": "Plate XIX. THE LINE OF HEALTH.",
+   "page": 84,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1322,
+   "height": 1400,
+   "overviewLines": [
+    "health"
+   ],
+   "lines": [
+    "health"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xx",
+   "src": "/atlas/plates/cheiro-plate-xx.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xx.json",
+   "book": "cheiro-1916",
+   "label": "Plate XX",
+   "caption": "Plate XX. THE GIRDLE OF VENUS, THE RING OF SATURN, THE THREE BRACELETS, THE LINE OF INTUITION AND THE VIA LASCIVA.",
+   "page": 89,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1200,
+   "height": 1400,
+   "overviewLines": [
+    "girdle",
+    "bracelets"
+   ],
+   "lines": [
+    "bracelets",
+    "girdle"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxi",
+   "src": "/atlas/plates/cheiro-plate-xxi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXI",
+   "caption": "Plate XXI. TRAVELS, VOYAGES, ACCIDENTS AND DESCENDING LINES PROM THE MOUNTS.",
+   "page": 99,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1133,
+   "height": 1400,
+   "overviewLines": [],
+   "lines": [
+    "life"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxii",
+   "src": "/atlas/plates/cheiro-plate-xxii.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxii.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXII",
+   "caption": "Plate XXII. THE ISLAND, THE CIRCLE, THE SPOT, THE GRILLE, THE STAR, THE SQUARE.",
+   "page": 102,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1305,
+   "height": 1400,
+   "overviewLines": [],
+   "lines": [
+    "heart",
+    "life",
+    "fate"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxiv",
+   "src": "/atlas/plates/cheiro-plate-xxiv.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxiv.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXIV",
+   "caption": "Plate XXIV. MINOR MARKS AND SIGNS.",
+   "page": 108,
+   "pageNote": "printed page = scan index - 39 (running head agrees)",
+   "width": 1400,
+   "height": 1179,
+   "overviewLines": [],
+   "lines": [
+    "head"
+   ]
+  },
+  {
+   "id": "cheiro-plate-xxvi",
+   "src": "/atlas/plates/cheiro-plate-xxvi.png",
+   "sidecar": "/atlas/plates/cheiro-plate-xxvi.json",
+   "book": "cheiro-1916",
+   "label": "Plate XXVI",
+   "caption": "Plate XXVI. TIME AND DATES OF PRINCIPAL EVENTS.",
+   "page": 113,
+   "pageNote": "printed page = scan index - 39",
+   "width": 1118,
+   "height": 1400,
+   "overviewLines": [],
+   "lines": [
+    "fate"
+   ]
+  },
+  {
+   "id": "dale-plate-i",
+   "src": "/atlas/plates/dale-plate-i.png",
+   "sidecar": "/atlas/plates/dale-plate-i.json",
+   "book": "dale-1895",
+   "label": "Plate I",
+   "caption": "PLATE I.—THE REFERENCE HAND.",
+   "page": null,
+   "pageNote": "frontispiece",
+   "width": 795,
+   "height": 1280,
+   "overviewLines": [],
+   "lines": [
+    "fate",
+    "sun",
+    "marriage",
+    "bracelets",
+    "girdle"
+   ]
+  },
+  {
+   "id": "dale-plate-iv",
+   "src": "/atlas/plates/dale-plate-iv.png",
+   "sidecar": "/atlas/plates/dale-plate-iv.json",
+   "book": "dale-1895",
+   "label": "Plate IV",
+   "caption": "PLATE IV.—THE LINE OF LIFE.",
+   "page": null,
+   "pageNote": "inserted leaf, facing p. 39",
+   "width": 786,
+   "height": 1400,
+   "overviewLines": [
+    "life"
+   ],
+   "lines": [
+    "life"
+   ]
+  }
+ ]
+}
