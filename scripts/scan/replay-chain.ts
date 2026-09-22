@@ -94,6 +94,8 @@ export interface ChainFrame {
   readonly luma: Float32Array;
   /** Palm-quad validity at the working size. */
   readonly validity: Uint8Array;
+  /** The rectified crop's inside mask at 256. */
+  readonly inside: Uint8Array;
   readonly toCrop: Matrix3;
   readonly convention: number;
   readonly usedUnet: boolean;
@@ -159,7 +161,7 @@ export class ReplayChain {
     const plane = combineProbabilities(unet, classical);
     const contract = new Float32Array(workPlane);
     contractFrameInto(this.depth, this.ridge, frangi, unet, CONTRACT_DEPTH_DEFAULTS, contract);
-    return { plane, contract, gray, luma, validity, toCrop: warped.toCrop, convention: anchors.length, usedUnet: unet !== null };
+    return { plane, contract, gray, luma, validity, inside: Uint8Array.from(warped.inside), toCrop: warped.toCrop, convention: anchors.length, usedUnet: unet !== null };
   }
 }
 

@@ -16,6 +16,7 @@ import {
 } from "@/lib/scan/quality";
 import { canonicalAnchors, conventionRemap, palmAnchors, rectifyPalm, solveHomography, type RectifyResult } from "@/lib/scan/rectify";
 import type { RekhaPersistence, RekhaSnapshot } from "@/lib/scan/rekha-persist";
+import type { ValleyTracer } from "@/lib/scan/trace-valley";
 import { derivePalmEdge } from "@/lib/scan/landmarks";
 import { emptyStabiliser, resetStabiliser, stabiliseAnchors, type AnchorStabiliser } from "@/lib/scan/stabilise";
 import { scanFlags } from "@/lib/scan/flags";
@@ -254,6 +255,13 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const rekhaRef = useRef<RekhaPersistence | null>(null);
   const rekhaModuleRef = useRef<typeof import("@/lib/scan/rekha-persist") | null>(null);
   const rekhaLoadingRef = useRef(false);
+  /**
+   * rekhaTrace (flag, S2): the valley tracer, fetched the first time the flag is seen on (as the
+   * persistence module is) and constructed once. With the flag off it is never loaded.
+   */
+  const traceModuleRef = useRef<typeof import("@/lib/scan/trace-valley") | null>(null);
+  const traceLoadingRef = useRef(false);
+  const tracerRef = useRef<ValleyTracer | null>(null);
   const rekhaGrayRef = useRef<Float32Array | null>(null);
   /**
    * Landmark jitter slides the same skin a few crop pixels between frames — more than a crease is
@@ -404,6 +412,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const [superRes, setSuperRes] = useState<SuperResReadout | null>(null);
   /** rekhaPersist (flag): per-line state, hold and flicker — what the Rekha Monitor draws. Null with the flag off. */
   const [rekha, setRekha] = useState<RekhaSnapshot | null>(null);
+  /** rekhaTrace (flag): milliseconds the last trace took, for the chamber's ?cost=1 readout. Null with the flag off. */
+  const [traceMs, setTraceMs] = useState<number | null>(null);
   /** Raw per-detector fields from the last inference, for the debug HUD's three-way mask toggle. */
   const [stageMasks, setStageMasks] = useState<{
     unet: Float32Array | null;
@@ -635,17 +645,33 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         at: number,
         anchorsAtFire: readonly Point2[],
         conventionAtFire: number,
+        crop?: { readonly rgba: Uint8ClampedArray; readonly inside: Uint8Array; readonly size: number },
       ): void => {
         const flagsAtExtract = scanFlags.snapshot();
         const vocabV2 = flagsAtExtract.featureVocabV2;
         const found = extractLines(activeFusion.ema, activeFusion.size, vocabV2);
+        /*
+         * rekhaTrace (flag, S2): trace, don't fit. extractLines decides WHICH lines exist and from
+         * which fragments; the drawn geometry is the valley tracer's, on this frame's own rectified
+         * crop. `found` still carries the features (and feeds the corridor fill-in); `drawn` is what
+         * the chamber, the Monitor, persistence and the hand-off see. A line the tracer could not
+         * follow is not drawn — nothing is drawn where the tracer stopped.
+         */
+        const traceModule = flagsAtExtract.rekhaTrace ? traceModuleRef.current : null;
+        let drawn = found;
+        if (traceModule !== null && crop !== undefined) {
+          const tracer = tracerRef.current ?? (tracerRef.current = new traceModule.ValleyTracer(crop.size));
+          const traced = tracer.trace(found, traceModule.lumaFromRgba(crop.rgba, crop.size), crop.inside);
+          drawn = { ...found, lines: traced.lines };
+          setTraceMs(traced.ms);
+        }
         /*
          * rekhaPersist: measure this extraction against the accumulator's ladder. A CONFIRMED line
          * is held from here on, and rides along in what is published even when this extraction
          * missed it; the corridor fill-in below waits for the first confirmed line.
          */
         const rekha = flagsAtExtract.rekhaPersist ? rekhaRef.current : null;
-        const rekhaSnap = rekha === null ? null : rekha.extracted(found, at);
+        const rekhaSnap = rekha === null ? null : rekha.extracted(drawn, at);
         if (rekhaSnap !== null) setRekha(rekhaSnap);
         /*
          * Everything else on the palm. The four completed lines are the headline, but a
@@ -746,7 +772,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           // Refused while the hand is clipped: the crop was fitted to extrapolated
           // landmarks, so any line placed from it is a claim about guessed geometry.
           if (named && !degradedRef.current) onLineFeatures?.(forFeatures, at);
-          setExtraction(rekha === null ? found : { ...found, lines: { ...found.lines, ...rekha.hold.heldMissingFrom(found) } });
+          setExtraction(rekha === null ? drawn : { ...drawn, lines: { ...drawn.lines, ...rekha.hold.heldMissingFrom(drawn) } });
           setPolys(drawable);
           setPolySegments(
             named
@@ -986,6 +1012,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
              */
             let rekhaGray: Float32Array | null = null;
             let rekhaWeight = 0;
+            if (scanFlags.snapshot().rekhaTrace && traceModuleRef.current === null && !traceLoadingRef.current) {
+              traceLoadingRef.current = true;
+              void import("@/lib/scan/trace-valley").then((loaded) => {
+                traceModuleRef.current = loaded;
+              });
+            }
             const rekhaModule = rekhaModuleRef.current;
             if (scanFlags.snapshot().rekhaPersist && rekhaModule === null && !rekhaLoadingRef.current) {
               rekhaLoadingRef.current = true;
@@ -1172,6 +1204,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   at,
                   anchorsAtFire,
                   conventionAtFire,
+                  // rekhaTrace: the frame this mask came from, whose valley the tracer walks.
+                  { rgba: warped.image.data, inside: warped.inside, size: warped.image.width },
                 );
               }
             });
@@ -1598,6 +1632,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     observation,
     /** rekhaPersist (flag): per-line detection state for the Rekha Monitor; null with the flag off. */
     rekha,
+    /** rekhaTrace (flag): ms the last trace took; null with the flag off. */
+    traceMs,
     features,
     rectified,
     stats,

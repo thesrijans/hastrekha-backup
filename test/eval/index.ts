@@ -30,6 +30,8 @@ import {
   contractPlaneOf,
   diagnoseFields,
   extractAtThreshold,
+  lumaOf,
+  traceAtThreshold,
   minorEmissionOn,
   rawPlanesOf,
   rungId,
@@ -240,8 +242,10 @@ async function scoreSweep(
             return found === null ? null : found.points.map((p) => [p.x / W128, p.y / W128] as const);
           })()
         : null;
+    // post "trace" (S2): the valley tracer on the case's own luma replaces the fitted geometry.
+    const crop = rung.post === "trace" ? await lumaOf(evalCase, rung.framing, opts) : null;
     for (const t of SWEEP_THRESHOLDS) {
-      const detectedRaw = extractAtThreshold(caseField.field, t);
+      const detectedRaw = crop !== null ? traceAtThreshold(caseField.field, t, crop) : extractAtThreshold(caseField.field, t);
       const detected =
         corridorFate !== null && detectedRaw.lines.fate === null
           ? { lines: { ...detectedRaw.lines, fate: corridorFate } }

@@ -46,7 +46,7 @@ import type { LandmarkFeatureResult } from "@/lib/scan/features";
 import { extractLines } from "@/lib/scan/lines";
 import { emptySession, observe, observeLines, sessionBag, type ReadingSession } from "@/lib/scan/reading-session";
 import { mergedMask, type CaptureState } from "@/lib/scan/capture";
-import { MASK_SIZE } from "@/lib/scan/types";
+import { MASK_SIZE, type ActiveLineId, type TracedLine } from "@/lib/scan/types";
 import { useHandScan } from "@/components/scan/use-hand-scan";
 import { encodeCrop, handOffToPothi, rescanPrompt, RESCAN_PARAM } from "@/lib/sanctuary/pothi-handoff";
 import {
@@ -90,6 +90,12 @@ export interface ChamberClientProps {
 export function ChamberClient({ readHref, backHref }: ChamberClientProps): ReactElement {
   const router = useRouter();
   const sessionRef = useRef<ReadingSession>(emptySession());
+  /*
+   * S2: the lines the reader was SHOWN — traced (rekhaTrace) and held (rekhaPersist) — kept for the
+   * hand-off, so the pothi draws the geometry the chamber drew rather than a fresh fit of the merged
+   * capture. Null until anything has been drawn, and then the merged fit is the fallback.
+   */
+  const drawnRef = useRef<Partial<Record<ActiveLineId, TracedLine>> | null>(null);
   const mountedRef = useRef(true);
 
   const [phase, setPhase] = useState<ChamberPhase>("scanning");
@@ -191,7 +197,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
 
         handOffToPothi({
           reading,
-          lines: found.lines,
+          lines: drawnRef.current ?? found.lines,
           space: MASK_SIZE,
           ...(cropImage === null ? {} : { cropDataUrl: encodeCrop(cropImage) ?? undefined }),
           sessionId: reading.readingId ?? `chamber-${Math.round(performance.now())}`,
@@ -234,6 +240,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     quality,
     observation,
     rekha,
+    traceMs,
     rectified,
     extraction,
     traces,
@@ -249,6 +256,10 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
   useEffect(() => {
     cropRef.current = rectified?.image ?? cropRef.current;
   }, [rectified]);
+
+  useEffect(() => {
+    if (extraction !== null && Object.keys(extraction.lines).length > 0) drawnRef.current = extraction.lines;
+  }, [extraction]);
 
   /* ------------------------------ the litany ----------------------------- */
 
@@ -422,6 +433,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
           {rekha === null
             ? null
             : ` · rekha ${rekha.costMs.toFixed(2)} ms/frame · ${rekhaLedger(rekha)} · flicker ${Object.values(rekha.flicker).join("/")}`}
+          {traceMs === null ? null : ` · trace ${traceMs.toFixed(1)} ms/extraction`}
         </p>
       ) : null}
     </div>

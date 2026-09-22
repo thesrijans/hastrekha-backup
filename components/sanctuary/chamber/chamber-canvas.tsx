@@ -42,6 +42,12 @@ const REVEAL_MS = 900;
 /** A bridged stretch of a completed line is drawn at this share of an observed one's alpha. */
 const INFERRED_ALPHA = 0.4;
 
+/**
+ * A TRACED line's unobserved stretch (flag rekhaTrace, S2) is valley extension — the crease
+ * measured past its seeds, not a gap bridged by a fit — and draws at 0.6 of observed.
+ */
+export const TRACED_EXTENSION_ALPHA = 0.6;
+
 /** The constellation's own weights, all well under the lines': the hand is context, the creases are the subject. */
 const BONE_ALPHA = 0.22;
 const POINT_ALPHA = 0.6;
@@ -466,7 +472,7 @@ function drawFoundLines(
       for (const segment of segments) {
         const slice = points.slice(segment.from, segment.to + 1);
         if (slice.length < 2) continue;
-        context.globalAlpha = reveal * (segment.observed ? 1 : INFERRED_ALPHA);
+        context.globalAlpha = reveal * (segment.observed ? 1 : line.traced === true ? TRACED_EXTENSION_ALPHA : INFERRED_ALPHA);
         strokePath(context, slice);
       }
     }

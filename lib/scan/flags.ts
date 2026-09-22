@@ -77,6 +77,13 @@ export interface ScanFlags {
    * would all have weighed zero.
    */
   readonly rekhaPersist: boolean;
+  /**
+   * Trace, don't fit (S2): the DRAWN geometry of each line extractLines accepts is traced through
+   * the black-hat valley of the rectified crop at 256 — seeded by the line's observed fragments,
+   * extended along the valley until the crease fades — instead of completion's fitted curve, which
+   * is kept only for features. See lib/scan/trace-valley.ts for the method and its measurements.
+   */
+  readonly rekhaTrace: boolean;
 }
 
 export const DEFAULT_SCAN_FLAGS: ScanFlags = {
@@ -91,11 +98,12 @@ export const DEFAULT_SCAN_FLAGS: ScanFlags = {
   corridorSearch: false,
   superRes: false,
   rekhaPersist: false,
+  rekhaTrace: false,
 };
 
 export type ScanFlagName = keyof ScanFlags;
 
-export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch", "superRes", "rekhaPersist"];
+export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch", "superRes", "rekhaPersist", "rekhaTrace"];
 
 /** Human labels for the HUD toggles, in the app's register. */
 export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
@@ -110,6 +118,7 @@ export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
   corridorSearch: "Corridor search",
   superRes: "Super-resolution",
   rekhaPersist: "Rekha persistence",
+  rekhaTrace: "Trace, don't fit",
 };
 
 type Listener = (flags: ScanFlags) => void;
@@ -154,11 +163,11 @@ export class FlagStore {
 export const scanFlags = new FlagStore();
 
 /**
- * The flags the chamber runs with, and only the chamber (S1.1): persistence, the corridor fill-in
- * it releases, and the super-resolution fusion that feeds it sharper evidence. /scan keeps every
- * default.
+ * The flags the chamber runs with, and only the chamber: persistence, the corridor fill-in it
+ * releases, and the super-resolution fusion that feeds it sharper evidence (S1.1), and the valley
+ * tracer that draws what was found (S2). /scan keeps every default.
  */
-export const CHAMBER_SCAN_FLAGS: readonly ScanFlagName[] = ["rekhaPersist", "corridorSearch", "superRes"];
+export const CHAMBER_SCAN_FLAGS: readonly ScanFlagName[] = ["rekhaPersist", "corridorSearch", "superRes", "rekhaTrace"];
 
 /**
  * Switch `names` on and return the undo, which puts each flag back to the value it had BEFORE — not

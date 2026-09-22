@@ -160,6 +160,12 @@ export interface TracedLine {
   readonly segments?: ReadonlyArray<{ readonly from: number; readonly to: number; readonly observed: boolean }>;
   /** Fraction of the curve's arc length that sits on observed evidence. */
   readonly observedFraction?: number;
+  /**
+   * True when the geometry is the valley tracer's (flag rekhaTrace, lib/scan/trace-valley.ts)
+   * rather than completion's fit. Its unobserved stretches are then valley EXTENSION — measured
+   * crease, just not seeded — and draw at 0.6, where a fit's bridged gaps draw fainter.
+   */
+  readonly traced?: boolean;
 }
 
 /* -------------------------------- Quality --------------------------------- */

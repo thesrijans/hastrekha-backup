@@ -274,6 +274,10 @@ export interface RekhaLine {
   readonly progress: number;
   /** True when this frame's extraction did not produce it and it is shown because it is held. */
   readonly held: boolean;
+  /** The line's observed/unobserved stretches, as TracedLine carries them (S2: traced extension draws at 0.6). */
+  readonly segments?: TracedLine["segments"];
+  /** True when the geometry is the valley tracer's (flag rekhaTrace). */
+  readonly traced?: boolean;
 }
 
 export interface RekhaSnapshot {
@@ -383,18 +387,18 @@ export class RekhaLineHold {
         if (fresh !== undefined && freshState === "confirmed") {
           // Re-found and still confirmed: take the newer trace (it may reach further), keep the hold.
           held.line = fresh;
-          out = { id, state: "confirmed", points: fresh.points, progress: freshMeasure?.progress ?? 1, held: false };
+          out = { id, state: "confirmed", points: fresh.points, progress: freshMeasure?.progress ?? 1, held: false, segments: fresh.segments, traced: fresh.traced };
         } else {
           const heldMeasure = measureLine(acc, held.line.points, opts);
           if (heldMeasure.candidate >= REKHA_HOLD_FRACTION) {
-            out = { id, state: "confirmed", points: held.line.points, progress: heldMeasure.progress, held: true };
+            out = { id, state: "confirmed", points: held.line.points, progress: heldMeasure.progress, held: true, segments: held.line.segments, traced: held.line.traced };
           } else {
             this.held.delete(id); // the evidence under it has gone: lost
           }
         }
       }
       if (out === undefined && fresh !== undefined && freshMeasure !== null && freshState !== null) {
-        out = { id, state: freshState, points: fresh.points, progress: freshMeasure.progress, held: false };
+        out = { id, state: freshState, points: fresh.points, progress: freshMeasure.progress, held: false, segments: fresh.segments, traced: fresh.traced };
         if (freshState === "confirmed") this.held.set(id, { line: fresh, confirmedAt: nowMs });
       }
       if (out !== undefined) lines[id] = out;

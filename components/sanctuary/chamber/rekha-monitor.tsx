@@ -72,6 +72,9 @@ export function rekhaStroke(line: RekhaLine): { readonly width: number; readonly
   return { width: 1 + t, opacity: 0.35 + 0.65 * t, glow: false };
 }
 
+/** A traced line's valley extension (S2) draws at this share of its observed stretches. */
+export const REKHA_EXTENSION_OPACITY = 0.6;
+
 /* ------------------------------- The leaders ------------------------------- */
 
 /** Plate units: the palm is 0–100; the view adds margins either side for the names. */
@@ -166,9 +169,33 @@ export function RekhaMonitor({ snapshot, visible = true, className }: RekhaMonit
       <svg className={styles.plate} viewBox={VIEW} role="img" aria-label="The palm, with the lines found so far" focusable="false">
         <path d={NEUTRAL_PALM_PATH} className={styles.palm} vectorEffect="non-scaling-stroke" />
         {lines.map((line) => {
+          const stroke = rekhaStroke(line);
+          /* A traced line (S2) draws its observed stretches at its state's stroke and its valley
+             extension at 0.6 of it; a fitted line draws whole, as before. */
+          const segments = line.traced === true ? (line.segments ?? []) : [];
+          if (segments.length > 1 || segments.some((segment) => !segment.observed)) {
+            return (
+              <g key={line.id} data-snc-line={line.id} data-snc-state={line.state} data-snc-held={line.held ? "" : undefined}>
+                {segments.map((segment, index) => {
+                  const d = pothiPolylinePath(line.points.slice(segment.from, segment.to + 1), MASK_SIZE);
+                  if (d === null) return null;
+                  return (
+                    <path
+                      key={index}
+                      d={d}
+                      className={stroke.glow ? `${styles.line} ${styles.confirmed}` : styles.line}
+                      data-snc-extension={segment.observed ? undefined : ""}
+                      strokeWidth={stroke.width}
+                      strokeOpacity={stroke.opacity * (segment.observed ? 1 : REKHA_EXTENSION_OPACITY)}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  );
+                })}
+              </g>
+            );
+          }
           const d = pothiPolylinePath(line.points, MASK_SIZE);
           if (d === null) return null;
-          const stroke = rekhaStroke(line);
           return (
             <path
               key={line.id}

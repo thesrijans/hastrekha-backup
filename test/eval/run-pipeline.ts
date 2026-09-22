@@ -35,6 +35,8 @@ import { completeLines } from "../../lib/scan/completion";
 import { MASK_SIZE, RECTIFIED_SIZE, type ActiveLineId, type Point2 } from "../../lib/scan/types";
 import { canonicalAnchors, solveHomography, type Matrix3 } from "../../lib/scan/rectify";
 import { RekhaEnhancer } from "../../lib/scan/enhance/rekha-enhancer";
+import { ValleyTracer, type TracedPath } from "../../lib/scan/trace-valley";
+import type { LineExtraction } from "../../lib/scan/lines";
 import { CANONICAL_FULLHAND_21 } from "../../lib/scan/models/canonical-fullhand-21";
 import {
   UNET_INPUT_SIZE,
@@ -72,7 +74,7 @@ export type Framing = (typeof FRAMINGS)[number];
  * and the IDENTICAL chain runs on the fusion instead of the single labelled still. Classical
  * framing only — the fused texture is luma. Legacy cases and thin groups report n/a with the reason.
  */
-export const POSTS = ["fused", "enhancer", "enhancer-ridge", "corridor", "superres"] as const;
+export const POSTS = ["fused", "enhancer", "enhancer-ridge", "corridor", "superres", "trace"] as const;
 export type Post = (typeof POSTS)[number];
 export const FIELDS = ["legacy", "contract"] as const;
 export type FieldKind = (typeof FIELDS)[number];
@@ -183,6 +185,10 @@ interface Prepared {
   /** Last framing UNet plane (null for classical) — calibration's noisy-OR input. */
   readonly unet: Float32Array | null;
   readonly small: Float32Array;
+  /** The rectified crop's luma at RECTIFIED_SIZE — the +trace post's valley is measured on it. */
+  readonly luma: Float32Array;
+  /** The rectified crop's inside mask at RECTIFIED_SIZE — the +trace post never leaves the palm. */
+  readonly inside: Uint8Array;
   readonly notes: string[];
   readonly approximate?: boolean;
 }
@@ -362,6 +368,8 @@ async function prepareFromSource(
       frangi: frangiPlane,
       unet: unetPlane,
       small,
+      luma: gray,
+      inside: Uint8Array.from(warped.inside),
       notes,
       approximate,
     };
@@ -596,6 +604,43 @@ export function extractAtThreshold(field: Float32Array, threshold: number): Dete
     lines[id] = fitted === undefined ? null : fitted.points.map((p) => [p.x / WORK, p.y / WORK]);
   }
   return { lines };
+}
+
+/* ------------------------------ +trace post (S2) ------------------------------ */
+
+/** The case's rectified luma at RECTIFIED_SIZE (cached with its field), for the +trace post. */
+export async function lumaOf(
+  evalCase: EvalCase,
+  framing: Framing,
+  opts: RunOptions = {},
+): Promise<{ luma: Float32Array; inside: Uint8Array } | null> {
+  const prepared = await prepare(evalCase, framing, opts);
+  return "error" in prepared ? null : { luma: prepared.luma, inside: prepared.inside };
+}
+
+const evalTracer = new ValleyTracer(RECTIFIED_SIZE);
+
+/**
+ * post "+trace": extraction's geometry path at `threshold` (as extractAtThreshold), then the
+ * valley tracer (lib/scan/trace-valley.ts) on the case's own luma, seeded by the fragments
+ * completion assigned. The traced path is what gets scored; the fitted curve only decides which
+ * lines exist.
+ */
+export function traceAtThreshold(
+  field: Float32Array,
+  threshold: number,
+  crop: { luma: Float32Array; inside: Uint8Array },
+): DetectedLines & { readonly paths: Partial<Record<ActiveLineId, TracedPath>>; readonly ms: number } {
+  const skeleton = thin(binarize(field, threshold), WORK);
+  const { polys } = tracePolylines(skeleton, WORK);
+  const completion = completeLines(polys, field, WORK);
+  const traced = evalTracer.trace({ fragments: polys, completion } as unknown as LineExtraction, crop.luma, crop.inside);
+  const lines: Record<LabelLineId, readonly (readonly number[])[] | null> = { heart: null, head: null, life: null, fate: null };
+  for (const id of LABEL_LINE_IDS) {
+    const line = traced.lines[id as ActiveLineId];
+    lines[id] = line === undefined ? null : line.points.map(([x, y]) => [x / WORK, y / WORK]);
+  }
+  return { lines, paths: traced.paths, ms: traced.ms };
 }
 
 /* ------------------------------ Diagnostics (item 3) ------------------------------ */

@@ -158,8 +158,8 @@ const stage = (id: string) => CHAMBER_STAGES.find((s) => s.id === id) ?? CHAMBER
   {
     const flags = require_("../lib/scan/flags") as typeof import("../lib/scan/flags");
     ok(
-      JSON.stringify(flags.CHAMBER_SCAN_FLAGS) === JSON.stringify(["rekhaPersist", "corridorSearch", "superRes"]),
-      "and those flags are exactly rekhaPersist, corridorSearch and superRes (S1.1)",
+      JSON.stringify(flags.CHAMBER_SCAN_FLAGS) === JSON.stringify(["rekhaPersist", "corridorSearch", "superRes", "rekhaTrace"]),
+      "and those flags are exactly rekhaPersist, corridorSearch, superRes (S1.1) and rekhaTrace (S2)",
     );
     const store = new flags.FlagStore();
     store.set("superRes", true);
@@ -168,7 +168,7 @@ const stage = (id: string) => CHAMBER_STAGES.find((s) => s.id === id) ?? CHAMBER
     undo();
     const after = store.snapshot();
     ok(
-      during.rekhaPersist && during.corridorSearch && during.superRes && !after.rekhaPersist && !after.corridorSearch && after.superRes,
+      during.rekhaPersist && during.corridorSearch && during.superRes && during.rekhaTrace && !after.rekhaPersist && !after.corridorSearch && !after.rekhaTrace && after.superRes,
       "on unmount each flag returns to the value it had BEFORE — superRes, already on, stays on; the other two go back off — and /scan's own defaults are never touched",
     );
   }
