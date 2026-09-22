@@ -1,0 +1,93 @@
+# ============================================================================
+# D1.4 — every push to `dev` becomes a PRODUCTION deployment.
+# ============================================================================
+#
+# The CLI does the build here rather than on Vercel's builder: `vercel pull`
+# fetches the project's settings and its PRODUCTION environment, `vercel build`
+# produces .vercel/output against them, and `vercel deploy --prebuilt` uploads
+# that output. One consequence worth naming: the environment this builds with is
+# the PRODUCTION scope's, whatever is in it — NEXT_PUBLIC_SANCTUARY is inlined at
+# build time, so the sanctuary routes exist in the deployment only if that scope
+# carries the flag.
+#
+# CONCURRENCY: pushes QUEUE. `cancel-in-progress: false` is the whole point of
+# the group — two deployments racing to the same production alias can land in
+# either order, and the older one winning is a silent rollback nobody asked for.
+#
+# SECRETS (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN        a token for the account that owns the project
+#   VERCEL_ORG_ID       .vercel/project.json's orgId
+#   VERCEL_PROJECT_ID   .vercel/project.json's projectId
+#
+# Note for a Hobby team: Vercel checks the GIT COMMIT AUTHOR of a CLI deployment
+# against the account, and blocks one it cannot match ("the commit author doesn't
+# have permission to create deployments for this project" — readyState BLOCKED,
+# no build). It is the account's own Git login that has to be connected under
+# Vercel → Settings → Authentication. A blocked deployment fails this job at the
+# deploy step rather than silently.
+name: Deploy dev to production
+
+on:
+  push:
+    branches: [dev]
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: vercel --prod
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci` installs devDependencies too, which the build needs: prisma (the
+      # prebuild generates the git-ignored client) and the Next toolchain.
+      - name: Install dependencies
+        run: npm ci
+
+      # Pinned, because the CLI is what builds here: an unpinned major could
+      # change the build output between two pushes that changed nothing.
+      - name: Install Vercel CLI
+        run: npm install --global vercel@59.25.0
+
+      - name: Pull the project's production environment
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --prod --token=$VERCEL_TOKEN
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        id: deploy
+        run: |
+          url="$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Production deployment"
+            echo
+            if [ -n "${{ steps.deploy.outputs.url }}" ]; then
+              echo "- URL: ${{ steps.deploy.outputs.url }}"
+            else
+              echo "- No URL: the deploy step did not complete."
+            fi
+            echo "- Commit: \`${GITHUB_SHA}\` on \`${GITHUB_REF_NAME}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
