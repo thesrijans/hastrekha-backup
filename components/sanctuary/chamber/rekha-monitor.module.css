@@ -147,8 +147,12 @@
       transition: translate 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
     }
 
+    /* OPEN, the sheet is the thing being read: it rises above the litany's leaf and the chamber's
+       flip and torch marks (z 2 and 3) and goes nearly opaque, so neither is drawn over its plate. */
     .monitor[data-snc-sheet="open"] {
       translate: 0 0;
+      z-index: 5;
+      background: color-mix(in oklab, var(--color-snc-stone-900) 96%, transparent);
     }
 
     .ledger {

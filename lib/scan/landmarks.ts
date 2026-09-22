@@ -16,6 +16,11 @@ import type { HandObservation, Handedness, Landmark3, Point2 } from "./types";
 
 export const MEDIAPIPE_WASM_PATH = "/mediapipe/wasm";
 export const HAND_LANDMARKER_MODEL_PATH = "/models/hand_landmarker.task";
+/**
+ * M1.4: the same bundle with MediaPipe's LITE landmark model behind the full palm detector, for
+ * MID/LOW devices. Built by scripts/models/build-hand-landmarker-lite.py; see lib/scan/scan-profile.ts.
+ */
+export const HAND_LANDMARKER_LITE_MODEL_PATH = "/models/hand_landmarker_lite.task";
 
 export interface LandmarkerOptions {
   readonly wasmPath?: string;

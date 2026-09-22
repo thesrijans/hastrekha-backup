@@ -2,7 +2,19 @@
 
 import type { HandLandmarker } from "@mediapipe/tasks-vision";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createHandLandmarker, MissingScanAssetError, toObservation } from "@/lib/scan/landmarks";
+import { createHandLandmarker, HAND_LANDMARKER_LITE_MODEL_PATH, MissingScanAssetError, toObservation } from "@/lib/scan/landmarks";
+import {
+  cameraConstraints,
+  flipConstraints,
+  flipTarget,
+  isPhone,
+  mirroredFor,
+  preferredFacing,
+  resolveFacing,
+  videoInputCount,
+  type CameraFacing,
+} from "@/lib/scan/camera-select";
+import { FULL_SCAN_PROFILE, type ScanProfile } from "@/lib/scan/scan-profile";
 import { featuresFromLandmarks, type LandmarkFeatureResult } from "@/lib/scan/features";
 import {
   CAPTURE_POSES,
@@ -36,6 +48,8 @@ import {
   emptyCameraControl,
   lumaStats,
   nextExposureBias,
+  setTorch,
+  torchSupported,
   CONTROL_INTERVAL_MS,
   type CameraControlState,
 } from "@/lib/scan/camera-control";
@@ -104,8 +118,10 @@ export type ScanStatus = "idle" | "starting" | "running" | "denied" | "unsupport
 const FEATURE_INTERVAL_MS = 160;
 /** Rectification is ~65k bilinear samples, so it runs far below frame rate. */
 const RECTIFY_INTERVAL_MS = 200;
-/** Thinning + tracing is the most expensive CPU step; it does not need to keep up with inference. */
-const EXTRACT_INTERVAL_MS = 700;
+/**
+ * Thinning + tracing is the most expensive CPU step; it does not need to keep up with inference.
+ * The cadence itself is the profile's (M1.4) — FULL_SCAN_PROFILE's 700 ms unless a caller passes one.
+ */
 /** Luma is sampled from a tiny downscale — reading a full frame back every tick would stall the loop. */
 const LUMA_SIZE = 48;
 /** Clamp on the frame delta fed to the capture clock, so a backgrounded tab cannot auto-capture. */
@@ -141,6 +157,12 @@ const SUPERRES_STALE_MS = 5000;
  */
 const REKHA_SUPERRES_WEIGHT = 0.5;
 
+/** M1.1: what the camera choice may read about the device. The decision itself is pure (camera-select.ts). */
+function readPhoneSignals(): { userAgent: string; uaDataMobile: boolean | null } {
+  const data = (navigator as Navigator & { userAgentData?: { mobile?: unknown } }).userAgentData;
+  return { userAgent: navigator.userAgent, uaDataMobile: typeof data?.mobile === "boolean" ? data.mobile : null };
+}
+
 const IDLE_QUALITY: QualityVerdict = {
   ok: false,
   issues: ["no_hand"],
@@ -172,6 +194,18 @@ export interface UseHandScanOptions {
   readonly mirrored?: boolean;
   readonly facingMode?: "user" | "environment";
   /**
+   * M1.1: "auto" lets the hook choose the camera — the BACK one on a phone, the front one elsewhere,
+   * and silently the front one where there is no back camera (M1.5) — lets the reader flip between
+   * them, and derives `mirrored` from the camera that actually opened (lib/scan/camera-select.ts).
+   * Absent, the fixed `facingMode` and `mirrored` above are used exactly as before (/scan).
+   */
+  readonly cameraSelection?: "auto";
+  /**
+   * M1.4: the pipeline profile — landmark model, capture size, extraction cadence. Read when the
+   * camera opens and held for the session. Absent = FULL_SCAN_PROFILE, which is what /scan has always run.
+   */
+  readonly profile?: ScanProfile;
+  /**
    * Called from the frame loop **only for frames that pass the gate**, each time features are
    * recomputed. Firing on a failing frame is what previously let rules confirm off the back of a
    * hand, so the filter lives here rather than at the call site.
@@ -194,8 +228,15 @@ export interface UseHandScanOptions {
 
 export function useHandScan(options: UseHandScanOptions = {}) {
   const { onFeatures, onGateFail, onLineFeatures, onCaptureComplete } = options;
-  const mirrored = options.mirrored ?? true;
   const facingMode = options.facingMode ?? "user";
+  const autoCamera = options.cameraSelection === "auto";
+  const requestedProfile = options.profile ?? FULL_SCAN_PROFILE;
+  /**
+   * M1.1: the camera that actually opened, and — derived from it and nothing else — THE mirror flag.
+   * With a fixed camera (/scan) the flag is the caller's, as it always was.
+   */
+  const [cameraFacing, setCameraFacing] = useState<CameraFacing>(facingMode);
+  const mirrored = autoCamera ? mirroredFor(cameraFacing) : (options.mirrored ?? true);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
@@ -435,6 +476,28 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const [extraction, setExtraction] = useState<LineExtraction | null>(null);
   const [capture, setCapture] = useState<CaptureState>(emptyCapture);
 
+  /* ── M1: the camera the reader chose, its torch, and the profile the session runs at ── */
+  const cameraFacingRef = useRef<CameraFacing>(facingMode);
+  /** How many cameras the device offers; the flip is offered only when there are two or more. */
+  const [cameraCount, setCameraCount] = useState(0);
+  /** "unsupported" until a track that can light one is open (Chrome on Android, back camera). */
+  const [torch, setTorchStateValue] = useState<"unsupported" | "off" | "on">("unsupported");
+  const torchOnRef = useRef(false);
+  /** The DOMException name a failed start threw (NotAllowedError, NotFoundError…), for the chamber's copy. */
+  const [cameraErrorName, setCameraErrorName] = useState<string | null>(null);
+  const flippingRef = useRef(false);
+  /** The profile requested now, and the one the running session was opened with (held until the next start). */
+  const requestedProfileRef = useRef<ScanProfile>(requestedProfile);
+  const activeProfileRef = useRef<ScanProfile>(requestedProfile);
+  const [activeProfile, setActiveProfile] = useState<ScanProfile | null>(null);
+  /** M1.4 ?cost=1: median landmarker call over the last second, ms. Published only with cameraSelection "auto". */
+  const [landmarkMs, setLandmarkMs] = useState<number | null>(null);
+  const landmarkSamplesRef = useRef<number[]>([]);
+  const lastLandmarkPublishRef = useRef(0);
+  useEffect(() => {
+    requestedProfileRef.current = requestedProfile;
+  }, [requestedProfile]);
+
   const setVideoElement = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node;
   }, []);
@@ -445,6 +508,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     rafRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+    torchOnRef.current = false;
     landmarkerRef.current?.close();
     landmarkerRef.current = null;
     segmenterRef.current?.dispose();
@@ -531,6 +595,18 @@ export function useHandScan(options: UseHandScanOptions = {}) {
 
     try {
       const result = landmarker.detectForVideo(video, now);
+      if (autoCamera) {
+        /* M1.4 ?cost=1: what the landmarker costs this device, published once a second (a React
+           update per frame would be the instrument measuring itself). */
+        const samples = landmarkSamplesRef.current;
+        samples.push(performance.now() - now);
+        if (now - lastLandmarkPublishRef.current > 1000 && samples.length > 0) {
+          lastLandmarkPublishRef.current = now;
+          const sorted = [...samples].sort((a, b) => a - b);
+          setLandmarkMs(sorted[Math.floor(sorted.length / 2)]);
+          samples.length = 0;
+        }
+      }
       const next = toObservation(result, now);
       if (next !== null) recordStage(telemetryRef.current, "handDetected", now);
 
@@ -936,6 +1012,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                       cameraRef.current,
                       cameraRef.current.bias + BRACKET_OFFSETS[nextStep],
                       now,
+                      // A new advanced set replaces the old one: a lit torch (M1.2) must be asked for again.
+                      torchOnRef.current,
                     ).then((state) => {
                       controlBusyRef.current = false;
                       cameraRef.current = state;
@@ -962,7 +1040,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                  * that were made about frames it has already moved past.
                  */
                 controlBusyRef.current = true;
-                void applyPlan(track, { ...cameraRef.current, gamma: corrected.gamma }, wanted, now).then(
+                void applyPlan(track, { ...cameraRef.current, gamma: corrected.gamma }, wanted, now, torchOnRef.current).then(
                   (state) => {
                     controlBusyRef.current = false;
                     cameraRef.current = state;
@@ -1190,7 +1268,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                * (below), so extraction always reads the one field that remembers.
                */
               const persisting = rekhaGray !== null && rekhaRef.current !== null;
-              if (at - lastExtractAtRef.current > EXTRACT_INTERVAL_MS && (persisting || !superResFresh(at))) {
+              if (at - lastExtractAtRef.current > activeProfileRef.current.extractIntervalMs && (persisting || !superResFresh(at))) {
                 lastExtractAtRef.current = at;
                 const flagsAtExtract = scanFlags.snapshot();
                 /*
@@ -1401,7 +1479,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     }
 
     schedule();
-  }, [frameImageData, mirrored, onCaptureComplete, onFeatures, onGateFail, onLineFeatures, sampleLuma, schedule]);
+  }, [autoCamera, frameImageData, mirrored, onCaptureComplete, onFeatures, onGateFail, onLineFeatures, sampleLuma, schedule]);
 
   useEffect(() => {
     loopRef.current = tick;
@@ -1415,6 +1493,25 @@ export function useHandScan(options: UseHandScanOptions = {}) {
    */
   useEffect(() => teardown, [teardown]);
 
+  /**
+   * M1.1 / M1.2: read what actually opened — which way the camera faces (and so the mirror), whether
+   * it has a torch, and how many cameras the device has to flip between. Called after every open.
+   */
+  const adoptStream = useCallback(async (stream: MediaStream): Promise<void> => {
+    const track = stream.getVideoTracks()[0];
+    const settings = track?.getSettings?.() ?? {};
+    const facing = resolveFacing(settings.facingMode, track?.label ?? "");
+    cameraFacingRef.current = facing;
+    setCameraFacing(facing);
+    torchOnRef.current = false;
+    setTorchStateValue(track !== undefined && torchSupported(track) ? "off" : "unsupported");
+    try {
+      setCameraCount(videoInputCount(await navigator.mediaDevices.enumerateDevices()));
+    } catch {
+      setCameraCount(1);
+    }
+  }, []);
+
   const start = useCallback(async () => {
     if (runningRef.current) return;
     setError(null);
@@ -1426,9 +1523,15 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     }
 
     setStatus("starting");
+    setCameraErrorName(null);
+    /* M1.4: the profile is fixed for the session at the moment the camera opens. */
+    const profile = requestedProfileRef.current;
+    activeProfileRef.current = profile;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: autoCamera
+          ? cameraConstraints(preferredFacing(isPhone(readPhoneSignals())), profile)
+          : { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -1437,8 +1540,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       if (video === null) throw new Error("video element not mounted");
       video.srcObject = stream;
       await video.play();
+      if (autoCamera) await adoptStream(stream);
 
-      landmarkerRef.current = await createHandLandmarker();
+      landmarkerRef.current = await createHandLandmarker(
+        profile.landmarker === "lite" ? { modelPath: HAND_LANDMARKER_LITE_MODEL_PATH } : {},
+      );
       // Starts loading in the background; scanning proceeds while the model warms up.
       segmenterRef.current = createOnnxSegmenter({
         // Every load step reports itself, so a missing model or a bad wasm path is visible in the
@@ -1450,10 +1556,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       runningRef.current = true;
       scanStartedAtRef.current = performance.now();
       setTimeToFirstTraceMs(null);
+      setActiveProfile(profile);
       setStatus("running");
       schedule();
     } catch (startError) {
       teardown();
+      if (startError instanceof DOMException) setCameraErrorName(startError.name);
       if (startError instanceof MissingScanAssetError) {
         setStatus("error");
         setError(startError.message);
@@ -1471,10 +1579,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       setStatus("error");
       setError("Camera shuru nahi ho paya.");
     }
-  }, [facingMode, schedule, teardown]);
+  }, [adoptStream, autoCamera, facingMode, schedule, teardown]);
 
   const stop = useCallback(() => {
     teardown();
+    setTorchStateValue("unsupported");
     setStatus("idle");
     setObservation(null);
     setQuality(IDLE_QUALITY);
@@ -1625,6 +1734,73 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     baselineHandRef.current = null;
   }, []);
 
+  /**
+   * M1.1: switch to the other camera.
+   *
+   * The old track is stopped FIRST — many phones cannot hold two cameras open at once. The other
+   * camera is asked for by facing (`exact`, so a device with one camera says so rather than reopening
+   * it); failing that, by the next listed device; failing both, the camera that was open is reopened,
+   * so a flip that cannot happen leaves the chamber as it was. The landmarker and the segmenter are
+   * kept — only the stream changes — and the evidence starts over, because a different camera is a
+   * different view of the palm.
+   */
+  const flipCamera = useCallback(async (): Promise<void> => {
+    if (!autoCamera || !runningRef.current || flippingRef.current) return;
+    const video = videoRef.current;
+    if (video === null) return;
+    flippingRef.current = true;
+    const profile = activeProfileRef.current;
+    const from = cameraFacingRef.current;
+    const previousDevice = streamRef.current?.getVideoTracks()[0]?.getSettings?.().deviceId;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    torchOnRef.current = false;
+
+    const open = (video: MediaTrackConstraints): Promise<MediaStream> =>
+      navigator.mediaDevices.getUserMedia({ video, audio: false });
+    let next: MediaStream | null = null;
+    try {
+      next = await open(flipConstraints(flipTarget(from), profile));
+    } catch {
+      try {
+        const other = (await navigator.mediaDevices.enumerateDevices()).find(
+          (device) => device.kind === "videoinput" && device.deviceId !== "" && device.deviceId !== previousDevice,
+        );
+        if (other !== undefined) next = await open(cameraConstraints(flipTarget(from), profile, other.deviceId));
+      } catch {
+        next = null;
+      }
+    }
+    try {
+      if (next === null) next = await open(cameraConstraints(from, profile));
+      streamRef.current = next;
+      video.srcObject = next;
+      await video.play();
+      await adoptStream(next);
+      restartCapture();
+      previousLandmarksRef.current = null;
+      spanHistoryRef.current = [];
+    } catch (flipError) {
+      console.error("[scan] camera flip failed:", flipError);
+      teardown();
+      setStatus("error");
+      setError("Camera shuru nahi ho paya.");
+    } finally {
+      flippingRef.current = false;
+    }
+  }, [adoptStream, autoCamera, restartCapture, teardown]);
+
+  /** M1.2: light or put out the back camera's torch — the same switch the dev sequence capture uses. */
+  const toggleTorch = useCallback(async (): Promise<void> => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (track === undefined || !torchSupported(track)) return;
+    const want = !torchOnRef.current;
+    if (await setTorch(track, want)) {
+      torchOnRef.current = want;
+      setTorchStateValue(want ? "on" : "off");
+    }
+  }, []);
+
   return {
     status,
     error,
@@ -1676,6 +1852,20 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     totalProgress: progressOf(capture),
     poseCount: CAPTURE_POSES.length,
     mirrored,
+    /** M1.1: which way the open camera faces ("user" until a camera has opened). */
+    cameraFacing,
+    /** M1.1: cameras on this device; the flip is only meaningful at 2 or more. */
+    cameraCount,
+    flipCamera,
+    /** M1.2: the open track's torch — "unsupported" unless it can light one. */
+    torch,
+    toggleTorch,
+    /** The DOMException name of the last failed start, or null. */
+    cameraErrorName,
+    /** M1.4: the profile the running session opened with; null before the first start. */
+    activeProfile,
+    /** M1.4: median landmarker call over the last second (cameraSelection "auto" only). */
+    landmarkMs,
     setVideoElement,
     start,
     stop,

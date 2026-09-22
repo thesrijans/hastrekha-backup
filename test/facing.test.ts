@@ -9,6 +9,7 @@ import {
   palmTilt,
   palmWinding,
   physicalHandedness,
+  PIPELINE_FEEDS_MIRRORED_INPUT,
   type PoseProfile,
   type QualityInput,
 } from "../lib/scan/quality";
@@ -25,6 +26,19 @@ function mirrorWorld(world: readonly Landmark3[]): Landmark3[] {
 }
 
 const { image: rightPalmImage, world: rightPalmWorld } = syntheticHand();
+
+/*
+ * THE LABEL EACH FIXTURE CARRIES, in the gate's convention: the label that pairs with that geometry's
+ * winding. It is the same through the front camera and the back camera, because the pipeline always
+ * hands MediaPipe the RAW frame and both cameras photograph the palmar surface from in front (M1.1).
+ *
+ * (A measured caveat, not changed by M1: this fixture's "right palm" has its thumb on the image's left;
+ * a real right palm in a raw frame has it on the right, and MediaPipe labels it "Right" — see the note
+ * at PIPELINE_FEEDS_MIRRORED_INPUT. The fixture's naming and the gate's two conventions are each
+ * inverted, and the PAIRING, which is what the gate uses, is the part that holds on real frames.)
+ */
+const RIGHT_HAND_LABEL: Handedness = "Left";
+const LEFT_HAND_LABEL: Handedness = "Right";
 /** A left palm shown to the camera is the mirror image of a right palm. */
 const leftPalmImage = mirrorHand(rightPalmImage);
 const leftPalmWorld = mirrorWorld(rightPalmWorld);
@@ -50,20 +64,15 @@ const leftPalmWorld = mirrorWorld(rightPalmWorld);
 
 {
   /*
-   * MediaPipe labels handedness assuming a mirrored (selfie) input. We feed it the raw frame, so on
-   * a front camera — the case where the preview is CSS-mirrored — its label is inverted.
+   * The pairing takes no camera argument: the preview's mirror (lib/scan/camera-select.ts) never
+   * touches the pixels MediaPipe sees, so a label pairs with the same winding through either camera.
    */
-  assert.equal(physicalHandedness("Right", false), "Right", "unmirrored preview: label is taken as given");
-  assert.equal(physicalHandedness("Left", false), "Left", "unmirrored preview: label is taken as given");
-  assert.equal(physicalHandedness("Right", true), "Left", "mirrored preview: the label is inverted");
-  assert.equal(physicalHandedness("Left", true), "Right", "mirrored preview: the label is inverted");
+  assert.equal(PIPELINE_FEEDS_MIRRORED_INPUT, false, "the landmarker is always handed the raw frame");
+  assert.equal(physicalHandedness(RIGHT_HAND_LABEL), "Right", "the right-palm fixture's label maps to the right hand");
+  assert.equal(physicalHandedness(LEFT_HAND_LABEL), "Left", "and the left-palm fixture's to the left");
 
-  assert.equal(expectedWindingSign("Right", false), 1, "physical right palm expects a positive winding");
-  assert.equal(expectedWindingSign("Left", false), -1, "physical left palm expects a negative winding");
-  // The app's real configuration: front camera, mirrored preview, MediaPipe reports "Left" for a
-  // physically right hand — which must still expect the positive winding a right palm produces.
-  assert.equal(expectedWindingSign("Left", true), 1, "mirrored preview inverts the expectation with the label");
-  assert.equal(expectedWindingSign("Right", true), -1, "and inverts it the other way too");
+  assert.equal(expectedWindingSign(RIGHT_HAND_LABEL), 1, "and pairs with the right-palm fixture's positive winding");
+  assert.equal(expectedWindingSign(LEFT_HAND_LABEL), -1, "the left-palm fixture's label with its negative one");
 }
 
 /* ------------------------- The four-case gate matrix ----------------------- */
@@ -83,73 +92,18 @@ interface Case {
  * the back of a left hand carries the label "Left" while presenting the geometry of a right palm.
  * That is precisely the confusion the winding test exists to resolve.
  */
-const CASES: readonly Case[] = [
-  {
-    name: "right palm, unmirrored preview",
-    image: rightPalmImage,
-    world: rightPalmWorld,
-    label: "Right",
-    mirrored: false,
-    expectPalm: true,
-  },
-  {
-    name: "left palm, unmirrored preview",
-    image: leftPalmImage,
-    world: leftPalmWorld,
-    label: "Left",
-    mirrored: false,
-    expectPalm: true,
-  },
-  {
-    name: "back of right hand, unmirrored preview",
-    image: leftPalmImage,
-    world: leftPalmWorld,
-    label: "Right",
-    mirrored: false,
-    expectPalm: false,
-  },
-  {
-    name: "back of left hand, unmirrored preview",
-    image: rightPalmImage,
-    world: rightPalmWorld,
-    label: "Left",
-    mirrored: false,
-    expectPalm: false,
-  },
-  /* The same four through a mirrored front-camera preview — the app's actual configuration. */
-  {
-    name: "right palm, mirrored preview (the app case that used to be rejected)",
-    image: rightPalmImage,
-    world: rightPalmWorld,
-    label: "Left", // inverted by MediaPipe's mirrored-input assumption
-    mirrored: true,
-    expectPalm: true,
-  },
-  {
-    name: "left palm, mirrored preview",
-    image: leftPalmImage,
-    world: leftPalmWorld,
-    label: "Right",
-    mirrored: true,
-    expectPalm: true,
-  },
-  {
-    name: "back of right hand, mirrored preview",
-    image: leftPalmImage,
-    world: leftPalmWorld,
-    label: "Left",
-    mirrored: true,
-    expectPalm: false,
-  },
-  {
-    name: "back of left hand, mirrored preview",
-    image: rightPalmImage,
-    world: rightPalmWorld,
-    label: "Right",
-    mirrored: true,
-    expectPalm: false,
-  },
-];
+const CASES: readonly Case[] = (["front", "back"] as const).flatMap((camera) => {
+  /* M1.1: the preview flag follows the camera — mirrored for the front one, never for the back. */
+  const mirrored = camera === "front";
+  const through = `${camera} camera (${mirrored ? "mirrored" : "unmirrored"} preview)`;
+  return [
+    { name: `right palm, ${through}`, image: rightPalmImage, world: rightPalmWorld, label: RIGHT_HAND_LABEL, mirrored, expectPalm: true },
+    { name: `left palm, ${through}`, image: leftPalmImage, world: leftPalmWorld, label: LEFT_HAND_LABEL, mirrored, expectPalm: true },
+    /* The back of a right hand presents a left palm's geometry and still carries the right hand's label. */
+    { name: `back of right hand, ${through}`, image: leftPalmImage, world: leftPalmWorld, label: RIGHT_HAND_LABEL, mirrored, expectPalm: false },
+    { name: `back of left hand, ${through}`, image: rightPalmImage, world: rightPalmWorld, label: LEFT_HAND_LABEL, mirrored, expectPalm: false },
+  ];
+});
 
 for (const testCase of CASES) {
   const readout = assessFacing({
@@ -158,7 +112,6 @@ for (const testCase of CASES) {
     world: testCase.world,
     handedness: testCase.label,
     handednessScore: 0.95,
-    mirrored: testCase.mirrored,
     minFacing: 0.55,
   });
   assert.equal(readout.trusted, true, `${testCase.name}: a 0.95 score is trusted`);
@@ -197,18 +150,16 @@ for (const testCase of CASES) {
     landmarks: rightPalmImage,
     span: palmSpan(rightPalmImage),
     world: rightPalmWorld,
-    handedness: "Right",
+    handedness: RIGHT_HAND_LABEL,
     handednessScore: 0.95,
-    mirrored: false,
     minFacing: 0.55,
   });
   const left = assessFacing({
     landmarks: leftPalmImage,
     span: palmSpan(leftPalmImage),
     world: leftPalmWorld,
-    handedness: "Left",
+    handedness: LEFT_HAND_LABEL,
     handednessScore: 0.95,
-    mirrored: false,
     minFacing: 0.55,
   });
   assert.ok(right.palmToward && left.palmToward, "both palms face the camera");
@@ -229,9 +180,8 @@ for (const testCase of CASES) {
     landmarks: rightPalmImage,
     span: palmSpan(rightPalmImage),
     world: rightPalmWorld,
-    handedness: "Left", // wrong label, and no mirror to excuse it
+    handedness: LEFT_HAND_LABEL, // the other hand's label on a right palm
     handednessScore: lowScore,
-    mirrored: false,
     minFacing: 0.55,
   });
   assert.equal(mislabelled.trusted, false, "a sub-threshold score is not trusted");
@@ -244,9 +194,8 @@ for (const testCase of CASES) {
     landmarks: rightPalmImage,
     span: palmSpan(rightPalmImage),
     world: rightPalmWorld.map((p) => ({ x: p.x, y: 0, z: p.y })), // palm rotated into the view axis
-    handedness: "Right",
+    handedness: RIGHT_HAND_LABEL,
     handednessScore: lowScore,
-    mirrored: false,
     minFacing: 0.55,
   });
   assert.ok(edgeOn.facing < 0.55, "the rotated palm is edge-on");
@@ -257,9 +206,8 @@ for (const testCase of CASES) {
     landmarks: rightPalmImage,
     span: palmSpan(rightPalmImage),
     world: rightPalmWorld,
-    handedness: "Left",
+    handedness: LEFT_HAND_LABEL,
     handednessScore: HANDEDNESS_TRUST_SCORE,
-    mirrored: false,
     minFacing: 0.55,
   });
   assert.ok(trusted.trusted, "exactly at the threshold counts as trusted");
@@ -294,12 +242,13 @@ function gradeTilt(
   hand: { image: Landmark3[]; world: Landmark3[] },
   pose: PoseProfile,
   mirrored: boolean,
+  label: Handedness,
 ): ReturnType<typeof gradeFrame> {
   const span = palmSpan(hand.image);
   return gradeFrame({
     landmarks: hand.image,
     world: hand.world,
-    handedness: "Right",
+    handedness: label,
     mirrored,
     stats: { luma: 0.5, clipped: 0 },
     jitter: 0,
@@ -326,7 +275,7 @@ function gradeTilt(
   /* Rear camera, no mirroring: a left-leaning normal satisfies TILT LEFT. */
   const leftRear = tiltedHand(35);
   assert.ok(palmTilt(leftRear.world, false) < 0, "35° leans the normal to screen-left unmirrored");
-  assert.equal(gradeTilt(leftRear, TILT_LEFT, false).ok, true, "TILT LEFT accepts a left-leaning palm");
+  assert.equal(gradeTilt(leftRear, TILT_LEFT, false, RIGHT_HAND_LABEL).ok, true, "TILT LEFT accepts a left-leaning palm through the back camera");
 
   /*
    * Front camera, mirrored preview — the configuration the bug was reported on. The user tilts left
@@ -339,7 +288,8 @@ function gradeTilt(
   };
   assert.ok(palmTilt(mirroredHand.world, true) < 0, "and leans screen-left once mirrored");
 
-  const accepted = gradeTilt(mirroredHand, TILT_LEFT, true);
+  /* The raw frame is a left palm's geometry, so MediaPipe labels it the left hand's way. */
+  const accepted = gradeTilt(mirroredHand, TILT_LEFT, true, LEFT_HAND_LABEL);
   assert.equal(accepted.ok, true, "TILT LEFT accepts a left-tilted palm on a mirrored preview");
   assert.equal(
     accepted.checks.not_palm_up,
@@ -348,7 +298,7 @@ function gradeTilt(
   );
 
   /* Tilting the wrong way is still rejected, but as its own failure with its own hint. */
-  const wrongWay = gradeTilt(mirroredHand, TILT_RIGHT, true);
+  const wrongWay = gradeTilt(mirroredHand, TILT_RIGHT, true, LEFT_HAND_LABEL);
   assert.equal(wrongWay.ok, false, "TILT RIGHT rejects a left-tilted palm");
   assert.equal(wrongWay.checks.tilt_direction, false, "as a tilt-direction failure");
   assert.equal(wrongWay.checks.not_palm_up, true, "not as a facing failure");
@@ -356,8 +306,8 @@ function gradeTilt(
 
   /* A square-on palm satisfies neither tilt pose — the check is not vacuous. */
   const square = tiltedHand(0);
-  assert.equal(gradeTilt(square, TILT_LEFT, false).checks.tilt_direction, false, "no tilt is not a left tilt");
-  assert.equal(gradeTilt(square, TILT_RIGHT, false).checks.tilt_direction, false, "nor a right one");
+  assert.equal(gradeTilt(square, TILT_LEFT, false, RIGHT_HAND_LABEL).checks.tilt_direction, false, "no tilt is not a left tilt");
+  assert.equal(gradeTilt(square, TILT_RIGHT, false, RIGHT_HAND_LABEL).checks.tilt_direction, false, "nor a right one");
 }
 
 /* --------------------- Winding sign on a foreshortened palm ----------------- */
@@ -377,9 +327,8 @@ function gradeTilt(
     landmarks: image,
     span: palmSpan(image),
     world,
-    handedness: "Right",
+    handedness: RIGHT_HAND_LABEL,
     handednessScore: 0.95,
-    mirrored: false,
     minFacing: 0.3,
   });
   assert.equal(full.windingReadable, true, "a square-on palm has a readable winding");
@@ -390,9 +339,8 @@ function gradeTilt(
     landmarks: flattened,
     span: palmSpan(flattened),
     world,
-    handedness: "Right",
+    handedness: RIGHT_HAND_LABEL,
     handednessScore: 0.95,
-    mirrored: false,
     minFacing: 0.3,
   });
   assert.equal(foreshortened.windingReadable, false, "a foreshortened palm does not");
@@ -404,9 +352,8 @@ function gradeTilt(
     landmarks: flattened,
     span: palmSpan(flattened),
     world,
-    handedness: "Left",
+    handedness: LEFT_HAND_LABEL,
     handednessScore: 0.95,
-    mirrored: false,
     minFacing: 0.3,
   });
   assert.equal(wrongLabel.palmToward, true, "an unreadable sign is ignored rather than believed");
@@ -419,9 +366,8 @@ function gradeTilt(
     landmarks: image,
     span: palmSpan(image),
     world,
-    handedness: "Left",
+    handedness: LEFT_HAND_LABEL,
     handednessScore: 0.95,
-    mirrored: false,
     minFacing: 0.3,
   });
   assert.equal(wrongLabelSquare.palmToward, false, "a readable mismatch still rejects a dorsum");

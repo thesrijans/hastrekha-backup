@@ -44,6 +44,7 @@ export const SANCTUARY_ICON_NAMES = [
   "arrow",
   "profile",
   "chevron-down",
+  "flip",
 ] as const;
 
 export type SanctuaryIconName = (typeof SANCTUARY_ICON_NAMES)[number];
@@ -130,6 +131,10 @@ const ICON_PATHS: Readonly<Record<SanctuaryIconName, string>> = {
   profile: "M15.2 9 A3.2 3.2 0 1 1 8.8 9 A3.2 3.2 0 1 1 15.2 9 Z M5.8 18.8 C7 15.8 9.3 14.3 12 14.3 C14.7 14.3 17 15.8 18.2 18.8",
   /* Down, into the rest of the page. */
   "chevron-down": "M6 9.5 L12 15.5 L18 9.5",
+  /* The chamber's other camera (M1.1) — a lens between two arcs that turn it round. */
+  flip:
+    "M15 12 A3 3 0 1 1 9 12 A3 3 0 1 1 15 12 Z M4.4 10.2 A7.8 7.8 0 0 1 18.7 8.3 M18.7 8.3 L19.1 4.9 " +
+    "M18.7 8.3 L15.4 7.5 M19.6 13.8 A7.8 7.8 0 0 1 5.3 15.7 M5.3 15.7 L4.9 19.1 M5.3 15.7 L8.6 16.5",
 };
 
 /** The two filled marks — the yantra's bindu and the diya's wick. */

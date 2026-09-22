@@ -34,7 +34,7 @@ import { coverTransform, videoNormToCanvas, videoPxToCanvas, type CoverTransform
 import { MASK_SIZE, type ActiveLineId, type Landmark3, type Point2, type TracedLine } from "@/lib/scan/types";
 import { placeLeaders } from "@/lib/sanctuary/chamber-leaders";
 import { createFrameCost, type FrameCostSummary } from "@/lib/sanctuary/frame-cost";
-import { drawScanRing, ringGeometry } from "./scan-ring";
+import { drawScanRing, ringGeometry, RING_HAND_MARGIN } from "./scan-ring";
 
 /** How long a newly found line takes to come up to full brightness. Slow enough to be a reveal. */
 const REVEAL_MS = 900;
@@ -61,6 +61,35 @@ const CORNER_FRACTION = 0.14;
 
 /** The label's size in CSS pixels. Small, the way the reference sets them. */
 const LABEL_PX = 14;
+
+/**
+ * M1.3: how quickly the ring follows the hand's size, per frame. Slow on purpose — a wheel that
+ * breathes with every landmark jitter is a gauge, and the reference's wheel is an object in the room.
+ */
+const RING_EASE = 0.08;
+
+/**
+ * The hand's extent for the ring (M1.3): the farthest of the 21 landmarks from their centroid, in canvas
+ * CSS pixels, with the ring's margin. Null without a hand or a camera box to project through. Pure and
+ * exported for the test.
+ */
+export function handRingExtent(
+  marks: readonly Landmark3[] | null,
+  videoSize: { readonly width: number; readonly height: number } | null,
+  width: number,
+  height: number,
+  mirrored: boolean,
+): number | null {
+  if (marks === null || marks.length < 21 || videoSize === null) return null;
+  const transform = coverTransform(videoSize.width, videoSize.height, width, height, mirrored);
+  if (transform === null) return null;
+  const points = marks.map((mark) => videoNormToCanvas(transform, mark));
+  const cx = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+  const cy = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+  let far = 0;
+  for (const p of points) far = Math.max(far, Math.hypot(p.x - cx, p.y - cy));
+  return far * RING_HAND_MARGIN;
+}
 
 /**
  * The clock the frame window is measured on, at module scope.
@@ -191,11 +220,19 @@ export function ChamberCanvas({
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
 
+    /* M1.3: the ring's radius, eased toward the hand's extent; null until a hand has been seen. */
+    let ringExtent: number | null = null;
+
     const frame = (timestamp: number): void => {
       if (started === 0) started = timestamp;
       costRef.current.measure(() => {
+        const state = propsRef.current;
+        const target = handRingExtent(state.landmarks, state.videoSize, box.width, box.height, state.mirrored);
+        const rest = ringGeometry(box.width, box.height).radius;
+        const aim = target ?? rest;
+        ringExtent = ringExtent === null ? aim : ringExtent + (aim - ringExtent) * RING_EASE;
         context.setTransform(dpr, 0, 0, dpr, 0, 0);
-        drawChamber(context, box, palette, propsRef.current, firstSeenRef.current, timestamp, timestamp - started);
+        drawChamber(context, box, palette, { ...state, ringExtent }, firstSeenRef.current, timestamp, timestamp - started);
       });
       /* Reported four times a second rather than every frame: a readout that
          re-renders React sixty times a second is itself a frame cost, and would
@@ -203,6 +240,11 @@ export function ChamberCanvas({
       if (timestamp - lastReport > 250) {
         lastReport = timestamp;
         onCostRef.current?.(costRef.current.summary());
+        /* The ring's geometry, on the element, for the layout captures to measure (M1.3). */
+        const ring = ringGeometry(box.width, box.height, ringExtent);
+        const hand = handRingExtent(propsRef.current.landmarks, propsRef.current.videoSize, box.width, box.height, propsRef.current.mirrored);
+        canvas.dataset.sncRing = `${Math.round(ring.cx)},${Math.round(ring.cy)},${Math.round(ring.radius)}`;
+        canvas.dataset.sncHand = hand === null ? "" : String(Math.round(hand));
       }
       raf = requestAnimationFrame(frame);
     };
@@ -228,6 +270,8 @@ interface DrawState {
   readonly poseProgress: number;
   readonly mirrored: boolean;
   readonly gatePassing: boolean;
+  /** M1.3: the ring's smoothed extent (see handRingExtent); absent or null rests the ring at its largest. */
+  readonly ringExtent?: number | null;
 }
 
 /**
@@ -256,7 +300,7 @@ export function drawChamber(
      A vignette to near-black, and one warm source. Both are the SCENE and are
      drawn whether or not a hand has been seen: a chamber that only becomes a
      chamber once it recognises you is a loading state wearing an atmosphere. */
-  drawRoom(context, width, height, palette, state.landmarks);
+  drawRoom(context, width, height, palette, state.landmarks, state.ringExtent ?? null);
 
   /* ── 2. the wheel ──────────────────────────────────────────────────────── */
   drawScanRing(context, {
@@ -269,6 +313,7 @@ export function drawChamber(
     elapsedMs,
     progress: state.poseProgress,
     palette: { line: palette.gold, fill: palette.warm },
+    extent: state.ringExtent ?? null,
   });
 
   const marks = state.landmarks;
@@ -324,8 +369,9 @@ function drawRoom(
   height: number,
   palette: Palette,
   marks: readonly Landmark3[] | null,
+  extent: number | null,
 ): void {
-  const { cx, cy, radius } = ringGeometry(width, height);
+  const { cx, cy, radius } = ringGeometry(width, height, extent);
 
   /*
    * THE FEED IS DIMMED BEFORE IT IS VIGNETTED, and the first capture is why.

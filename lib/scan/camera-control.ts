@@ -354,6 +354,37 @@ export function emptyCameraControl(): CameraControlState {
   };
 }
 
+/* --------------------------------- The torch -------------------------------- */
+
+/** Structural view of the torch capability/constraint — a Chromium extension, absent from TS lib. */
+interface TorchCapableTrack {
+  getCapabilities?(): { torch?: boolean };
+  applyConstraints(constraints: { advanced?: { torch?: boolean }[] }): Promise<void>;
+}
+
+/** Whether this track can light a torch at all — Chrome on Android, on a back camera that has one. */
+export function torchSupported(track: MediaStreamTrack): boolean {
+  return readCapabilities(track)?.torch === true;
+}
+
+/**
+ * Turn the track's torch on or off. Returns whether the request was actually applied — false means
+ * the camera has no torch (or refused). Never throws: an unsupported torch is a recorded fact, not an
+ * error.
+ *
+ * The ONE torch switch: the chamber's torch toggle (M1.2) and the dev sequence capture (§2.3, which
+ * re-exports it from lib/scan/dev/still-capture.ts) both go through here.
+ */
+export async function setTorch(track: MediaStreamTrack, on: boolean): Promise<boolean> {
+  if (!torchSupported(track)) return false;
+  try {
+    await (track as unknown as TorchCapableTrack).applyConstraints({ advanced: [{ torch: on }] });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Reads a track's capabilities without assuming the method or the fields exist. */
 export function readCapabilities(track: MediaStreamTrack): ExtendedCapabilities | null {
   const getter = (track as { getCapabilities?: () => MediaTrackCapabilities }).getCapabilities;

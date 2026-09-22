@@ -59,8 +59,36 @@ export const RING_RADII = {
   innerCircle: 0.69,
 } as const;
 
-/** How much of the smaller viewport dimension the ring's outer radius takes. */
+/** How much of the smaller viewport dimension the ring's outer radius takes, at most. */
 export const RING_EXTENT = 0.42;
+
+/**
+ * M1.3 — THE RING IS SIZED TO THE HAND. With a hand in view the ring's radius eases toward the hand's
+ * own extent (chamber-canvas.tsx measures it: the farthest landmark from the hand's centre, in canvas
+ * pixels, times {@link RING_HAND_MARGIN}); with none it rests at its largest. Never smaller than
+ * {@link RING_MIN_SHARE} of that largest, so a hand held far away still gets a wheel rather than a coin.
+ */
+export const RING_HAND_MARGIN = 1.12;
+export const RING_MIN_SHARE = 0.45;
+
+/**
+ * M1.3 — THE PHONE'S FREE BAND. On a phone the chamber's DOM owns a row at each end of the screen: the
+ * back mark above, and below it the Rekha Monitor's handle, the litany's leaf and the flip and torch
+ * marks either side of it. The ring must fit between them — "nothing overlapping the feed" means the
+ * hand's wheel is never under a leaf or a control — so on a phone its radius is also capped by the band
+ * and its centre is held inside it. In CSS pixels:
+ *
+ *   top      the back mark's 44px target at 0.75rem, plus a gap
+ *   bottom   the monitor handle (3rem), the dock's gap (1.25rem) and the leaf at its TALLEST — the
+ *            longest stage line, the "found nothing" note and the longest gate hint together reach
+ *            259px above the bottom edge at 390 and at 412 (scripts/capture/capture-chamber-phone.mjs
+ *            measures it) — plus a 9px gap. Measured, not estimated: 228, sized to a one-hint leaf, let
+ *            the tallest leaf into the wheel by 31px.
+ */
+export const RING_PHONE_RESERVE_TOP = 64;
+export const RING_PHONE_RESERVE_BOTTOM = 268;
+/** The chamber's phone layout is the Rekha Monitor's: below 900px it becomes the pull-up sheet. */
+export const RING_PHONE_MAX_WIDTH = 899;
 
 /** How strongly a completed sector is washed. A tenth: felt on the second look, never on the first. */
 export const SECTOR_WASH_ALPHA = 0.12;
@@ -95,6 +123,8 @@ export interface RingDraw {
   /** 0–1: how much of the tilt choreography is done. Fills that fraction of the sectors. */
   readonly progress: number;
   readonly palette: RingPalette;
+  /** M1.3: the hand's extent in CSS pixels, already smoothed; null with no hand in view. */
+  readonly extent?: number | null;
 }
 
 /**
@@ -109,19 +139,30 @@ export interface RingDraw {
 export const RING_THUMB_Y = 0.58;
 
 /**
- * The ring's centre and outer radius for a viewport.
+ * The ring's centre and outer radius for a viewport, and — M1.3 — for the hand in it.
  *
  * Exported because the vignette is drawn concentric with it: a room whose
  * darkness is centred somewhere other than its own wheel has two centres, and
  * the eye finds the disagreement long before it can name it.
+ *
+ * On a phone (portrait, under the monitor's 900px breakpoint) the radius is also
+ * capped by the free band between the chamber's top and bottom rows, and the
+ * centre sits at thumb height unless that would push the wheel into either row,
+ * in which case it moves just far enough not to. A short viewport — a phone with
+ * its browser bars showing — therefore lifts the wheel rather than running it
+ * under the litany.
  */
-export function ringGeometry(width: number, height: number): { cx: number; cy: number; radius: number } {
+export function ringGeometry(width: number, height: number, extent: number | null = null): { cx: number; cy: number; radius: number } {
   const portrait = height > width;
-  return {
-    cx: width / 2,
-    cy: height * (portrait ? RING_THUMB_Y : 0.5),
-    radius: Math.min(width, height) * RING_EXTENT,
-  };
+  const largest = Math.min(width, height) * RING_EXTENT;
+  const phone = portrait && width <= RING_PHONE_MAX_WIDTH;
+  const top = phone ? RING_PHONE_RESERVE_TOP : 0;
+  const bottom = phone ? height - RING_PHONE_RESERVE_BOTTOM : height;
+  const cap = phone ? Math.max(0, Math.min(largest, (bottom - top) / 2)) : largest;
+  const radius = extent === null || !Number.isFinite(extent) ? cap : Math.min(cap, Math.max(cap * RING_MIN_SHARE, extent));
+  const thumb = height * (portrait ? RING_THUMB_Y : 0.5);
+  const cy = phone ? Math.min(Math.max(thumb, top + radius), Math.max(top + radius, bottom - radius)) : thumb;
+  return { cx: width / 2, cy, radius };
 }
 
 /**
@@ -152,7 +193,7 @@ export function ringRotation(elapsedMs: number): number {
  * which is among the harder things to attribute in a frame.
  */
 export function drawScanRing(context: CanvasRenderingContext2D, draw: RingDraw): void {
-  const { cx, cy, radius } = ringGeometry(draw.width, draw.height);
+  const { cx, cy, radius } = ringGeometry(draw.width, draw.height, draw.extent ?? null);
   if (radius <= 0) return;
 
   const hairline = 1 / Math.max(draw.dpr, 1);

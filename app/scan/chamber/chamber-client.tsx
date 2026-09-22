@@ -30,6 +30,16 @@
  * score, and the failure copy is below only because failure copy is a fact
  * about this route's own states.
  *
+ * ── THE PHONE (M1) ──
+ *
+ * The chamber chooses its camera: the BACK one on a phone, the front one
+ * elsewhere, silently the front one where there is no back camera. The reader
+ * can flip between them and, where the back camera has one, light its torch;
+ * both marks sit at the litany's lower corners, where a thumb reaches. The
+ * mirror follows the camera that opened (lib/scan/camera-select.ts). On a
+ * MID or LOW device the pipeline runs its lite profile — the lite landmark
+ * model, 480p, extraction every 900 ms — and `?cost=1` says which profile ran.
+ *
  * ── WHAT IS NOT REBUILT HERE ──
  *
  * No live ticker, no debug HUD, no enhance toasts, no deep-scan flash. Those
@@ -48,6 +58,11 @@ import { emptySession, observe, observeLines, sessionBag, type ReadingSession } 
 import { mergedMask, type CaptureState } from "@/lib/scan/capture";
 import { MASK_SIZE, type ActiveLineId, type TracedLine } from "@/lib/scan/types";
 import { useHandScan } from "@/components/scan/use-hand-scan";
+import { useCapabilityTier } from "@/components/sanctuary/use-capability-tier";
+import { SanctuaryIcon } from "@/components/sanctuary/sanctuary-icons";
+import { scanProfileFor } from "@/lib/scan/scan-profile";
+import { browserFamily } from "@/lib/scan/camera-select";
+import { cameraDeniedDirections, cameraFailureNote } from "@/lib/sanctuary/chamber-camera";
 import { encodeCrop, handOffToPothi, rescanPrompt, RESCAN_PARAM } from "@/lib/sanctuary/pothi-handoff";
 import {
   chamberCurrentLine,
@@ -127,6 +142,24 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     () => rescanPrompt(new URLSearchParams(window.location.search).get(RESCAN_PARAM)),
     () => null,
   );
+
+  /*
+   * M1.5: which browser's words to use when the camera is refused. Client knowledge, read through a
+   * store with a null server snapshot for the same reason the rescan ask is.
+   */
+  const browser = useSyncExternalStore(
+    subscribeToNothing,
+    () => browserFamily(navigator.userAgent, navigator.maxTouchPoints ?? 0),
+    () => null,
+  );
+
+  /*
+   * M1.4: the device's capability tier decides the pipeline profile. It is settled (~170 ms after
+   * mount) long before the reader presses the gate, and the hook holds whatever profile was current
+   * when the camera opened for the rest of the session.
+   */
+  const capabilityTier = useCapabilityTier();
+  const profile = scanProfileFor(capabilityTier);
 
   /** The frame-cost readout, shown only when it is asked for. See the note at its render site. */
   const showCost = useSyncExternalStore(
@@ -251,7 +284,15 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     videoSize,
     setVideoElement,
     start,
-  } = useHandScan({ onFeatures, onLineFeatures, onCaptureComplete });
+    cameraFacing,
+    cameraCount,
+    flipCamera,
+    torch,
+    toggleTorch,
+    cameraErrorName,
+    activeProfile,
+    landmarkMs,
+  } = useHandScan({ onFeatures, onLineFeatures, onCaptureComplete, cameraSelection: "auto", profile });
 
   useEffect(() => {
     cropRef.current = rectified?.image ?? cropRef.current;
@@ -312,26 +353,37 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
   /* ------------------------------ the failures --------------------------- */
 
   /*
-   * A camera the reader refused, a browser that has none, and a pipeline that
-   * broke are three different facts and get three different sentences. The one
-   * thing none of them does is offer a retry the chamber cannot honour: a
-   * denied permission is not fixed by pressing a button, so that state sends
-   * the reader to their browser settings in words instead.
+   * A camera the reader refused, a browser that has none, a device with no
+   * camera, a camera another app is holding, and a pipeline that broke are
+   * different facts and get different sentences. A denied permission is not
+   * fixed by pressing a button, so that leaf (M1.5) gives the reader their own
+   * browser's directions first, and its one control is for AFTER they have
+   * followed them.
    */
-  const cameraFailure =
-    status === "denied"
-      ? "Camera ki ijaazat nahi mili. Browser ki settings mein ise allow karke wapas aao."
-      : status === "unsupported"
-        ? "Is browser mein camera nahi khulta. Kisi doosre browser se koshish karo."
-        : status === "error"
-          ? (cameraError ?? "Camera khulte hue ruk gaya.")
-          : null;
+  const denied = status === "denied";
+  const cameraFailure = denied
+    ? null
+    : status === "unsupported"
+      ? "Is browser mein camera nahi khulta. Kisi doosre browser se koshish karo."
+      : status === "error"
+        ? (cameraFailureNote(cameraErrorName) ?? cameraError ?? "Camera khulte hue ruk gaya.")
+        : null;
 
-  const blocked = cameraFailure ?? failure;
+  const blocked = denied ? "denied" : (cameraFailure ?? failure);
   const idle = status === "idle" || status === "starting";
 
+  /*
+   * M1.1 / M1.2: the flip and the torch, offered only while the chamber is
+   * actually scanning, and each only where it can do something — the flip on a
+   * device with two cameras, the torch on a track that can light one.
+   */
+  const scanning = status === "running" && blocked === null && phase === "scanning";
+  const canFlip = scanning && cameraCount >= 2;
+  const canTorch = scanning && torch !== "unsupported";
+  const directions = denied ? cameraDeniedDirections(browser ?? "other") : null;
+
   return (
-    <div className={styles.chamber}>
+    <div className={styles.chamber} data-snc-controls={canFlip || canTorch ? "" : undefined}>
       <video
         ref={setVideoElement}
         playsInline
@@ -383,34 +435,82 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         </div>
       ) : null}
 
+      {/* M1.5 — THE REFUSED CAMERA: the reader's own browser's directions, on the
+          same leaf, and one control for after they have followed them. */}
+      {directions === null ? null : (
+        <div className={styles.gate}>
+          <Parchment tone="aged" tear="rough" seed={9091} className={styles.gateLeaf}>
+            <p className={styles.gateLine} lang="hi">
+              {directions.title}
+            </p>
+            <p className={styles.gateNote}>{directions.lead}</p>
+            <ol className={styles.steps}>
+              {directions.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            {directions.alternative === null ? null : <p className={styles.gateNote}>{directions.alternative}</p>}
+            <button type="button" className={styles.gateButton} onClick={start}>
+              {directions.retry}
+            </button>
+          </Parchment>
+        </div>
+      )}
+
       {/* THE FAILURES, in the same ink, on the same leaf. An error here is still
           something happening in a room rather than a dialog over one. */}
-      {blocked === null ? null : (
+      {blocked === null || denied ? null : (
         <div className={styles.gate}>
           <Parchment tone="aged" tear="rough" seed={9091} className={styles.gateLeaf}>
             <p className={styles.gateLine} lang="hi">
               कक्ष अभी नहीं खुला.
             </p>
             <p className={styles.gateNote}>{blocked}</p>
-            {status === "denied" ? null : (
-              <button
-                type="button"
-                className={styles.gateButton}
-                onClick={() => {
-                  setFailure(null);
-                  setPhase("scanning");
-                  start();
-                }}
-              >
-                Dobara koshish karo
-              </button>
-            )}
+            <button
+              type="button"
+              className={styles.gateButton}
+              onClick={() => {
+                setFailure(null);
+                setPhase("scanning");
+                start();
+              }}
+            >
+              Dobara koshish karo
+            </button>
           </Parchment>
         </div>
       )}
 
+      {/* M1.1 / M1.2 — THE FLIP AND THE TORCH. Marks like the back mark, not
+          buttons: no fill, no border, no radius, a 44px target around an engraved
+          glyph. They sit at the litany's two lower corners — on a phone the one
+          place both are in a thumb's reach, and off the ring the hand is in. */}
+      {canFlip ? (
+        <button
+          type="button"
+          className={styles.control}
+          data-snc-control="flip"
+          aria-label={cameraFacing === "environment" ? "Saamne ka camera" : "Peeche ka camera"}
+          onClick={() => void flipCamera()}
+        >
+          <SanctuaryIcon name="flip" size={26} />
+        </button>
+      ) : null}
+      {canTorch ? (
+        <button
+          type="button"
+          className={styles.control}
+          data-snc-control="torch"
+          aria-label="Roshni"
+          aria-pressed={torch === "on"}
+          onClick={() => void toggleTorch()}
+        >
+          <SanctuaryIcon name="diya" size={26} />
+        </button>
+      ) : null}
+
       {/* S1.4 — the lines found so far, by state, and nothing below CANDIDATE. Detection only. */}
-      <RekhaMonitor snapshot={rekha} visible={status === "running" && blocked === null && phase === "scanning"} />
+      <RekhaMonitor snapshot={rekha} visible={scanning} />
 
       <ScanLitany
         line={line}
@@ -434,6 +534,11 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
             ? null
             : ` · rekha ${rekha.costMs.toFixed(2)} ms/frame · ${rekhaLedger(rekha)} · flicker ${Object.values(rekha.flicker).join("/")}`}
           {traceMs === null ? null : ` · trace ${traceMs.toFixed(1)} ms/extraction`}
+          {activeProfile === null
+            ? null
+            : ` · profile ${activeProfile.name} (${capabilityTier}) ${videoSize === null ? "–" : `${videoSize.width}×${videoSize.height}`} · extract ${activeProfile.extractIntervalMs} ms`}
+          {landmarkMs === null ? null : ` · landmarks ${landmarkMs.toFixed(1)} ms`}
+          {status === "running" ? ` · ${cameraFacing === "environment" ? "back" : "front"}${mirrored ? " mirrored" : ""}` : null}
         </p>
       ) : null}
     </div>

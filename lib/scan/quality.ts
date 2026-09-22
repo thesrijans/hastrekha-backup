@@ -187,18 +187,38 @@ export function palmNormal(world: readonly Landmark3[]): { x: number; y: number;
 export const HANDEDNESS_TRUST_SCORE = 0.8;
 
 /**
- * MediaPipe determines handedness *assuming the input image is mirrored* (selfie view). We hand it
- * the RAW camera frame, so on a front camera — exactly the case where the preview is CSS-mirrored —
- * its label names the opposite of the physical hand.
+ * MediaPipe determines handedness *assuming the input image is mirrored* (selfie view).
  *
  * This is the ONE constant to flip if a device disagrees. The debug HUD's facing row makes any
  * disagreement visible in a glance: show a palm and `winding sign` must equal `expected sign`.
  */
-export const MEDIAPIPE_ASSUMES_MIRRORED_INPUT = true;
+export const MEDIAPIPE_ASSUMES_MIRRORED_INPUT: boolean = true;
 
-/** The physical hand, correcting for MediaPipe's mirrored-input assumption. */
-export function physicalHandedness(label: Handedness, mirrored: boolean): Handedness {
-  if (!(MEDIAPIPE_ASSUMES_MIRRORED_INPUT && mirrored)) return label;
+/**
+ * Whether the frames this pipeline hands MediaPipe are mirrored. They never are.
+ *
+ * The landmarker always gets the RAW camera frame, from whichever camera took it; the mirror is a
+ * display concern (lib/scan/camera-select.ts, M1.1) and never touches pixels. And a back camera's
+ * photograph of a palm is the same kind of image as a front camera's — the palmar surface seen from
+ * in front of it — so the label and the winding pair up the same way through both. The pairing is
+ * therefore a property of the INPUT, not of the preview.
+ *
+ * It used to be keyed to the preview flag, which was only ever true while the front camera was the
+ * only camera. With the back camera's unmirrored preview that keying would have expected the opposite
+ * winding and failed every confidently-labelled palm as the back of a hand.
+ *
+ * MEASURED, M1: on the 15 raw session stills of a right hand, MediaPipe says "Right" (0.97), the thumb
+ * is on the image's right and the winding is NEGATIVE. So the two stories told here — "the label is
+ * inverted" and "a right palm winds positive" — are each wrong, and cancel: label "Right" → swapped →
+ * expects negative → the real right palm passes. The gate is right on real frames; only the facing
+ * readout's `physical` field names the wrong hand. Recorded rather than rewritten under M1, which
+ * changes none of the pairing — only what it depends on.
+ */
+export const PIPELINE_FEEDS_MIRRORED_INPUT: boolean = false;
+
+/** The physical hand, correcting for MediaPipe's mirrored-input assumption. The same through either camera. */
+export function physicalHandedness(label: Handedness): Handedness {
+  if (MEDIAPIPE_ASSUMES_MIRRORED_INPUT === PIPELINE_FEEDS_MIRRORED_INPUT) return label;
   return label === "Right" ? "Left" : "Right";
 }
 
@@ -228,8 +248,8 @@ export function palmWinding(landmarks: readonly Landmark3[]): number {
  * knuckle sits left of the little knuckle while both sit above the wrist, and the cross product
  * comes out positive. A left palm is the mirror of that, so negative.
  */
-export function expectedWindingSign(label: Handedness, mirrored: boolean): 1 | -1 {
-  return physicalHandedness(label, mirrored) === "Right" ? 1 : -1;
+export function expectedWindingSign(label: Handedness): 1 | -1 {
+  return physicalHandedness(label) === "Right" ? 1 : -1;
 }
 
 export interface FacingInput {
@@ -237,7 +257,6 @@ export interface FacingInput {
   readonly world: readonly Landmark3[];
   readonly handedness: Handedness;
   readonly handednessScore: number;
-  readonly mirrored: boolean;
   /**
    * The pose's own squareness floor. Tilt poses ask for a palm that is *not* square-on, so holding
    * them to the flat pose's floor would be a gate that cannot pass — this must be the pose's value,
@@ -267,7 +286,7 @@ export function assessFacing(input: FacingInput): FacingReadout {
   const facing = Math.abs(normalZ);
   const winding = palmWinding(input.landmarks);
   const windingSign = winding > 0 ? 1 : winding < 0 ? -1 : 0;
-  const expectedSign = expectedWindingSign(input.handedness, input.mirrored);
+  const expectedSign = expectedWindingSign(input.handedness);
   const trusted = input.handednessScore >= HANDEDNESS_TRUST_SCORE;
   const squareOn = facing >= input.minFacing;
 
@@ -284,7 +303,7 @@ export function assessFacing(input: FacingInput): FacingReadout {
   return {
     handedness: input.handedness,
     handednessScore: input.handednessScore,
-    physical: physicalHandedness(input.handedness, input.mirrored),
+    physical: physicalHandedness(input.handedness),
     winding,
     windingSign,
     windingStrength,
@@ -426,6 +445,10 @@ export interface QualityInput {
   readonly landmarks: readonly Landmark3[];
   readonly world: readonly Landmark3[];
   readonly handedness: Handedness;
+  /**
+   * The PREVIEW's mirror (M1.1: true for the front camera, false for the back). Read only by the
+   * tilt check, which is written in what the reader sees; the physical hand does not depend on it.
+   */
   readonly mirrored: boolean;
   readonly stats: FrameStats;
   readonly jitter: number;
@@ -483,7 +506,6 @@ export function gradeFrame(input: QualityInput | null): QualityVerdict {
     world,
     handedness,
     handednessScore: score,
-    mirrored,
     minFacing: pose.minFacing,
     span,
   });

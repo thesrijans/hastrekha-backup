@@ -36,6 +36,12 @@
     .chamber {
       --snc-monitor-handle: 3rem;
     }
+
+    /* M1.3: with the flip or the torch showing, the leaf narrows to leave each mark its corner —
+       a 44px target, the 0.75rem it sits in from the edge, and a gap. */
+    .chamber[data-snc-controls] {
+      --snc-litany-gutter: 3.75rem;
+    }
   }
 
   /*
@@ -94,6 +100,56 @@
   .back:hover,
   .back:focus-visible {
     color: var(--color-snc-gold-400);
+  }
+
+  /*
+   * THE FLIP AND THE TORCH (M1.1, M1.2) — the back mark's kin. No fill, no border, no radius: an
+   * engraved glyph in a 44px target. Docked exactly where the litany's leaf is docked, one at each of
+   * its lower corners, because that row is the one a thumb reaches on a held phone and the one the
+   * hand's ring never enters (scan-ring.ts keeps the wheel above it). On a desktop the same corners
+   * are simply the screen's; a laptop rarely has a second camera or a torch, and then neither shows.
+   */
+  .control {
+    position: absolute;
+    inset-block-end: calc(max(1.25rem, env(safe-area-inset-bottom)) + var(--snc-monitor-handle, 0px));
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: color-mix(in oklab, var(--color-snc-gold-500) 76%, transparent);
+    cursor: pointer;
+    transition:
+      color 180ms ease,
+      filter 180ms ease;
+  }
+
+  .control[data-snc-control="flip"] {
+    inset-inline-start: 0.75rem;
+  }
+
+  .control[data-snc-control="torch"] {
+    inset-inline-end: 0.75rem;
+  }
+
+  .control:hover,
+  .control:focus-visible {
+    color: var(--color-snc-gold-400);
+  }
+
+  /* Under an open Monitor sheet the marks step out rather than sitting beneath it as dead targets. */
+  .chamber:has([data-snc-sheet="open"]) .control {
+    visibility: hidden;
+  }
+
+  /* A lit torch is the one control in the chamber that stays ON, so it carries the active rung's glow. */
+  .control[aria-pressed="true"] {
+    color: var(--color-snc-gold-400);
+    filter: var(--snc-stroke-active-glow);
   }
 
   /*
@@ -162,6 +218,18 @@
     color: var(--color-snc-ink-red);
   }
 
+  /* M1.5: the refused camera's directions — numbered, in ink, each step one line a reader can follow
+     with the leaf still open beside the browser's own menu. */
+  .steps {
+    margin: 0.75rem 0 0;
+    padding-inline-start: 1.4rem;
+    font-family: var(--font-snc-serif);
+    font-size: 0.86rem;
+    line-height: 1.7;
+    color: var(--color-snc-ink);
+    text-align: start;
+  }
+
   /*
    * THE FRAME-COST READOUT. Deliberately plain and deliberately small: it is an
    * instrument reading, it appears only when asked for with `?cost=1`, and it
@@ -169,9 +237,11 @@
    */
   .cost {
     position: absolute;
-    inset-block-end: max(0.5rem, env(safe-area-inset-bottom));
-    inset-inline-start: 0.75rem;
+    /* The top row, clear of the back mark: the bottom corners now hold the flip and the torch (M1). */
+    inset-block-start: max(0.75rem, env(safe-area-inset-top));
+    inset-inline: 3.75rem 0.75rem;
     z-index: 6;
+    text-align: end;
     margin: 0;
     font-family: ui-monospace, monospace;
     font-size: 0.7rem;

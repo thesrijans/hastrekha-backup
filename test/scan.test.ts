@@ -87,7 +87,9 @@ function baseInput(overrides: Partial<QualityInput> = {}): QualityInput {
   return {
     landmarks: image,
     world,
-    handedness: "Right",
+    /* The fixture's palm, carrying the label that pairs with its winding in the gate's convention —
+       the same through either camera (lib/scan/quality.ts, PIPELINE_FEEDS_MIRRORED_INPUT). */
+    handedness: "Left",
     mirrored: false,
     stats: { luma: 0.5, clipped: 0 },
     jitter: 0,
@@ -132,9 +134,14 @@ function baseInput(overrides: Partial<QualityInput> = {}): QualityInput {
   const drifting = gradeFrame(baseInput({ spanHistory: [0.4, 0.5, 0.6, 0.7, 0.8] }));
   assert.ok(!drifting.ok && drifting.checks.inconsistent === false, "a drifting hand is rejected");
 
-  /* Back of hand: winding flips sign and must be rejected no matter how good everything else is. */
-  const backOfHand = gradeFrame(baseInput({ mirrored: true }));
+  /* Back of hand: the same geometry under the OTHER hand's label is a dorsum, and must be rejected no
+     matter how good everything else is — through either camera, since the preview's mirror no longer
+     enters the facing test (M1.1). */
+  const backOfHand = gradeFrame(baseInput({ handedness: "Right" }));
   assert.ok(!backOfHand.ok && backOfHand.checks.not_palm_up === false, "reversed winding is rejected");
+  const backOfHandFront = gradeFrame(baseInput({ handedness: "Right", mirrored: true }));
+  assert.ok(!backOfHandFront.ok && backOfHandFront.checks.not_palm_up === false, "and rejected on the front camera's mirrored preview too");
+  assert.ok(gradeFrame(baseInput({ mirrored: true })).ok, "while the palm itself passes through the front camera exactly as through the back");
 
   const dark = gradeFrame(baseInput({ stats: { luma: 0.05, clipped: 0 } }));
   assert.ok(!dark.ok && dark.checks.too_dark === false, "a dark frame is rejected");
@@ -144,9 +151,9 @@ function baseInput(overrides: Partial<QualityInput> = {}): QualityInput {
 
   /* OTHER_HAND wants the opposite hand to the one the session started with. */
   const otherHandPose = CAPTURE_POSES.find((pose) => pose.pose === "OTHER_HAND")!;
-  const sameHand = gradeFrame(baseInput({ pose: otherHandPose, baselineHandedness: "Right" }));
+  const sameHand = gradeFrame(baseInput({ pose: otherHandPose, baselineHandedness: "Left" }));
   assert.ok(sameHand.checks.wrong_hand === false, "showing the same hand fails the OTHER_HAND step");
-  const swapped = gradeFrame(baseInput({ pose: otherHandPose, baselineHandedness: "Left" }));
+  const swapped = gradeFrame(baseInput({ pose: otherHandPose, baselineHandedness: "Right" }));
   assert.ok(swapped.checks.wrong_hand === true, "showing the other hand passes it");
 }
 

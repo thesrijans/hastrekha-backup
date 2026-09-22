@@ -60,7 +60,7 @@ const maskOf = (value: number): LineMask => ({
   const verdict = gradeFrame({
     landmarks: image,
     world,
-    handedness: "Right",
+    handedness: "Left", // the label that pairs with this fixture's winding, through either camera (M1.1)
     mirrored: false,
     stats: { luma: 0.5, clipped: 0 },
     jitter: 0,

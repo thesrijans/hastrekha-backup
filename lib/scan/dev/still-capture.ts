@@ -135,29 +135,13 @@ export {
 
 /* --------------------------- Torch control (§2.3) --------------------------- */
 
-/** Structural view of the torch capability/constraint — a Chromium extension, absent from TS lib. */
-interface TorchCapableTrack {
-  getCapabilities?(): { torch?: boolean };
-  applyConstraints(constraints: { advanced?: { torch?: boolean }[] }): Promise<void>;
-}
-
-/**
- * Turn the track's torch on or off. Returns whether the request was actually applied — false
- * means the camera has no torch (or refused), and the sequence records `torchSupported: false`
- * so the offline solve knows these frames are ambient-only. Never throws: an unsupported torch
- * is a recorded fact, not an error.
+/*
+ * The torch switch lives in production code now (lib/scan/camera-control.ts), because the chamber's
+ * torch toggle (M1.2) uses the very same capability; the sequence capture keeps importing it from
+ * here. A false return means the camera has no torch (or refused), and the sequence records
+ * `torchSupported: false` so the offline solve knows its frames are ambient-only.
  */
-export async function setTorch(track: MediaStreamTrack, on: boolean): Promise<boolean> {
-  const capable = track as unknown as TorchCapableTrack;
-  const capabilities = capable.getCapabilities?.();
-  if (capabilities?.torch !== true) return false;
-  try {
-    await capable.applyConstraints({ advanced: [{ torch: on }] });
-    return true;
-  } catch {
-    return false;
-  }
-}
+export { setTorch } from "../camera-control";
 
 /* ------------------------------ Still capture ------------------------------ */
 

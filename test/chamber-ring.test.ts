@@ -20,6 +20,10 @@ import {
   RING_BEADS,
   RING_DEGREES_PER_SECOND,
   RING_EXTENT,
+  RING_HAND_MARGIN,
+  RING_MIN_SHARE,
+  RING_PHONE_RESERVE_BOTTOM,
+  RING_PHONE_RESERVE_TOP,
   RING_RADII,
   RING_SECTORS,
   RING_THUMB_Y,
@@ -104,16 +108,49 @@ const PALETTE = { line: "var(--color-snc-gold-500)", fill: "var(--color-snc-flam
   const phone = ringGeometry(390, 844);
   ok(phone.cx === 195, "the wheel is centred horizontally");
   ok(
-    Math.abs(phone.cy - 844 * RING_THUMB_Y) < 1e-9,
-    "and on a portrait screen it sits BELOW centre, at thumb height — the middle of a phone is behind the hand holding it",
+    phone.cy <= 844 * RING_THUMB_Y + 1e-9 && phone.cy - phone.radius >= RING_PHONE_RESERVE_TOP,
+    "on a phone it sits never LOWER than thumb height — M1.3 gives thumb height to the litany, and the free band above the litany's row decides the wheel's place",
   );
+  const tall = ringGeometry(390, 1400);
+  ok(Math.abs(tall.cy - 1400 * RING_THUMB_Y) < 1e-9, "where the free band allows it, exactly at thumb height");
   const desktop = ringGeometry(1440, 900);
   ok(desktop.cy === 450, "on a landscape screen, which is a window rather than a held object, it returns to the centre");
+  ok(desktop.radius === 900 * RING_EXTENT, "and a desktop keeps the wheel at its largest — the phone's band does not apply there");
   ok(
     Math.abs(phone.radius - 390 * RING_EXTENT) < 1e-9,
     "the radius follows the SMALLER dimension, so the wheel is never cropped by the narrow axis",
   );
   ok(ringGeometry(0, 0).radius === 0, "a zero viewport has a zero ring rather than a negative one");
+}
+
+/* ------------- 3b. M1.3: inside the phone's free band, sized to the hand ------------- */
+
+{
+  /* 390×844 and 412×915 are the two phones M1.3 names; 390×664 is the first with Safari's bars showing. */
+  for (const [width, height] of [
+    [390, 844],
+    [412, 915],
+    [390, 664],
+    [360, 640],
+  ] as const) {
+    for (const extent of [null, 60, 120, 400]) {
+      const { cy, radius } = ringGeometry(width, height, extent);
+      ok(
+        cy - radius >= RING_PHONE_RESERVE_TOP - 1e-9 && cy + radius <= height - RING_PHONE_RESERVE_BOTTOM + 1e-9,
+        `${width}×${height}, extent ${extent}: the wheel stays between the back mark's row and the litany's — nothing of the chamber lies over it`,
+      );
+    }
+  }
+  const short = ringGeometry(390, 664);
+  ok(short.cy < 664 * RING_THUMB_Y, "a short viewport LIFTS the wheel rather than running it under the litany");
+
+  const cap = ringGeometry(390, 844).radius;
+  ok(ringGeometry(390, 844, null).radius === cap, "with no hand the ring rests at its largest");
+  ok(ringGeometry(390, 844, 120).radius === 120, "with a hand it takes the hand's own extent");
+  ok(ringGeometry(390, 844, 10).radius === cap * RING_MIN_SHARE, "never shrinking to a coin for a hand held far away");
+  ok(ringGeometry(390, 844, 5000).radius === cap, "nor growing past the band for one held too close");
+  ok(ringGeometry(390, 844, Number.NaN).radius === cap, "and a nonsense extent is treated as no hand");
+  ok(RING_HAND_MARGIN > 1, "the wheel sits just OUTSIDE the hand, never through the fingertips");
 }
 
 /* ------------------- 4. The bands are in the right order ----------------- */

@@ -141,6 +141,7 @@ on or retouched. Every plate is the printed figure, only cropped and reduced.
 | Asset | Origin | Licence |
 |---|---|---|
 | `public/models/hand_landmarker.task` | Google MediaPipe hand landmarker | Apache-2.0 (MediaPipe model bundle) |
+| `public/models/hand_landmarker_lite.task` | Rebuilt from Google MediaPipe models by `scripts/models/build-hand-landmarker-lite.py`: the shipped bundle's palm detector, byte-for-byte, and the `mediapipe` wheel's `hand_landmark_lite.tflite` with the shipped landmark model's metadata grafted on | Apache-2.0 (MediaPipe models) |
 | `public/models/palm-lines.onnx` | Trained in this project's lab repo | Ours |
 | `docs/reference/*.png`, `*.webp` | Art direction references and captures made for this project | Ours, or captures of our own UI |
 

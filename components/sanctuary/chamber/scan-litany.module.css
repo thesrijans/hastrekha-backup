@@ -30,7 +30,8 @@
     z-index: 2;
     display: flex;
     justify-content: center;
-    padding-inline: 1rem;
+    /* --snc-litany-gutter: the chamber's flip and torch marks at the leaf's corners on a phone (M1.3). */
+    padding-inline: max(1rem, var(--snc-litany-gutter, 0px));
     pointer-events: none;
   }
 
