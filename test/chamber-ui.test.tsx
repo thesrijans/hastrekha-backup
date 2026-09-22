@@ -133,8 +133,8 @@ const stage = (id: string) => CHAMBER_STAGES.find((s) => s.id === id) ?? CHAMBER
 
 {
   ok(
-    pageCode.includes('process.env.NODE_ENV !== "development"') && pageCode.includes("notFound()"),
-    "the chamber is behind the same hard 404 gate as /dev/capture, /dev/label, /sanctuary/materials and /read/pothi",
+    pageCode.includes('if (process.env.NEXT_PUBLIC_SANCTUARY !== "1") notFound();') && !pageCode.includes("NODE_ENV"),
+    "the chamber is behind the sanctuary flag — the same hard 404 as /sanctuary and /read/pothi, opened by NEXT_PUBLIC_SANCTUARY=1 at build — and no longer the development gate (D1.1)",
   );
   ok(/robots:\s*\{\s*index:\s*false/.test(pageSource), "and carries the same noindex metadata beside it");
   ok(pageCode.includes("<SanctuaryDefs />"), "the shared filter sprite is mounted, or every leaf on the route renders with square edges");

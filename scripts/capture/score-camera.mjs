@@ -27,7 +27,7 @@
  * flushes to Node when the route changes, before a navigation can discard it.
  *
  *   node scripts/capture/score-camera.mjs            # uses the existing build
- *   node scripts/capture/score-camera.mjs --build    # rebuilds with SNC_MEASURE=1
+ *   node scripts/capture/score-camera.mjs --build    # rebuilds with NEXT_PUBLIC_SANCTUARY=1
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";

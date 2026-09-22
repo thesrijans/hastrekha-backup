@@ -7,15 +7,16 @@ import { ChamberClient } from "./chamber-client";
 
 /**
  * ============================================================================
- * /scan/chamber — the scanning ritual, behind the dev gate.
+ * /scan/chamber — the scanning ritual, behind the sanctuary flag.
  * ============================================================================
  *
- * THE GATE IS THE ONE app/dev/capture, app/dev/label, /sanctuary/materials AND
- * /read/pothi ALL USE: a hard 404 before the client bundle is even referenced,
- * on any NODE_ENV other than development. THE EXISTING /scan ROUTE IS UNTOUCHED
- * AND STAYS LIVE. This is a second surface over the same hook, not a
- * replacement, and nothing about the live scan changes while it is behind the
- * gate.
+ * THE GATE IS THE ONE /sanctuary AND /read/pothi USE: a hard 404 before the
+ * client bundle is even referenced, unless the build was made with
+ * NEXT_PUBLIC_SANCTUARY=1 (inlined at `next build`, so it is decided per build
+ * and never at runtime — see app/sanctuary/page.tsx). THE EXISTING /scan ROUTE
+ * IS UNTOUCHED AND STAYS LIVE. This is a second surface over the same hook,
+ * not a replacement, and nothing about the live scan changes while it is
+ * behind the flag.
  *
  * ══ WHY THIS PAGE IS ALMOST EMPTY ══
  *
@@ -58,7 +59,7 @@ const READ_HREF = "/read/pothi";
 const BACK_HREF = "/read/pothi";
 
 export default function ChamberPage(): ReactElement {
-  if (process.env.NODE_ENV !== "development") notFound();
+  if (process.env.NEXT_PUBLIC_SANCTUARY !== "1") notFound();
 
   return (
     <main className={SANCTUARY_FONT_CLASS}>

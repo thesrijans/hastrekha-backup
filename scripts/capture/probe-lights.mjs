@@ -6,7 +6,7 @@
  * contains — each light's label, position, layers and intensity, and each
  * drape's bounds and layers — so a placement bug shows as a number.
  *
- *   node scripts/capture/probe-lights.mjs   (needs an SNC_MEASURE build)
+ *   node scripts/capture/probe-lights.mjs   (needs a NEXT_PUBLIC_SANCTUARY=1 build)
  */
 import { chromium } from "playwright";
 import { startServer, THRESHOLD_SEEN, THRESHOLD_STORAGE_KEY } from "./capture.mjs";

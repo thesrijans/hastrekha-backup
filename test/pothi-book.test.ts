@@ -532,12 +532,12 @@ ok(
 /* ------------------------- 9. the route and its gate --------------------- */
 
 ok(
-  routeCode.includes('process.env.NODE_ENV !== "development"') && routeCode.includes("notFound()"),
-  "the route is hard-gated to development, the same 404 app/dev/capture and app/sanctuary/materials use — a dev surface over somebody's reading must not exist in production",
+  routeCode.includes('if (process.env.NEXT_PUBLIC_SANCTUARY !== "1") notFound();') && !routeCode.includes("NODE_ENV"),
+  "the route is behind the sanctuary flag — a hard 404 unless the build was made with NEXT_PUBLIC_SANCTUARY=1, the same gate /sanctuary and /scan/chamber use (D1.1)",
 );
 ok(
   routeCode.includes("robots") && routeCode.includes("index: false"),
-  "with robots noindex beside the gate, for the case where a preview branch is ever built with NODE_ENV=development",
+  "with robots noindex beside the gate, so the preview deploys the flag opens it on stay out of search indexes",
 );
 /* U3 (A1): the assembly moved into <SanctuaryShell>, which every sanctuary route but the chamber is
  * built on. The contract did not change — it is asserted where it now lives, and the route is

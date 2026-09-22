@@ -19,8 +19,8 @@
  *     backend the run aborts rather than reporting.
  *  2. Measure a development server. `next dev` carries HMR, an unminified
  *     React and no minified chunk graph, so its frame times describe the dev
- *     server rather than the room. The default target is a production build,
- *     which is why app/sanctuary/page.tsx grew the SNC_MEASURE lift.
+ *     server rather than the room. The default target is a production build
+ *     made with NEXT_PUBLIC_SANCTUARY=1, the flag the sanctuary routes open on.
  *  3. Report a percentile over too few frames. FRAME_MIN_SAMPLES mirrors
  *     lib/sanctuary/frame-cost.ts: a p95 over eight frames is the second-worst
  *     of eight.
@@ -37,10 +37,13 @@
  *   node scripts/capture/capture.mjs --route /sanctuary --viewport 390 --cpu 4
  *   node scripts/capture/capture.mjs --route /sanctuary --base-url http://localhost:3000
  *
- * `--build` rebuilds with SNC_MEASURE=1 set, which is required rather than
- * convenient: see buildProduction() for why a build made without it serves a
- * baked 404 that the running server cannot reopen. Without --build the harness
- * reuses whatever is in .next, so pass it whenever you are unsure what that is.
+ * `--build` rebuilds with NEXT_PUBLIC_SANCTUARY=1 (and SNC_MEASURE=1 for
+ * /dev/rekha-monitor) set, which is required rather than convenient: see
+ * buildProduction() for why a build made without them serves a baked 404 that
+ * the running server cannot reopen. Without --build the harness reuses
+ * whatever is in .next, so pass it whenever you are unsure what that is.
+ * `--base-url` measures a server it does not own — a preview deploy included —
+ * and then neither builds nor starts anything.
  */
 import { spawn } from "node:child_process";
 import { mkdir, writeFile, access } from "node:fs/promises";
@@ -160,32 +163,34 @@ async function exists(path) {
 }
 
 /**
- * Build with the gate already lifted.
+ * Build with the gates already open.
  *
- * SNC_MEASURE has to be set for the BUILD and not merely for `next start`.
- * app/sanctuary/page.tsx calls notFound() before it touches cookies, so with
- * the gate closed Next finds nothing dynamic on the route, prerenders it, and
- * bakes the 404 into a static page that no amount of runtime environment can
- * reopen — the route prints as `○ /sanctuary` instead of `ƒ`. With the gate
- * lifted the page reaches the session cookie, becomes dynamic, and is rendered
- * per request as the measurement needs.
+ * NEXT_PUBLIC_SANCTUARY is inlined at build time, so it opens /sanctuary,
+ * /scan/chamber and /read/pothi for this build or not at all: with the flag
+ * unset app/sanctuary/page.tsx calls notFound() before it touches cookies,
+ * Next finds nothing dynamic on the route, prerenders it, and bakes the 404
+ * into a static page that no amount of runtime environment can reopen — the
+ * route prints as `○ /sanctuary` instead of `ƒ`. With the flag set the page
+ * reaches the session cookie, becomes dynamic, and is rendered per request as
+ * the measurement needs. SNC_MEASURE=1 is the separate lift on
+ * /dev/rekha-monitor, which keeps its development gate; it too is read at build.
  */
 export async function buildProduction() {
   const nextBin = join(REPO, "node_modules", "next", "dist", "bin", "next");
   await new Promise((done, fail) => {
     const child = spawn(process.execPath, [nextBin, "build"], {
       cwd: REPO,
-      env: { ...process.env, SNC_MEASURE: "1" },
+      env: { ...process.env, NEXT_PUBLIC_SANCTUARY: "1", SNC_MEASURE: "1" },
       stdio: "inherit",
     });
     child.on("exit", (code) => (code === 0 ? done() : fail(new Error(`next build exited with ${code}`))));
   });
 }
 
-/** Start `next start` with the measurement gate lifted, and resolve once it answers. */
+/** Start `next start` on the gate-open build, and resolve once it answers. */
 export async function startServer() {
   if (!(await exists(join(REPO, ".next")))) {
-    throw new Error("No production build found at .next — run with --build, or `SNC_MEASURE=1 npm run build` first.");
+    throw new Error("No production build found at .next — run with --build, or `NEXT_PUBLIC_SANCTUARY=1 SNC_MEASURE=1 npm run build` first.");
   }
   // Run Next's bin through this same node rather than through `npx` in a shell:
   // a shell spawn on Windows concatenates arguments instead of escaping them
@@ -193,7 +198,7 @@ export async function startServer() {
   const nextBin = join(REPO, "node_modules", "next", "dist", "bin", "next");
   const child = spawn(process.execPath, [nextBin, "start", "--port", String(PORT)], {
     cwd: REPO,
-    env: { ...process.env, SNC_MEASURE: "1", NODE_ENV: "production" },
+    env: { ...process.env, NEXT_PUBLIC_SANCTUARY: "1", SNC_MEASURE: "1", NODE_ENV: "production" },
     stdio: ["ignore", "pipe", "pipe"],
   });
   const base = `http://localhost:${PORT}`;
@@ -281,8 +286,9 @@ async function captureOne(browser, { base, route, width, cpu, frames, outDir, wa
       cpu,
       status,
       error:
-        `HTTP ${status}. The route is dev-gated; SNC_MEASURE=1 must be set for the BUILD, not just for the server. ` +
-        "Re-run with --build, or `SNC_MEASURE=1 npm run build`. A build made without it prints `○ /sanctuary` and serves a baked 404.",
+        `HTTP ${status}. The sanctuary routes open on NEXT_PUBLIC_SANCTUARY=1 at BUILD time (and /dev/rekha-monitor on SNC_MEASURE=1); ` +
+        "setting it for the server alone does nothing. Re-run with --build, or `NEXT_PUBLIC_SANCTUARY=1 SNC_MEASURE=1 npm run build`. " +
+        "A build made without it prints `○ /sanctuary` and serves a baked 404; on a deploy, set it in the project's environment and redeploy.",
     };
   }
 

@@ -8,21 +8,21 @@ import { PothiClient } from "./pothi-client";
 
 /**
  * ============================================================================
- * /read/pothi — the fifteen-leaf reading, behind the dev gate.
+ * /read/pothi — the fifteen-leaf reading, behind the sanctuary flag.
  * ============================================================================
  *
- * THE GATE IS THE SAME ONE app/dev/capture, app/dev/label AND
- * app/sanctuary/materials USE, and it is a hard 404 rather than a redirect or a
- * feature flag: any NODE_ENV other than development calls `notFound()` before
- * the client bundle is even referenced. THE EXISTING /read ROUTE IS UNTOUCHED
- * AND STAYS LIVE — this is a second surface over the same response, not a
+ * THE GATE IS THE SAME ONE /sanctuary AND /scan/chamber USE, and it is a hard
+ * 404 rather than a redirect: unless the build was made with
+ * NEXT_PUBLIC_SANCTUARY=1 (inlined at `next build`, so decided per build and
+ * never at runtime — see app/sanctuary/page.tsx), `notFound()` runs before the
+ * client bundle is even referenced. THE EXISTING /read ROUTE IS UNTOUCHED AND
+ * STAYS LIVE — this is a second surface over the same response, not a
  * replacement, and nothing about the reading flow changes while it is behind
- * the gate.
+ * the flag.
  *
- * `robots: { index: false, follow: false }` alongside it, following the same
- * precedent: the gate is what actually stops the route existing, and the
- * metadata is the belt for the case where a preview branch is ever built with
- * NODE_ENV=development.
+ * `robots: { index: false, follow: false }` alongside it: the flag is what
+ * decides whether the route exists, and the metadata keeps the preview deploys
+ * it is opened on out of search indexes.
  *
  * ══ WHY components/header.tsx IS NOT MOUNTED ABOVE THIS ══
  *
@@ -160,7 +160,7 @@ const POTHI_STANDFIRST =
  */
 
 export default function PothiPage(): ReactElement {
-  if (process.env.NODE_ENV !== "development") notFound();
+  if (process.env.NEXT_PUBLIC_SANCTUARY !== "1") notFound();
 
   return (
     <SanctuaryShell activeHref="/read/pothi" groundSeed={GROUND_SEED} className={SANCTUARY_FONT_CLASS}>

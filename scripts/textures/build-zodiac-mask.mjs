@@ -30,7 +30,7 @@
  * and its output is committed.
  *
  *   node scripts/textures/build-zodiac-mask.mjs          # uses the existing build
- *   node scripts/textures/build-zodiac-mask.mjs --build  # rebuilds with SNC_MEASURE=1
+ *   node scripts/textures/build-zodiac-mask.mjs --build  # rebuilds with NEXT_PUBLIC_SANCTUARY=1
  */
 import { mkdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";

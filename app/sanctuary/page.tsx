@@ -21,8 +21,8 @@ import { SanctuaryHomeIsland } from "./home-island";
  *
  * U3a. A complete Home with no WebGL anywhere: the room is B7's CSS
  * composition, which is also the first paint the 3D room (U3b) will fade in
- * over. Behind the same hard development gate as every other sanctuary route,
- * with noindex beside it.
+ * over. Behind the same sanctuary flag as the chamber and the pothi
+ * (NEXT_PUBLIC_SANCTUARY=1 at build), with noindex beside it.
  *
  * WHAT IS ON THE PAGE, IN ORDER:
  *
@@ -67,19 +67,18 @@ async function visitorOrNull(): Promise<SessionUser | null> {
 }
 
 export default async function SanctuaryHomePage(): Promise<ReactElement> {
-  // The gate stays exactly as strict as it was, with one lift: `SNC_MEASURE=1`
-  // also opens the route. The loop harness (docs/specs/loop-harness.md §1) has
-  // to measure this page under a PRODUCTION build — dev carries HMR and an
-  // unminified React, so a frame number taken there measures the dev server
-  // rather than the room — and a production build is precisely the case this
-  // gate closes. scripts/capture/ sets the variable for the life of one
-  // `next start` it owns and never writes it to a file.
+  // THE SANCTUARY FLAG (D1.1). The route opens on one thing: NEXT_PUBLIC_SANCTUARY
+  // === "1" when `next build` ran. A NEXT_PUBLIC_ variable is inlined at build
+  // time — into server code as well as client — so a build made without it
+  // bakes this route as a 404 and a build made with it serves the room, and
+  // nothing at runtime can flip either. It replaced the development-only gate
+  // and the SNC_MEASURE lift the loop harness used to open it on a production
+  // build: a preview deploy, scripts/capture/ and a local `next dev` now all
+  // open the sanctuary the same way, by setting the flag.
   //
   // Why an explicit "1" and not merely "set": an empty or accidental value
-  // must not open a dev route in a real deploy. The variable has no
-  // NEXT_PUBLIC_ prefix, so it is server-only and never inlined into a client
-  // bundle, and the `robots: noindex` above still covers the route regardless.
-  if (process.env.NODE_ENV !== "development" && process.env.SNC_MEASURE !== "1") notFound();
+  // must not open the route. The `robots: noindex` above still covers it.
+  if (process.env.NEXT_PUBLIC_SANCTUARY !== "1") notFound();
 
   const visitor = await visitorOrNull();
   const signedIn = visitor !== null;

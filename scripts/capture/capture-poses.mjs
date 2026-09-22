@@ -10,7 +10,7 @@
  *   node scripts/capture/capture-poses.mjs [--label name]
  *
  * Writes captures/ui/<stamp>-<label>/pose-<name>-1440.png. Needs a build made
- * with SNC_MEASURE=1 (capture.mjs --build, or score-camera.mjs --build).
+ * with NEXT_PUBLIC_SANCTUARY=1 (capture.mjs --build, or score-camera.mjs --build).
  */
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
