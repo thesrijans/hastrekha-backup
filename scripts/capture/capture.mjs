@@ -255,6 +255,17 @@ async function captureOne(browser, { base, route, width, cpu, frames, outDir, wa
     deviceScaleFactor: 1,
     colorScheme: "dark",
   });
+  // A Vercel deploy behind Deployment Protection: trade the project's
+  // automation-bypass secret for its cookie once, on the deploy's own origin.
+  // Never as a context-wide extra header, which would carry the secret along
+  // on every third-party request the page makes.
+  const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  if (bypass) {
+    await context.request.get(`${base}${route}`, {
+      headers: { "x-vercel-protection-bypass": bypass, "x-vercel-set-bypass-cookie": "true" },
+      maxRedirects: 0,
+    });
+  }
   // Seed localStorage before any page script runs, so the pre-paint script
   // that decides whether to show the Threshold sees a returning visitor.
   if (storage.length > 0) {
