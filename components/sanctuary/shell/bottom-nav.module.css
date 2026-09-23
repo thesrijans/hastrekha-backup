@@ -3,8 +3,10 @@
  *
  * obsidian is the palette's "nav rail, glass panels over stone": the darkest
  * brown in the set, and the one a surface laid over the room is made of. It is
- * held nearly opaque rather than blurred — no glassmorphism anywhere in this
- * language — so the page scrolling under it simply goes dark.
+ * OPAQUE — no glassmorphism anywhere in this language, and no page showing
+ * through it (M1.1: on the phone the greeting's last lines read through the
+ * bar) — so the page scrolling under it is simply gone. Its height is the
+ * shell's --snc-bar-height, the same number the content column ends by.
  */
 
 .bar {
@@ -15,10 +17,10 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: stretch;
-  height: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  height: calc(var(--snc-bar-height, 4.25rem) + env(safe-area-inset-bottom, 0px));
   padding-inline: 0.35rem;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background-color: color-mix(in oklab, var(--color-snc-obsidian) 97%, transparent);
+  background-color: var(--color-snc-obsidian);
   box-shadow: 0 -14px 26px -16px color-mix(in oklab, var(--color-snc-ink) 90%, transparent);
 }
 
@@ -80,17 +82,19 @@
 }
 
 /*
- * THE CENTRE — larger, circular, floating above the bar's edge.
+ * THE CENTRE — larger, circular, its crown just over the bar's edge.
  *
  * The token layer's dark medallion, with two extra rings outside it: a band of
  * the bar's own brown that cuts the disc out of the rule, and a hairline of old
- * gold around that, so the emblem sits in a setting rather than on the bar.
+ * gold around that, so the emblem sits in a setting rather than on the bar. The
+ * overhang is small (M1.1, as the target draws it): the medallion belongs to
+ * the bar, and the page above it is not asked to make room.
  */
 .centre {
   justify-self: center;
   align-self: start;
-  width: 4.5rem;
-  margin-top: -1.65rem;
+  width: 3.4rem;
+  margin-top: -0.7rem;
   box-shadow:
     inset 0 0 0 1px var(--color-snc-gold-500),
     0 0 0 5px var(--color-snc-obsidian),

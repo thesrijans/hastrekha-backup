@@ -52,10 +52,8 @@
  * seal already documents, and it costs nothing here because there is no hook to
  * pull across the boundary.
  *
- * WHAT IT REQUIRES OF THE ROUTE. `<SanctuaryDefs />` must be mounted, because
- * the neutral diagram strokes itself with the shared `#snc-g-gold` ramp. Without
- * the sprite the outline renders with no stroke at all — silently, the way every
- * missing SVG def fails.
+ * WHAT IT REQUIRES OF THE ROUTE. Nothing: the neutral hand is a <picture>
+ * (public/plates/hand-plate) and the ink is plain strokes.
  *
  * WHAT IT DOES NOT DO. It draws no leaf of its own: no parchment, no border, no
  * background. The caller lays it on a <Parchment>, which is what makes the burn
@@ -63,6 +61,7 @@
  * floating on one.
  */
 import type { CSSProperties, ReactElement } from "react";
+import { HandPlate } from "@/components/sanctuary/hand-plate";
 import type { CapabilityTier } from "@/components/sanctuary/use-capability-tier";
 import {
   POTHI_PLATE_SIZE,
@@ -101,77 +100,28 @@ export const POTHI_PLATE_LINE_LABELS: Readonly<Record<PothiPlateLineId, string>>
   fate: "Shani rekha",
 };
 
-/* --------------------------- The neutral diagram --------------------------- */
+/* ---------------------------- The neutral plate ---------------------------- */
 
-/**
- * The neutral palm, as a hairline outline in the plate's 0-100 square.
- *
- * AUTHORED, NOT TRACED — and, more importantly, REGISTERED. It is deliberately
- * nobody's hand, but it is not a free drawing either: a polyline projected onto
- * it was measured in a rectified crop, and unless this outline agrees with how
- * that crop is framed, every crease lands somewhere the reader's crease is not.
- * A pretty hand in the wrong frame would put a heart line across the knuckles
- * and still look finished, which is the A2 failure wearing a nicer coat.
- *
- * So the silhouette is built on `CANONICAL_ANCHORS` in lib/scan/rectify.ts —
- * where the rectifier actually puts the four palm landmarks, in the crop's own
- * 0-1 units, and therefore the only fixed points this drawing may not invent:
+/*
+ * THE NEUTRAL PALM IS THE REAL HAND, REGISTERED (M1.1). public/plates/hand-plate
+ * is the P1 mesh (public/models/hand.glb) baked into the crop's own frame by
+ * scripts/plates/bake-hand.mjs: its wrist, thumb root and two outer knuckles
+ * warped onto CANONICAL_ANCHORS in lib/scan/rectify.ts — where the rectifier
+ * actually puts those four landmarks of a real palm, in the crop's 0-1 units:
  *
  *     wrist        (0.50, 0.97)      thumb root (CMC)  (0.13, 0.74)
  *     index MCP    (0.24, 0.14)      little MCP        (0.85, 0.24)
- *     percussion   (0.96, 0.26)  — the ulnar bulge, from CANONICAL_PERCUSSION
  *
- * Read that table and the shape of this drawing follows from it. The crop frames
- * the PALM: the knuckle line sits a seventh of the way down, the wrist almost at
- * the bottom edge, and the fingers are mostly OUTSIDE the frame. Hence the two
- * things about this path that look like mistakes and are not.
- *
- *  1. **It is open, and it has no thumb.** The four finger sides run to the top
- *     edge and simply stop, in four separate subpaths, because the fingers
- *     continue past the crop and a rounded fingertip drawn inside the frame
- *     would claim they end there. The thumb is off the left edge for the same
- *     reason — the canonical thumb root already sits at x = 0.13 — so the radial
- *     edge merely passes THROUGH it. Closing the shape, or drawing the missing
- *     parts, would be drawing what the camera did not frame.
- *  2. **The palm fills the whole square.** That is what makes a life line curve
- *     around the ball of the thumb here instead of floating in the middle of a
- *     smaller hand.
- *
- * It carries no creases of its own. A neutral palm with a suggested life line
- * printed on it would put a line in front of the reader that nobody measured,
- * one rung away from a line that somebody did — which is the A2 failure with
- * extra steps.
+ * So a polyline projected onto it — measured in a rectified crop framed by the
+ * same table — lands where the reader's crease lay. It is deliberately nobody's
+ * hand: mirrored to the crop's thumb-left framing, the fingers running off the
+ * top and the thumb off the left as the crop cuts them, and NO CREASE OF ITS
+ * OWN — a suggested life line on a neutral palm is a line nobody measured, one
+ * rung from a line somebody did. bake.json beside the plate records the
+ * anchors, and test/sanctuary-hand-plates.test.ts and the plate's own test hold
+ * them to the rectifier, so a retune there without a re-bake fails a suite
+ * instead of sliding the ink off the hand.
  */
-export const NEUTRAL_PALM_PATH = [
-  /* the radial edge: the index finger's thumb side, down past the thumb root, round to the wrist */
-  "M 16.5 0",
-  "C 16 6 15.4 10 15.4 14.5",
-  "C 13.8 32 12.8 52 13 74",
-  "C 13.4 82 16 90 22 94",
-  /* the wrist */
-  "C 30 97.5 42 98 50 97",
-  /* the ulnar edge: up past the percussion bulge to the little finger */
-  "C 62 95.5 74 90 82 82",
-  "C 88 74 93 60 95 46",
-  "C 96 38 96 32 96 26",
-  "C 95.6 22 93.6 20 92.8 16",
-  "L 92.5 0",
-  /* the web between index and middle */
-  "M 31.5 0",
-  "C 31.8 6 32 12 32.4 16",
-  "Q 34.1 21 35.9 17",
-  "C 36.2 12 36.5 6 36.8 0",
-  /* the web between middle and ring */
-  "M 51.8 0",
-  "C 52.2 7 52.6 15 53 20",
-  "Q 54.6 25 56.2 21",
-  "C 56.5 14 56.8 7 57.2 0",
-  /* the web between ring and little */
-  "M 72.2 0",
-  "C 72.7 8 73.2 18 73.6 24",
-  "Q 75.2 29 76.9 25",
-  "C 77.1 17 77.3 8 77.5 0",
-].join(" ");
 
 /* -------------------------------- Drawing ---------------------------------- */
 
@@ -369,7 +319,12 @@ export function PalmPlate({
             <span className={cx(styles.layer, styles.wash)} aria-hidden="true" data-snc-layer="wash" />
             <span className={cx(styles.layer, styles.burn)} aria-hidden="true" data-snc-layer="burn" />
           </>
-        ) : null}
+        ) : (
+          /* The neutral plate, under the ink: context for the measured line, never a claim of its own. */
+          <span className={cx(styles.layer, styles.neutral)} aria-hidden="true" data-snc-part="neutral-palm" data-snc-layer="neutral">
+            <HandPlate kind="plate" />
+          </span>
+        )}
 
         <svg
           className={cx(styles.layer, styles.ink)}
@@ -379,22 +334,6 @@ export function PalmPlate({
           aria-label={label}
           data-snc-layer="ink"
         >
-          {measured ? null : (
-            /* The neutral palm, at the secondary rung: it is context for the
-               measured line, never a claim of its own. Ink like every other
-               line here, and off the gold ramp for the same reason they are:
-               against the leaf the ramp's own pale stops are the parchment
-               back again, so the outline faded out exactly where the light on
-               it should have been brightest. */
-            <path
-              d={NEUTRAL_PALM_PATH}
-              className={STROKE_SECONDARY}
-              stroke={INK_SECONDARY}
-              data-snc-part="neutral-palm"
-              {...STROKE_GEOMETRY}
-            />
-          )}
-
           {others.map((path) => (
             <path
               key={path.id}

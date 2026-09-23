@@ -94,8 +94,26 @@ export function palmForwardRotation(marks: Landmarks): Matrix4 {
   return basis.invert();
 }
 
-/** A warm, faint volume whose silhouette brightens — Fresnel, not a texture. */
-function hologramMaterial(strength: number): ShaderMaterial {
+/** The hand's interior: this much light everywhere, plus HOLOGRAM_BODY_LIT where the surface faces the key. */
+export const HOLOGRAM_BODY = 0.05;
+export const HOLOGRAM_BODY_LIT = 0.13;
+
+/**
+ * A warm, faint volume whose silhouette brightens — Fresnel, not a texture.
+ *
+ * M1.1: the hand's interior is SOFTLY SHADED, not flat. `uShade` scales a
+ * lambert term toward the key (the one warm source inside the column,
+ * world.ts), so the palm's centre — which faces the key — carries a little
+ * more light than the sides that turn away from it, and the hand reads as a
+ * form rather than a stencil. The column keeps uShade 0 and its flat 0.07.
+ *
+ * The two includes at the end are load-bearing. Rendered through the post
+ * stack the scene is tone-mapped by the OutputPass and both are no-ops; on the
+ * phone profile (room-canvas.tsx) the scene is drawn straight to the canvas
+ * with no post at all, and without them this shader alone would write linear
+ * values into an sRGB canvas — a hand two stops off from the desktop's.
+ */
+function hologramMaterial(strength: number, key: Vector3, shade: number): ShaderMaterial {
   return new ShaderMaterial({
     transparent: true,
     depthWrite: false,
@@ -106,27 +124,38 @@ function hologramMaterial(strength: number): ShaderMaterial {
       uRim: { value: new Color(GOLD_500) },
       uStrength: { value: strength },
       uTime: { value: 0 },
+      uKey: { value: key.clone() },
+      uShade: { value: shade },
+      uBody: { value: new Vector3(0.07, HOLOGRAM_BODY, HOLOGRAM_BODY_LIT) },
     },
     vertexShader: /* glsl */ `
       varying vec3 vNormal;
       varying vec3 vView;
+      varying vec3 vWorld;
       void main() {
         vec4 world = modelMatrix * vec4(position, 1.0);
+        vWorld = world.xyz;
         vNormal = normalize(mat3(modelMatrix) * normal);
         vView = normalize(cameraPosition - world.xyz);
         gl_Position = projectionMatrix * viewMatrix * world;
       }`,
     fragmentShader: /* glsl */ `
       uniform vec3 uColour; uniform vec3 uRim; uniform float uStrength; uniform float uTime;
-      varying vec3 vNormal; varying vec3 vView;
+      uniform vec3 uKey; uniform float uShade; uniform vec3 uBody;
+      varying vec3 vNormal; varying vec3 vView; varying vec3 vWorld;
       void main() {
-        float facing = abs(dot(normalize(vNormal), normalize(vView)));
+        vec3 n = normalize(vNormal);
+        float facing = abs(dot(n, normalize(vView)));
         float fresnel = pow(1.0 - facing, 2.4);
-        // A faint body, a bright edge: light gathering where the surface turns.
-        float body = 0.07;
+        // A faint body, a bright edge: light gathering where the surface turns —
+        // and, on the hand, a little more where the surface faces the key.
+        float lit = max(dot(n, normalize(uKey - vWorld)), 0.0);
+        float body = mix(uBody.x, uBody.y + uBody.z * lit, uShade);
         float breathe = 0.92 + 0.08 * sin(uTime * 0.9);
         vec3 colour = mix(uColour * body, uRim * 1.6, fresnel) * breathe;
         gl_FragColor = vec4(colour * uStrength, (body + fresnel) * uStrength);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
 }
@@ -150,7 +179,7 @@ export function buildHologram(layout: RoomLayout): BuiltHologram {
   const radius = layout.pedestal.radius * 0.42;
 
   // The column: an open cylinder of warm light rising from the drum.
-  const columnMaterial = keep(hologramMaterial(0.55));
+  const columnMaterial = keep(hologramMaterial(0.55, layout.key, 0));
   const column = new Mesh(keep(new CylinderGeometry(radius, radius, height, 64, 1, true)), columnMaterial);
   // Named for the scorer: the column is one of the subjects the moonlight cap is measured on.
   column.name = "column";
@@ -223,7 +252,7 @@ export function buildHologram(layout: RoomLayout): BuiltHologram {
   handHolder.name = "hand";
   handHolder.position.y = height * 0.47;
   group.add(handHolder);
-  const handMaterial = keep(hologramMaterial(1));
+  const handMaterial = keep(hologramMaterial(1, layout.key, 1));
 
   const ready = (async () => {
     const [gltf, marks] = await Promise.all([

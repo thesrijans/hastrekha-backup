@@ -92,7 +92,7 @@ export const PALM_MARGIN_PX = 4;
 
 /**
  * The palm in the rectified crop's canonical frame: the on-curve points of the Pothi's registered
- * neutral palm (components/sanctuary/pothi/palm-plate.tsx NEUTRAL_PALM_PATH, built on rectify.ts's
+ * neutral palm (public/plates/hand-plate, the mesh baked onto rectify.ts's
  * CANONICAL_ANCHORS), closed along the top edge where the fingers leave the crop. The crop's own
  * `inside` mask only says where the camera frame exists; this says where the PALM is, so a trace
  * cannot walk the silhouette — whose black-hat depth (p90 0.33) overlaps a crease's (p95 0.30) too

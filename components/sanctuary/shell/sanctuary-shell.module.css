@@ -5,7 +5,10 @@
  * `--snc-rail-width` is declared here and read by the rail (its width), the
  * content column (its inset) and the coming-soon note (its fallback position).
  * One number, three readers, so the content can never slide under the rail by a
- * rem somebody retyped.
+ * rem somebody retyped. `--snc-bar-height` is the same arrangement for the
+ * phone's bar: the bar is that tall, and the column ends exactly that far — plus
+ * the home indicator's inset — above the page's foot, so nothing scrolls under
+ * the bar (M1.1).
  */
 
 /*
@@ -16,6 +19,7 @@
  * stacking context, which is what keeps both true.
  */
 .shell {
+  --snc-bar-height: 4.25rem;
   --snc-rail-width: 0rem;
   position: relative;
   display: flex;
@@ -36,14 +40,16 @@
   }
 }
 
-/* Below 48rem the bar is fixed at the foot: the column ends clear of it and of the floating emblem. */
+/* Below 48rem the bar is fixed at the foot: the column ends exactly clear of it — the bar's own
+   height plus the home indicator's inset. The emblem's small overhang above the bar sits within the
+   stamp's bottom padding. */
 .column {
   position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
   min-width: 0;
-  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--snc-bar-height) + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 48rem) {

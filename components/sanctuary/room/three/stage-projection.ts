@@ -48,22 +48,57 @@ export const CAMERA_SANCTUARY = {
   horizon: 372,
 } as const;
 
+/** A rectangle of the stage, in stage units: the part of the frame a window camera renders. */
+export interface StageWindow {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
 /**
- * Shift a level camera's frame so eye level lands on `horizon`.
+ * Shift a level camera's frame so eye level lands on `horizon` — and, with a
+ * `window`, cut the frame to that rectangle of the stage.
  *
  * In Three's projection matrix, element 9 is the frustum's vertical offset:
  * an on-axis point maps to NDC y = -m[9]. Setting it moves the horizon without
  * tilting the camera. Raycaster reads `projectionMatrixInverse`, so that is
  * refreshed too, or every stage ray would be cast through the unshifted frame.
  *
+ * THE WINDOW IS THE SAME FRUSTUM, CUT (M1.1). The shifted frame is the frustum
+ * top = t(1 - ndcY), bottom = -t(1 + ndcY), left/right = -/+ t·aspect, with
+ * t = near·tan(fov/2); a window of the stage is each edge moved in by the
+ * window's share of the frame. A stage point projects to the same place
+ * through both — scripts/plates/bake-hand.mjs proves it to a hundredth of a
+ * unit — so the phone's canvas (room-canvas.tsx), which renders only the part
+ * of the stage its vignette shows, lands on the CSS composition's pixels
+ * exactly, and everything outside the window is frustum-culled for free.
+ *
  * Anything that calls updateProjectionMatrix() resets the shift, so the room
  * only ever builds its camera here; the canvas is 16:9 by its own CSS and never
  * needs its aspect changed.
  */
-export function applyHorizon(camera: PerspectiveCamera, horizon: number): void {
-  camera.updateProjectionMatrix();
+export function applyHorizon(camera: PerspectiveCamera, horizon: number, window: StageWindow | null = null): void {
   const ndcY = 1 - (horizon / ROOM_STAGE.height) * 2;
-  camera.projectionMatrix.elements[9] = -ndcY;
+  if (window === null) {
+    camera.updateProjectionMatrix();
+    camera.projectionMatrix.elements[9] = -ndcY;
+  } else {
+    const t = camera.near * Math.tan((camera.fov * Math.PI) / 360);
+    const top = t * (1 - ndcY);
+    const bottom = -t * (1 + ndcY);
+    const left = -t * STAGE_ASPECT;
+    const right = t * STAGE_ASPECT;
+    const { width: W, height: H } = ROOM_STAGE;
+    camera.projectionMatrix.makePerspective(
+      left + (window.x / W) * (right - left),
+      left + ((window.x + window.w) / W) * (right - left),
+      top - (window.y / H) * (top - bottom),
+      top - ((window.y + window.h) / H) * (top - bottom),
+      camera.near,
+      camera.far,
+    );
+  }
   camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
 }
 

@@ -39,8 +39,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
-  padding: max(1.1rem, env(safe-area-inset-top, 0px)) 1rem 0.4rem;
+  gap: 0.15rem;
+  padding: max(0.9rem, env(safe-area-inset-top, 0px)) 1rem 0.25rem;
   text-align: center;
 }
 
@@ -60,7 +60,7 @@
   margin: 0;
   font-family: var(--font-snc-display);
   font-weight: 600;
-  font-size: clamp(2.35rem, 11.5vw, 3.4rem);
+  font-size: clamp(2rem, 8.8vw, 3.4rem);
   line-height: 1.05;
   letter-spacing: 0.06em;
 }
@@ -103,9 +103,27 @@
   color: inherit;
 }
 
-/* The vertical scene's vignette: pedestal and hologram, in a band under the masthead. */
+/* The vertical scene's vignette: pedestal and hologram. On a phone it stands beside the greeting
+   (the hero row, M1.1), as tall as that row; from 34rem it is a band across the top of the content. */
 .vignetteBand {
-  margin-top: 0.4rem;
+  margin: 0;
+}
+
+.areaHero {
+  grid-area: hero;
+  min-width: 0;
+}
+
+.areaHero [data-snc-room="vignette"] {
+  height: 100%;
+  min-height: 17rem;
+}
+
+@media (min-width: 34rem) {
+  .areaHero [data-snc-room="vignette"] {
+    height: clamp(14rem, 64vw, 21rem);
+    min-height: 0;
+  }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -131,32 +149,48 @@
 
 .content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
   grid-template-areas:
-    "greeting"
-    "begin"
-    "plate"
-    "paths"
-    "wisdom"
-    "colophon";
-  gap: 2rem;
+    "greeting hero"
+    "begin begin"
+    "plate plate"
+    "paths paths"
+    "wisdom wisdom"
+    "colophon colophon";
+  column-gap: 0.75rem;
+  row-gap: 1.5rem;
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
-  padding: 1.25rem 1rem 1.5rem;
+  padding: 0.5rem 1rem 1rem;
 }
 
+/* From 34rem the vignette is a band across the top and the greeting sits beside the tradition's palm. */
 @media (min-width: 34rem) {
   .content {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
     grid-template-areas:
+      "hero hero"
       "greeting plate"
       "begin begin"
       "paths paths"
       "wisdom wisdom"
       "colophon colophon";
     column-gap: 1.25rem;
-    padding-inline: 1.5rem;
+    row-gap: 2rem;
+    padding: 1.25rem 1.5rem 1.5rem;
+  }
+}
+
+/* Under the room there is no vignette: the hero row goes, and its gap with it. */
+@media (min-width: 48rem) and (min-aspect-ratio: 1/1) {
+  .content {
+    grid-template-areas:
+      "greeting plate"
+      "begin begin"
+      "paths paths"
+      "wisdom wisdom"
+      "colophon colophon";
   }
 }
 
@@ -200,14 +234,14 @@
   display: flex;
   flex-direction: column;
   align-self: center;
-  gap: 0.85rem;
+  gap: 0.7rem;
   min-width: 0;
 }
 
 .namaste {
   margin: 0;
   font-family: var(--font-snc-devanagari);
-  font-size: 1.3rem;
+  font-size: clamp(1.1rem, 4.6vw, 1.3rem);
   line-height: 1.4;
   letter-spacing: normal;
   color: var(--color-snc-gold-500);
@@ -218,7 +252,7 @@
   margin: 0;
   font-family: var(--font-snc-serif);
   font-weight: 600;
-  font-size: clamp(2.1rem, 8vw, 3.2rem);
+  font-size: clamp(1.85rem, 7.6vw, 3.2rem);
   line-height: 1.04;
   letter-spacing: 0;
 }
@@ -231,8 +265,8 @@
   margin: 0;
   max-width: 32rem;
   font-family: var(--font-snc-serif);
-  font-size: 1.1rem;
-  line-height: 1.65;
+  font-size: clamp(0.95rem, 3.9vw, 1.1rem);
+  line-height: 1.55;
   color: var(--color-snc-parchment);
 }
 
@@ -341,10 +375,11 @@
   min-width: 0;
 }
 
+/* One line on a phone — "Begin your reading" beside the seal and the arrow, as the target sets it. */
 .beginTitle {
   font-family: var(--font-snc-serif);
   font-weight: 600;
-  font-size: clamp(1.4rem, 5.2vw, 2rem);
+  font-size: clamp(1.2rem, 4.7vw, 2rem);
   line-height: 1.12;
   color: var(--color-snc-gold-400);
 }
@@ -547,10 +582,10 @@
 .wisdomBody {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
-  padding: 1.35rem 1.25rem 1.4rem;
+  padding: 1.1rem 1rem 1.2rem;
 }
 
 @media (min-width: 34rem) {
@@ -605,20 +640,16 @@
   color: color-mix(in oklab, var(--color-snc-ink) 78%, var(--color-snc-parch-edge));
 }
 
-/* On a phone the lotus sits in the leaf's top corner, beside the short title, rather than taking a column. */
+/* The lotus takes the leaf's right column at every width, as the target draws it — smaller on a phone. */
 .lotus {
-  position: absolute;
-  top: 0.7rem;
-  right: 0.7rem;
-  width: 5rem;
+  width: clamp(4.25rem, 19vw, 6rem);
   height: auto;
-  opacity: 0.45;
+  opacity: 0.85;
   pointer-events: none;
 }
 
 @media (min-width: 34rem) {
   .lotus {
-    position: static;
     width: clamp(6rem, 14vw, 9.5rem);
     opacity: 1;
   }

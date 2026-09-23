@@ -44,6 +44,15 @@
  * whatever is in .next, so pass it whenever you are unsure what that is.
  * `--base-url` measures a server it does not own — a preview deploy included —
  * and then neither builds nor starts anything.
+ *
+ * `--phone` (M1.1) is a mid-range Android: a mobile context (touch, the UA,
+ * DPR 3) with deviceMemory 4 and hardwareConcurrency 4 stubbed, the device
+ * the spec's "phones with WebGL2 and >= 4 cores" bar is written for. The
+ * capability tier's own frame probe is left alone. With `--cpu N` the throttle
+ * is applied AFTER the page has settled rather than before navigation: the
+ * tier measures nine idle frames at mount, and a throttle applied first would
+ * measure the throttle and refuse the room the bar is meant to measure. The
+ * report records the tier the page settled on and whether a scene went live.
  */
 import { spawn } from "node:child_process";
 import { mkdir, writeFile, access } from "node:fs/promises";
@@ -62,6 +71,15 @@ const REPO = resolve(import.meta.dirname, "..", "..");
  */
 export const THRESHOLD_STORAGE_KEY = "hastrekha:threshold:v1";
 export const THRESHOLD_SEEN = "seen";
+
+/** `--phone`: a Pixel 7's Chrome, as capture-chamber-phone.mjs also states it. */
+export const PHONE_UA = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36";
+
+/** `--phone`: the device signals of a mid-range phone, so the capability tier can reach MID. */
+const PHONE_SIGNALS = () => {
+  Object.defineProperty(navigator, "deviceMemory", { configurable: true, get: () => 4 });
+  Object.defineProperty(navigator, "hardwareConcurrency", { configurable: true, get: () => 4 });
+};
 
 /** The four widths the E pass names (Amendment 4). */
 export const DEFAULT_VIEWPORTS = [390, 430, 768, 1440];
@@ -115,6 +133,7 @@ function parseArgs(argv) {
     waitFor: null,
     settle: 2500,
     storage: [],
+    phone: false,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -133,6 +152,7 @@ function parseArgs(argv) {
       const [key, ...rest] = next().split("=");
       out.storage.push([key, rest.join("=")]);
     } else if (arg === "--returning") out.storage.push([THRESHOLD_STORAGE_KEY, THRESHOLD_SEEN]);
+    else if (arg === "--phone") out.phone = true;
     else if (arg === "--help") out.help = true;
   }
   return out;
@@ -249,12 +269,16 @@ async function sampleFrames(page, frames, warmup) {
 }
 
 /** One route, one width: navigate, settle, sample, shoot. */
-async function captureOne(browser, { base, route, width, cpu, frames, outDir, waitFor, settle, storage }) {
+async function captureOne(browser, { base, route, width, cpu, frames, outDir, waitFor, settle, storage, phone }) {
   const context = await browser.newContext({
     viewport: { width, height: HEIGHT_FOR(width) },
-    deviceScaleFactor: 1,
+    deviceScaleFactor: phone ? 3 : 1,
+    isMobile: phone,
+    hasTouch: phone,
+    ...(phone ? { userAgent: PHONE_UA } : {}),
     colorScheme: "dark",
   });
+  if (phone) await context.addInitScript(PHONE_SIGNALS);
   // A Vercel deploy behind Deployment Protection: trade the project's
   // automation-bypass secret for its cookie once, on the deploy's own origin.
   // Never as a context-wide extra header, which would carry the secret along
@@ -279,10 +303,11 @@ async function captureOne(browser, { base, route, width, cpu, frames, outDir, wa
     if (msg.type() === "error") consoleErrors.push(msg.text());
   });
 
-  if (cpu > 1) {
-    const cdp = await context.newCDPSession(page);
-    await cdp.send("Emulation.setCPUThrottlingRate", { rate: cpu });
-  }
+  // The throttle: before navigation on a desktop run; after the page has
+  // settled on a phone run, so the capability tier measures the device and
+  // the throttle measures the room (see the header).
+  const cdp = cpu > 1 ? await context.newCDPSession(page) : null;
+  if (cdp !== null && !phone) await cdp.send("Emulation.setCPUThrottlingRate", { rate: cpu });
 
   // "load", not "networkidle". A room that animates keeps requesting frames and
   // an App Router page can hold a connection open, so networkidle is a coin
@@ -320,6 +345,17 @@ async function captureOne(browser, { base, route, width, cpu, frames, outDir, wa
   // Then let the fade finish and fonts settle.
   await page.waitForTimeout(settle);
 
+  // What the page decided about itself: the measured tier, and whether a scene went live.
+  const decided = await page.evaluate(() => ({
+    tier: document.querySelector("[data-snc-tier]")?.getAttribute("data-snc-tier") ?? null,
+    scene: document.querySelector('[data-snc-room-scene="live"]') !== null,
+  }));
+
+  if (cdp !== null && phone) {
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: cpu });
+    await page.waitForTimeout(400);
+  }
+
   const gpu = await readRenderer(page);
 
   // Proof that the throttle bit, carried in the report beside the number it
@@ -338,17 +374,17 @@ async function captureOne(browser, { base, route, width, cpu, frames, outDir, wa
   const samples = await sampleFrames(page, frames, WARMUP_FRAMES);
   const frame = summarise(samples);
 
-  const shot = join(outDir, `${route.replaceAll("/", "_") || "_root"}-${width}${cpu > 1 ? `-cpu${cpu}x` : ""}.png`);
+  const shot = join(outDir, `${route.replaceAll("/", "_") || "_root"}-${width}${phone ? "-phone" : ""}${cpu > 1 ? `-cpu${cpu}x` : ""}.png`);
   await page.screenshot({ path: shot, fullPage: false });
 
   await context.close();
-  return { width, cpu, status, gpu, frame, cpuCalibrationMs, waitFor, waitedMs: waited, screenshot: shot, consoleErrors };
+  return { width, cpu, phone, status, gpu, frame, cpuCalibrationMs, waitFor, waitedMs: waited, tier: decided.tier, sceneLive: decided.scene, screenshot: shot, consoleErrors };
 }
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help) {
-    console.log("node scripts/capture/capture.mjs [--route /sanctuary] [--viewport 390,1440] [--cpu 4] [--frames 240] [--base-url URL] [--headed] [--label name] [--build] [--wait-for selector] [--settle ms] [--returning] [--storage key=value]");
+    console.log("node scripts/capture/capture.mjs [--route /sanctuary] [--viewport 390,1440] [--cpu 4] [--frames 240] [--base-url URL] [--headed] [--label name] [--build] [--wait-for selector] [--settle ms] [--returning] [--storage key=value] [--phone]");
     return;
   }
 
@@ -394,17 +430,18 @@ async function main() {
         waitFor: opts.waitFor,
         settle: opts.settle,
         storage: opts.storage,
+        phone: opts.phone,
       });
       results.push(result);
       const f = result.frame;
       console.log(
         f
-          ? `${opts.route} @ ${width}${opts.cpu > 1 ? ` cpu${opts.cpu}x` : ""}  p50 ${f.p50}ms  p95 ${f.p95}ms  worst ${f.worst}ms  (${f.fpsAtP95} fps at p95)  [busy-loop ${result.cpuCalibrationMs}ms]`
+          ? `${opts.route} @ ${width}${opts.phone ? " phone" : ""}${opts.cpu > 1 ? ` cpu${opts.cpu}x` : ""}  p50 ${f.p50}ms  p95 ${f.p95}ms  worst ${f.worst}ms  (${f.fpsAtP95} fps at p95)  [busy-loop ${result.cpuCalibrationMs}ms; tier ${result.tier ?? "?"}, scene ${result.sceneLive ? "live" : "none"}]`
           : `${opts.route} @ ${width}  ${result.error ?? "no frame summary"}`,
       );
     }
 
-    const report = { stamp, route: opts.route, cpu: opts.cpu, frames: opts.frames, gpu, results };
+    const report = { stamp, route: opts.route, cpu: opts.cpu, phone: opts.phone, frames: opts.frames, gpu, results };
     await writeFile(join(outDir, "report.json"), JSON.stringify(report, null, 2));
     console.log(`\nReport: ${join(outDir, "report.json")}`);
   } finally {

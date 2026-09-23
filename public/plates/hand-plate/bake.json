@@ -1,0 +1,95 @@
+{
+  "id": "hand-plate",
+  "generator": "scripts/plates/bake-hand.mjs",
+  "source": {
+    "mesh": "public/models/hand.glb",
+    "sha256": "cc368d4a7a0e984e77a65f1b0ec4d1a08688c20ad954a2bf1c90f03c5c80d214",
+    "landmarks": "public/models/hand.landmarks.json"
+  },
+  "three": "0.185.1",
+  "gpu": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001681) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "rendered": {
+    "width": 1536,
+    "height": 1536
+  },
+  "registration": {
+    "frame": "canonical rectified crop (lib/scan/rectify.ts CANONICAL_ANCHORS: wrist, thumb CMC, index MCP, little MCP)",
+    "anchors": [
+      {
+        "x": 0.5,
+        "y": 0.97
+      },
+      {
+        "x": 0.13,
+        "y": 0.74
+      },
+      {
+        "x": 0.24,
+        "y": 0.14
+      },
+      {
+        "x": 0.85,
+        "y": 0.24
+      }
+    ],
+    "sourcePx": 2048,
+    "mirrored": true,
+    "joints": [
+      {
+        "name": "wrist",
+        "target": {
+          "x": 768,
+          "y": 1489.92
+        },
+        "landed": {
+          "x": 768,
+          "y": 1489.92
+        },
+        "errorPx": 0
+      },
+      {
+        "name": "thumbCmc",
+        "target": {
+          "x": 199.68,
+          "y": 1136.6399999999999
+        },
+        "landed": {
+          "x": 199.68,
+          "y": 1136.64
+        },
+        "errorPx": 0
+      },
+      {
+        "name": "indexMcp",
+        "target": {
+          "x": 368.64,
+          "y": 215.04000000000002
+        },
+        "landed": {
+          "x": 368.64,
+          "y": 215.04
+        },
+        "errorPx": 0
+      },
+      {
+        "name": "littleMcp",
+        "target": {
+          "x": 1305.6,
+          "y": 368.64
+        },
+        "landed": {
+          "x": 1305.6,
+          "y": 368.64
+        },
+        "errorPx": 0
+      }
+    ],
+    "worstResidualPx": 0,
+    "jointExtentPx": {
+      "minX": -987.5,
+      "maxX": 1436.9,
+      "minY": -353.2,
+      "maxY": 1489.9
+    }
+  }
+}

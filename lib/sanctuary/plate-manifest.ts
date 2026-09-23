@@ -123,3 +123,16 @@ export function isPlateManifest(value: unknown): value is PlateManifest {
    * position↔scale correspondence somewhere. */
   return PLATE_SCALES.every((scale, index) => isPlateDensityAt(densities[index], scale));
 }
+
+/**
+ * `srcSet` for one format across all three densities.
+ *
+ * Density descriptors rather than widths: a plate is drawn at a size its CSS
+ * decides, so the browser's only real question is how many device pixels that
+ * box has. Here, and not in scene-plate.tsx, because that file is a client
+ * module and the server components that paint the baked hands (M1.1) need this
+ * without pulling a client boundary across it.
+ */
+export function plateSrcSet(manifest: PlateManifest, format: "avif" | "webp"): string {
+  return manifest.densities.map((density) => `${density[format]} ${density.scale}x`).join(", ");
+}

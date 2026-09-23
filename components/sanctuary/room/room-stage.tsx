@@ -11,8 +11,9 @@
  *   far   the wall, corridor, window, shelves, drapes; the light pools are its
  *         background, so the one warm source lights the wall behind everything
  *   mid   the floor, props, book and pedestal; the lifted leaf; the zodiac ring
- *         (HTML, so it can turn); the hologram's column, its hand and its two
- *         rings; the candles, and each candle's pool of light
+ *         (HTML, so it can turn); the hologram's column, its hand (the P1 mesh,
+ *         baked — public/plates/hand-hologram) and its two rings; the candles,
+ *         and each candle's pool of light
  *   near  the haze, and three drifts of dust
  *
  * NOTHING MOVES INSIDE A PLATE. Every motion — the leaf, the hand, the rings,
@@ -35,8 +36,10 @@
  * its component already stops under reduced motion.
  */
 import type { CSSProperties, ReactElement, ReactNode } from "react";
+import { HandPlate } from "@/components/sanctuary/hand-plate";
 import { CelestialRing } from "@/components/sanctuary/material";
 import {
+  HOLOGRAM_HAND_REGION,
   ROOM_ANCHORS,
   ROOM_CANDLES,
   ROOM_LAYER_DEPTH,
@@ -44,10 +47,8 @@ import {
   roomPercent,
 } from "@/lib/sanctuary/room-composition";
 import {
-  HOLOGRAM_HAND_REGION,
   HOLOGRAM_ORBITS,
   HologramColumn,
-  HologramHand,
   LIFTED_PAGE_REGION,
   LiftedPage,
   OrbitRing,
@@ -154,16 +155,13 @@ export function RoomStage({ id, variant, className, overlay, labels, chrome, sce
           <svg viewBox={VIEWBOX} className={styles.svg} aria-hidden="true" focusable="false">
             {room ? <RoomMidFront leaders={labels !== undefined} /> : <HologramColumn />}
           </svg>
-          <svg
-            viewBox={HAND.viewBox}
-            style={HAND.style}
-            className={`${styles.part} ${styles.handFloat}`}
-            data-snc-room-object="hologram"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <HologramHand />
-          </svg>
+          {/* [A2] The hand: the P1 mesh at rest, baked from this scene through this camera
+              (public/plates/hand-hologram, M1.1) — no line on it, ever. One element in its own box,
+              so it floats without repainting the plates behind it; and the pixels the live scene
+              fades in over are the scene's own. */}
+          <div style={HAND.style} className={`${styles.part} ${styles.handFloat}`} data-snc-room-object="hologram" aria-hidden="true">
+            <HandPlate kind="hologram" className={styles.handPlate} loading="eager" />
+          </div>
           {ORBITS.map(({ orbit, style, viewBox }) => (
             <svg
               key={orbit.y}

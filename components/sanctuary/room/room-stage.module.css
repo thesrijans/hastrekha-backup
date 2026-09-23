@@ -368,22 +368,17 @@
   vector-effect: non-scaling-stroke;
 }
 
-.handGlow {
-  fill: var(--color-snc-gold-400);
-  fill-opacity: 0.1;
-  stroke: var(--color-snc-flame-warm);
-  stroke-width: 6;
-  stroke-opacity: 0.08;
-  vector-effect: non-scaling-stroke;
+/* The hand is a baked picture (M1.1) filling its own stage box; nothing is drawn on it. */
+.handPlate,
+.handPlate img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.hand {
-  fill: none;
-  stroke: var(--color-snc-gold-400);
-  stroke-width: 1.1;
-  stroke-opacity: 0.6;
-  vector-effect: non-scaling-stroke;
-  stroke-linejoin: round;
+/* The book's own drawing of the hand, on the left leaf: the tradition plate, small, in ink's weight. */
+.pageHand {
+  opacity: 0.6;
 }
 
 .orbit {
@@ -544,14 +539,14 @@
   }
 }
 
+/* The breath is opacity only: the hand never moves, so the live scene's hand — the same
+   mesh at rest — lands on the same pixels when it fades in over this one (M1.1). */
 @keyframes sncRoomBreathe {
   from {
-    opacity: 0.82;
-    translate: 0 3px;
+    opacity: 0.84;
   }
   to {
     opacity: 1;
-    translate: 0 -3px;
   }
 }
 
@@ -608,9 +603,13 @@
   );
 }
 
-/* The vignette has no page edge of its own: it dissolves into the ground above and below it. */
+/* The vignette has no page edge of its own: it dissolves into the ground on every side — beside
+   the greeting on a phone (M1.1) its sides are edges too. */
 .vignette {
-  mask-image: linear-gradient(to bottom, transparent, black 10%, black 88%, transparent);
+  mask-image:
+    linear-gradient(to bottom, transparent, black 10%, black 88%, transparent),
+    linear-gradient(to right, transparent, black 9%, black 91%, transparent);
+  mask-composite: intersect;
 }
 
 /* ---------------------------------------------------------------------- */

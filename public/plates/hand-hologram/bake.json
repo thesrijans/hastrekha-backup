@@ -1,0 +1,48 @@
+{
+  "id": "hand-hologram",
+  "generator": "scripts/plates/bake-hand.mjs",
+  "source": {
+    "mesh": "public/models/hand.glb",
+    "sha256": "cc368d4a7a0e984e77a65f1b0ec4d1a08688c20ad954a2bf1c90f03c5c80d214",
+    "landmarks": "public/models/hand.landmarks.json"
+  },
+  "three": "0.185.1",
+  "gpu": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001681) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "rendered": {
+    "width": 900,
+    "height": 1200
+  },
+  "registration": {
+    "region": {
+      "x": 380,
+      "y": 150,
+      "w": 300,
+      "h": 400
+    },
+    "pose": "rest — world.tick(0), sway 0",
+    "camera": {
+      "position": [
+        0,
+        1.05,
+        4.6
+      ],
+      "fov": 36,
+      "horizon": 372
+    },
+    "handCentreStage": {
+      "x": 530,
+      "y": 345.48
+    },
+    "handBoxStage": {
+      "from": {
+        "x": 367.4923534428157,
+        "y": 505.44
+      },
+      "to": {
+        "x": 692.507646557184,
+        "y": 185.5199999999999
+      }
+    },
+    "cameraAgreementStageUnits": 0
+  }
+}

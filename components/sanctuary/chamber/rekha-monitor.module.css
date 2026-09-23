@@ -67,22 +67,39 @@
     color: color-mix(in oklab, var(--color-snc-gold-500) 55%, transparent);
   }
 
-  /* THE PLATE. */
+  /* THE PLATE — positioned, so it paints OVER the absolutely placed hand under it: an unpositioned
+     block is painted before a positioned sibling whatever the DOM order, and the first capture showed
+     the plate's found lines hidden behind the hand. */
   .plate {
+    position: relative;
     display: block;
     inline-size: 100%;
     block-size: auto;
     overflow: visible;
   }
 
-  /* The hand: context, at the secondary rung, in the cool moon token — a different hue from a found line. */
+  /* The hand under the lines: the baked plate (M1.1), laid on the palm's own square of the view
+     (rekha-monitor.tsx PALM_BOX); its wrist fades rather than ending in the mesh's cut. */
+  .plateBox {
+    position: relative;
+    inline-size: 100%;
+  }
+
   .palm {
-    fill: none;
-    stroke: var(--color-snc-moon);
-    stroke-width: var(--snc-stroke-secondary-width);
-    stroke-opacity: var(--snc-stroke-secondary-opacity);
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    position: absolute;
+    display: block;
+    pointer-events: none;
+  }
+
+  /* Held well under the lines: at full brightness a gold-400 line on the gold-500 hand vanished
+     (the first capture showed three confirmed lines and none of them). Brightness alone — a
+     transfer function, not a colour — takes the hand down to a dark bronze the lines lead on. */
+  .palm img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    filter: brightness(0.38) saturate(0.9);
+    mask-image: linear-gradient(to bottom, var(--color-snc-ink) 91%, transparent);
   }
 
   /* A found line. Width and opacity come per line from its state (rekha-monitor.tsx). */
@@ -160,7 +177,7 @@
       cursor: pointer;
     }
 
-    .plate {
+    .plateBox {
       max-inline-size: 22rem;
       margin-inline: auto;
     }

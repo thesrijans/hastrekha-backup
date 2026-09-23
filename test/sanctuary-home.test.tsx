@@ -12,8 +12,8 @@
  *  3. B7: the room is one composition — one table of numbers, three layers at
  *     the plate depths, the same viewBox everywhere — and nothing in it moves
  *     below MID. The phone's vignette draws the pedestal and the hologram only.
- *  4. [A2] The hologram's hand is a silhouette: not one line of the tradition's
- *     diagram is ever drawn on it.
+ *  4. [A2] The hologram's hand is the P1 mesh, baked from the scene at rest
+ *     (M1.1): not one line of the tradition's diagram is ever drawn on it.
  *  5. The island: the same follow constants as <ScenePlate>, a capture-phase
  *     camera that lets a Link stand down, and no WebGL anywhere in U3a.
  * ========================================================================== */
@@ -40,12 +40,7 @@ import {
   roomCameraTransform,
 } from "../lib/sanctuary/room-composition";
 import { SANCTUARY_CHAMBER_HREF, SANCTUARY_POTHI_HREF } from "../lib/sanctuary/routes";
-import {
-  TRADITION_HAND_CREASES,
-  TRADITION_HAND_SILHOUETTE,
-  TRADITION_LABELS_HI,
-  TRADITION_LINES,
-} from "../lib/sanctuary/tradition-hand";
+import { TRADITION_LABELS_HI, TRADITION_LINES } from "../lib/sanctuary/tradition-hand";
 import { WISDOM_SEED_VERSE, WISDOM_VERSES, wisdomOfTheDay } from "../lib/sanctuary/wisdom";
 
 let assertions = 0;
@@ -183,7 +178,9 @@ function rules(css: string): { selector: string; body: string }[] {
   ok(!html.includes("snc-stroke-active"), "[A2] nothing on the plate uses the active stroke rung a traced result is drawn in");
   const css = withoutComments(read("components", "sanctuary", "home", "tradition-palm.module.css"));
   const width = (selector: string): number => Number(new RegExp(`\\${selector}\\s*{[^}]*stroke-width:\\s*([0-9.]+)`).exec(css)?.[1]);
-  ok(width(".line") < 1 && width(".leader") < 1 && width(".crease") < 1 && width(".outline") <= 1, "[A2] every stroke is a sub-pixel hairline — thinner than any reading");
+  ok(width(".line") < 1 && width(".leader") < 1, "[A2] every stroke is a sub-pixel hairline — thinner than any reading");
+  ok(html.includes('data-snc-hand-plate="tradition"') && html.includes("/plates/hand-tradition/"), "the hand under the lines is the P1 mesh, baked (M1.1) — not a drawing");
+  ok(/--snc-tradition-engrave:\s*color-mix\(in oklab, var\(--color-snc-stone-900\)/.test(css) && /\.line\s*{[^}]*stroke:\s*var\(--snc-tradition-engrave\)/.test(css), "the lines are engraved dark into the gold hand, not laid over it in gold");
   ok(/--snc-tradition-ink:\s*color-mix\(in oklab, var\(--color-snc-gold-500\)[^;]*var\(--color-snc-moon\)\)/.test(css), "[A2] …and cooler: the gold pulled toward the moon's blue-grey");
   ok(!/filter|drop-shadow|glow/.test(css), "[A2] and nothing on it glows");
 }
@@ -356,11 +353,11 @@ function rules(css: string): { selector: string; body: string }[] {
   );
   ok(vignette.length < room.length / 2, `…so a phone does not pay for a room it cannot see (${vignette.length} vs ${room.length} bytes)`);
 
-  /* [A2] the hologram's hand is a silhouette, never a reading. */
+  /* [A2] the hologram's hand is the mesh, baked, never a reading. */
   const hologram = vignette.slice(vignette.indexOf('data-snc-room-object="hologram"'));
-  ok(hologram.includes(TRADITION_HAND_SILHOUETTE), "[A2] the hologram draws the hand's silhouette…");
+  ok(hologram.includes('data-snc-hand-plate="hologram"') && hologram.includes("/plates/hand-hologram/"), "[A2] the hologram's hand is the P1 mesh baked from the scene at rest (M1.1)…");
   ok(
-    TRADITION_LINES.every((line) => !room.includes(`d="${line.d}"`)) && !room.includes(TRADITION_HAND_CREASES),
+    TRADITION_LINES.every((line) => !room.includes(`d="${line.d}"`)),
     "[A2] …and not one of the tradition's lines, anywhere in the room: the hand is a symbol of the scan, not a traced result",
   );
   ok(!/cyan|mount-glow|line-glow/.test(room), "[A2] and it is gold light, never the cyan the reference draws");
@@ -440,11 +437,11 @@ function rules(css: string): { selector: string; body: string }[] {
     "over a live scene the words over the room still leave with the camera — the scene pushes them about the stage point the set would have been, over the same 1400 ms, and home again; from the 3D chunk, not Home's first load (U3b P3)",
   );
   ok(
-    /const gl = renderer\.getContext\(\);/.test(canvas) && /post\.render\(seconds\);\s*gl\.flush\(\);/.test(canvas),
+    /const gl = renderer\.getContext\(\);/.test(canvas) && /render\(seconds\);\s*gl\.flush\(\);/.test(canvas),
     "the room hands each frame to the GPU as soon as it is drawn — unflushed, it stalled ~200 ms every half second on ANGLE/D3D11, at rest and in motion (found in U3b P3)",
   );
   ok(
-    /post\.render\(seconds\);\s*gl\.flush\(\);\s*if \(arriving !== null && rig\.progress\(now\) >= 1\) \{[\s\S]*?set\?\.dispatchEvent\(new CustomEvent\(ROOM_CAMERA_ARRIVED_EVENT, \{ detail: \{ camera \} \}\)\);/.test(canvas),
+    /render\(seconds\);\s*gl\.flush\(\);\s*if \(arriving !== null && rig\.progress\(now\) >= 1\) \{[\s\S]*?set\?\.dispatchEvent\(new CustomEvent\(ROOM_CAMERA_ARRIVED_EVENT, \{ detail: \{ camera \} \}\)\);/.test(canvas),
     "the scene says its camera has arrived from the frame that draws it there — after that frame's render, never before (U3b P3)",
   );
   ok(

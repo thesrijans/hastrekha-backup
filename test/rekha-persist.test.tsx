@@ -269,7 +269,7 @@ function extraction(lines: Partial<Record<ActiveLineId, TracedLine>>): LineExtra
   ok(!/आपकी|आप |your|reading|पाठ|future|भविष्य/i.test(markup.replace(/aria-label="[^"]*"/g, "")), "no reading text anywhere on it — detection only");
   const empty = render({ snapshot: null });
   ok(
-    (empty.match(/<span aria-hidden="true">—<\/span>/g) ?? []).length === 4 && !empty.includes("data-snc-line=") && empty.includes('d="M 16.5 0'),
+    (empty.match(/<span aria-hidden="true">—<\/span>/g) ?? []).length === 4 && !empty.includes("data-snc-line=") && empty.includes('data-snc-hand-plate="plate"'),
     "before any evidence the ledger marks every line not yet seen, and the plate shows only the hand",
   );
   ok(markup.includes('aria-live="polite"'), "the ledger is announced politely as lines are confirmed");

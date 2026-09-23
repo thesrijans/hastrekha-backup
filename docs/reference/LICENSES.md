@@ -80,6 +80,13 @@ above; `scripts/models/check_hand.py` scores the result, and
 4. Decimate to 3,000 triangles, centre, and normalise to unit extent.
 5. Export `hand.glb` (54,948 B) and the 21 joint centres as
    `hand.landmarks.json`, in the same frame.
+6. Bake it into the three hand plates under `public/plates/hand-hologram/`,
+   `public/plates/hand-plate/` and `public/plates/hand-tradition/`
+   (`scripts/plates/bake-hand.mjs`, M1.1): the same mesh rendered by the
+   room's own Three.js code in headless Chromium, encoded as AVIF + WebP at
+   three densities by `scripts/plates/build-plates.mjs`. Each directory's
+   `bake.json` records the mesh's SHA-256 and the registration the render was
+   warped to. Derived works of the same CC0 source; no new licence attaches.
 
 Measured on the committed files: 3,000 triangles, 53.7 kB, one connected
 component, four fingers resolving separately, an opposing thumb 3.8× further

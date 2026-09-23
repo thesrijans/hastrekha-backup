@@ -1,0 +1,31 @@
+{
+  "id": "hand-tradition",
+  "alt": "An open right hand in engraved gold, palm forward, the tradition's diagram hand.",
+  "layer": "mid",
+  "densities": [
+    {
+      "scale": 1,
+      "width": 300,
+      "height": 433,
+      "avif": "/plates/hand-tradition/hand-tradition-1x.avif",
+      "webp": "/plates/hand-tradition/hand-tradition-1x.webp",
+      "bytes": 10004
+    },
+    {
+      "scale": 2,
+      "width": 600,
+      "height": 867,
+      "avif": "/plates/hand-tradition/hand-tradition-2x.avif",
+      "webp": "/plates/hand-tradition/hand-tradition-2x.webp",
+      "bytes": 21975
+    },
+    {
+      "scale": 3,
+      "width": 900,
+      "height": 1300,
+      "avif": "/plates/hand-tradition/hand-tradition-3x.avif",
+      "webp": "/plates/hand-tradition/hand-tradition-3x.webp",
+      "bytes": 20812
+    }
+  ]
+}

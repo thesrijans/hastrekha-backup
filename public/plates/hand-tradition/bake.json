@@ -1,0 +1,97 @@
+{
+  "id": "hand-tradition",
+  "generator": "scripts/plates/bake-hand.mjs",
+  "source": {
+    "mesh": "public/models/hand.glb",
+    "sha256": "cc368d4a7a0e984e77a65f1b0ec4d1a08688c20ad954a2bf1c90f03c5c80d214",
+    "landmarks": "public/models/hand.landmarks.json"
+  },
+  "three": "0.185.1",
+  "gpu": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001681) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "rendered": {
+    "width": 900,
+    "height": 1300
+  },
+  "registration": {
+    "frame": "tradition hand box (lib/sanctuary/tradition-hand.ts): TRADITION_HAND_LANDMARKS, baked into TRADITION_HAND_PLATE_BOX at 4.16667 px per unit",
+    "landmarks": {
+      "wrist": {
+        "x": 100,
+        "y": 258
+      },
+      "indexMcp": {
+        "x": 134,
+        "y": 123
+      },
+      "littleMcp": {
+        "x": 65,
+        "y": 132
+      }
+    },
+    "box": {
+      "x": 0,
+      "y": -22,
+      "width": 216,
+      "height": 312
+    },
+    "sourcePx": 2048,
+    "mirrored": false,
+    "joints": [
+      {
+        "name": "wrist",
+        "target": {
+          "x": 416.6666666666667,
+          "y": 1166.6666666666667
+        },
+        "landed": {
+          "x": 416.667,
+          "y": 1166.667
+        },
+        "errorPx": 0
+      },
+      {
+        "name": "indexMcp",
+        "target": {
+          "x": 558.3333333333334,
+          "y": 604.1666666666667
+        },
+        "landed": {
+          "x": 558.333,
+          "y": 604.167
+        },
+        "errorPx": 0
+      },
+      {
+        "name": "littleMcp",
+        "target": {
+          "x": 270.83333333333337,
+          "y": 641.6666666666667
+        },
+        "landed": {
+          "x": 270.833,
+          "y": 641.667
+        },
+        "errorPx": 0
+      },
+      {
+        "name": "parallelogram",
+        "target": {
+          "x": 412.50000000000006,
+          "y": 79.16666666666674
+        },
+        "landed": {
+          "x": 412.5,
+          "y": 79.167
+        },
+        "errorPx": 0
+      }
+    ],
+    "worstResidualPx": 0,
+    "jointExtentPx": {
+      "minX": 202.5,
+      "maxX": 795.4,
+      "minY": 96,
+      "maxY": 1166.7
+    }
+  }
+}

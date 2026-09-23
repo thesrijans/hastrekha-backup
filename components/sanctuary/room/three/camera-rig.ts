@@ -39,7 +39,7 @@
 import { Vector3, type PerspectiveCamera } from "three";
 import { ROOM_CAMERA_MOVE_MS, ROOM_CSS_CAMERAS } from "@/lib/sanctuary/room-composition";
 import type { RoomLayout } from "./layout";
-import { applyHorizon, CAMERA_SANCTUARY, STAGE_ASPECT } from "./stage-projection";
+import { applyHorizon, CAMERA_SANCTUARY, STAGE_ASPECT, type StageWindow } from "./stage-projection";
 
 export type RoomCameraName = keyof typeof ROOM_CSS_CAMERAS;
 export const ROOM_CAMERA_NAMES = Object.keys(ROOM_CSS_CAMERAS) as RoomCameraName[];
@@ -234,6 +234,8 @@ export class CameraRig {
   constructor(
     private readonly camera: PerspectiveCamera,
     layout: RoomLayout,
+    /** The phone renders a window of the stage (stage-projection.ts applyHorizon); every pose keeps to it. */
+    private window: StageWindow | null = null,
   ) {
     this.poses = roomCameraPoses(layout);
     this.from = this.poses.sanctuary;
@@ -293,8 +295,14 @@ export class CameraRig {
     this.camera.position.copy(pose.position);
     this.camera.rotation.set(0, pose.yaw, 0);
     this.camera.updateMatrixWorld(true);
-    applyHorizon(this.camera, pose.horizon);
+    applyHorizon(this.camera, pose.horizon, this.window);
     this.horizonApplied = pose.horizon;
+  }
+
+  /** A new window of the stage (the vignette was resized): the next apply() cuts the frame to it. */
+  setWindow(window: StageWindow | null): void {
+    this.window = window;
+    this.horizonApplied = NaN;
   }
 
   /** Put the camera where it belongs at `now` (ms) — pose, then drift, then parallax. */
@@ -334,7 +342,7 @@ export class CameraRig {
     // and every comparison with NaN is false — written the obvious way, the
     // horizon was never applied at all and every pose kept the rest camera's.
     if (!(Math.abs(pose.horizon - this.horizonApplied) <= 1e-4)) {
-      applyHorizon(this.camera, pose.horizon);
+      applyHorizon(this.camera, pose.horizon, this.window);
       this.horizonApplied = pose.horizon;
     }
   }

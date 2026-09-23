@@ -68,13 +68,38 @@ export const BLOOM_LAYER = 1;
 export const DRAPE_LAYER = 2;
 
 /**
- * The scene, drawn in the two passes [R11] needs.
+ * The scene, drawn in the two passes [R11] needs, to whatever target is bound.
  *
  * First the drapes alone, clearing to the scene's background; then everything
  * else on the camera's own layers, WITHOUT clearing, so the drapes keep their
  * pixels and depth and every transparent thing drawn afterwards — dust, haze,
  * the hologram — still blends over them as it should.
+ *
+ * Exported for the phone profile (room-canvas.tsx, M1.1), which draws the
+ * scene straight to the canvas with no composer at all and still owes the
+ * drapes their flag.
  */
+export function drawFlagged(renderer: WebGLRenderer, scene: Scene, camera: PerspectiveCamera): void {
+  const mask = camera.layers.mask;
+  const autoClear = renderer.autoClear;
+  const background = scene.background;
+  renderer.autoClear = true;
+  camera.layers.set(DRAPE_LAYER);
+  renderer.render(scene, camera);
+  // The second draw must not clear. autoClear alone is not enough: when the
+  // scene's background is a Color, Three FORCES a clear at the start of every
+  // render regardless of autoClear — which is how P2.1's first iteration
+  // wiped the drapes it had just drawn, and made the flag look as if it had
+  // worked because the drapes, and their glow, were simply gone. The
+  // background is already painted by the first draw's clear.
+  scene.background = null;
+  renderer.autoClear = false;
+  camera.layers.mask = mask;
+  renderer.render(scene, camera);
+  scene.background = background;
+  renderer.autoClear = autoClear;
+}
+
 class FlaggedRenderPass extends Pass {
   constructor(
     private readonly scene: Scene,
@@ -85,25 +110,8 @@ class FlaggedRenderPass extends Pass {
   }
 
   override render(renderer: WebGLRenderer, _writeBuffer: WebGLRenderTarget, readBuffer: WebGLRenderTarget): void {
-    const mask = this.camera.layers.mask;
-    const autoClear = renderer.autoClear;
-    const background = this.scene.background;
     renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
-    renderer.autoClear = true;
-    this.camera.layers.set(DRAPE_LAYER);
-    renderer.render(this.scene, this.camera);
-    // The second draw must not clear. autoClear alone is not enough: when the
-    // scene's background is a Color, Three FORCES a clear at the start of every
-    // render regardless of autoClear — which is how P2.1's first iteration
-    // wiped the drapes it had just drawn, and made the flag look as if it had
-    // worked because the drapes, and their glow, were simply gone. The
-    // background is already painted by the first draw's clear.
-    this.scene.background = null;
-    renderer.autoClear = false;
-    this.camera.layers.mask = mask;
-    renderer.render(this.scene, this.camera);
-    this.scene.background = background;
-    renderer.autoClear = autoClear;
+    drawFlagged(renderer, this.scene, this.camera);
   }
 }
 

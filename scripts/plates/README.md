@@ -155,3 +155,26 @@ allows exactly one warm point source per scene — and a `#0A0806` (`--stone-900
 1280×720, 1920×1080. 8,344 B of AVIF across all three densities, of which one is ever fetched.
 
 Replace it the moment a real far plate exists. It is a stand-in for a room, not a room.
+
+---
+
+## The hand plates are baked, not exported by hand
+
+`public/plates/hand-hologram/`, `hand-plate/` and `hand-tradition/` are the one exception to the
+manual-export rule above, because their source is not a Blender scene but the P1 hand mesh already
+in the tree (`public/models/hand.glb`, CC0) and the room's own Three.js code:
+
+```sh
+node scripts/plates/bake-hand.mjs                 # all three
+node scripts/plates/bake-hand.mjs --only hand-plate
+```
+
+`bake-hand.mjs` bundles `bake-hand.entry.ts` with esbuild, opens it in headless Chromium on the real
+GPU (`scripts/capture/gpu-probe.mjs` flags), renders the mesh three ways — the scene's own hologram
+hand at rest through the room camera cut to `HOLOGRAM_HAND_REGION`; the palm mirrored and warped
+onto `lib/scan/rectify.ts` `CANONICAL_ANCHORS`; the whole hand fitted to
+`lib/sanctuary/tradition-hand.ts` `TRADITION_HAND_LANDMARKS` — and hands each PNG to
+`build-plates.mjs`. Beside every manifest it writes `bake.json`: the mesh's SHA-256, the
+registration (which points went where, to the pixel) and the GPU. `test/sanctuary-hand-plates.test.ts`
+holds the code to those records, so a moved anchor or a changed region fails a test until the plates
+are re-baked.

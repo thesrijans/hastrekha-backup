@@ -100,13 +100,12 @@ interface CjsExtensionHost {
 
 interface PalmPlateModule {
   PalmPlate: (props: PalmPlateProps) => ReturnType<typeof createElement> | null;
-  NEUTRAL_PALM_PATH: string;
   POTHI_PLATE_ORIGINAL_NOT_KEPT: string;
   POTHI_PLATE_LINE_LABELS: Readonly<Record<string, string>>;
 }
 
 const ROOT = path.resolve(__dirname, "..");
-const { PalmPlate, NEUTRAL_PALM_PATH, POTHI_PLATE_ORIGINAL_NOT_KEPT, POTHI_PLATE_LINE_LABELS } = createRequire(
+const { PalmPlate, POTHI_PLATE_ORIGINAL_NOT_KEPT, POTHI_PLATE_LINE_LABELS } = createRequire(
   __filename,
 )("../components/sanctuary/pothi/palm-plate") as PalmPlateModule;
 
@@ -335,64 +334,51 @@ const count = (haystack: string, needle: string): number => haystack.split(needl
 
 {
   const revisited = render({ lineId: "heart", geometry: geometry() });
-  ok(revisited.includes(NEUTRAL_PALM_PATH), "with no crop the plate draws the neutral palm diagram it authors itself");
+  ok(
+    revisited.includes('data-snc-hand-plate="plate"') && revisited.includes("/plates/hand-plate/"),
+    "with no crop the plate lays the baked neutral hand (M1.1) — the P1 mesh in the crop's frame — under the ink",
+  );
   ok(
     revisited.includes(POTHI_PLATE_ORIGINAL_NOT_KEPT),
     "and states the reason in the margin, in the exact words of the promise: a reworded promise is a different promise",
   );
   ok(revisited.includes('data-snc-plate="neutral"'), "the state is published on the figure, so a leaf above can style it and a reviewer can see it in devtools");
-  ok(!revisited.includes("<image"), "no crop element is emitted when there is no crop — an empty <image> would be a broken picture, not an absence");
+  ok(!revisited.includes('data-snc-layer="crop"'), "no crop layer is emitted when there is no crop — an empty crop would be a broken picture, not an absence");
   ok(
-    tagWith(revisited, 'data-snc-part="neutral-palm"').includes("snc-stroke-secondary"),
-    "the diagram is drawn at the secondary rung: it is context for the measured line, never a claim of its own",
+    revisited.indexOf('data-snc-part="neutral-palm"') < revisited.indexOf('data-snc-layer="ink"'),
+    "the hand lies under the ink: context for the measured line, never a claim of its own",
   );
   ok(
-    !/[Zz]/.test(NEUTRAL_PALM_PATH) && count(NEUTRAL_PALM_PATH, "M ") === 4,
-    "the outline is open, in four subpaths: the fingers run off the top of the crop, and a rounded fingertip drawn inside the frame would claim they end there",
-  );
-  ok(
-    numbersIn(NEUTRAL_PALM_PATH).every((value) => value >= 0 && value <= POTHI_PLATE_SIZE),
-    "and every coordinate of it sits inside the plate, so nothing of the diagram spills onto the leaf around it",
+    !/data-snc-line=/.test(revisited.slice(revisited.indexOf('data-snc-part="neutral-palm"'), revisited.indexOf('data-snc-layer="ink"'))),
+    "and it carries no crease of its own — a suggested line on a neutral palm is a line nobody measured",
   );
 
   /*
-   * THE REGISTRATION PIN, and the reason this diagram is not a free drawing.
+   * THE REGISTRATION PIN, and the reason this hand is not a free picture.
    *
    * A polyline projected onto the neutral palm was measured in a crop whose
-   * framing is decided by CANONICAL_ANCHORS in lib/scan/rectify.ts. If the
-   * outline disagrees with that framing, every crease lands somewhere the
-   * reader's crease is not — a heart line across the knuckles, on a picture that
-   * still looks finished. So the anchors are READ from the rectifier rather than
-   * retyped here, and a retune there fails this suite instead of silently
-   * sliding the drawing out from under the ink.
+   * framing is decided by CANONICAL_ANCHORS in lib/scan/rectify.ts. The baked
+   * hand (public/plates/hand-plate) had the mesh's wrist, thumb root and two
+   * outer knuckles warped onto exactly those anchors, and bake.json beside it
+   * records which. So the anchors are READ from the rectifier rather than
+   * retyped here, and compared with the record: a retune there without a
+   * re-bake fails this suite instead of silently sliding the hand out from
+   * under the ink.
    */
   const rectify = readFileSync(path.join(ROOT, "lib", "scan", "rectify.ts"), "utf8");
   const anchorPairs = [...rectify.matchAll(/\{\s*x:\s*(-?[\d.]+),\s*y:\s*(-?[\d.]+)\s*\}/g)]
-    .map((match) => [Number(match[1]) * POTHI_PLATE_SIZE, Number(match[2]) * POTHI_PLATE_SIZE] as const)
-    .filter(([x, y]) => x > 0 && x < POTHI_PLATE_SIZE && y > 0 && y < POTHI_PLATE_SIZE);
+    .map((match) => [Number(match[1]), Number(match[2])] as const)
+    .filter(([x, y]) => x > 0 && x < 1 && y > 0 && y < 1);
   ok(anchorPairs.length >= 5, `the rectifier's canonical anchors were found and read: ${anchorPairs.length} of them`);
-
-  /** Every on-curve endpoint of a path — the last coordinate pair of each command. */
-  const endpoints = (d: string): (readonly [number, number])[] =>
-    (d.match(/[MLCQ][^MLCQZ]*/g) ?? []).map((segment) => {
-      const nums = numbersIn(segment);
-      return [nums[nums.length - 2], nums[nums.length - 1]] as const;
-    });
-  const nearest = (point: readonly [number, number]): number =>
-    Math.min(...endpoints(NEUTRAL_PALM_PATH).map(([x, y]) => Math.hypot(x - point[0], y - point[1])));
-
-  /* Three anchors sit ON the silhouette — the wrist, the thumb root, the ulnar
-   * percussion bulge — so the outline must pass through them, not near them. */
-  const onEdge = anchorPairs.filter((anchor) => nearest(anchor) <= 1.5);
-  ok(onEdge.length >= 3, `the wrist, the thumb root and the percussion bulge lie on the drawn edge: ${onEdge.length} anchors within 1.5 units of it`);
-
-  /* The other two are KNUCKLE CENTRES, so the nearest edge is half a finger
-   * away by construction; the pin there is that they land on the drawn hand at
-   * all rather than beside it. */
+  const bake = JSON.parse(readFileSync(path.join(ROOT, "public", "plates", "hand-plate", "bake.json"), "utf8")) as {
+    registration: { anchors: { x: number; y: number }[]; mirrored: boolean; worstResidualPx: number };
+  };
   ok(
-    anchorPairs.every((anchor) => nearest(anchor) <= 10),
-    "and the two knuckle anchors fall within half a finger of the outline, so the fingers are drawn where the rectifier puts them",
+    bake.registration.anchors.length === 4 &&
+      bake.registration.anchors.every((a) => anchorPairs.some(([x, y]) => Math.abs(x - a.x) < 1e-9 && Math.abs(y - a.y) < 1e-9)),
+    "the baked hand's four joints were warped onto the rectifier's own canonical anchors — the same four the rectifier gives a real palm",
   );
+  ok(bake.registration.mirrored === true && bake.registration.worstResidualPx < 0.05, "mirrored to the crop's thumb-left framing, with the joints landing to within a twentieth of a pixel");
   ok(
     render({ lineId: "heart", geometry: geometry() }).includes(POTHI_PLATE_LINE_LABELS.heart),
     "the accessible label names the line actually drawn, so a screen reader is told which crease leads",
@@ -405,7 +391,7 @@ const count = (haystack: string, needle: string): number => haystack.split(needl
   const measured = render({ lineId: "heart", geometry: geometry({ cropDataUrl: CROP }) });
   ok(measured.includes(CROP), "with a crop the plate draws the crop");
   ok(measured.includes('data-snc-plate="measured"'), "and says so on the figure");
-  ok(!measured.includes(NEUTRAL_PALM_PATH), "the neutral diagram is absent: it is a fallback, never a backdrop under a real hand");
+  ok(!measured.includes('data-snc-hand-plate="plate"'), "the neutral hand is absent: it is a fallback, never a backdrop under a real hand");
   ok(
     !measured.includes(POTHI_PLATE_ORIGINAL_NOT_KEPT),
     "and the margin note is absent, because the original image IS here — the note is a fact about the session, not a disclaimer to sprinkle",

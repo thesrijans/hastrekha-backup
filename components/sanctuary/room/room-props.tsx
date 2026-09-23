@@ -22,7 +22,7 @@
 import type { CSSProperties, ReactElement } from "react";
 import { defUrl, seededRandom, SNC_GRADIENT_GOLD } from "@/components/sanctuary/material";
 import { ROOM_ANCHORS, ROOM_CANDLES } from "@/lib/sanctuary/room-composition";
-import { TRADITION_HAND_OUTLINE, TRADITION_HAND_SILHOUETTE } from "@/lib/sanctuary/tradition-hand";
+import { HAND_TRADITION_PLATE } from "@/lib/sanctuary/hand-plates";
 import styles from "./room-stage.module.css";
 
 const GOLD = defUrl(SNC_GRADIENT_GOLD);
@@ -269,7 +269,9 @@ export function Pedestal(): ReactElement {
 
 /** The open book on its stand, the lifted page, the lectern. */
 function Book(): ReactElement {
-  const handTransform = "translate(1196 468) scale(0.44) translate(-108 -150)";
+  /* The book's own diagram of the hand: the baked tradition plate (216 × 290 hand units) at 0.44, its
+     centre at (1196, 468) on the left leaf. One density is enough for a drawing 95 stage units wide. */
+  const leafHand = HAND_TRADITION_PLATE.densities[0];
   return (
     <g data-snc-room-object="book">
       {/* The lectern. */}
@@ -291,7 +293,15 @@ function Book(): ReactElement {
       <path d={hatch(1266, 1290, 404, 610, 5, "end")} className={styles.pageHatch} />
       <path d={hatch(1294, 1318, 404, 610, 5, "start")} className={styles.pageHatch} />
       {/* The left leaf carries a small drawing of the tradition's hand — the book's own diagram. */}
-      <path d={TRADITION_HAND_OUTLINE} transform={handTransform} className={styles.pageInk} />
+      <image
+        href={leafHand.webp}
+        x={1196 - 108 * 0.44}
+        y={468 - 150 * 0.44}
+        width={216 * 0.44}
+        height={290 * 0.44}
+        preserveAspectRatio="none"
+        className={styles.pageHand}
+      />
       <path
         d="M1140,560Q1210,550 1278,556M1142,578Q1210,568 1278,574M1144,596Q1210,588 1278,592"
         className={styles.pageInk}
@@ -396,20 +406,6 @@ export function HologramColumn(): ReactElement {
       <path d={ellipse(cx, base - 2, 150, 26)} className={styles.emitter} />
       <path d={ellipse(cx, base - 2, 108, 18)} className={styles.emitterCore} />
     </g>
-  );
-}
-
-/** The hand's own box, in stage units — it floats as one element, so nothing behind it is repainted. */
-export const HOLOGRAM_HAND_REGION = { x: 380, y: 150, w: 300, h: 400 } as const;
-
-/** [A2] The hand: a silhouette and a soft edge of light. Never a line. */
-export function HologramHand(): ReactElement {
-  const hand = `translate(${ROOM_ANCHORS.pedestal.x} 356) scale(1.3) translate(-108 -150)`;
-  return (
-    <>
-      <path d={TRADITION_HAND_SILHOUETTE} transform={hand} className={styles.handGlow} />
-      <path d={TRADITION_HAND_SILHOUETTE} transform={hand} className={styles.hand} />
-    </>
   );
 }
 

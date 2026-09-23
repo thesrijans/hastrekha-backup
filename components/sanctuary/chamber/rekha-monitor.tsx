@@ -20,20 +20,21 @@
  * draws a line below CANDIDATE — `RekhaSnapshot` does not carry one, so there is
  * nothing here to filter: a line nobody has evidence for cannot reach the plate.
  *
- * THE PLATE is the Pothi's neutral palm (NEUTRAL_PALM_PATH), which is registered
- * to the rectified crop's canonical frame — so a crease traced in mask space
- * lands on this hand where it lies on the reader's. It is drawn in the cool moon
- * token at the secondary rung: context, and a different hue from the gold of a
- * found line, so a candidate crease at the same weight is never mistaken for
- * the hand's own contour. (U3c replaces the plate with the reader's twin.)
+ * THE PLATE is the Pothi's neutral palm (public/plates/hand-plate, M1.1): the
+ * P1 mesh baked into the rectified crop's canonical frame — so a crease traced
+ * in mask space lands on this hand where it lies on the reader's. A picture
+ * laid on the palm's own square of the view, under the SVG; the lines are
+ * drawn in gold-400 over its engraved gold, so a candidate crease at the
+ * secondary rung is a line ON a hand, never the hand's own contour. (U3c
+ * replaces the plate with the reader's twin.)
  *
  * WHERE IT SITS. The right side of the chamber on a desktop; a pull-up sheet on
  * a phone, collapsed to the ledger, opened by tapping it.
  */
-import { useState, type ReactElement } from "react";
+import { useState, type CSSProperties, type ReactElement } from "react";
+import { HandPlate } from "@/components/sanctuary/hand-plate";
 import type { RekhaLine, RekhaSnapshot } from "@/lib/scan/rekha-persist";
 import { ACTIVE_LINE_IDS, MASK_SIZE, type ActiveLineId } from "@/lib/scan/types";
-import { NEUTRAL_PALM_PATH } from "@/components/sanctuary/pothi/palm-plate";
 import { pothiPolylinePath } from "@/lib/sanctuary/pothi-geometry";
 import styles from "./rekha-monitor.module.css";
 
@@ -79,8 +80,18 @@ export const REKHA_EXTENSION_OPACITY = 0.6;
 
 /** Plate units: the palm is 0–100; the view adds margins either side for the names. */
 const MARGIN = 28;
-const VIEW = `${-MARGIN} -6 ${100 + 2 * MARGIN} 112`;
+const VIEW_TOP = 6;
+const VIEW_HEIGHT = 112;
+const VIEW = `${-MARGIN} ${-VIEW_TOP} ${100 + 2 * MARGIN} ${VIEW_HEIGHT}`;
 const LABEL_GAP = 9;
+
+/** Where the palm's 0-100 square sits in the view, for the baked hand laid under the SVG. */
+const PALM_BOX: CSSProperties = {
+  left: `${((MARGIN / (100 + 2 * MARGIN)) * 100).toFixed(3)}%`,
+  top: `${((VIEW_TOP / VIEW_HEIGHT) * 100).toFixed(3)}%`,
+  width: `${((100 / (100 + 2 * MARGIN)) * 100).toFixed(3)}%`,
+  height: `${((100 / VIEW_HEIGHT) * 100).toFixed(3)}%`,
+};
 
 interface Leader {
   readonly id: ActiveLineId;
@@ -166,8 +177,9 @@ export function RekhaMonitor({ snapshot, visible = true, className }: RekhaMonit
         </span>
       </button>
 
+      <div className={styles.plateBox}>
+        <HandPlate kind="plate" className={styles.palm} style={PALM_BOX} />
       <svg className={styles.plate} viewBox={VIEW} role="img" aria-label="The palm, with the lines found so far" focusable="false">
-        <path d={NEUTRAL_PALM_PATH} className={styles.palm} vectorEffect="non-scaling-stroke" />
         {lines.map((line) => {
           const stroke = rekhaStroke(line);
           /* A traced line (S2) draws its observed stretches at its state's stroke and its valley
@@ -227,6 +239,7 @@ export function RekhaMonitor({ snapshot, visible = true, className }: RekhaMonit
           );
         })}
       </svg>
+      </div>
     </section>
   );
 }

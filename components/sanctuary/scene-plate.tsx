@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
-import type { PlateLayer, PlateManifest } from "@/lib/sanctuary/plate-manifest";
+import { plateSrcSet, type PlateLayer, type PlateManifest } from "@/lib/sanctuary/plate-manifest";
 /* [R6] The one `CapabilityTier` in the sanctuary, imported rather than redeclared. `import type`
  * erases at compile time, so this costs no bundle weight and creates no client-boundary coupling —
  * a second identical union would still have been a second thing to keep in step, and the whole
@@ -114,15 +114,9 @@ export function clampParallaxOffset({ offsetPx, layer, surface, capability }: Pa
   return Math.min(max, Math.max(-max, offsetPx * PLATE_DEPTH_FACTOR[layer]));
 }
 
-/**
- * `srcSet` for one format across all three densities.
- *
- * Density descriptors rather than widths: a plate is a full-bleed backdrop whose CSS size is the
- * stage, so the browser's only real question is how many device pixels that stage has.
- */
-export function plateSrcSet(manifest: PlateManifest, format: "avif" | "webp"): string {
-  return manifest.densities.map((density) => `${density[format]} ${density.scale}x`).join(", ");
-}
+/* `plateSrcSet` lives with the manifest (lib/sanctuary/plate-manifest.ts) so server components can
+ * share it; re-exported here for the callers and tests that learned it from this file. */
+export { plateSrcSet };
 
 /* Subscribe/snapshot pairs, matching the useSyncExternalStore idiom already used in
  * components/scan/deep-scan-flash.tsx: a live browser query mirrored into state by an effect is

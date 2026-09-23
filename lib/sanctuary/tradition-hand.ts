@@ -1,27 +1,26 @@
 /**
- * The tradition's hand — an original open right hand, and the classical lines on it.
+ * The tradition's hand — the classical lines, and where the real hand goes under them.
  *
- * Two places draw this hand and neither may look like a reading:
+ * Two places show this hand and neither may look like a reading:
  *
- *  · C3's plate on Home, which draws the outline, the classical lines and the
- *    nine रेखा names the brief lists — a diagram of what the tradition names,
- *    captioned "पारंपरिक चित्र";
- *  · the room's hologram (B2), which draws the OUTLINE ONLY. [A2] That hand is a
- *    symbol of the scan and must not resemble a traced result, so it never
- *    receives a line.
+ *  · C3's plate on Home, which lays the classical lines and the nine रेखा
+ *    names the brief lists over the baked hand — a diagram of what the
+ *    tradition names, captioned "पारंपरिक चित्र";
+ *  · the room's book, whose left leaf carries the same plate small, as the
+ *    book's own drawing. [A2] The room's hologram is the SAME mesh with no
+ *    line on it at all (public/plates/hand-hologram): a symbol of the scan
+ *    that must not resemble a traced result.
  *
- * NOT THE POTHI'S HAND. components/sanctuary/pothi/palm-plate.tsx has
- * `NEUTRAL_PALM_PATH`, but that outline is registered to a scan crop — an open
- * palm with the fingers cut off at the frame — because it sits under a real
- * reader's traced lines. A diagram of the tradition needs a whole hand, so this is
- * a separate drawing, and keeping them separate is also what keeps the diagram
+ * NOT THE POTHI'S HAND. The Pothi's plate (components/sanctuary/pothi/
+ * palm-plate.tsx) is the same mesh baked into the scan crop's canonical frame —
+ * a palm with the fingers cut off at the frame — because it sits under a real
+ * reader's traced lines. A diagram of the tradition needs a whole hand, so it is
+ * a separate bake, and keeping them separate is also what keeps the diagram
  * from ever being mistaken for somebody's result.
  *
  * GEOMETRY. A right hand, palm toward the viewer, thumb on the viewer's right —
- * the orientation the home reference draws. Fingers of four lengths (middle
- * longest, little shortest), slightly spread; the thumb swung out from the
- * thenar mound. Units are a 216 × 290 box; the wrist is left open at y 258 so
- * the hand reads as reaching up out of the page rather than as a cut-out.
+ * the orientation the home reference draws. Units are a 216 x 290 box; the
+ * wrist is at y 258 so the hand reads as reaching up out of the page.
  *
  * THE LINES ARE THE TRADITION'S, NOT A CLAIM. Placement follows the classical
  * diagrams (heart line across the top of the palm, head line below it, the life
@@ -34,29 +33,33 @@
 
 export const TRADITION_HAND_VIEWBOX = { width: 216, height: 290 } as const;
 
-/** The outline, open at the wrist. */
-export const TRADITION_HAND_OUTLINE =
-  "M66,258 C62,232 55,200 54,168 C54,154 54,142 55,135 C56,129 57,125 57.2,121.9 " +
-  "L43.2,63.9 A8,8 0 0,1 58.8,60.1 L72.8,118.1 Q75.5,112 78.5,108.4 " +
-  "L75,30.4 A9,9 0 0,1 93,29.6 L96.5,107.6 Q99,104 101.5,101.8 " +
-  "L103.5,15.8 A9.5,9.5 0 0,1 122.5,16.2 L120.5,102.2 Q123,106 125.6,109.7 " +
-  "L136.1,36.7 A9,9 0 0,1 153.9,39.3 L143.4,112.3 C145,125 148,138 151,148 " +
-  "C152,156 153,162 153.8,166.9 L182.8,114.9 A10.5,10.5 0 0,1 201.2,125.1 L172.2,177.1 " +
-  "C172,200 152,232 134,258";
-
-/** The same outline closed across the wrist — for a filled silhouette. */
-export const TRADITION_HAND_SILHOUETTE = `${TRADITION_HAND_OUTLINE} Z`;
+/**
+ * THE HAND IS A BAKED RENDER, NOT A DRAWING (M1.1). public/plates/hand-tradition
+ * is the P1 mesh (public/models/hand.glb) rendered palm-forward, fingers up,
+ * thumb on the viewer's right, and registered into this 216 x 290 box so that
+ * the mesh's own joints land on the three points below — where the outline the
+ * lines were drawn against put them. The lines are unchanged; the hand under
+ * them is the real one. scripts/plates/bake-hand.mjs reads these, and the
+ * plate's bake.json records them, so a change here without a re-bake fails
+ * test/sanctuary-hand-plates.test.ts rather than sliding the lines off the hand.
+ */
+export const TRADITION_HAND_LANDMARKS = {
+  /** The middle of the wrist. */
+  wrist: { x: 100, y: 258 },
+  /** The index finger's knuckle — the joint centre, a little below the finger's base crease on the palm side. Thumb side, viewer's right. */
+  indexMcp: { x: 134, y: 123 },
+  /** The little finger's knuckle. Viewer's left. */
+  littleMcp: { x: 65, y: 132 },
+} as const;
 
 /**
- * The finger joints: two short creases on each finger and one on the thumb.
- * Only the plate draws them — an engraver's detail that makes a diagram a hand.
+ * The box the tradition plate is baked into, in hand units. The real hand's
+ * fingers are longer, against its palm, than the drawn outline's were, so with
+ * its knuckles on the points above its fingertips reach past y 0; the plate
+ * carries that overflow rather than cutting the fingers, and TraditionPalm lays
+ * it so that this box's (0, 0)-(216, 290) is the drawing's own.
  */
-export const TRADITION_HAND_CREASES =
-  "M49,88 Q55,86 61,88 M47,76 Q52,74 58,75 " +
-  "M78,64 Q84,63 90,64 M77,48 Q83,47 89,48 " +
-  "M104,52 Q112,51 120,53 M104,34 Q112,33 120,35 " +
-  "M131,72 Q139,72 147,75 M133,56 Q140,56 148,58 " +
-  "M170,150 Q176,153 182,150";
+export const TRADITION_HAND_PLATE_BOX = { x: 0, y: -22, width: 216, height: 312 } as const;
 
 export type TraditionLineId =
   | "life"

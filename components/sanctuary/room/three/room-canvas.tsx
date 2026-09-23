@@ -9,9 +9,22 @@
  * downloads any of it. Written against Three.js directly, not React Three Fiber — R3F's
  * own floor is 227.6 kB gz against a 200 kB ceiling (spec [R9]).
  *
- * DPR IS CAPPED AT 2. A phone at devicePixelRatio 3 would render 2.25x the
- * pixels of the same scene at 2 for a difference nobody sees at arm's length,
- * and it is the single cheapest thing that keeps a mid-range Android at 30 fps.
+ * TWO PROFILES (M1.1). `full`, the room on a wide landscape screen: DPR capped
+ * at 2 — a display at devicePixelRatio 3 would render 2.25x the pixels of the
+ * same scene at 2 for a difference nobody sees at arm's length — and the post
+ * stack. `phone`, the vignette beside the greeting: DPR 1, NO POST (the scene
+ * drawn straight to the canvas in [R11]'s two draws, tone-mapped by its own
+ * materials), ONE FRAME IN TWO — a 30 fps cap — and ONLY THE WINDOW OF THE
+ * STAGE THE VIGNETTE SHOWS. The set is the whole 16:9 stage scaled so the
+ * pedestal-and-hologram band fills the box (room-stage.module.css `.vignette
+ * .set`), and the box is all the reader sees; the canvas is placed over that
+ * window and the camera's frame is cut to it (stage-projection.ts
+ * applyHorizon), so the book, the library, the window and the drapes are
+ * frustum-culled and a third of the pixels are drawn. Measured at 390, 4x CPU
+ * (scripts/capture/probe-phone-draw.mjs): the whole stage cost 72 draw calls
+ * and 11.8 / 14.4 / 18.1 ms (p50 / p95 / worst) of main thread per draw, and
+ * the page dropped one frame in twenty; the window costs 32 draw calls and
+ * 6.0 / 7.5 / 8.8 ms, and 480 sampled frames at 390 and 412 dropped none.
  *
  * THE LOOP STOPS WHEN THE ROOM IS NOT SEEN. `active` goes false when the room
  * scrolls away or the tab hides; the frame loop then does not run at all
@@ -33,13 +46,21 @@
 import { useEffect, useRef } from "react";
 import { ACESFilmicToneMapping, FloatType, SRGBColorSpace, WebGLRenderer, WebGLRenderTarget } from "three";
 import { CameraRig, ROOM_CAMERA_NAMES, TILT_FULL_DEFLECTION_DEG, TILT_NEUTRAL_BETA_DEG, type RoomCameraName } from "./camera-rig";
-import { buildPost } from "./post";
+import { buildPost, drawFlagged } from "./post";
 import { buildWorld } from "./world";
-import { ROOM_CAMERA_ARRIVED_EVENT, roomCameraTransform } from "@/lib/sanctuary/room-composition";
+import { ROOM_CAMERA_ARRIVED_EVENT, ROOM_STAGE, roomCameraTransform } from "@/lib/sanctuary/room-composition";
+import type { StageWindow } from "./stage-projection";
 
 export const ROOM_MAX_DPR = 2;
 
+/** The phone profile draws at most this often: one frame in two at 60 Hz. */
+export const ROOM_PHONE_FRAME_MS = 1000 / 30;
+
+/** `full` — DPR up to ROOM_MAX_DPR and the post stack. `phone` — DPR 1, no post, ROOM_PHONE_FRAME_MS between frames. */
+export type RoomProfile = "full" | "phone";
+
 export interface RoomCanvasProps {
+  readonly profile?: RoomProfile;
   /** Whether the loop runs. Off under a hidden tab or an off-screen room. */
   readonly active: boolean;
   /** Called once the room has drawn its first frame, so the gate can fade it in. */
@@ -48,7 +69,7 @@ export interface RoomCanvasProps {
   readonly onLost?: () => void;
 }
 
-export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasProps): React.ReactElement {
+export default function RoomCanvas({ profile = "full", active, onFirstFrame, onLost }: RoomCanvasProps): React.ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const activeRef = useRef(active);
   const wake = useRef<(() => void) | null>(null);
@@ -69,8 +90,9 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
     const element = host.current;
     if (element === null) return undefined;
 
+    const phone = profile === "phone";
     const renderer = new WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, ROOM_MAX_DPR));
+    renderer.setPixelRatio(phone ? 1 : Math.min(window.devicePixelRatio || 1, ROOM_MAX_DPR));
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
     renderer.outputColorSpace = SRGBColorSpace;
@@ -81,17 +103,46 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
     const gl = renderer.getContext();
 
     const world = buildWorld();
+    const set = element.closest<HTMLElement>("[data-snc-room-set]");
+
+    /* The phone's window of the stage: the box's rectangle in the set's stage units. */
+    const box = element.closest<HTMLElement>("[data-snc-room]");
+    const readWindow = (): StageWindow | null => {
+      if (!phone || set === null || box === null) return null;
+      const s = set.getBoundingClientRect();
+      const b = box.getBoundingClientRect();
+      if (s.width < 1 || s.height < 1 || b.width < 1 || b.height < 1) return null;
+      const sx = ROOM_STAGE.width / s.width;
+      const sy = ROOM_STAGE.height / s.height;
+      const x = Math.max(0, (b.left - s.left) * sx);
+      const y = Math.max(0, (b.top - s.top) * sy);
+      return { x, y, w: Math.min(ROOM_STAGE.width - x, b.width * sx), h: Math.min(ROOM_STAGE.height - y, b.height * sy) };
+    };
+    const placeWindow = (w: StageWindow): void => {
+      element.style.inset = "auto";
+      element.style.left = `${(w.x / ROOM_STAGE.width) * 100}%`;
+      element.style.top = `${(w.y / ROOM_STAGE.height) * 100}%`;
+      element.style.width = `${(w.w / ROOM_STAGE.width) * 100}%`;
+      element.style.height = `${(w.h / ROOM_STAGE.height) * 100}%`;
+    };
+    let stageWindow = readWindow();
+    if (stageWindow !== null) placeWindow(stageWindow);
+
     const size = (): { w: number; h: number } => ({
       w: Math.max(1, element.clientWidth),
       h: Math.max(1, element.clientHeight),
     });
     const initial = size();
     renderer.setSize(initial.w, initial.h, false);
-    const post = buildPost(renderer, world.scene, world.camera, initial.w, initial.h);
-    const rig = new CameraRig(world.camera, world.layout);
+    const post = phone ? null : buildPost(renderer, world.scene, world.camera, initial.w, initial.h);
+    // No post on the phone: the scene straight to the canvas, in [R11]'s two draws.
+    const render = (seconds: number): void => {
+      if (post === null) drawFlagged(renderer, world.scene, world.camera);
+      else post.render(seconds);
+    };
+    const rig = new CameraRig(world.camera, world.layout, stageWindow);
 
     /* The camera before the route: follow the island's mark on the set. */
-    const set = element.closest<HTMLElement>("[data-snc-room-set]");
     const isName = (value: string | undefined): value is RoomCameraName =>
       value !== undefined && (ROOM_CAMERA_NAMES as string[]).includes(value);
     /* The words over the room are HTML, not scene: with no CSS push over a
@@ -146,12 +197,21 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
     window.addEventListener("pointermove", onPointer, { passive: true });
     window.addEventListener("deviceorientation", onTilt, { passive: true });
 
-    // The canvas is the 16:9 `.set` box by its own CSS; resizing it changes
-    // resolution, never the camera's aspect, so the stage registration holds.
+    // The canvas is the 16:9 `.set` box by its own CSS — or, on the phone, the
+    // window of it the vignette shows; resizing it changes resolution, never
+    // the camera's registration, so the stage registration holds. A phone's
+    // window is re-read on resize: the vignette is as tall as the greeting
+    // beside it, and a wider screen shows more of the stage.
     const observer = new ResizeObserver(() => {
+      const next = readWindow();
+      if (next !== null && (stageWindow === null || ["x", "y", "w", "h"].some((k) => Math.abs(next[k as keyof StageWindow] - stageWindow![k as keyof StageWindow]) > 0.25))) {
+        stageWindow = next;
+        placeWindow(next);
+        rig.setWindow(next);
+      }
       const { w, h } = size();
       renderer.setSize(w, h, false);
-      post.setSize(w, h);
+      post?.setSize(w, h);
     });
     observer.observe(element);
 
@@ -159,13 +219,15 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
     let frame = 0;
     let first = true;
     let lost = false;
+    let settled = false;
+    let lastDrawn = Number.NEGATIVE_INFINITY;
 
     const draw = (): void => {
       const now = performance.now();
       const seconds = (now - started) / 1000;
       rig.apply(now);
       world.tick(seconds);
-      post.render(seconds);
+      render(seconds);
       // Hand the frame to the GPU now. Without this the commands of a frame's
       // six passes waited in the command buffer, and on ANGLE/D3D11 the room
       // stalled for ~200 ms every half second — at rest and in motion alike,
@@ -179,7 +241,11 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
         arriving = null;
         set?.dispatchEvent(new CustomEvent(ROOM_CAMERA_ARRIVED_EVENT, { detail: { camera } }));
       }
-      if (first) {
+      // The first COMPLETE frame — drawn after the hand and the zodiac arrived —
+      // is the one the gate fades in on: the plate underneath was baked from this
+      // scene with the hand in it, and a fade over a frame without the hand would
+      // show the hand vanish and come back (M1.1).
+      if (first && settled) {
         first = false;
         callbacks.current.onFirstFrame?.();
       }
@@ -187,7 +253,12 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
 
     const loop = (): void => {
       if (lost) return;
-      draw();
+      const now = performance.now();
+      // The phone draws one frame in two: a frame only once ROOM_PHONE_FRAME_MS has passed.
+      if (!phone || now - lastDrawn >= ROOM_PHONE_FRAME_MS - 1) {
+        draw();
+        lastDrawn = now;
+      }
       frame = activeRef.current ? requestAnimationFrame(loop) : 0;
     };
 
@@ -235,7 +306,7 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
         /** Render the room as it is at `seconds`, deterministically. */
         renderAt: (seconds: number) => {
           world.tick(seconds);
-          post.render(seconds);
+          render(seconds);
         },
         /**
          * A float target for reading LINEAR HDR — what the bloom pass sees.
@@ -248,8 +319,10 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
     }
 
     frame = requestAnimationFrame(loop);
-    // Late arrivals (the hand, the zodiac) get a frame even if the loop is paused.
+    // Late arrivals (the hand, the zodiac): the next frame is the first complete
+    // one, and a paused loop draws it anyway.
     void world.settled.then(() => {
+      settled = true;
       if (!lost && !activeRef.current) draw();
     });
 
@@ -262,13 +335,13 @@ export default function RoomCanvas({ active, onFirstFrame, onLost }: RoomCanvasP
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("deviceorientation", onTilt);
       renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
-      post.dispose();
+      post?.dispose();
       world.dispose();
       renderer.dispose();
       renderer.domElement.remove();
       wake.current = null;
     };
-  }, []);
+  }, [profile]);
 
   return <div ref={host} style={{ position: "absolute", inset: 0 }} />;
 }

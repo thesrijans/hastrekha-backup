@@ -1,0 +1,31 @@
+{
+  "id": "hand-plate",
+  "alt": "An open palm in engraved gold, framed as a scan crop with the fingers running off the top — nobody's hand, the plate a measured line is drawn on.",
+  "layer": "mid",
+  "densities": [
+    {
+      "scale": 1,
+      "width": 512,
+      "height": 512,
+      "avif": "/plates/hand-plate/hand-plate-1x.avif",
+      "webp": "/plates/hand-plate/hand-plate-1x.webp",
+      "bytes": 11010
+    },
+    {
+      "scale": 2,
+      "width": 1024,
+      "height": 1024,
+      "avif": "/plates/hand-plate/hand-plate-2x.avif",
+      "webp": "/plates/hand-plate/hand-plate-2x.webp",
+      "bytes": 21220
+    },
+    {
+      "scale": 3,
+      "width": 1536,
+      "height": 1536,
+      "avif": "/plates/hand-plate/hand-plate-3x.avif",
+      "webp": "/plates/hand-plate/hand-plate-3x.webp",
+      "bytes": 25043
+    }
+  ]
+}

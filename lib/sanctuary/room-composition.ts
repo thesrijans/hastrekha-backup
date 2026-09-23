@@ -58,6 +58,15 @@ export const ROOM_ANCHORS = {
 export type RoomAnchor = keyof typeof ROOM_ANCHORS;
 
 /**
+ * The hologram hand's own box, in stage units — the 3:4 window the baked hand
+ * (public/plates/hand-hologram) is cut to. The CSS room floats it as one
+ * element, so nothing behind it is repainted; the bake renders the scene's
+ * camera through exactly this window (scripts/plates/bake-hand.mjs), so the
+ * plate and the live hand land on the same pixels at the crossfade.
+ */
+export const HOLOGRAM_HAND_REGION = { x: 380, y: 150, w: 300, h: 400 } as const;
+
+/**
  * B4's camera positions, as the CSS composition can express them: a point to
  * push toward and how far. The scene (U3b) owns real 3D positions for the same
  * five names; these are the flat equivalents, so a nav action moves the CSS room

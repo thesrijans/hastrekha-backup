@@ -1,15 +1,19 @@
 /*
- * The tradition's palm — an engraved print, deliberately cooler and thinner
- * than anything that marks a real reading.
+ * The tradition's palm — the real hand as an engraved print, deliberately cooler
+ * and thinner in its lines than anything that marks a real reading.
  *
  * `--snc-tradition-ink` is the gold pulled a third of the way toward the moon's
  * blue-grey: still of this world's metal, visibly not the warm foil a traced
- * result is drawn in. Every stroke is a non-scaling hairline under 1px, the
- * weight of an engraver's line, never the active rung of the stroke ladder.
+ * result is drawn in; the leaders, their dots and the names are set in it.
+ * `--snc-tradition-engrave` is the lines' own ink where they cross the gold
+ * hand: the stone, warmed a little, cut into the metal. Every stroke is a
+ * non-scaling hairline under 1px, the weight of an engraver's line, never the
+ * active rung of the stroke ladder.
  */
 
 .plate {
   --snc-tradition-ink: color-mix(in oklab, var(--color-snc-gold-500) 68%, var(--color-snc-moon));
+  --snc-tradition-engrave: color-mix(in oklab, var(--color-snc-stone-900) 74%, var(--color-snc-gold-600));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -25,10 +29,29 @@
   padding-inline: 3.9rem;
 }
 
+/* The plate's box (TRADITION_HAND_PLATE_BOX — its aspect is set inline); the drawing's 216 x 290
+   box is laid inside it at the offsets the component derives from the same table. */
 .handBox {
   position: relative;
   width: 100%;
-  aspect-ratio: 216 / 290;
+}
+
+.handImage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.handImage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The wrist fades into the page: the hand reaches up out of it rather than ending in the mesh's cut. */
+  mask-image: linear-gradient(to bottom, var(--color-snc-ink) 86%, transparent 96%);
+}
+
+.drawing {
+  position: absolute;
 }
 
 .ring {
@@ -50,8 +73,6 @@
   overflow: visible;
 }
 
-.outline,
-.crease,
 .line,
 .leader {
   fill: none;
@@ -61,19 +82,11 @@
   stroke-linejoin: round;
 }
 
-.outline {
-  stroke-width: 0.95;
-  stroke-opacity: 0.9;
-}
-
-.crease {
-  stroke-width: 0.6;
-  stroke-opacity: 0.45;
-}
-
+/* The classical lines cross the gold hand: engraved into it, not laid over it. */
 .line {
+  stroke: var(--snc-tradition-engrave);
   stroke-width: 0.8;
-  stroke-opacity: 0.82;
+  stroke-opacity: 0.86;
 }
 
 .leader {

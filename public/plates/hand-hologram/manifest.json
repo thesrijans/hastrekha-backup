@@ -1,0 +1,31 @@
+{
+  "id": "hand-hologram",
+  "alt": "The hologram's hand — a gold-lit open right hand, palm forward, at rest above the pedestal.",
+  "layer": "mid",
+  "densities": [
+    {
+      "scale": 1,
+      "width": 300,
+      "height": 400,
+      "avif": "/plates/hand-hologram/hand-hologram-1x.avif",
+      "webp": "/plates/hand-hologram/hand-hologram-1x.webp",
+      "bytes": 7168
+    },
+    {
+      "scale": 2,
+      "width": 600,
+      "height": 800,
+      "avif": "/plates/hand-hologram/hand-hologram-2x.avif",
+      "webp": "/plates/hand-hologram/hand-hologram-2x.webp",
+      "bytes": 16783
+    },
+    {
+      "scale": 3,
+      "width": 900,
+      "height": 1200,
+      "avif": "/plates/hand-hologram/hand-hologram-3x.avif",
+      "webp": "/plates/hand-hologram/hand-hologram-3x.webp",
+      "bytes": 18804
+    }
+  ]
+}
