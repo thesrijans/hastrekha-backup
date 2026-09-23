@@ -53,7 +53,7 @@ tsconfig must have `"resolveJsonModule": true` (create-next-app sets it).
    - **Preview + Development**: `APP_ENV=dev`, test keys, `dev` DB, `ALLOW_FAKE_MONEY=true`.
 3. Domains: `hastrekha.com` → Production; `dev.hastrekha.com` → branch `dev` (Preview).
 4. Branch strategy: `master` = live, `dev` = dev. Feature work merges into `dev` → test on `dev.hastrekha.com` with fake money → PR to `master`.
-5. Smoke test after every deploy: `GET /api/health` → `{ appEnv, moneyMode: "LIVE" | "FAKE" | "BLOCKED", kbVersion }`.
+5. Smoke test after every deploy: `GET /api/health` → `{ appEnv, moneyMode: "LIVE" | "FAKE" | "BLOCKED", kbVersion }`, and `GET /api/version` → `{ sha, builtAt }` — compare `sha` to the commit you pushed (the same stamp sits in every sanctuary route's footer).
 
 ## 4. Razorpay
 
@@ -69,6 +69,7 @@ lib/env.ts                     env contract + assertMoneyPath()
 lib/hastrekha/*                rules engine, DOB, narrator, sanitiser, rate limit
 app/api/reading/route.ts       POST reading (free for guests, premium/deep auth-gated)
 app/api/health/route.ts        deploy smoke test
+app/api/version/route.ts       build stamp probe — { sha, builtAt }, derived by next.config.ts at build
 prisma/schema.prisma           v0: User/Session/Consent, Reading/ReadingRule/RuleFeedback/RuleStat, Order/Payment/Entitlement, AuditLog
 scripts/merge_kb.py            KB batches → data/kb/hastrekha_kb.json
 data/kb/batches/               put ALL Cheiro batch files here (1–5B)

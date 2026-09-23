@@ -1,0 +1,22 @@
+/*
+ * The build stamp's type, and only its type: the placement (position, margin,
+ * padding, alignment) belongs to whichever host mounts it.
+ *
+ * The colophon's smallest voice, one step quieter: the serif home.module.css
+ * gives the Privacy · Terms line, at 0.66rem, tracked a step tighter than that
+ * line's 0.16em, and the engraved gold at nine tenths. A host that needs it
+ * quieter still sets
+ * --snc-build-stamp-color; nothing here is uppercased, because a SHA is read
+ * back against `git log`, which prints it in lowercase.
+ *
+ * NO COLOUR LITERAL. Every pigment is a --color-snc-* token.
+ */
+.stamp {
+  font-family: var(--font-snc-serif);
+  font-weight: 600;
+  font-size: 0.66rem;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  color: var(--snc-build-stamp-color, color-mix(in oklab, var(--color-snc-gold-600) 90%, transparent));
+}

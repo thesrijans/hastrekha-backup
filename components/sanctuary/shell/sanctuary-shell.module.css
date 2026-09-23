@@ -52,3 +52,16 @@
     padding-inline-start: var(--snc-rail-width);
   }
 }
+
+/*
+ * The build stamp's place (M0): the last thing in the column. `margin-top: auto`
+ * is what pins it to the column's foot on a short page — the column is flex:1
+ * in a min-h-full chain — and the column's own padding is what keeps it above
+ * the bar. Centred, with a breath above it, so it reads as a colophon's last
+ * line and not as a stray.
+ */
+.stamp {
+  margin: auto 0 0;
+  padding: 1.25rem 1rem 0.75rem;
+  text-align: center;
+}

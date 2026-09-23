@@ -16,6 +16,8 @@
  *      the rail and the bar already name the rooms.
  *   5. The route's own content, in a column padded clear of the rail and the bar
  *      by the same custom property those two are sized by.
+ *   6. The build stamp (M0), at the column's foot — one muted line saying which
+ *      build this is, on every shelled route, above the bar.
  *
  * THE FONT CLASS ARRIVES AS A PROP. `SANCTUARY_FONT_CLASS` lives in
  * lib/sanctuary/fonts.ts, which runs `next/font/google` at import — and that
@@ -34,6 +36,7 @@ import { SanctuaryDefs, SanctuaryGround } from "@/components/sanctuary/material"
 import { SanctuaryHeader } from "@/components/sanctuary/sanctuary-header";
 import type { SanctuaryRouteHref } from "@/lib/sanctuary/nav";
 import { BottomNav } from "./bottom-nav";
+import { BuildStamp } from "./build-stamp";
 import { NavRail } from "./nav-rail";
 import styles from "./sanctuary-shell.module.css";
 
@@ -64,6 +67,7 @@ export function SanctuaryShell({
       <div className={styles.column}>
         {header ? <SanctuaryHeader links={false} /> : null}
         {children}
+        <BuildStamp className={styles.stamp} />
       </div>
       <BottomNav activeHref={activeHref} />
     </main>

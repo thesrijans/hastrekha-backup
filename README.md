@@ -51,6 +51,7 @@ contradictory value fails the build instead of a request.
 | `NEXT_PUBLIC_SANCTUARY=1` | at `next build` (inlined) | Opens `/sanctuary`, `/scan/chamber` and `/read/pothi`, and redirects `/` → `/sanctuary` (307). Unset, those routes are a baked 404 and `/` is the original home. Changing it needs a **redeploy**, not a restart. |
 | `APP_ENV`, `DATABASE_URL`, keys… | at server start (`lib/env.ts`) | The dev/live contract — see SETUP.md §0. |
 | `SNC_MEASURE=1` | at `next build` | Measurement harness only (opens `/dev/rekha-monitor` on a production build). Never set it on a deploy. |
+| `NEXT_PUBLIC_BUILD_SHA`, `NEXT_PUBLIC_BUILT_AT` | **derived** at `next build` by `next.config.ts` — never set by hand | The build stamp: the commit (`VERCEL_GIT_COMMIT_SHA` if Vercel set it, else `git rev-parse --short HEAD`, else the `export-subst` `.git-archive-sha` of a `git archive` export, else `unknown`) and the build's ISO time. Printed in the footer of every sanctuary route and on `/scan/chamber`; answered by `GET /api/version`. |
 
 `/dev/*` and `/sanctuary/materials` stay development-only whatever the flag
 says. To see the sanctuary under `npm run dev`, put `NEXT_PUBLIC_SANCTUARY=1`
@@ -80,6 +81,9 @@ Anything private that is not git-ignored goes below the mirror in `.vercelignore
 ### After a deploy
 
 - `GET /api/health` → `{ appEnv, moneyMode, kbVersion }`.
+- `GET /api/version` → `{ sha, builtAt }` — the build stamp, `no-store`, so it is
+  always the answering deployment's own. The same values sit in the footer of
+  every sanctuary route and at the top right of `/scan/chamber`.
 - Frame capture against the deploy, without building locally:
   `node scripts/capture/capture.mjs --base-url <url> --route /sanctuary --viewport 390,1440`.
 - `vercel.json` schedules a nightly cron (`/api/cron/rule-stats`); Vercel runs

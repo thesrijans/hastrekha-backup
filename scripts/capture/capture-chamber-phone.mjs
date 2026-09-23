@@ -16,7 +16,7 @@
  *   high-390                tier left alone (this machine is HIGH) — the full profile's ?cost=1 line
  *   denied-android / -ios   camera refused — the M1.5 leaf in Chrome's and Safari's words
  *
- *   node scripts/capture/capture-chamber-phone.mjs [--build] [--label name] [--only a,b] [--settle ms] [--cpu 4]
+ *   node scripts/capture/capture-chamber-phone.mjs [--build] [--label name] [--only a,b] [--settle ms] [--cpu 4] [--no-cost]
  *
  * Writes captures/ui/<stamp>-<label>/ (git-ignored): PNGs, report.json, and a scored checklist.
  */
@@ -35,6 +35,8 @@ const only = argv.includes("--only") ? argv[argv.indexOf("--only") + 1].split(",
 const settle = argv.includes("--settle") ? Number(argv[argv.indexOf("--settle") + 1]) : 7000;
 /** CPU slowdown (CDP) for a phone-like reading of the CPU stages; the GPU is this machine's either way. */
 const cpu = argv.includes("--cpu") ? Number(argv[argv.indexOf("--cpu") + 1]) : 1;
+/** M0: without `?cost=1` the chamber shows its build stamp instead of the readout; `--no-cost` measures that path. */
+const withCost = !argv.includes("--no-cost");
 
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36";
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
@@ -169,6 +171,9 @@ async function measure(page) {
       flip: box(document.querySelector('[data-snc-control="flip"]')),
       torch: box(document.querySelector('[data-snc-control="torch"]')),
       torchPressed: document.querySelector('[data-snc-control="torch"]')?.getAttribute("aria-pressed") ?? null,
+      /* M0: the build stamp on the back mark's row (absent under ?cost=1, when the readout carries the SHA). */
+      stamp: box(document.querySelector("[data-snc-build-stamp]")),
+      stampText: document.querySelector("[data-snc-build-stamp]")?.textContent ?? null,
       leaf: box(document.querySelector('[data-snc-litany="in"] > *')),
       /* Only the part of the sheet that is on screen is "the Monitor" for overlap purposes. */
       monitor: monitorBox === null ? null : { ...monitorBox, top: Math.max(monitorBox.top, 0), bottom: Math.min(monitorBox.bottom, H), height: Math.min(monitorBox.bottom, H) - Math.max(monitorBox.top, 0) },
@@ -237,7 +242,7 @@ function score(m, sheetOpen = null) {
   add("flip + torch reachable one-handed", reach(m.flip) && reach(m.torch), `flip ${m.flip ? `${((m.flip.top + m.flip.bottom) / 2 / H).toFixed(2)}·H ${m.flip.width}px` : "absent"}, torch ${m.torch ? `${((m.torch.top + m.torch.bottom) / 2 / H).toFixed(2)}·H ${m.torch.width}px` : "absent"}`);
 
   const ringBox = { left: ring.cx - ring.r, right: ring.cx + ring.r, top: ring.cy - ring.r, bottom: ring.cy + ring.r };
-  const ui = { back: m.back, flip: m.flip, torch: m.torch, leaf: m.leaf, monitor: m.monitor };
+  const ui = { back: m.back, flip: m.flip, torch: m.torch, leaf: m.leaf, monitor: m.monitor, stamp: m.stamp };
   const hits = [];
   for (const [name, rect] of Object.entries(ui)) if (intersects(rect, ringBox)) hits.push(`${name}×ring`);
   const names = Object.keys(ui);
@@ -300,7 +305,7 @@ try {
     const errors = [];
     page.on("console", (msg) => msg.type() === "error" && errors.push(msg.text()));
     page.on("pageerror", (error) => errors.push(String(error)));
-    await page.goto(`${server.base}/scan/chamber?cost=1`, { waitUntil: "load", timeout: 60_000 });
+    await page.goto(`${server.base}/scan/chamber${withCost ? "?cost=1" : ""}`, { waitUntil: "load", timeout: 60_000 });
     await page.waitForTimeout(600);
     await page.tap("button:has-text('Kaksh mein pravesh')");
     const entry = { viewport: `${s.width}×${s.height}@${s.dpr}`, ua: s.ua.includes("iPhone") ? "iOS Safari" : "Android Chrome", tier: s.tier ?? "unforced", cpu, errors };
@@ -346,7 +351,35 @@ try {
       sheet = await measure(page);
       await page.screenshot({ path: join(dir, `${s.id}-sheet.png`) });
     }
+    /* M0: the build stamp lives where the readout is not. The default run loads `?cost=1`, under which the
+       stamp is unmounted by design, so it is scored on one more plain load — a null stamp FAILS a row
+       rather than passing the overlap rows vacuously. (--no-cost runs the whole pipeline on that path.) */
+    await page.goto(`${server.base}/scan/chamber`, { waitUntil: "load", timeout: 60_000 });
+    await page.waitForTimeout(600);
+    entry.stampOnPlainLoad = await page.evaluate(() => {
+      const box = (el) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+      };
+      const stamp = document.querySelector("[data-snc-build-stamp]");
+      return { stamp: box(stamp), text: stamp?.textContent ?? null, back: box(document.querySelector('a[aria-label="Wapas"]')) };
+    });
     entry.checklist = score(scanning, sheet);
+    {
+      const { stamp, text, back } = entry.stampOnPlainLoad;
+      entry.checklist.push({
+        item: "build stamp shown without ?cost=1",
+        verdict: stamp !== null && /^build ([0-9a-f]{7}|unknown)/.test(text ?? "") ? "PASS" : "FAIL",
+        measured: stamp === null ? "no [data-snc-build-stamp]" : `"${text}"`,
+      });
+      const clear = stamp !== null && back !== null && stamp.left >= back.right && stamp.bottom <= 64;
+      entry.checklist.push({
+        item: "stamp on the back mark's row, clear of the mark and the ring band",
+        verdict: clear ? "PASS" : "FAIL",
+        measured: stamp === null ? "no stamp" : `stamp x ${stamp.left.toFixed(0)}–${stamp.right.toFixed(0)} y ${stamp.top.toFixed(0)}–${stamp.bottom.toFixed(0)}; back mark right ${back?.right.toFixed(0)}; band top 64`,
+      });
+    }
     {
       const ringBottom = scanning.ring.cy + scanning.ring.r;
       entry.checklist.push({
@@ -359,7 +392,7 @@ try {
 
     console.log(`\n${s.id} (${entry.viewport}, tier ${entry.tier})`);
     for (const row of entry.checklist) console.log(`  ${row.verdict}  ${row.item} — ${row.measured}`);
-    console.log(`  ?cost=1  ${scanning.cost}`);
+    console.log(withCost ? `  ?cost=1  ${scanning.cost}` : `  stamp (pipeline)  ${JSON.stringify(scanning.stamp)} "${scanning.stampText}"`);
     console.log(`  video transform (back): ${scanning.videoTransform}; opens: ${JSON.stringify(scanning.camera?.opens)}`);
     if (entry.torch) console.log(`  torch: aria-pressed ${entry.torch.torchPressed}; constraint sent: ${JSON.stringify(entry.torch.camera?.torch)}`);
     if (entry.front) console.log(`  after flip: video transform ${entry.front.videoTransform}; ?cost=1 ${entry.front.cost}; opens ${JSON.stringify(entry.front.camera?.opens)}`);

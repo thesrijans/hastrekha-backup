@@ -255,4 +255,21 @@
   .cost[data-snc-budget="over"] {
     color: var(--color-snc-ink-red);
   }
+
+  /*
+   * THE BUILD STAMP (M0), on the back mark's row. Centred on the mark's 44px
+   * target and right-aligned; the ring's band begins at 64px on a phone, so the
+   * line never enters it. At the marks' rung (z 3) and quieter than a mark —
+   * gold-500 at 38% against their 76% — because it is the one thing on this screen that is
+   * about the software and not the reader. Watched, never touched.
+   */
+  .buildStamp {
+    position: absolute;
+    inset-block-start: calc(max(0.75rem, env(safe-area-inset-top)) + 0.95rem);
+    inset-inline-end: 0.75rem;
+    z-index: 3;
+    margin: 0;
+    pointer-events: none;
+    --snc-build-stamp-color: color-mix(in oklab, var(--color-snc-gold-500) 38%, transparent);
+  }
 }

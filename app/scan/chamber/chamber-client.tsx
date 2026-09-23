@@ -77,6 +77,8 @@ import { CHAMBER_SCAN_FLAGS, withScanFlags } from "@/lib/scan/flags";
 import { ScanLitany } from "@/components/sanctuary/chamber/scan-litany";
 import { RevealBeat } from "@/components/sanctuary/chamber/reveal-beat";
 import { Parchment } from "@/components/sanctuary/material";
+import { BuildStamp } from "@/components/sanctuary/shell/build-stamp";
+import { BUILD_SHA_SHORT } from "@/lib/build-stamp";
 import type { ReadingResponse } from "@/app/read/reading-types";
 import styles from "./chamber.module.css";
 
@@ -539,8 +541,15 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
             : ` · profile ${activeProfile.name} (${capabilityTier}) ${videoSize === null ? "–" : `${videoSize.width}×${videoSize.height}`} · extract ${activeProfile.extractIntervalMs} ms`}
           {landmarkMs === null ? null : ` · landmarks ${landmarkMs.toFixed(1)} ms`}
           {status === "running" ? ` · ${cameraFacing === "environment" ? "back" : "front"}${mirrored ? " mirrored" : ""}` : null}
+          {` · build ${BUILD_SHA_SHORT}`}
         </p>
       ) : null}
+
+      {/* THE BUILD STAMP (M0). The chamber has no footer — its foot is the litany,
+          the marks and the Monitor's handle — so the line takes the back mark's
+          row, the one strip free on every phone and on a desktop. The readout
+          owns that row when it is asked for, and carries the SHA itself then. */}
+      {showCost ? null : <BuildStamp className={styles.buildStamp} />}
     </div>
   );
 }
