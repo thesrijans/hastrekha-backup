@@ -16,7 +16,7 @@
  *   high-390                tier left alone (this machine is HIGH) — the full profile's ?cost=1 line
  *   denied-android / -ios   camera refused — the M1.5 leaf in Chrome's and Safari's words
  *
- *   node scripts/capture/capture-chamber-phone.mjs [--build] [--label name] [--only a,b] [--settle ms] [--cpu 4] [--no-cost]
+ *   node scripts/capture/capture-chamber-phone.mjs [--build] [--label name] [--only a,b] [--settle ms] [--cpu 4] [--no-cost] [--base-url URL]
  *
  * Writes captures/ui/<stamp>-<label>/ (git-ignored): PNGs, report.json, and a scored checklist.
  */
@@ -37,6 +37,8 @@ const settle = argv.includes("--settle") ? Number(argv[argv.indexOf("--settle") 
 const cpu = argv.includes("--cpu") ? Number(argv[argv.indexOf("--cpu") + 1]) : 1;
 /** M0: without `?cost=1` the chamber shows its build stamp instead of the readout; `--no-cost` measures that path. */
 const withCost = !argv.includes("--no-cost");
+/** A server this run does not own — a deployment — instead of a local build. The camera stub is an init script, so it works on any origin. */
+const baseUrl = argv.includes("--base-url") ? argv[argv.indexOf("--base-url") + 1] : null;
 
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36";
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
@@ -254,8 +256,9 @@ function score(m, sheetOpen = null) {
 /* --------------------------------- driver --------------------------------- */
 
 if (!existsSync(FEED)) throw new Error(`No feed at ${FEED} — run scripts/capture/make-phone-feed.py first.`);
-if (argv.includes("--build")) await buildProduction();
-const server = await startServer();
+if (argv.includes("--build") && baseUrl === null) await buildProduction();
+const server = baseUrl === null ? await startServer() : null;
+const base = baseUrl ?? server.base;
 const stamp = new Date().toISOString().replaceAll(":", "-").slice(0, 19);
 const dir = join(REPO, "captures", "ui", `${stamp}-${label}`);
 mkdirSync(dir, { recursive: true });
@@ -305,7 +308,7 @@ try {
     const errors = [];
     page.on("console", (msg) => msg.type() === "error" && errors.push(msg.text()));
     page.on("pageerror", (error) => errors.push(String(error)));
-    await page.goto(`${server.base}/scan/chamber${withCost ? "?cost=1" : ""}`, { waitUntil: "load", timeout: 60_000 });
+    await page.goto(`${base}/scan/chamber${withCost ? "?cost=1" : ""}`, { waitUntil: "load", timeout: 60_000 });
     await page.waitForTimeout(600);
     await page.tap("button:has-text('Kaksh mein pravesh')");
     const entry = { viewport: `${s.width}×${s.height}@${s.dpr}`, ua: s.ua.includes("iPhone") ? "iOS Safari" : "Android Chrome", tier: s.tier ?? "unforced", cpu, errors };
@@ -354,7 +357,7 @@ try {
     /* M0: the build stamp lives where the readout is not. The default run loads `?cost=1`, under which the
        stamp is unmounted by design, so it is scored on one more plain load — a null stamp FAILS a row
        rather than passing the overlap rows vacuously. (--no-cost runs the whole pipeline on that path.) */
-    await page.goto(`${server.base}/scan/chamber`, { waitUntil: "load", timeout: 60_000 });
+    await page.goto(`${base}/scan/chamber`, { waitUntil: "load", timeout: 60_000 });
     await page.waitForTimeout(600);
     entry.stampOnPlainLoad = await page.evaluate(() => {
       const box = (el) => {
@@ -402,7 +405,7 @@ try {
 } finally {
   writeFileSync(join(dir, "report.json"), JSON.stringify(report, null, 2));
   await live.close();
-  server.stop?.();
-  server.child?.kill?.();
+  server?.stop?.();
+  server?.child?.kill?.();
   console.log(`\nReport: ${join(dir, "report.json")}`);
 }
