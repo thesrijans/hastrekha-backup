@@ -57,11 +57,11 @@ import { extractLines } from "@/lib/scan/lines";
 import { emptySession, observe, observeLines, sessionBag, type ReadingSession } from "@/lib/scan/reading-session";
 import { mergedMask, type CaptureState } from "@/lib/scan/capture";
 import { MASK_SIZE, type ActiveLineId, type TracedLine } from "@/lib/scan/types";
-import { useHandScan } from "@/components/scan/use-hand-scan";
+import { useHandScan, readTouchSignals } from "@/components/scan/use-hand-scan";
 import { useCapabilityTier } from "@/components/sanctuary/use-capability-tier";
 import { SanctuaryIcon } from "@/components/sanctuary/sanctuary-icons";
 import { scanProfileFor } from "@/lib/scan/scan-profile";
-import { browserFamily } from "@/lib/scan/camera-select";
+import { browserFamily, flipVisible, isTouchDevice } from "@/lib/scan/camera-select";
 import { cameraDeniedDirections, cameraFailureNote } from "@/lib/sanctuary/chamber-camera";
 import { encodeCrop, handOffToPothi, rescanPrompt, RESCAN_PARAM } from "@/lib/sanctuary/pothi-handoff";
 import {
@@ -154,6 +154,9 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     () => browserFamily(navigator.userAgent, navigator.maxTouchPoints ?? 0),
     () => null,
   );
+
+  /* F1: a held, touched device — the flip is always offered on one. Client knowledge, read like the browser. */
+  const touch = useSyncExternalStore(subscribeToNothing, () => isTouchDevice(readTouchSignals()), () => false);
 
   /*
    * M1.4: the device's capability tier decides the pipeline profile. It is settled (~170 ms after
@@ -375,12 +378,14 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
   const idle = status === "idle" || status === "starting";
 
   /*
-   * M1.1 / M1.2: the flip and the torch, offered only while the chamber is
-   * actually scanning, and each only where it can do something — the flip on a
-   * device with two cameras, the torch on a track that can light one.
+   * M1.1 / M1.2 / F1: the flip and the torch, offered while the chamber is
+   * actually scanning — the flip ALWAYS on a touch device (the camera count is
+   * unknown until permission, and a phone's reader must reach the other camera
+   * whatever the list said), on a mouse-driven machine only with two cameras;
+   * the torch on a track that can light one.
    */
   const scanning = status === "running" && blocked === null && phase === "scanning";
-  const canFlip = scanning && cameraCount >= 2;
+  const canFlip = scanning && flipVisible(touch, cameraCount);
   const canTorch = scanning && torch !== "unsupported";
   const directions = denied ? cameraDeniedDirections(browser ?? "other") : null;
 
@@ -483,19 +488,25 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         </div>
       )}
 
-      {/* M1.1 / M1.2 — THE FLIP AND THE TORCH. Marks like the back mark, not
-          buttons: no fill, no border, no radius, a 44px target around an engraved
-          glyph. They sit at the litany's two lower corners — on a phone the one
-          place both are in a thumb's reach, and off the ring the hand is in. */}
+      {/* M1.1 / M1.2 / F1 — THE FLIP AND THE TORCH. Marks like the back mark, not
+          buttons: no fill, no border, no radius, a 48px target around an engraved
+          glyph with its name under it. They sit at the screen's two lower corners
+          — on a phone the one place both are in a thumb's reach, and off the ring
+          the hand is in — ABOVE everything else: the pull-up sheet and the litany
+          leaf never cover them (chamber.module.css). */}
       {canFlip ? (
         <button
           type="button"
           className={styles.control}
           data-snc-control="flip"
-          aria-label={cameraFacing === "environment" ? "Saamne ka camera" : "Peeche ka camera"}
+          data-snc-facing={cameraFacing}
+          aria-label="कैमरा बदलें"
           onClick={() => void flipCamera()}
         >
           <SanctuaryIcon name="flip" size={26} />
+          <span className={styles.controlLabel} lang="hi" aria-hidden="true">
+            कैमरा बदलें
+          </span>
         </button>
       ) : null}
       {canTorch ? (
@@ -503,11 +514,14 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
           type="button"
           className={styles.control}
           data-snc-control="torch"
-          aria-label="Roshni"
+          aria-label="रोशनी"
           aria-pressed={torch === "on"}
           onClick={() => void toggleTorch()}
         >
           <SanctuaryIcon name="diya" size={26} />
+          <span className={styles.controlLabel} lang="hi" aria-hidden="true">
+            रोशनी
+          </span>
         </button>
       ) : null}
 

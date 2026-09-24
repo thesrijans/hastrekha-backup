@@ -37,10 +37,10 @@
       --snc-monitor-handle: 3rem;
     }
 
-    /* M1.3: with the flip or the torch showing, the leaf narrows to leave each mark its corner —
-       a 44px target, the 0.75rem it sits in from the edge, and a gap. */
+    /* M1.3 / F1: with the flip or the torch showing, the leaf narrows to leave each mark its corner —
+       a 48px target, the 0.75rem it sits in from the edge, and a gap. */
     .chamber[data-snc-controls] {
-      --snc-litany-gutter: 3.75rem;
+      --snc-litany-gutter: 4.25rem;
     }
   }
 
@@ -103,21 +103,25 @@
   }
 
   /*
-   * THE FLIP AND THE TORCH (M1.1, M1.2) — the back mark's kin. No fill, no border, no radius: an
-   * engraved glyph in a 44px target. Docked exactly where the litany's leaf is docked, one at each of
-   * its lower corners, because that row is the one a thumb reaches on a held phone and the one the
-   * hand's ring never enters (scan-ring.ts keeps the wheel above it). On a desktop the same corners
-   * are simply the screen's; a laptop rarely has a second camera or a torch, and then neither shows.
+   * THE FLIP AND THE TORCH (M1.1, M1.2, F1) — the back mark's kin. No fill, no border, no radius: an
+   * engraved glyph in a 48px target with its name under it. Docked at the screen's two lower corners,
+   * because that row is the one a thumb reaches on a held phone and the one the hand's ring never
+   * enters (scan-ring.ts keeps the wheel above it). ABOVE EVERYTHING: z 7 clears the litany's leaf
+   * (3), the gate (4) and the Monitor's open sheet (5), so on a phone the flip is never hidden —
+   * it was, under the open sheet, and a reader on the front camera had no way back. On a desktop the
+   * same corners are simply the screen's; a laptop rarely has a second camera or a torch.
    */
   .control {
     position: absolute;
     inset-block-end: calc(max(1.25rem, env(safe-area-inset-bottom)) + var(--snc-monitor-handle, 0px));
-    z-index: 3;
+    z-index: 7;
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    inline-size: 2.75rem;
-    block-size: 2.75rem;
+    gap: 0.15rem;
+    inline-size: 3rem;
+    block-size: 3rem;
     padding: 0;
     border: 0;
     background: none;
@@ -126,6 +130,16 @@
     transition:
       color 180ms ease,
       filter 180ms ease;
+  }
+
+  /* The mark's name, in its own script — Devanagari is never letter-spaced. */
+  .controlLabel {
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.62rem;
+    line-height: 1;
+    letter-spacing: normal;
+    white-space: nowrap;
+    color: inherit;
   }
 
   .control[data-snc-control="flip"] {
@@ -139,11 +153,6 @@
   .control:hover,
   .control:focus-visible {
     color: var(--color-snc-gold-400);
-  }
-
-  /* Under an open Monitor sheet the marks step out rather than sitting beneath it as dead targets. */
-  .chamber:has([data-snc-sheet="open"]) .control {
-    visibility: hidden;
   }
 
   /* A lit torch is the one control in the chamber that stays ON, so it carries the active rung's glow. */

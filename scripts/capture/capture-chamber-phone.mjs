@@ -8,7 +8,21 @@
  * agent and client hints, a second camera, the facing each open reports, and a torch on the back camera.
  * The frames are always the feed's; the real-device check is the owner's.
  *
+ * THE REAL-PHONE PROFILE (F1). Android does not label its cameras — or count them — until the reader
+ * has answered the permission prompt: before it, enumerateDevices() returns one entry with no label
+ * and no id. The stub below behaves exactly so: the list is label-less until the first getUserMedia
+ * is granted (after a prompt's delay), and the checklist proves the chamber asked for the back camera
+ * BEFORE any list could have told it otherwise. A scenario that passes only on a permissive list does
+ * not count. `fakeui-412` goes further: no stub at all, Chromium's own fake cameras and its own
+ * permission prompt (auto-accepted by --use-fake-ui-for-media-stream), with the permission state read
+ * before and after.
+ *
  * Scenarios (each at its own viewport, DPR and user agent):
+ *   android-412             THE real-phone profile: Pixel 7, touch, 412×915, label-less list before
+ *                           permission — back camera first, the flip always there, flipped to the
+ *                           front and back and front again (four captures), the torch, the sheet
+ *   fakeui-412              Chromium's real prompt and fake devices, no stub — the code path under a
+ *                           browser's own permission gate
  *   phone-390 / phone-412   the layout checklist, M1.3 — back camera, lite profile (tier forced to MID)
  *                           — then the torch (M1.2) and the flip to the front camera (M1.1), and the
  *                           Monitor's sheet opened
@@ -43,22 +57,56 @@ const baseUrl = argv.includes("--base-url") ? argv[argv.indexOf("--base-url") + 
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36";
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
 
-/** The phone the desktop cannot be: facing per open, a second camera, a torch on the back one, client hints. */
-const PHONE_CAMERA_STUB = () => {
+/**
+ * The phone the desktop cannot be — AS ANDROID BEHAVES (F1). Two cameras, a torch on the back one, the
+ * facing each open reports, client hints; and the permission model: until the first getUserMedia is
+ * granted, enumerateDevices() answers ONE entry with no label and no id, and the first getUserMedia
+ * waits a prompt's delay before it is granted (or refused, with __refuseCamera). Every call is logged
+ * on window.__camera — opens (with the constraints as asked), enumerations (labelled or not, and
+ * whether any open had happened yet), prompts, torch constraints — so the checklist can prove the
+ * ORDER of things, not just the outcome.
+ */
+const ANDROID_CAMERA_STUB = () => {
   const media = navigator.mediaDevices;
   const realOpen = media.getUserMedia.bind(media);
-  const realList = media.enumerateDevices.bind(media);
-  const facingOf = (constraints) => {
-    const video = constraints?.video;
+  const DEVICES = [
+    { kind: "videoinput", deviceId: "android-back", groupId: "g0", label: "camera2 0, facing back", facing: "environment", torch: true },
+    { kind: "videoinput", deviceId: "android-front", groupId: "g1", label: "camera2 1, facing front", facing: "user", torch: false },
+  ];
+  const state = { granted: false, prompts: 0, opens: [], enumerations: [], torch: [] };
+  window.__camera = state;
+  const facingOf = (video) => {
     const facing = video && typeof video === "object" ? video.facingMode : undefined;
-    if (facing === undefined) return null;
-    return typeof facing === "string" ? facing : (facing.exact ?? facing.ideal ?? null);
+    if (facing === undefined) return { value: null, exact: false };
+    if (typeof facing === "string") return { value: facing, exact: false };
+    return { value: facing.exact ?? facing.ideal ?? null, exact: facing.exact !== undefined };
   };
-  window.__camera = { opens: [], torch: [] };
+  const deviceIdOf = (video) => {
+    const id = video && typeof video === "object" ? video.deviceId : undefined;
+    if (id === undefined) return null;
+    return typeof id === "string" ? id : (id.exact ?? id.ideal ?? null);
+  };
+  media.enumerateDevices = async () => {
+    const list = state.granted
+      ? DEVICES.map((d) => ({ kind: d.kind, deviceId: d.deviceId, groupId: d.groupId, label: d.label, toJSON() { return this; } }))
+      : [{ kind: "videoinput", deviceId: "", groupId: "", label: "", toJSON() { return this; } }];
+    state.enumerations.push({ granted: state.granted, count: list.length, labelled: list.filter((d) => d.label !== "").length, beforeAnyOpen: state.opens.length === 0 });
+    return list;
+  };
   media.getUserMedia = async (constraints) => {
-    if (window.__refuseCamera) throw new DOMException("Permission denied", "NotAllowedError");
-    const facing = facingOf(constraints) ?? "user";
-    const video = typeof constraints.video === "object" ? { ...constraints.video } : constraints.video;
+    const asked = constraints?.video;
+    if (!state.granted) {
+      /* The prompt: a real one takes a reader's tap. */
+      state.prompts += 1;
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      if (window.__refuseCamera) throw new DOMException("Permission denied", "NotAllowedError");
+      state.granted = true;
+    }
+    const facing = facingOf(asked);
+    const byId = DEVICES.find((d) => d.deviceId === deviceIdOf(asked));
+    const device = byId ?? DEVICES.find((d) => d.facing === (facing.value ?? "user")) ?? DEVICES[1];
+    if (facing.exact && device.facing !== facing.value) throw new DOMException("no camera faces that way", "OverconstrainedError");
+    const video = asked && typeof asked === "object" ? { ...asked } : asked;
     if (video && typeof video === "object") {
       delete video.facingMode;
       delete video.deviceId;
@@ -71,14 +119,15 @@ const PHONE_CAMERA_STUB = () => {
     const stream = await realOpen({ ...constraints, video });
     for (const track of stream.getVideoTracks()) {
       const settings = track.getSettings.bind(track);
-      track.getSettings = () => ({ ...settings(), facingMode: facing });
+      track.getSettings = () => ({ ...settings(), facingMode: device.facing, deviceId: device.deviceId });
+      Object.defineProperty(track, "label", { configurable: true, get: () => device.label });
       const capabilities = track.getCapabilities ? track.getCapabilities.bind(track) : () => ({});
-      track.getCapabilities = () => ({ ...capabilities(), torch: facing === "environment" });
+      track.getCapabilities = () => ({ ...capabilities(), torch: device.torch });
       const apply = track.applyConstraints.bind(track);
       track.applyConstraints = async (next) => {
         const advanced = next?.advanced?.[0];
         if (advanced && "torch" in advanced) {
-          window.__camera.torch.push(advanced.torch);
+          state.torch.push(advanced.torch);
           const rest = { ...advanced };
           delete rest.torch;
           if (Object.keys(rest).length === 0) return;
@@ -87,15 +136,53 @@ const PHONE_CAMERA_STUB = () => {
         return apply(next);
       };
     }
-    window.__camera.opens.push({ facing, width: stream.getVideoTracks()[0]?.getSettings().width, height: stream.getVideoTracks()[0]?.getSettings().height });
+    state.opens.push({
+      asked: asked && typeof asked === "object" ? { facingMode: asked.facingMode ?? null, deviceId: asked.deviceId ?? null } : asked,
+      facing: device.facing,
+      device: device.deviceId,
+      promptsSoFar: state.prompts,
+      enumerationsBefore: state.enumerations.length,
+      width: stream.getVideoTracks()[0]?.getSettings().width,
+      height: stream.getVideoTracks()[0]?.getSettings().height,
+    });
     return stream;
   };
+  Object.defineProperty(navigator, "userAgentData", { configurable: true, get: () => ({ mobile: true, platform: "Android", brands: [] }) });
+};
+
+/**
+ * No emulation at all — only a RECORDER around Chromium's own getUserMedia / enumerateDevices, so the
+ * fakeui scenario can show the order of calls and the permission state under the browser's own gate.
+ */
+const RECORDER_STUB = () => {
+  const media = navigator.mediaDevices;
+  const realOpen = media.getUserMedia.bind(media);
+  const realList = media.enumerateDevices.bind(media);
+  const state = { opens: [], enumerations: [], torch: [], permission: [] };
+  window.__camera = state;
+  const note = async (when) => {
+    try {
+      const status = await navigator.permissions.query({ name: "camera" });
+      state.permission.push({ when, state: status.state });
+    } catch {
+      state.permission.push({ when, state: "unqueryable" });
+    }
+  };
+  void note("load");
   media.enumerateDevices = async () => {
     const list = await realList();
-    if (list.filter((d) => d.kind === "videoinput").length >= 2) return list;
-    return [...list, { kind: "videoinput", deviceId: "emulated-front", groupId: "", label: "camera2 1, facing front", toJSON() { return this; } }];
+    state.enumerations.push({ count: list.filter((d) => d.kind === "videoinput").length, labelled: list.filter((d) => d.kind === "videoinput" && d.label !== "").length, beforeAnyOpen: state.opens.length === 0 });
+    return list;
   };
-  Object.defineProperty(navigator, "userAgentData", { configurable: true, get: () => ({ mobile: true, platform: "Android", brands: [] }) });
+  media.getUserMedia = async (constraints) => {
+    await note("before-open");
+    const asked = constraints?.video;
+    const stream = await realOpen(constraints);
+    await note("after-open");
+    const track = stream.getVideoTracks()[0];
+    state.opens.push({ asked: asked && typeof asked === "object" ? { facingMode: asked.facingMode ?? null, deviceId: asked.deviceId ?? null } : asked, device: track?.getSettings().deviceId, label: track?.label, facing: track?.getSettings().facingMode ?? null, enumerationsBefore: state.enumerations.length });
+    return stream;
+  };
 };
 
 /** Force the capability tier's device signals to a mid-range phone's, so the lite profile runs. */
@@ -105,6 +192,10 @@ const MID_TIER_STUB = () => {
 };
 
 const SCENARIOS = [
+  /* F1 — the real-phone profile: Android's permission model, four camera states, the torch, the sheet. */
+  { id: "android-412", width: 412, height: 915, dpr: 2.625, ua: ANDROID, tier: "MID", steps: ["torch", "flip", "flip2", "flip3", "sheet"], android: true },
+  /* F1 — Chromium's own prompt and fake devices, nothing emulated: two fake cameras, the fake UI grants. */
+  { id: "fakeui-412", width: 412, height: 915, dpr: 2.625, ua: ANDROID, tier: "MID", steps: ["flip"], fakeui: true },
   { id: "phone-390", width: 390, height: 844, dpr: 3, ua: ANDROID, tier: "MID", steps: ["torch", "flip", "sheet"] },
   { id: "phone-412", width: 412, height: 915, dpr: 2.625, ua: ANDROID, tier: "MID", steps: [] },
   { id: "short-390", width: 390, height: 664, dpr: 3, ua: ANDROID, tier: "MID", steps: [] },
@@ -173,6 +264,16 @@ async function measure(page) {
       flip: box(document.querySelector('[data-snc-control="flip"]')),
       torch: box(document.querySelector('[data-snc-control="torch"]')),
       torchPressed: document.querySelector('[data-snc-control="torch"]')?.getAttribute("aria-pressed") ?? null,
+      flipFacing: document.querySelector('[data-snc-control="flip"]')?.getAttribute("data-snc-facing") ?? null,
+      flipLabel: document.querySelector('[data-snc-control="flip"]')?.getAttribute("aria-label") ?? null,
+      /* F1: what a tap at the flip's centre lands on — the flip itself, whatever is open. */
+      flipHit: (() => {
+        const flip = document.querySelector('[data-snc-control="flip"]');
+        if (!flip) return null;
+        const r = flip.getBoundingClientRect();
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return flip.contains(hit);
+      })(),
       /* M0: the build stamp on the back mark's row (absent under ?cost=1, when the readout carries the SHA). */
       stamp: box(document.querySelector("[data-snc-build-stamp]")),
       stampText: document.querySelector("[data-snc-build-stamp]")?.textContent ?? null,
@@ -234,14 +335,15 @@ function score(m, sheetOpen = null) {
       open ? `open: ${open.top.toFixed(0)}–${open.bottom.toFixed(0)} (${open.height.toFixed(0)}px)` : "no monitor",
     );
     add(
-      "open sheet unobstructed (leaf and marks under it)",
-      sheetOpen.hitsSheet.length > 0 && sheetOpen.hitsSheet.every(Boolean),
-      `taps at leaf/marks land on the sheet: ${JSON.stringify(sheetOpen.hitsSheet)}`,
+      "open sheet covers the leaf; the flip stays above it (F1)",
+      sheetOpen.hitsSheet.length > 0 && sheetOpen.hitsSheet[0] === true && sheetOpen.flipHit === true,
+      `tap at the leaf lands on the sheet: ${sheetOpen.hitsSheet[0]}; tap at the flip lands on the flip: ${sheetOpen.flipHit}`,
     );
   }
 
   const reach = (b) => b && (b.top + b.bottom) / 2 >= 0.6 * H && b.left >= 8 && b.right <= W - 8 && b.width >= 44 && b.height >= 44;
-  add("flip + torch reachable one-handed", reach(m.flip) && reach(m.torch), `flip ${m.flip ? `${((m.flip.top + m.flip.bottom) / 2 / H).toFixed(2)}·H ${m.flip.width}px` : "absent"}, torch ${m.torch ? `${((m.torch.top + m.torch.bottom) / 2 / H).toFixed(2)}·H ${m.torch.width}px` : "absent"}`);
+  /* The torch is offered only where the track has one (F1); its absence is not a failure. */
+  add("flip (+ torch, where the camera has one) reachable one-handed", reach(m.flip) && (m.torch === null || reach(m.torch)), `flip ${m.flip ? `${((m.flip.top + m.flip.bottom) / 2 / H).toFixed(2)}·H ${m.flip.width}px` : "absent"}, torch ${m.torch ? `${((m.torch.top + m.torch.bottom) / 2 / H).toFixed(2)}·H ${m.torch.width}px` : "absent"}`);
 
   const ringBox = { left: ring.cx - ring.r, right: ring.cx + ring.r, top: ring.cy - ring.r, bottom: ring.cy + ring.r };
   const ui = { back: m.back, flip: m.flip, torch: m.torch, leaf: m.leaf, monitor: m.monitor, stamp: m.stamp };
@@ -250,6 +352,49 @@ function score(m, sheetOpen = null) {
   const names = Object.keys(ui);
   for (let i = 0; i < names.length; i += 1) for (let j = i + 1; j < names.length; j += 1) if (intersects(ui[names[i]], ui[names[j]])) hits.push(`${names[i]}×${names[j]}`);
   add("nothing overlapping the feed (ring clear, no UI on UI)", hits.length === 0, hits.length === 0 ? `ring ${ring.cy - ring.r | 0}–${ring.cy + ring.r | 0} clear of ${Object.keys(ui).filter((k) => ui[k]).join(", ")}` : hits.join(", "));
+  return rows;
+}
+
+/** F1's checklist: the order of the camera's opening, and the four states. */
+function scoreCamera(entry, s) {
+  const rows = [];
+  const add = (item, pass, measured) => rows.push({ item, verdict: pass ? "PASS" : "FAIL", measured });
+  const cam = entry.back?.camera ?? null;
+  const first = cam?.opens?.[0] ?? null;
+  const idealBack = first?.asked?.facingMode && JSON.stringify(first.asked.facingMode) === JSON.stringify({ ideal: "environment" });
+  add("first getUserMedia asks for the back camera as ideal", Boolean(idealBack), first ? `asked ${JSON.stringify(first.asked)}` : "no open recorded");
+  add("…before any enumerateDevices() could decide it", first !== null && first.enumerationsBefore === 0, first ? `${first.enumerationsBefore} enumeration(s) before the first open` : "no open");
+  if (s.android) {
+    add("the permission prompt was exercised on that first call", first !== null && first.promptsSoFar === 1, first ? `${first.promptsSoFar} prompt(s) before the first open` : "no open");
+    const after = (cam?.enumerations ?? []).filter((e) => !e.beforeAnyOpen);
+    add("the device list is read only after permission, and is labelled then", after.length > 0 && after.every((e) => e.granted && e.labelled >= 2), `${after.length} enumeration(s) after the open: ${JSON.stringify(after.map((e) => `${e.labelled}/${e.count} labelled`))}`);
+    add("first frame from the back camera, not mirrored", first?.facing === "environment" && entry.back?.videoTransform === "none", `facing ${first?.facing}, video transform ${entry.back?.videoTransform}`);
+  } else {
+    /* Nothing was pre-granted (the context carries no permission; the state reads "prompt" at load and
+       at the call), and the open still succeeded: Chromium's own prompt answered it (the fake UI accepts).
+       The fake UI does not persist a grant, so the state after is not asserted. */
+    const perm = cam?.permission ?? [];
+    add("Chromium's own prompt answered the first open — nothing pre-granted", perm.some((p) => p.when === "load" && p.state === "prompt") && perm.some((p) => p.when === "before-open" && p.state === "prompt") && first !== null, JSON.stringify(perm));
+    add("the device list is read only after the open", (cam?.enumerations ?? []).length > 0 && (cam?.enumerations ?? []).every((e) => !e.beforeAnyOpen), JSON.stringify(cam?.enumerations ?? []));
+  }
+  const flip = entry.back?.flip;
+  add("flip visible while scanning, 48px, in a bottom corner", flip && flip.width >= 48 && flip.height >= 48 && flip.bottom > 0.85 * s.height, flip ? `${flip.width}×${flip.height} at ${flip.left.toFixed(0)},${flip.top.toFixed(0)}` : "absent");
+  add("flip labelled कैमरा बदलें", entry.back?.flipLabel === "कैमरा बदलें", `aria-label ${entry.back?.flipLabel}`);
+  if (s.android) {
+    add("torch beside the flip while the back camera is up", Boolean(entry.back?.torch), entry.back?.torch ? `torch at ${entry.back.torch.left.toFixed(0)},${entry.back.torch.top.toFixed(0)}` : "absent");
+    const states = ["front", "back2", "front2"].map((k) => entry[k]).filter(Boolean);
+    const expect = ["user", "environment", "user"];
+    add("flip → front, mirrored; → back, unmirrored; → front, mirrored", states.length === 3 && states.every((m, i) => m.camera.opens.at(-1)?.facing === expect[i] && (expect[i] === "user" ? /matrix\(-1/.test(m.videoTransform) : m.videoTransform === "none")), states.map((m, i) => `${expect[i]}: facing ${m.camera.opens.at(-1)?.facing}, transform ${m.videoTransform}`).join(" | ") || "no flips");
+    add("the flip stays visible through every state", states.every((m) => m.flip && m.flip.width >= 48), states.map((m) => (m.flip ? "visible" : "absent")).join(", "));
+    add("torch only on the camera that has one", states.every((m, i) => (expect[i] === "environment") === Boolean(m.torch)), states.map((m, i) => `${expect[i]}: ${m.torch ? "torch" : "no torch"}`).join(", "));
+  } else {
+    /* Chromium's file-backed fake capture exposes ONE camera: the laptop case. The flip is still offered
+       (touch), asks for the other camera exactly, is told there is none, and quietly reopens the only one;
+       the mirror follows that track (no facingMode reported → the reader's side → mirrored). */
+    const front = entry.front;
+    const opens = front?.camera.opens ?? [];
+    add("a one-camera device: the flip reopens its only camera and the mirror follows the track", front && opens.length >= 2 && opens.at(-1).device === opens[0].device && /matrix\(-1/.test(front.videoTransform), front ? `${opens.length} opens, devices ${JSON.stringify([...new Set(opens.map((o) => o.device))])}, transform ${front.videoTransform}` : "no flip");
+  }
   return rows;
 }
 
@@ -276,7 +421,7 @@ const live = await chromium.launch({
   args: [
     ...GPU_ARGS,
     "--disable-features=WebGPU,WebGPUService,Vulkan",
-    "--use-fake-device-for-media-stream",
+    "--use-fake-device-for-media-stream=device-count=2",
     "--use-fake-ui-for-media-stream",
     `--use-file-for-fake-video-capture=${FEED}`,
   ],
@@ -298,9 +443,10 @@ try {
       hasTouch: true,
       userAgent: s.ua,
       colorScheme: "dark",
-      permissions: ["camera"],
+      /* The fakeui scenario leaves the permission to Chromium's own prompt (the fake UI accepts it). */
+      ...(s.fakeui ? {} : { permissions: ["camera"] }),
     });
-    await context.addInitScript(PHONE_CAMERA_STUB);
+    await context.addInitScript(s.fakeui ? RECORDER_STUB : ANDROID_CAMERA_STUB);
     if (s.denied) await context.addInitScript(() => (window.__refuseCamera = true));
     if (s.tier === "MID") await context.addInitScript(MID_TIER_STUB);
     const page = await context.newPage();
@@ -341,12 +487,13 @@ try {
       entry.torch = await measure(page);
       await page.screenshot({ path: join(dir, `${s.id}-torch.png`) });
     }
-    if (s.steps.includes("flip")) {
+    for (const [step, key, shot] of [["flip", "front", "front"], ["flip2", "back2", "back-again"], ["flip3", "front2", "front-again"]]) {
+      if (!s.steps.includes(step)) continue;
       await page.tap('[data-snc-control="flip"]').catch(() => {});
       await page.waitForFunction(() => document.querySelector("canvas")?.dataset.sncHand, null, { timeout: 30_000 }).catch(() => {});
-      await page.waitForTimeout(5000);
-      entry.front = await measure(page);
-      await page.screenshot({ path: join(dir, `${s.id}-front.png`) });
+      await page.waitForTimeout(step === "flip" ? 5000 : 2500);
+      entry[key] = await measure(page);
+      await page.screenshot({ path: join(dir, `${s.id}-${shot}.png`) });
     }
     if (s.steps.includes("sheet")) {
       await page.tap('section[aria-label^="Rekha monitor"] button').catch(() => {});
@@ -396,7 +543,11 @@ try {
     console.log(`\n${s.id} (${entry.viewport}, tier ${entry.tier})`);
     for (const row of entry.checklist) console.log(`  ${row.verdict}  ${row.item} — ${row.measured}`);
     console.log(withCost ? `  ?cost=1  ${scanning.cost}` : `  stamp (pipeline)  ${JSON.stringify(scanning.stamp)} "${scanning.stampText}"`);
-    console.log(`  video transform (back): ${scanning.videoTransform}; opens: ${JSON.stringify(scanning.camera?.opens)}`);
+    if (s.android || s.fakeui) {
+      entry.cameraChecklist = scoreCamera(entry, s);
+      for (const row of entry.cameraChecklist) console.log(`  ${row.verdict}  ${row.item} — ${row.measured}`);
+    }
+    console.log(`  video transform (back): ${scanning.videoTransform}; opens: ${JSON.stringify((scanning.camera?.opens ?? []).map((o) => o.facing ?? o.label))}`);
     if (entry.torch) console.log(`  torch: aria-pressed ${entry.torch.torchPressed}; constraint sent: ${JSON.stringify(entry.torch.camera?.torch)}`);
     if (entry.front) console.log(`  after flip: video transform ${entry.front.videoTransform}; ?cost=1 ${entry.front.cost}; opens ${JSON.stringify(entry.front.camera?.opens)}`);
     if (errors.length) console.log(`  console errors: ${errors.slice(0, 4).join(" || ")}`);

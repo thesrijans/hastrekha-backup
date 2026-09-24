@@ -6,8 +6,8 @@ import { createHandLandmarker, HAND_LANDMARKER_LITE_MODEL_PATH, MissingScanAsset
 import {
   cameraConstraints,
   flipConstraints,
+  isTouchDevice,
   flipTarget,
-  isPhone,
   mirroredFor,
   preferredFacing,
   resolveFacing,
@@ -158,9 +158,12 @@ const SUPERRES_STALE_MS = 5000;
 const REKHA_SUPERRES_WEIGHT = 0.5;
 
 /** M1.1: what the camera choice may read about the device. The decision itself is pure (camera-select.ts). */
-function readPhoneSignals(): { userAgent: string; uaDataMobile: boolean | null } {
-  const data = (navigator as Navigator & { userAgentData?: { mobile?: unknown } }).userAgentData;
-  return { userAgent: navigator.userAgent, uaDataMobile: typeof data?.mobile === "boolean" ? data.mobile : null };
+/** The touch signals the camera choice reads (F1). Client only. */
+export function readTouchSignals(): { maxTouchPoints: number; coarsePointer: boolean | null } {
+  return {
+    maxTouchPoints: typeof navigator === "undefined" ? 0 : (navigator.maxTouchPoints ?? 0),
+    coarsePointer: typeof window === "undefined" || typeof window.matchMedia !== "function" ? null : window.matchMedia("(pointer: coarse)").matches,
+  };
 }
 
 const IDLE_QUALITY: QualityVerdict = {
@@ -1494,8 +1497,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   useEffect(() => teardown, [teardown]);
 
   /**
-   * M1.1 / M1.2: read what actually opened — which way the camera faces (and so the mirror), whether
-   * it has a torch, and how many cameras the device has to flip between. Called after every open.
+   * M1.1 / M1.2 / F1: read what actually opened — which way the ACTIVE track faces (and so the
+   * mirror: `getSettings().facingMode`, never the facing that was asked for), whether it has a torch,
+   * and how many cameras the device has. Called after every open and every flip. THIS is the only
+   * place the device list is read: only now, with permission granted, does Android label its cameras.
    */
   const adoptStream = useCallback(async (stream: MediaStream): Promise<void> => {
     const track = stream.getVideoTracks()[0];
@@ -1528,9 +1533,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     const profile = requestedProfileRef.current;
     activeProfileRef.current = profile;
     try {
+      /* F1: the FIRST call asks for the back camera on a touch device, as `ideal`, with nothing read
+         from enumerateDevices() first — the list is empty and unlabelled until this call is granted. */
       const stream = await navigator.mediaDevices.getUserMedia({
         video: autoCamera
-          ? cameraConstraints(preferredFacing(isPhone(readPhoneSignals())), profile)
+          ? cameraConstraints(preferredFacing(isTouchDevice(readTouchSignals())), profile)
           : { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
       });

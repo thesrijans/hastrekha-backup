@@ -19,12 +19,14 @@ import {
   cameraConstraints,
   flipConstraints,
   flipTarget,
+  flipVisible,
   isPhone,
+  isTouchDevice,
   mirroredFor,
   preferredFacing,
   resolveFacing,
-  videoInputCount,
   type CameraFacing,
+  videoInputCount,
 } from "../lib/scan/camera-select";
 import { coverTransform, videoNormToCanvas } from "../lib/scan/view-transform";
 import { gradeFrame, palmTilt, physicalHandedness } from "../lib/scan/quality";
@@ -123,7 +125,25 @@ ok(flipTarget("user") === "environment" && flipTarget("environment") === "user",
   ok(!isPhone({ userAgent: IPAD_AS_MAC, uaDataMobile: null }), "nor an iPad");
   ok(!isPhone({ userAgent: DESKTOP, uaDataMobile: null }), "nor a laptop");
   ok(isPhone({ userAgent: DESKTOP, uaDataMobile: true }) && !isPhone({ userAgent: ANDROID_PHONE, uaDataMobile: false }), "client hints win where the browser offers them");
-  ok(preferredFacing(true) === "environment" && preferredFacing(false) === "user", "a phone starts on the BACK camera, everything else on the front");
+  ok(preferredFacing(true) === "environment" && preferredFacing(false) === "user", "a touch device starts on the BACK camera, everything else on the front");
+
+  /* F1: touch decides the first ask, and the flip's presence — never the device list. */
+  ok(isTouchDevice({ maxTouchPoints: 5, coarsePointer: true }) && isTouchDevice({ maxTouchPoints: 1, coarsePointer: null }), "a phone or a tablet is a touch device");
+  ok(isTouchDevice({ maxTouchPoints: 0, coarsePointer: true }), "…as is anything whose primary pointer is coarse");
+  ok(!isTouchDevice({ maxTouchPoints: 0, coarsePointer: false }) && !isTouchDevice({ maxTouchPoints: 0, coarsePointer: null }), "a mouse-driven machine is not");
+  ok(flipVisible(true, 0) && flipVisible(true, 1), "on a touch device the flip is ALWAYS offered — the count is unknown until permission and a phone must be able to reach its other camera");
+  ok(!flipVisible(false, 1) && flipVisible(false, 2), "on a mouse-driven machine only with two cameras in the list");
+  ok(
+    /cameraConstraints\(preferredFacing\(isTouchDevice\(readTouchSignals\(\)\)\), profile\)/.test(hook) && !/enumerateDevices\(\)[\s\S]{0,400}getUserMedia\(\{\s*video: autoCamera/.test(withoutComments(hook)),
+    "the hook's FIRST getUserMedia asks by touch, with no enumerateDevices() read before it",
+  );
+  ok(/const adoptStream[\s\S]*?enumerateDevices\(\)/.test(hook) && hook.indexOf("enumerateDevices()") > hook.indexOf("const adoptStream"), "the device list is read in adoptStream — after the open, when Android labels its cameras");
+  ok(/const touch = useSyncExternalStore\(subscribeToNothing, \(\) => isTouchDevice\(readTouchSignals\(\)\), \(\) => false\);/.test(chamber) && /const canFlip = scanning && flipVisible\(touch, cameraCount\);/.test(chamber), "the chamber offers the flip by flipVisible(touch, count)");
+  ok(/data-snc-control="flip"[\s\S]*?aria-label="कैमरा बदलें"/.test(chamber) && /data-snc-control="torch"[\s\S]*?aria-label="रोशनी"/.test(chamber), "the flip is named कैमरा बदलें and the torch रोशनी");
+  const chamberCss = withoutComments(source("app", "scan", "chamber", "chamber.module.css"));
+  ok(/\.control\s*{[^}]*inline-size:\s*3rem;[^}]*block-size:\s*3rem;/.test(chamberCss), "a 48px target");
+  ok(/\.control\s*{[^}]*z-index:\s*7;/.test(chamberCss) && !/visibility:\s*hidden/.test(chamberCss), "above the leaf, the gate and the open sheet, and never hidden");
+  ok(/\.controlLabel\s*{[^}]*letter-spacing:\s*normal;/.test(chamberCss), "its Devanagari name is never letter-spaced");
 
   ok(resolveFacing("environment", "") === "environment" && resolveFacing("user", "") === "user", "the track's own facingMode decides when it reports one");
   ok(resolveFacing(undefined, "camera2 0, facing back") === "environment", "Android's label names the back camera");

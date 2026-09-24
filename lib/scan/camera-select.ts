@@ -61,16 +61,53 @@ export function isPhone(signals: PhoneSignals): boolean {
   return /Mobi|Windows Phone/.test(ua);
 }
 
-/** Where the chamber starts: the back camera on a phone, the front camera everywhere else. */
-export function preferredFacing(phone: boolean): CameraFacing {
-  return phone ? "environment" : "user";
+/** What the hook can read about touch, as plain values. */
+export interface TouchSignals {
+  /** `navigator.maxTouchPoints` — 0 on a mouse-only machine. */
+  readonly maxTouchPoints: number;
+  /** `matchMedia("(pointer: coarse)")` — null where matchMedia is missing. */
+  readonly coarsePointer: boolean | null;
+}
+
+/**
+ * Whether this device is held and touched — a phone, a tablet, a touch laptop.
+ *
+ * F1: the device on which the camera is asked for the BACK one first. Tablets are in, unlike
+ * `isPhone`: the ask is only `ideal`, so a device whose only camera faces the reader keeps it, and a
+ * tablet with a back camera gets the reading a phone gets.
+ */
+export function isTouchDevice(signals: TouchSignals): boolean {
+  return signals.maxTouchPoints > 0 || signals.coarsePointer === true;
+}
+
+/**
+ * Where the chamber starts: the back camera on a touch device, the front camera everywhere else.
+ *
+ * F1: asked of getUserMedia DIRECTLY, never decided from enumerateDevices() — before permission
+ * Android lists its cameras with no label and no id, so a count taken then says "one camera" and
+ * would send the chamber to the front one; the list is read only after the camera is open.
+ */
+export function preferredFacing(touch: boolean): CameraFacing {
+  return touch ? "environment" : "user";
+}
+
+/**
+ * Whether the flip control is shown.
+ *
+ * F1: ALWAYS on a touch device — the count of cameras is not known until permission, and a phone's
+ * reader must be able to reach the other camera whatever the list said. On a mouse-driven machine
+ * only when the list, read after the camera opened, has two.
+ */
+export function flipVisible(touch: boolean, cameraCount: number): boolean {
+  return touch || cameraCount >= 2;
 }
 
 /**
  * Which way the camera that actually opened is facing.
  *
  * Asked for, not assumed: `facingMode: { ideal: "environment" }` on a laptop quietly opens the only
- * webcam there is, and the mirror must follow the camera that opened, not the one that was requested.
+ * webcam there is, and the mirror must follow the camera that opened, not the one that was requested
+ * (F1.4: the ACTIVE track's `getSettings().facingMode`, read after every open and every flip).
  * `getSettings().facingMode` answers on phones; where it is absent (most desktop webcams) the label
  * decides — Android labels its cameras "…facing back", iOS "Back Camera". Anything else — a front
  * camera, a laptop webcam, a virtual or fake device, a camera with no label yet — is treated as
