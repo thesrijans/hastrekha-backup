@@ -35,3 +35,6 @@ next-env.d.ts
 
 # Vercel CLI project link (vercel link) — per machine, never committed
 .vercel
+
+docs/reference/scan-video-*
+docs/reference/phone-chamber-*

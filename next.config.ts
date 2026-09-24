@@ -17,14 +17,17 @@ import path from "node:path";
  *   1. VERCEL_GIT_COMMIT_SHA — Vercel's builder sets it for a Git-integration
  *      deploy. Taken only when non-empty: an env file pulled by the CLI can
  *      carry the name with nothing after the "=".
- *   2. `git rev-parse --short HEAD` — a checkout with .git, including the D1.4
- *      GitHub Actions job (`vercel build` runs on the runner and sets no
- *      VERCEL_GIT_*).
- *   3. .git-archive-sha — a `git archive` export has no .git, but that file is
+ *   2. NEXT_PUBLIC_BUILD_SHA given to the build — the D1.5 GitHub Actions job
+ *      uploads a git-less export and passes the pushed commit's first seven
+ *      characters with `--build-env`, because Vercel's builder has no git to
+ *      ask there. Taken only when it looks like a SHA: the name is also listed
+ *      empty in .env.example, and a copied env file must not win with "".
+ *   3. `git rev-parse --short HEAD` — a checkout with .git.
+ *   4. .git-archive-sha — a `git archive` export has no .git, but that file is
  *      marked `export-subst` in .gitattributes, so git writes the archived
  *      commit into it as it exports. In a checkout it still reads "$Format:%H$"
  *      and is skipped.
- *   4. "unknown" — never undefined: an undefined `env` value is dropped rather
+ *   5. "unknown" — never undefined: an undefined `env` value is dropped rather
  *      than inlined, which would leave the reads unreplaced.
  *
  * This runs wherever the config is loaded (build, `next start`, the dev server,
@@ -59,7 +62,8 @@ function archivedSha(): string | null {
 }
 
 const vercelSha = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").trim();
-const buildSha = vercelSha !== "" ? vercelSha : (gitShortHead() ?? archivedSha() ?? "unknown");
+const givenSha = (process.env.NEXT_PUBLIC_BUILD_SHA ?? "").trim();
+const buildSha = vercelSha !== "" ? vercelSha : /^[0-9a-f]{7,40}$/.test(givenSha) ? givenSha : (gitShortHead() ?? archivedSha() ?? "unknown");
 const builtAt = new Date().toISOString();
 
 /**

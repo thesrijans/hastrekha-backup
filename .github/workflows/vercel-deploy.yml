@@ -1,14 +1,35 @@
 # ============================================================================
-# D1.4 — every push to `dev` becomes a PRODUCTION deployment.
+# D1.5 — every push to `dev` becomes a PRODUCTION deployment, built by Vercel.
 # ============================================================================
 #
-# The CLI does the build here rather than on Vercel's builder: `vercel pull`
-# fetches the project's settings and its PRODUCTION environment, `vercel build`
-# produces .vercel/output against them, and `vercel deploy --prebuilt` uploads
-# that output. One consequence worth naming: the environment this builds with is
-# the PRODUCTION scope's, whatever is in it — NEXT_PUBLIC_SANCTUARY is inlined at
-# build time, so the sanctuary routes exist in the deployment only if that scope
-# carries the flag.
+# THE BUILD HAPPENS ON VERCEL'S LINUX BUILDER, NOT ON THE RUNNER. D1.4 pulled the
+# project's settings and ran `vercel build` here; that path cannot work for this
+# project, and the 2026-09-24 attempt to do it by hand found every reason:
+#   · `vercel pull` writes "[SENSITIVE]" placeholders for the production
+#     secrets, and lib/env.ts refuses them at page-data collection;
+#   · the CLI writes the Next output's deduplicated functions as directory
+#     symlinks, a Hobby deployment may carry at most 12 functions, and the
+#     builder's file tracing differs by platform — a build made anywhere but
+#     the builder's own Linux is a different deployment.
+# Uploading the source and letting Vercel build it sees the real environment,
+# a Linux filesystem, and the same builder the dashboard uses.
+#
+# THE UPLOAD IS GIT-LESS. A Hobby team checks the git commit author of a CLI
+# deployment against the account and BLOCKS one it cannot match (readyState
+# BLOCKED, no build). The CLI reads that author from .git in the directory it
+# deploys from, so the tree is exported with `git archive` — the committed
+# files and nothing else, no .git — and deployed from there. The export also
+# fills .git-archive-sha (export-subst), a second source for the stamp.
+#
+# THE STAMP IS THE PUSHED COMMIT. next.config.ts takes NEXT_PUBLIC_BUILD_SHA
+# from the build environment when one is given (D1.5), so `--build-env` sets
+# it to the first seven characters of GITHUB_SHA. After the deploy the job
+# reads /api/version on the production alias and FAILS unless it answers with
+# that SHA: a deploy that did not become production is a failed job, not a
+# green one.
+#
+# ONLY THE MAIN REPOSITORY DEPLOYS. The backup remote carries this same file;
+# `if: github.repository == …` keeps it from ever running there.
 #
 # CONCURRENCY: pushes QUEUE. `cancel-in-progress: false` is the whole point of
 # the group — two deployments racing to the same production alias can land in
@@ -18,13 +39,6 @@
 #   VERCEL_TOKEN        a token for the account that owns the project
 #   VERCEL_ORG_ID       .vercel/project.json's orgId
 #   VERCEL_PROJECT_ID   .vercel/project.json's projectId
-#
-# Note for a Hobby team: Vercel checks the GIT COMMIT AUTHOR of a CLI deployment
-# against the account, and blocks one it cannot match ("the commit author doesn't
-# have permission to create deployments for this project" — readyState BLOCKED,
-# no build). It is the account's own Git login that has to be connected under
-# Vercel → Settings → Authentication. A blocked deployment fails this job at the
-# deploy step rather than silently.
 name: Deploy dev to production
 
 on:
@@ -37,46 +51,74 @@ concurrency:
 
 jobs:
   deploy:
-    name: vercel --prod
+    name: vercel deploy --prod
+    if: github.repository == 'thesrijans/hastrekha'
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      PRODUCTION_URL: https://hastrekha-nine.vercel.app
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      # `npm ci` installs devDependencies too, which the build needs: prisma (the
-      # prebuild generates the git-ignored client) and the Next toolchain.
-      - name: Install dependencies
-        run: npm ci
-
-      # Pinned, because the CLI is what builds here: an unpinned major could
-      # change the build output between two pushes that changed nothing.
+      # Pinned: the CLI is the one thing that runs here, and an unpinned major
+      # could change how the source is uploaded between two identical pushes.
       - name: Install Vercel CLI
         run: npm install --global vercel@59.25.0
 
-      - name: Pull the project's production environment
-        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --prod --token=$VERCEL_TOKEN
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy
-        id: deploy
+      # The committed tree, no .git, in the runner's temp directory. `test ! -e`
+      # is the guarantee the Hobby author check depends on.
+      - name: Export the tree without .git
+        id: export
         run: |
-          url="$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN)"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
+          short="$(echo "$GITHUB_SHA" | cut -c1-7)"
+          dir="$RUNNER_TEMP/hastrekha-$short"
+          mkdir -p "$dir"
+          git archive HEAD | tar -x -C "$dir"
+          test ! -e "$dir/.git"
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          echo "short=$short" >> "$GITHUB_OUTPUT"
+          echo "exported $(find "$dir" -type f | wc -l) files for $short"
+
+      # Vercel builds. The URL the CLI prints is the deployment's; `--prod`
+      # also assigns the production alias when the build succeeds.
+      - name: Deploy (Vercel builds in its cloud)
+        id: deploy
+        working-directory: ${{ steps.export.outputs.dir }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url="$(vercel deploy --prod --yes --token="$VERCEL_TOKEN" \
+            --build-env NEXT_PUBLIC_BUILD_SHA="${{ steps.export.outputs.short }}")"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "deployed: $url"
+
+      # The alias moves when the deployment is READY; a few polls cover the
+      # handover. Matched as a prefix, so a 40-character SHA (a Git-integration
+      # build, should one ever be enabled) passes too.
+      - name: Verify production answers with this commit
+        id: verify
+        run: |
+          expected="${{ steps.export.outputs.short }}"
+          live=""
+          for attempt in 1 2 3 4 5 6; do
+            live="$(curl -sS --max-time 30 "$PRODUCTION_URL/api/version" | sed -n 's/.*"sha":"\([0-9a-f]*\)".*/\1/p')"
+            case "$live" in
+              "$expected"*)
+                echo "$PRODUCTION_URL/api/version answers $live — this commit"
+                echo "sha=$live" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+            echo "attempt $attempt: live sha '${live:-none}', expected $expected; waiting 10 s"
+            sleep 10
+          done
+          echo "::error::$PRODUCTION_URL/api/version answers '${live:-nothing}', not $expected — the deploy did not become production"
+          exit 1
 
       - name: Job summary
         if: always()
@@ -85,9 +127,15 @@ jobs:
             echo "## Production deployment"
             echo
             if [ -n "${{ steps.deploy.outputs.url }}" ]; then
-              echo "- URL: ${{ steps.deploy.outputs.url }}"
+              echo "- Deployment: ${{ steps.deploy.outputs.url }}"
+              echo "- Production: ${PRODUCTION_URL}"
             else
               echo "- No URL: the deploy step did not complete."
             fi
             echo "- Commit: \`${GITHUB_SHA}\` on \`${GITHUB_REF_NAME}\`"
+            if [ -n "${{ steps.verify.outputs.sha }}" ]; then
+              echo "- /api/version: \`${{ steps.verify.outputs.sha }}\` ✅"
+            else
+              echo "- /api/version: did not answer with this commit ❌"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"

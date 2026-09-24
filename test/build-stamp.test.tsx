@@ -80,7 +80,11 @@ const gitPresent = ((): boolean => {
   ok(Math.abs(Date.now() - Date.parse(env.NEXT_PUBLIC_BUILT_AT!)) < 60_000, "taken when the config was evaluated, not stored anywhere");
 
   const config = withoutComments(read("next.config.ts"));
-  ok(/vercelSha !== "" \? vercelSha : \(gitShortHead\(\) \?\? archivedSha\(\) \?\? "unknown"\)/.test(config), "resolved in that order: Vercel's SHA, then git, then the archive stamp, then \"unknown\"");
+  ok(
+    /vercelSha !== "" \? vercelSha : \/\^\[0-9a-f\]\{7,40\}\$\/\.test\(givenSha\) \? givenSha : \(gitShortHead\(\) \?\? archivedSha\(\) \?\? "unknown"\)/.test(config),
+    "resolved in that order: Vercel's SHA, then a SHA given to the build (the D1.5 job's --build-env), then git, then the archive stamp, then \"unknown\"",
+  );
+  ok(/\(process\.env\.NEXT_PUBLIC_BUILD_SHA \?\? ""\)\.trim\(\)/.test(config), "a given SHA is read trimmed and taken only when SHA-shaped — the name sits empty in .env.example and a copied env file must not win with \"\"");
   ok(config.includes('execSync("git rev-parse --short HEAD"') && config.includes('".git-archive-sha"'), "and those are the git command and the archive file the spec names");
   ok(/execSync\([^)]*\)[\s\S]*catch/.test(config) && count(config, "catch") >= 2, "and both lookups are guarded — the config runs at `next start`, in the dev server and in this test, where git or the file may be missing");
   ok(/\(process\.env\.VERCEL_GIT_COMMIT_SHA \?\? ""\)\.trim\(\)/.test(config), "a Vercel SHA counts only when non-empty: a pulled env file can carry the name with nothing after it");
@@ -155,7 +159,14 @@ async function probe(): Promise<void> {
   const attributes = read(".gitattributes").split(/\r?\n/).map((l) => l.trim());
   ok(attributes.includes(".git-archive-sha export-subst"), ".gitattributes marks .git-archive-sha export-subst, so `git archive` writes the commit into it");
   ok(read(".git-archive-sha").trim() === "$Format:%H$", "and the checkout carries the placeholder, which next.config.ts skips");
-  ok(read(".github", "workflows", "vercel-deploy.yml").includes("vercel deploy --prebuilt --prod"), "D1.4's workflow is present");
+  const workflow = read(".github", "workflows", "vercel-deploy.yml");
+  ok(workflow.includes("git archive HEAD | tar -x -C") && workflow.includes('test ! -e "$dir/.git"'), "D1.5's workflow deploys a git-less `git archive` export, so the Hobby author check has nothing to read");
+  ok(/vercel deploy --prod --yes --token="\$VERCEL_TOKEN" \\\s*--build-env NEXT_PUBLIC_BUILD_SHA="\$\{\{ steps\.export\.outputs\.short \}\}"/.test(workflow), "…and hands the pushed commit's short SHA to Vercel's builder as NEXT_PUBLIC_BUILD_SHA, which next.config.ts takes");
+  /* The steps, not the header comment, which names the D1.4 path it replaced. */
+  const steps = workflow.split(/\r?\n/).filter((line) => !/^\s*#/.test(line)).join("\n");
+  ok(!/vercel pull|vercel build|--prebuilt/.test(steps), "…never pulling, building or uploading a prebuilt output on the runner — Vercel's Linux builder does the build with the real environment");
+  ok(workflow.includes("if: github.repository == 'thesrijans/hastrekha'"), "…only from the main repository, never the backup");
+  ok(workflow.includes('"$PRODUCTION_URL/api/version"') && workflow.includes("exit 1"), "…and fails the job unless production's /api/version answers with that commit");
 }
 
 probe()
