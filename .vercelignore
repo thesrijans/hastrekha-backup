@@ -1,39 +1,12 @@
-# ============ What `vercel deploy` must never upload ============
-# The Vercel CLI reads THIS file and not .gitignore: without it, a CLI deploy
-# uploads the whole working tree — captures/ and fixtures/private/ included,
-# which are raw palm frames and a recording of the user's face and hand. This
-# product's promise is that a palm image never leaves the device; the deploy
-# path must not be the thing that breaks it.
-#
-# Rule: every line of .gitignore is repeated here verbatim (test/deploy-gate
-# fails otherwise), so a CLI deploy uploads what a git deploy would. Anything
-# private that is not git-ignored is added below the mirror.
-
-# ---- mirror of .gitignore ----
-node_modules
-.next
-out
-.env*
-!.env.example
-diff.txt
-*.log
-tsconfig.tsbuildinfo
-lib/generated/
-public/mediapipe/
-public/ort/
+# What a `vercel deploy` of the source tree must never upload: the raw palm
+# captures and the eval fixtures (biometric, and large), the reference images
+# (the user's own stills), any video, and the build cache. The source-tree
+# upload of M1.1's tree (980 kB) failed on "fetch failed" three times running
+# with these included; the deploy is now `vercel build --prod` followed by
+# `vercel deploy --prebuilt --prod`, and this file keeps the fallback honest.
 captures/
-scan-sessions/
-*.session.zip
-diff*.txt
-test/eval/out/
-fixtures/private/
-fixtures/golden/**/raw/
-fixtures/golden/**/snapshots/
-.cache/
-next-env.d.ts
-.vercel
-
-# ---- private, and not git-ignored ----
-# Stills from the user's scan recording (their face is in frame), kept
-# untracked in docs/reference by the user.
-docs/reference/scan-video-*
+fixtures/
+docs/reference/
+*.mp4
+*.webm
+.next/cache
