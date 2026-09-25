@@ -397,17 +397,31 @@ export function spanVariation(history: readonly number[]): number {
 }
 
 /**
- * Signed lateral tilt **in screen space**, from how far the palm normal leans across the image.
+ * Signed lateral tilt **in screen space**: how far the palm's outward normal leans across the preview
+ * the user is tilting against. Negative leans to the user's left, positive to their right, through
+ * either camera and with either hand — `PoseProfile.tiltSign` is written in those terms.
  *
- * The mirror correction is the point. World landmarks come from the RAW camera frame, but the
- * preview the user is tilting against is CSS-mirrored, and `PoseProfile.tiltSign` is written in
- * terms of what the user sees. Without the flip, a correct tilt-left reads as a tilt-right and the
- * pose can only be satisfied by tilting the wrong way.
+ * Two corrections, and the order matters.
+ *
+ * First the hand. {@link palmNormal} is the wrist → index → little winding, and that winds the
+ * opposite way on the other hand: it points OUT of a palm whose thumb is on the image's right and
+ * INTO one whose thumb is on the image's left. Its x alone therefore read the same physical tilt with
+ * opposite signs for the two hands — and, because a front camera's raw frame is the back camera's
+ * mirror image (image x flips, the winding flips, the x of their cross product does not), the mirror
+ * flip below then turned ONE physical tilt into opposite verdicts through the two cameras (R1: the
+ * tilt pose passable through one camera only by tilting the other way). So the normal is first
+ * oriented to face the lens, which the facing gate has already established the palm does; world z
+ * grows away from the lens (MEASURED, R1: the landmarker's world z correlates +0.7 with its image z,
+ * whose smaller values are documented as nearer).
+ *
+ * Then the camera. World landmarks come from the RAW frame; a front camera's preview is mirrored, so
+ * its x is negated to read in the space the user sees. A back camera's preview is the raw frame.
  */
 export function palmTilt(world: readonly Landmark3[], mirrored: boolean): number {
   const normal = palmNormal(world);
   if (normal === null) return 0;
-  return mirrored ? -normal.x : normal.x;
+  const outwardX = normal.z > 0 ? -normal.x : normal.x;
+  return mirrored ? -outwardX : outwardX;
 }
 
 const MIN_TILT = 0.25;

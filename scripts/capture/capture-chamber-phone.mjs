@@ -30,7 +30,7 @@
  *   high-390                tier left alone (this machine is HIGH) — the full profile's ?cost=1 line
  *   denied-android / -ios   camera refused — the M1.5 leaf in Chrome's and Safari's words
  *
- *   node scripts/capture/capture-chamber-phone.mjs [--build] [--label name] [--only a,b] [--settle ms] [--cpu 4] [--no-cost] [--base-url URL]
+ *   node scripts/capture/capture-chamber-phone.mjs [--build] [--label name] [--only a,b] [--settle ms] [--cpu 4] [--no-cost] [--base-url URL] [--feed path.y4m]
  *
  * Writes captures/ui/<stamp>-<label>/ (git-ignored): PNGs, report.json, and a scored checklist.
  */
@@ -41,8 +41,9 @@ import { buildProduction, startServer } from "./capture.mjs";
 import { GPU_ARGS, readRenderer, isSoftware } from "./gpu-probe.mjs";
 
 const REPO = resolve(import.meta.dirname, "..", "..");
-const FEED = join(REPO, "captures", "ui", "feeds", "palm-portrait.y4m");
 const argv = process.argv.slice(2);
+/** R1 A/B: another feed — the palm's mirror image, or a tilted palm — for the same scenarios. */
+const FEED = argv.includes("--feed") ? resolve(argv[argv.indexOf("--feed") + 1]) : join(REPO, "captures", "ui", "feeds", "palm-portrait.y4m");
 const label = argv.includes("--label") ? argv[argv.indexOf("--label") + 1] : "m1-phone";
 const only = argv.includes("--only") ? argv[argv.indexOf("--only") + 1].split(",") : null;
 /** How long to let the scan run before measuring; long enough, with --settle 30000, for extractions to land. */
@@ -69,10 +70,12 @@ const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebK
 const ANDROID_CAMERA_STUB = () => {
   const media = navigator.mediaDevices;
   const realOpen = media.getUserMedia.bind(media);
+  /* R1 A/B: with __frontOnly the phone has only its front camera, so the same feed runs MIRRORED
+     (ideal: environment falls back to the only camera there is); otherwise it opens the back one. */
   const DEVICES = [
     { kind: "videoinput", deviceId: "android-back", groupId: "g0", label: "camera2 0, facing back", facing: "environment", torch: true },
     { kind: "videoinput", deviceId: "android-front", groupId: "g1", label: "camera2 1, facing front", facing: "user", torch: false },
-  ];
+  ].filter((device) => !window.__frontOnly || device.facing === "user");
   const state = { granted: false, prompts: 0, opens: [], enumerations: [], torch: [] };
   window.__camera = state;
   const facingOf = (video) => {
@@ -104,7 +107,7 @@ const ANDROID_CAMERA_STUB = () => {
     }
     const facing = facingOf(asked);
     const byId = DEVICES.find((d) => d.deviceId === deviceIdOf(asked));
-    const device = byId ?? DEVICES.find((d) => d.facing === (facing.value ?? "user")) ?? DEVICES[1];
+    const device = byId ?? DEVICES.find((d) => d.facing === (facing.value ?? "user")) ?? DEVICES[DEVICES.length - 1];
     if (facing.exact && device.facing !== facing.value) throw new DOMException("no camera faces that way", "OverconstrainedError");
     const video = asked && typeof asked === "object" ? { ...asked } : asked;
     if (video && typeof video === "object") {
@@ -194,6 +197,9 @@ const MID_TIER_STUB = () => {
 const SCENARIOS = [
   /* F1 — the real-phone profile: Android's permission model, four camera states, the torch, the sheet. */
   { id: "android-412", width: 412, height: 915, dpr: 2.625, ua: ANDROID, tier: "MID", steps: ["torch", "flip", "flip2", "flip3", "sheet"], android: true },
+  /* R1 A/B — the SAME feed on the back camera (unmirrored) and, with only a front camera, mirrored. */
+  { id: "ab-back-412", width: 412, height: 915, dpr: 2.625, ua: ANDROID, tier: "MID", steps: [], android: true, ab: true },
+  { id: "ab-front-412", width: 412, height: 915, dpr: 2.625, ua: ANDROID, tier: "MID", steps: [], android: true, ab: true, frontOnly: true },
   /* F1 — Chromium's own prompt and fake devices, nothing emulated: two fake cameras, the fake UI grants. */
   { id: "fakeui-412", width: 412, height: 915, dpr: 2.625, ua: ANDROID, tier: "MID", steps: ["flip"], fakeui: true },
   { id: "phone-390", width: 390, height: 844, dpr: 3, ua: ANDROID, tier: "MID", steps: ["torch", "flip", "sheet"] },
@@ -239,6 +245,31 @@ async function tallestLeafTop(page) {
 
 async function removeTwin(page) {
   await page.evaluate(() => document.querySelector("[data-snc-twin]")?.remove());
+}
+
+/** rAF deltas over `total` frames (after `skip` warm-up frames): the page's frame time as the reader's device sees it. */
+async function sampleFrames(page, total = 240, skip = 20) {
+  const samples = await page.evaluate(
+    ([n, warm]) =>
+      new Promise((done) => {
+        const out = [];
+        let last = performance.now();
+        let seen = 0;
+        const tick = (now) => {
+          out.push(now - last);
+          last = now;
+          seen += 1;
+          if (seen <= warm) out.length = 0;
+          if (out.length >= n) done(out);
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    [total, skip],
+  );
+  const sorted = [...samples].sort((a, b) => a - b);
+  const at = (p) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(p * sorted.length) - 1))];
+  return { n: sorted.length, p50: Number(at(0.5).toFixed(2)), p95: Number(at(0.95).toFixed(2)), worst: Number(sorted.at(-1).toFixed(2)) };
 }
 
 async function measure(page) {
@@ -446,6 +477,7 @@ try {
       /* The fakeui scenario leaves the permission to Chromium's own prompt (the fake UI accepts it). */
       ...(s.fakeui ? {} : { permissions: ["camera"] }),
     });
+    if (s.frontOnly) await context.addInitScript(() => (window.__frontOnly = true));
     await context.addInitScript(s.fakeui ? RECORDER_STUB : ANDROID_CAMERA_STUB);
     if (s.denied) await context.addInitScript(() => (window.__refuseCamera = true));
     if (s.tier === "MID") await context.addInitScript(MID_TIER_STUB);
@@ -474,6 +506,13 @@ try {
     await page.waitForFunction(() => document.querySelector("canvas")?.dataset.sncHand, null, { timeout: 45_000 }).catch(() => {});
     await page.waitForTimeout(settle);
     const scanning = await measure(page);
+    /* R1: the frame time with the readout (and so the funnel) ON, and the funnel's own line. */
+    scanning.frames = await sampleFrames(page);
+    scanning.funnel = await page.evaluate(() => (typeof window.__hrFunnel === "function" ? window.__hrFunnel() : null));
+    scanning.funnelLine = await page.evaluate(() => document.querySelector("[data-snc-funnel]")?.textContent ?? null);
+    /* R1 A/B: the last raw observation — the landmarker's label, the winding, the world normal — and the
+       conventions read off it: which side the thumb is on, which way world y and z run. */
+    scanning.observation = await page.evaluate(() => (typeof window.__hrObservation === "function" ? window.__hrObservation() : null));
     await page.screenshot({ path: join(dir, `${s.id}-back.png`) });
     entry.back = scanning;
     const tallest = await tallestLeafTop(page);
@@ -506,6 +545,12 @@ try {
        rather than passing the overlap rows vacuously. (--no-cost runs the whole pipeline on that path.) */
     await page.goto(`${base}/scan/chamber`, { waitUntil: "load", timeout: 60_000 });
     await page.waitForTimeout(600);
+    /* R1: the same scan with the readout OFF — the funnel must cost nothing it is not asked for. */
+    await page.tap("button:has-text('Kaksh mein pravesh')").catch(() => {});
+    await page.waitForFunction(() => document.querySelector("canvas")?.dataset.sncHand, null, { timeout: 45_000 }).catch(() => {});
+    await page.waitForTimeout(Math.min(settle, 4000));
+    entry.framesReadoutOff = await sampleFrames(page);
+    entry.funnelOff = await page.evaluate(() => typeof window.__hrFunnel);
     entry.stampOnPlainLoad = await page.evaluate(() => {
       const box = (el) => {
         if (!el) return null;
@@ -543,11 +588,36 @@ try {
     console.log(`\n${s.id} (${entry.viewport}, tier ${entry.tier})`);
     for (const row of entry.checklist) console.log(`  ${row.verdict}  ${row.item} — ${row.measured}`);
     console.log(withCost ? `  ?cost=1  ${scanning.cost}` : `  stamp (pipeline)  ${JSON.stringify(scanning.stamp)} "${scanning.stampText}"`);
-    if (s.android || s.fakeui) {
+    if ((s.android || s.fakeui) && !s.ab) {
       entry.cameraChecklist = scoreCamera(entry, s);
       for (const row of entry.cameraChecklist) console.log(`  ${row.verdict}  ${row.item} — ${row.measured}`);
     }
+    if (s.ab) {
+      /* R1 A/B: every funnel window, in order — the pose in force, the gates, the tilt gate's rejections, the tilt itself. */
+      const windows = [...(scanning.funnel?.windows ?? []), scanning.funnel?.current].filter(Boolean);
+      console.log(`  feed ${FEED.split(/[\\/]/).pop()} · camera ${scanning.camera?.opens?.[0]?.facing ?? "?"} · mirrored ${scanning.videoTransform !== "none"}`);
+      const o = scanning.observation;
+      if (o) {
+        /* Conventions, from the frame itself: the thumb's side in the image; world y against image y
+           (down or up); world z against image z (the landmarker documents image z as "smaller = nearer"). */
+        const thumbSide = o.landmarks[4].x < o.landmarks[20].x ? "image-left" : "image-right";
+        const yDown = Math.sign(o.world[12].y - o.world[0].y) === Math.sign(o.landmarks[12].y - o.landmarks[0].y) ? "down (as image y)" : "UP (opposite to image y)";
+        const iz = o.landmarks.map((l) => l.z), wz = o.world.map((l) => l.z);
+        const mean = (a) => a.reduce((t, v) => t + v, 0) / a.length;
+        const mi = mean(iz), mw = mean(wz);
+        const cov = iz.reduce((t, v, i) => t + (v - mi) * (wz[i] - mw), 0);
+        const corr = cov / Math.sqrt(iz.reduce((t, v) => t + (v - mi) ** 2, 0) * wz.reduce((t, v) => t + (v - mw) ** 2, 0) || 1);
+        const n = o.normal;
+        console.log(`  observation: label ${o.handedness} ${o.score.toFixed(2)} · thumb ${thumbSide} · winding ${o.winding > 0 ? "+" : "−"}${Math.abs(o.winding).toFixed(4)} · normal ${n ? `(${n.x.toFixed(3)}, ${n.y.toFixed(3)}, ${n.z.toFixed(3)})` : "–"} · world y ${yDown} · corr(image z, world z) ${corr.toFixed(2)}`);
+      }
+      for (const w of windows) {
+        const poses = Object.entries(w.poses ?? {}).map(([pose, n]) => `${pose} ${n}`).join(" ");
+        console.log(`  window ${Math.round(w.startMs / 1000)}s: hand ${w.handFound} gates ${w.gatesPassed} tilt_direction rejected ${w.rejections?.tilt_direction ?? 0} · pose ${poses} · tilt ${w.tilt ? `${w.tilt.median} (${w.tilt.min}…${w.tilt.max})` : "–"}`);
+      }
+    }
     console.log(`  video transform (back): ${scanning.videoTransform}; opens: ${JSON.stringify((scanning.camera?.opens ?? []).map((o) => o.facing ?? o.label))}`);
+    if (scanning.funnelLine) console.log(`  ${scanning.funnelLine.trim().replace(/^· /, "")}`);
+    if (scanning.frames && entry.framesReadoutOff) console.log(`  frames: readout ON p50 ${scanning.frames.p50} p95 ${scanning.frames.p95} worst ${scanning.frames.worst} · readout OFF p50 ${entry.framesReadoutOff.p50} p95 ${entry.framesReadoutOff.p95} worst ${entry.framesReadoutOff.worst} (window.__hrFunnel ${entry.funnelOff})`);
     if (entry.torch) console.log(`  torch: aria-pressed ${entry.torch.torchPressed}; constraint sent: ${JSON.stringify(entry.torch.camera?.torch)}`);
     if (entry.front) console.log(`  after flip: video transform ${entry.front.videoTransform}; ?cost=1 ${entry.front.cost}; opens ${JSON.stringify(entry.front.camera?.opens)}`);
     if (errors.length) console.log(`  console errors: ${errors.slice(0, 4).join(" || ")}`);

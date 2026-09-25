@@ -71,6 +71,7 @@ import {
   type ChamberSignals,
 } from "@/lib/sanctuary/chamber-stages";
 import { formatFrameCost, withinFrameBudget, type FrameCostSummary } from "@/lib/sanctuary/frame-cost";
+import { formatFunnel } from "@/lib/scan/funnel";
 import { ChamberCanvas } from "@/components/sanctuary/chamber/chamber-canvas";
 import { RekhaMonitor, rekhaLedger } from "@/components/sanctuary/chamber/rekha-monitor";
 import { CHAMBER_SCAN_FLAGS, withScanFlags } from "@/lib/scan/flags";
@@ -297,7 +298,8 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     cameraErrorName,
     activeProfile,
     landmarkMs,
-  } = useHandScan({ onFeatures, onLineFeatures, onCaptureComplete, cameraSelection: "auto", profile });
+    funnel,
+  } = useHandScan({ onFeatures, onLineFeatures, onCaptureComplete, cameraSelection: "auto", profile, funnel: showCost });
 
   useEffect(() => {
     cropRef.current = rectified?.image ?? cropRef.current;
@@ -553,6 +555,10 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
           {activeProfile === null
             ? null
             : ` · profile ${activeProfile.name} (${capabilityTier}) ${videoSize === null ? "–" : `${videoSize.width}×${videoSize.height}`} · extract ${activeProfile.extractIntervalMs} ms`}
+          {/* R1: the stage funnel — the last closed 10 s window, or the one still open. */}
+          {funnel === null ? null : (
+            <span data-snc-funnel="">{` · ${formatFunnel(funnel.windows.at(-1) ?? funnel.current)}`}</span>
+          )}
           {landmarkMs === null ? null : ` · landmarks ${landmarkMs.toFixed(1)} ms`}
           {status === "running" ? ` · ${cameraFacing === "environment" ? "back" : "front"}${mirrored ? " mirrored" : ""}` : null}
           {` · build ${BUILD_SHA_SHORT}`}

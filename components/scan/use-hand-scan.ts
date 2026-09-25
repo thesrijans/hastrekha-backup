@@ -26,6 +26,7 @@ import {
   SPAN_HISTORY_FRAMES,
   type PoseProfile,
 } from "@/lib/scan/quality";
+import { StageFunnel, type FunnelSnapshot } from "@/lib/scan/funnel";
 import { canonicalAnchors, conventionRemap, palmAnchors, rectifyPalm, solveHomography, type RectifyResult } from "@/lib/scan/rectify";
 import type { RekhaPersistence, RekhaSnapshot } from "@/lib/scan/rekha-persist";
 import type { ValleyTracer } from "@/lib/scan/trace-valley";
@@ -71,7 +72,7 @@ import {
   type PhotometricState,
 } from "@/lib/scan/photometric";
 import { normaliseIllumination } from "@/lib/scan/illumination";
-import { palmTilt } from "@/lib/scan/quality";
+import { palmNormal, palmTilt, palmWinding } from "@/lib/scan/quality";
 import { createOnnxSegmenter } from "@/lib/scan/segmenter-onnx";
 import type { SegmenterDiagnostics } from "@/lib/scan/segmenter";
 import type { Segmenter } from "@/lib/scan/segmenter";
@@ -227,6 +228,22 @@ export interface UseHandScanOptions {
   readonly onLineFeatures?: (extraction: LineExtraction, nowMs: number) => void;
   /** Called once the last guided pose is captured. */
   readonly onCaptureComplete?: (capture: CaptureState) => void;
+  /**
+   * R1: count every frame through every stage (lib/scan/funnel.ts) and publish it once a second as
+   * `funnel`, and as `window.__hrFunnel` for the phone rig. Off, nothing is counted — the loop's
+   * only cost is an optional chain on a null ref.
+   */
+  readonly funnel?: boolean;
+}
+
+/** What `window.__hrObservation` hands the phone rig (options.funnel only): the raw frame's landmarks and the gates' two measurements of them. */
+interface RigObservation {
+  readonly handedness: HandObservation["handedness"];
+  readonly score: number;
+  readonly landmarks: HandObservation["landmarks"];
+  readonly world: HandObservation["world"];
+  readonly normal: ReturnType<typeof palmNormal>;
+  readonly winding: number;
 }
 
 export function useHandScan(options: UseHandScanOptions = {}) {
@@ -495,6 +512,16 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const [activeProfile, setActiveProfile] = useState<ScanProfile | null>(null);
   /** M1.4 ?cost=1: median landmarker call over the last second, ms. Published only with cameraSelection "auto". */
   const [landmarkMs, setLandmarkMs] = useState<number | null>(null);
+  /* R1: the stage funnel — created at start() only when asked for, so a scan without it does no work here. */
+  const funnelRef = useRef<StageFunnel | null>(null);
+  const funnelWantedRef = useRef(options.funnel === true);
+  useEffect(() => {
+    funnelWantedRef.current = options.funnel === true;
+  }, [options.funnel]);
+  const [funnel, setFunnel] = useState<FunnelSnapshot | null>(null);
+  const lastFunnelPublishRef = useRef(0);
+  /** How many lines the overlay has to draw right now (the funnel's "drawn" stage). */
+  const drawnLinesRef = useRef(0);
   const landmarkSamplesRef = useRef<number[]>([]);
   const lastLandmarkPublishRef = useRef(0);
   useEffect(() => {
@@ -712,6 +739,25 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       setQuality(verdict);
       latestRef.current.quality = verdict;
 
+      /* R1: the funnel's frame stage — nothing runs here unless ?cost=1 asked for it. */
+      const funnelNow = funnelRef.current;
+      if (funnelNow !== null) {
+        const width = videoSizeRef.current?.width ?? 0;
+        funnelNow.frame(now, {
+          hand: next !== null,
+          palmWidthPx: next === null || width === 0 ? null : palmSpan(next.landmarks) * width,
+          checks: next === null ? null : verdict.checks,
+          issues: verdict.issues,
+          drawnLines: drawnLinesRef.current,
+          pose: pose?.pose ?? null,
+          tilt: next === null ? null : palmTilt(next.world, mirrored),
+        });
+        if (now - lastFunnelPublishRef.current > 1000) {
+          lastFunnelPublishRef.current = now;
+          setFunnel(funnelNow.snapshot(now));
+        }
+      }
+
       /**
        * Extraction + publication, shared by the per-frame path and (flag superRes) the fused path.
        *
@@ -752,6 +798,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         const rekha = flagsAtExtract.rekhaPersist ? rekhaRef.current : null;
         const rekhaSnap = rekha === null ? null : rekha.extracted(drawn, at);
         if (rekhaSnap !== null) setRekha(rekhaSnap);
+        /* R1: the funnel's extraction stage — what this run proposed, and what the accumulator holds now. */
+        funnelRef.current?.extracted(
+          at,
+          ACTIVE_LINE_IDS.filter((id) => drawn.lines[id] !== undefined),
+          rekhaSnap === null ? [] : ACTIVE_LINE_IDS.filter((id) => rekhaSnap.lines[id]?.state === "confirmed"),
+        );
         /*
          * Everything else on the palm. The four completed lines are the headline, but a
          * reader looks at the minor creases too, and dropping them was throwing away most of
@@ -851,7 +903,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           // Refused while the hand is clipped: the crop was fitted to extrapolated
           // landmarks, so any line placed from it is a claim about guessed geometry.
           if (named && !degradedRef.current) onLineFeatures?.(forFeatures, at);
-          setExtraction(rekha === null ? drawn : { ...drawn, lines: { ...drawn.lines, ...rekha.hold.heldMissingFrom(drawn) } });
+          const held = rekha === null ? {} : rekha.hold.heldMissingFrom(drawn);
+          /* R1: the funnel's "drawn" stage — how many lines the overlay has to draw from here on. */
+          drawnLinesRef.current = Object.keys(drawn.lines).length + Object.keys(held).length;
+          setExtraction(rekha === null ? drawn : { ...drawn, lines: { ...drawn.lines, ...held } });
           setPolys(drawable);
           setPolySegments(
             named
@@ -913,6 +968,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           if (warped !== null) {
             recordStage(telemetryRef.current, "rectifyOk", now);
             telemetryRef.current.anchorsUsed = anchors.points.length;
+            funnelRef.current?.rectified(now);
           }
           // A crop mostly outside the frame carries no palm to segment.
           if (warped !== null && segmentationEligible(next.score, warped.coverage)) {
@@ -1529,6 +1585,22 @@ export function useHandScan(options: UseHandScanOptions = {}) {
 
     setStatus("starting");
     setCameraErrorName(null);
+    /* R1: the funnel, only when asked for; the rig reads it as window.__hrFunnel. */
+    if (funnelWantedRef.current) {
+      const created = new StageFunnel();
+      funnelRef.current = created;
+      const hooks = window as Window & { __hrFunnel?: () => FunnelSnapshot; __hrObservation?: () => RigObservation | null };
+      hooks.__hrFunnel = () => created.snapshot(performance.now());
+      /* …and the last observation as the landmarker gave it, with the two measurements the gates take
+         from it, so the rig can check a convention (which way the normal points, which side the thumb
+         is on) against a real frame rather than a fixture. */
+      hooks.__hrObservation = () => {
+        const o = latestRef.current.observation;
+        return o === null
+          ? null
+          : { handedness: o.handedness, score: o.score, landmarks: o.landmarks, world: o.world, normal: palmNormal(o.world), winding: palmWinding(o.landmarks) };
+      };
+    }
     /* M1.4: the profile is fixed for the session at the moment the camera opens. */
     const profile = requestedProfileRef.current;
     activeProfileRef.current = profile;
@@ -1873,6 +1945,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     activeProfile,
     /** M1.4: median landmarker call over the last second (cameraSelection "auto" only). */
     landmarkMs,
+    /** R1: the stage funnel's latest snapshot (options.funnel only), published once a second. */
+    funnel,
     setVideoElement,
     start,
     stop,

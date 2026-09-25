@@ -217,39 +217,65 @@ for (const testCase of CASES) {
 /* ------------------------------- Tilted poses ------------------------------- */
 
 /**
- * The bug: TILT LEFT rejected a palm that was tilted left, and blamed it on the palm not facing the
- * camera — advice that could not fix anything, since the palm was already facing the user.
+ * The tilt gate is judged in the space the user tilts in — the preview — and ONE physical tilt must
+ * pass the same pose through either camera and with either hand. Two faults broke that, and both are
+ * pinned here against frames derived from the physical scene rather than from a fixture's naming.
  *
- * Two separate faults, so two separate fixes, and both are pinned here. `palmTilt` read the RAW
- * camera frame while `PoseProfile.tiltSign` describes the MIRRORED preview the user is tilting
- * against, so a correct tilt measured as its own opposite. And a tilt failure raised
- * `not_palm_up`, which is a different problem with a different hint.
+ * `palmTilt` took the x of the wrist → index → little winding normal, which points out of the palm for
+ * one hand and into it for the other, so the two hands read the same tilt with opposite signs. And a
+ * front camera's raw frame is the back camera's mirror image (image x flips, the winding flips, the x
+ * of their cross product does not), so the mirror correction turned one physical tilt into opposite
+ * verdicts through the two cameras: the pose the front camera passed, the back camera could only pass
+ * by tilting the other way (R1 — "no rekhas on my phone").
+ *
+ * The frames below are built in the landmarker's own axes — image x right and y down; world x right,
+ * y down, z away from the lens (MEASURED on a real frame under R1: world y follows image y, world z
+ * correlates +0.7 with image z) — so what each camera's raw frame contains is derived, not assumed.
  */
 
-/** Rotates the fixture about its vertical axis and re-projects, so image and world stay consistent. */
-function tiltedHand(degrees: number): { image: Landmark3[]; world: Landmark3[] } {
-  const base = syntheticHand();
-  const radians = (degrees * Math.PI) / 180;
-  const cos = Math.cos(radians);
-  const sin = Math.sin(radians);
-  const world = base.world.map((p) => ({ x: p.x * cos + p.z * sin, y: p.y, z: -p.x * sin + p.z * cos }));
-  // Orthographic re-projection: the x-extent foreshortens by cos(θ), exactly as a real tilt does.
-  const image = world.map((p) => ({ x: 0.5 + p.x * 4.0, y: 0.9 - p.y * 4.79, z: p.z }));
-  return { image, world };
+type Camera = "front" | "back";
+
+interface RawFrame {
+  readonly image: Landmark3[];
+  readonly world: Landmark3[];
+  readonly mirrored: boolean;
+  /** What the landmarker reports for this geometry, in the gate's pairing (see the labels above). */
+  readonly label: Handedness;
 }
 
-function gradeTilt(
-  hand: { image: Landmark3[]; world: Landmark3[] },
-  pose: PoseProfile,
-  mirrored: boolean,
-  label: Handedness,
-): ReturnType<typeof gradeFrame> {
-  const span = palmSpan(hand.image);
+/**
+ * The raw frame a camera takes of a palm the user tilts `degrees` toward THEIR left (positive) or
+ * right (negative): the lean of the palm's outward normal, as they see it on the preview.
+ *
+ * The back camera looks the way the user looks, so image-right is the user's right and the preview
+ * is the raw frame. The front camera looks AT the user, so image-right is the user's left, and the
+ * preview mirrors it back. A right palm shown to a camera has its thumb on the user's right (the
+ * thumb is lateral with the palm up), a left palm on the user's left.
+ */
+function rawFrame(hand: Handedness, camera: Camera, degrees: number): RawFrame {
+  const shape = syntheticHand().image; // a flat palm, thumb on the image's left
+  const usersRightIsImageRight = camera === "back";
+  const thumbOnImageRight = (hand === "Right") === usersRightIsImageRight;
+  /* The rotation about the vertical axis that leans the lens-facing normal (0, 0, -1) toward the user's left. */
+  const radians = ((usersRightIsImageRight ? degrees : -degrees) * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const world = shape.map((p) => {
+    const x = (thumbOnImageRight ? 0.5 - p.x : p.x - 0.5) * 0.25;
+    return { x: x * cos, y: (p.y - 0.9) * 0.25, z: -x * sin };
+  });
+  // Orthographic re-projection: the x-extent foreshortens by cos(θ), exactly as a real tilt does.
+  const image = world.map((p) => ({ x: 0.5 + p.x * 4, y: 0.9 + p.y * 4, z: p.z }));
+  return { image, world, mirrored: camera === "front", label: palmWinding(image) > 0 ? RIGHT_HAND_LABEL : LEFT_HAND_LABEL };
+}
+
+function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFrame> {
+  const span = palmSpan(frame.image);
   return gradeFrame({
-    landmarks: hand.image,
-    world: hand.world,
-    handedness: label,
-    mirrored,
+    landmarks: frame.image,
+    world: frame.world,
+    handedness: frame.label,
+    mirrored: frame.mirrored,
     stats: { luma: 0.5, clipped: 0 },
     jitter: 0,
     score: 0.95,
@@ -259,55 +285,74 @@ function gradeTilt(
 }
 
 {
+  const FLAT = CAPTURE_POSES.find((p) => p.pose === "FLAT");
   const TILT_LEFT = CAPTURE_POSES.find((p) => p.pose === "TILT_LEFT");
   const TILT_RIGHT = CAPTURE_POSES.find((p) => p.pose === "TILT_RIGHT");
-  assert.ok(TILT_LEFT !== undefined && TILT_RIGHT !== undefined, "the tilt poses exist");
+  assert.ok(FLAT !== undefined && TILT_LEFT !== undefined && TILT_RIGHT !== undefined, "the flat and tilt poses exist");
+  const tiltOf = (frame: RawFrame): number => palmTilt(frame.world, frame.mirrored);
 
-  /* The mirror correction itself: screen space is the mirror of camera space, and nothing else. */
-  const rotated = tiltedHand(35);
-  assert.equal(
-    palmTilt(rotated.world, true),
-    -palmTilt(rotated.world, false),
-    "the mirrored reading is the negation of the raw one",
+  /* The derivation itself, pinned: one scene, and the front camera's raw frame is the back camera's mirror image. */
+  for (const hand of ["Right", "Left"] as const) {
+    const back = rawFrame(hand, "back", 30);
+    const front = rawFrame(hand, "front", 30);
+    assert.ok(
+      back.image.every((p, i) => Math.abs(p.x - (1 - front.image[i]!.x)) < 1e-9 && Math.abs(p.y - front.image[i]!.y) < 1e-9),
+      `${hand} hand: the two cameras' raw frames are mirror images`,
+    );
+    assert.ok(
+      back.world.every((p, i) => Math.abs(p.x + front.world[i]!.x) < 1e-9 && Math.abs(p.z - front.world[i]!.z) < 1e-9),
+      `${hand} hand: …in world space too`,
+    );
+    assert.equal(palmWinding(rawFrame(hand, "back", 0).image) > 0, hand === "Left", `${hand} hand, back camera: the thumb is on the image's ${hand === "Right" ? "right" : "left"}`);
+  }
+
+  for (const hand of ["Right", "Left"] as const) {
+    for (const camera of ["front", "back"] as const) {
+      const who = `${hand.toLowerCase()} hand through the ${camera} camera`;
+
+      /* A flat palm passes FLAT and satisfies neither tilt pose — as a tilt failure, never a facing one. */
+      const flat = rawFrame(hand, camera, 0);
+      assert.equal(gradeRaw(flat, FLAT).ok, true, `${who}: a flat palm passes FLAT`);
+      assert.ok(Math.abs(tiltOf(flat)) < 1e-9, `${who}: a flat palm reads flat (${tiltOf(flat)})`);
+      for (const pose of [TILT_LEFT, TILT_RIGHT]) {
+        const verdict = gradeRaw(flat, pose);
+        assert.equal(verdict.checks.tilt_direction, false, `${who}: a flat palm does not satisfy ${pose.pose}`);
+        assert.equal(verdict.checks.not_palm_up, true, `${who}: …and is not told to face the camera`);
+      }
+
+      /* Tilted to the user's left: TILT LEFT passes, TILT RIGHT says "the other way". */
+      const left = rawFrame(hand, camera, 30);
+      assert.ok(tiltOf(left) < -0.25, `${who}: a palm tilted to the user's left reads left (${tiltOf(left).toFixed(3)})`);
+      assert.equal(gradeRaw(left, TILT_LEFT).ok, true, `${who}: …and passes TILT LEFT`);
+      const wrongWay = gradeRaw(left, TILT_RIGHT);
+      assert.equal(wrongWay.ok, false, `${who}: TILT RIGHT rejects a left-tilted palm`);
+      assert.equal(wrongWay.checks.tilt_direction, false, `${who}: …as a tilt-direction failure`);
+      assert.equal(wrongWay.checks.not_palm_up, true, `${who}: …not as a facing failure`);
+      assert.equal(wrongWay.hint, "Doosri taraf jhukao", `${who}: …and says which way to go`);
+
+      /* Tilted to the user's right: the mirror of that. */
+      const right = rawFrame(hand, camera, -30);
+      assert.ok(tiltOf(right) > 0.25, `${who}: a palm tilted to the user's right reads right (${tiltOf(right).toFixed(3)})`);
+      assert.equal(gradeRaw(right, TILT_RIGHT).ok, true, `${who}: …and passes TILT RIGHT`);
+      assert.equal(gradeRaw(right, TILT_LEFT).checks.tilt_direction, false, `${who}: …and fails TILT LEFT on direction`);
+    }
+  }
+
+  /* The reading is the USER's tilt: one number for one scene, through both cameras, with both hands. */
+  for (const degrees of [30, 0, -30]) {
+    const readings = (["Right", "Left"] as const).flatMap((hand) => (["front", "back"] as const).map((camera) => tiltOf(rawFrame(hand, camera, degrees))));
+    assert.ok(
+      readings.every((reading) => Math.abs(reading - readings[0]!) < 1e-9),
+      `a ${degrees}° tilt reads the same through both cameras with both hands: ${readings.map((r) => r.toFixed(3)).join(", ")}`,
+    );
+  }
+
+  /* And the raw measurement is still the raw measurement: mirroring a frame negates its reading. */
+  const raw = rawFrame("Right", "back", 30);
+  assert.ok(
+    Math.abs(palmTilt(mirrorWorld(raw.world), false) + palmTilt(raw.world, false)) < 1e-9,
+    "a mirrored world reads as the negation of the raw one, under the same preview",
   );
-  assert.ok(Math.abs(palmTilt(rotated.world, false)) > 0.5, "a 35° rotation is a substantial tilt");
-
-  /* Rear camera, no mirroring: a left-leaning normal satisfies TILT LEFT. */
-  const leftRear = tiltedHand(35);
-  assert.ok(palmTilt(leftRear.world, false) < 0, "35° leans the normal to screen-left unmirrored");
-  assert.equal(gradeTilt(leftRear, TILT_LEFT, false, RIGHT_HAND_LABEL).ok, true, "TILT LEFT accepts a left-leaning palm through the back camera");
-
-  /*
-   * Front camera, mirrored preview — the configuration the bug was reported on. The user tilts left
-   * as they see it, which is a right-leaning rotation in the raw frame the landmarker consumes.
-   */
-  const raw = tiltedHand(-35);
-  const mirroredHand = {
-    image: raw.image.map((p) => ({ ...p, x: 1 - p.x })),
-    world: raw.world.map((p) => ({ ...p, x: -p.x })),
-  };
-  assert.ok(palmTilt(mirroredHand.world, true) < 0, "and leans screen-left once mirrored");
-
-  /* The raw frame is a left palm's geometry, so MediaPipe labels it the left hand's way. */
-  const accepted = gradeTilt(mirroredHand, TILT_LEFT, true, LEFT_HAND_LABEL);
-  assert.equal(accepted.ok, true, "TILT LEFT accepts a left-tilted palm on a mirrored preview");
-  assert.equal(
-    accepted.checks.not_palm_up,
-    true,
-    "and never blames the palm for facing the wrong way — the exact reported symptom",
-  );
-
-  /* Tilting the wrong way is still rejected, but as its own failure with its own hint. */
-  const wrongWay = gradeTilt(mirroredHand, TILT_RIGHT, true, LEFT_HAND_LABEL);
-  assert.equal(wrongWay.ok, false, "TILT RIGHT rejects a left-tilted palm");
-  assert.equal(wrongWay.checks.tilt_direction, false, "as a tilt-direction failure");
-  assert.equal(wrongWay.checks.not_palm_up, true, "not as a facing failure");
-  assert.equal(wrongWay.hint, "Doosri taraf jhukao", "and says which way to go");
-
-  /* A square-on palm satisfies neither tilt pose — the check is not vacuous. */
-  const square = tiltedHand(0);
-  assert.equal(gradeTilt(square, TILT_LEFT, false, RIGHT_HAND_LABEL).checks.tilt_direction, false, "no tilt is not a left tilt");
-  assert.equal(gradeTilt(square, TILT_RIGHT, false, RIGHT_HAND_LABEL).checks.tilt_direction, false, "nor a right one");
 }
 
 /* --------------------- Winding sign on a foreshortened palm ----------------- */
