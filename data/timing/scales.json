@@ -1,0 +1,2521 @@
+{
+ "timingVersion": "1.0",
+ "generatedAt": "2026-09-28T23:07:34Z",
+ "generatedBy": "hastrekha-lab timing/{acquire,corpus,plates,build,export}.py",
+ "kb": {
+  "version": "0.3.0-dale-merged",
+  "sha256": "7c7570cd3b555726f27f223d382a95fae714d8629d44db571b4cddeac6990550"
+ },
+ "space": "Rectified palm-quad crop, 0-1: x toward the little-finger edge, y toward the wrist (lib/scan/zones.ts). A traced line in 256-px crop pixels divides by RECTIFIED_SIZE to join it.",
+ "measurement": {
+  "palmAxis": "unit vector from the knuckle-line midpoint (index MCP + pinky MCP) / 2 to the wrist landmark",
+  "produceMax": 0.75,
+  "fingerBaseK": 0.45,
+  "arc": "position = arc length along the traced line (produced straight along its end tangent, up to produceMax, where an anchor lies beyond a traced end), read from measure.from toward measure.toward",
+  "axis": "position = fraction t along the straight axis measure.from -> measure.to; project 'palm_axis' moves the feature along the palm axis onto it, 'orthogonal' drops it perpendicular",
+  "interpolation": "piecewise = linear between consecutive anchors; linear = one line through the two anchors",
+  "extrapolate": "outside the anchors: none = no age; open = 'before <first age>' / 'after <last age>'",
+  "tolerance": "years an anchor's age may be off from the source (reading a figure or plate); ranges keep an author's own stated band"
+ },
+ "refs": {
+  "lm.<name>": "MediaPipe hand landmark (index order of lib/scan/landmark-index.ts, lower-cased) mapped through the palm homography into rectified space.",
+  "finger_base.<f>": "Palmar crease at the base of finger f (index|middle|ring|little). Estimated as MCP + 0.45 x (PIP - MCP): an anatomical estimate of where the proximal digital crease lies, to be calibrated on real stills. 0 gives the MCP landmark itself.",
+  "web.<f>_<g>": "Midpoint of two adjacent MCP landmarks (index_middle | middle_ring | ring_little): the boundary between two fingers when a line is read 'under' them.",
+  "mount.<id>": "Mount centre from lib/scan/zones.ts MOUNT_ZONES (jupiter, saturn, sun, mercury, mars_inner, venus, moon), carried by the palm homography.",
+  "percussion": "Top of the percussion edge: derivePalmEdge().percussionTop (lib/scan/landmarks.ts); CANONICAL_PERCUSSION on the canonical hand.",
+  "L.end:<side>": "The end of traced line L lying toward side (radial | ulnar | distal | proximal).",
+  "L×M": "Where traced line L meets traced line M (first crossing; either may be produced along its end tangent).",
+  "L|under:<point>": "Where L meets the drop line through <point> along the palm axis (knuckle-line midpoint -> wrist).",
+  "L|level:<point>": "Where L meets the line through <point> perpendicular to the palm axis.",
+  "L|wrist_crease": "L|level:lm.wrist - where L, produced if it stops short, reaches the wrist crease.",
+  "frac(A,B,t)": "The point at arc fraction t from position A to position B along L; used only where the author states the fraction.",
+  "arc(A,d)": "The point at arc distance d (rectified palm units) from A along L in the scale's reading direction; used for plate-registered ticks.",
+  "axis@t": "For axis scales: the point at fraction t along the scale's axis (from -> to)."
+ },
+ "sources": {
+  "cheiro-1916": {
+   "author": "Cheiro (William John Warner)",
+   "authorLife": "1866–1936",
+   "title": "Palmistry for All",
+   "year": 1916,
+   "record": "https://archive.org/details/palmistryforall20480gut",
+   "licence": "Public domain",
+   "publicDomain": {
+    "us": "verified",
+    "india": "verified"
+   }
+  },
+  "cheiro-1897": {
+   "author": "Cheiro (William John Warner)",
+   "authorLife": "1866–1936",
+   "title": "Cheiro's Language of the Hand",
+   "year": 1897,
+   "record": "https://archive.org/details/b28096563",
+   "licence": "Public domain",
+   "publicDomain": {
+    "us": "verified",
+    "india": "verified"
+   }
+  },
+  "benham-1900": {
+   "author": "William G. (William George) Benham, American palmist",
+   "authorLife": "death year not established",
+   "title": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "record": "https://archive.org/details/lawsscientifich00benhgoog",
+   "licence": "Public domain",
+   "publicDomain": {
+    "us": "verified",
+    "india": "inferred"
+   }
+  },
+  "dale-1895": {
+   "author": "Mrs. J. B. Dale",
+   "authorLife": "death year not recorded",
+   "title": "Indian Palmistry",
+   "year": 1895,
+   "record": "https://archive.org/details/indianpalmistry00daleiala",
+   "licence": "Public domain",
+   "publicDomain": {
+    "us": "verified",
+    "india": "inferred"
+   }
+  }
+ },
+ "counts": {
+  "anchored": 15,
+  "unanchorable": 7,
+  "none": 4
+ },
+ "scales": [
+  {
+   "id": "S.benham-1900.life",
+   "author": "Benham",
+   "work": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "source": "benham-1900",
+   "line": "life",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "life",
+    "from": "life.end:distal",
+    "toward": "life|wrist_crease"
+   },
+   "origin": {
+    "ref": "life.end:distal",
+    "age": 0
+   },
+   "anchors": [
+    {
+     "ref": "life.end:distal",
+     "age": 0,
+     "basis": "text",
+     "tolerance": 0
+    },
+    {
+     "ref": "frac(life.end:distal,life|wrist_crease,0.5)",
+     "age": 36,
+     "basis": "text",
+     "tolerance": 0
+    },
+    {
+     "ref": "frac(life.end:distal,life|wrist_crease,0.625)",
+     "age": 43,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "frac(life.end:distal,life|wrist_crease,0.75)",
+     "age": 51,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "frac(life.end:distal,life|wrist_crease,0.875)",
+     "age": 60,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "life|wrist_crease",
+     "age": 70,
+     "basis": "text",
+     "tolerance": 0
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "open"
+   },
+   "notes": "Read from the top (under Jupiter) down to the rascette, 0 to 70, with 36 fixed at the centre of that span. The upper half is linear: the text lists 4, 6, 12, 18, 24 and 30 above the centre and fig. 19 draws them at equal 6-year steps. The lower half carries 43, 51 and 60 at equal quarters in fig. 19, so the later years crowd together. The span runs to the rascette, which a real life line rarely reaches; the line is produced along its end tangent to meet it. Benham adds that the spacing grows or shrinks with the length of the hand, which a span between two measured points does by construction.",
+   "citation": {
+    "text": "Benham — The Laws of Scientific Hand Reading",
+    "loc": "Part II Ch.IV, p.382, fig. 19",
+    "year": 1900,
+    "source": "benham-1900",
+    "pages": [
+     "382"
+    ],
+    "quote": "The division of the Life line (19) begins at the starting of the line under the finger of Jupiter and ends at the rascette; the intervening sections recording all the various years of the life. For convenience and to facilitate quickness in reading the line, I divide it in the centre, fixing that point as the age 36, which is approximately one half of 70. The space above this central point I divide into the ages 4, 6, 12, 18, 24, 30, and the portion of the line after the central point to read as ages 43, 51, 60, and 70.",
+    "quoteEdits": 0
+   },
+   "figures": [
+    {
+     "label": "fig. 19",
+     "page": "382",
+     "n": 412
+    }
+   ],
+   "canonical": {
+    "u": [
+     0.0,
+     0.3769,
+     0.4711,
+     0.5653,
+     0.6595,
+     0.7537
+    ],
+    "points": [
+     [
+      0.22,
+      0.26
+     ],
+     [
+      0.3891,
+      0.595
+     ],
+     [
+      0.4132,
+      0.6861
+     ],
+     [
+      0.429,
+      0.7789
+     ],
+     [
+      0.4368,
+      0.8728
+     ],
+     [
+      0.4436,
+      0.9667
+     ]
+    ]
+   },
+   "direction": "from the upper (finger-side) end downward",
+   "directionKey": "distal_to_proximal"
+  },
+  {
+   "id": "S.benham-1900.head",
+   "author": "Benham",
+   "work": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "source": "benham-1900",
+   "line": "head",
+   "status": "anchored",
+   "measure": {
+    "kind": "axis",
+    "line": "head",
+    "from": "mount.jupiter",
+    "to": "percussion",
+    "project": "palm_axis"
+   },
+   "origin": null,
+   "anchors": [
+    {
+     "ref": "axis@0",
+     "age": 6,
+     "basis": "figure",
+     "tolerance": 2,
+     "note": "Fig. 20 prints 6 at the axis's Jupiter end; the text names no age for the start."
+    },
+    {
+     "ref": "axis@0.1",
+     "age": 12,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.2",
+     "age": 18,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.3",
+     "age": 24,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.4",
+     "age": 30,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.5",
+     "age": 36,
+     "basis": "text",
+     "tolerance": 1,
+     "note": "'the same rules must be observed ... as to the Life line' - the centre is 36; fig. 20 draws it at 0.52."
+    },
+    {
+     "ref": "axis@0.625",
+     "age": 43,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.75",
+     "age": 51,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.875",
+     "age": 60,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@1",
+     "age": 70,
+     "basis": "text",
+     "tolerance": 1
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "open",
+    "after": "none"
+   },
+   "notes": "Not measured along the line itself: because head and heart lines vary in course, Benham lays the periods on an imaginary straight line from the middle of the Mount of Jupiter across to the percussion and reads a feature by the period it lies under (projection along the palm axis). Read from the Jupiter side. Fig. 20's ticks sit at 0, 0.11, 0.20, 0.30, 0.42, 0.52, 0.61, 0.74, 0.86 and 1 of the axis, within 0.03 of the idealised positions used here. A head line that starts radial of the Jupiter centre projects before the first tick: those positions read as 'before 6'.",
+   "citation": {
+    "text": "Benham — The Laws of Scientific Hand Reading",
+    "loc": "Part II Ch.IV, p.383, fig. 20",
+    "year": 1900,
+    "source": "benham-1900",
+    "pages": [
+     "383"
+    ],
+    "quote": "They begin under the finger of Jupiter and their course is across the hand. As these two lines have many variations in the direction they pursue, I have found it best to use an imaginary line beginning in the middle of the Mount of Jupiter and running across the hand to the percussion as a guide to measure by. On this imaginary line (20) I lay out the periods of 6, 12, 18, 24, 30, 36, 43, 51, 60, and 70, and when anything is to be read on the Heart or Head line, note under which of these periods it lies, and this is found to be the proper age.",
+    "quoteEdits": 0
+   },
+   "figures": [
+    {
+     "label": "fig. 20",
+     "page": "384",
+     "n": 414
+    }
+   ],
+   "canonical": {
+    "u": [
+     0.0,
+     0.1,
+     0.2,
+     0.3,
+     0.4,
+     0.5,
+     0.625,
+     0.75,
+     0.875,
+     1.0
+    ],
+    "points": [
+     [
+      0.27,
+      0.24
+     ],
+     [
+      0.339,
+      0.242
+     ],
+     [
+      0.408,
+      0.244
+     ],
+     [
+      0.477,
+      0.246
+     ],
+     [
+      0.546,
+      0.248
+     ],
+     [
+      0.615,
+      0.25
+     ],
+     [
+      0.7012,
+      0.2525
+     ],
+     [
+      0.7875,
+      0.255
+     ],
+     [
+      0.8738,
+      0.2575
+     ],
+     [
+      0.96,
+      0.26
+     ]
+    ]
+   },
+   "direction": "from the Jupiter side across to the percussion",
+   "directionKey": "radial_to_ulnar"
+  },
+  {
+   "id": "S.benham-1900.heart",
+   "author": "Benham",
+   "work": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "source": "benham-1900",
+   "line": "heart",
+   "status": "anchored",
+   "measure": {
+    "kind": "axis",
+    "line": "heart",
+    "from": "mount.jupiter",
+    "to": "percussion",
+    "project": "palm_axis"
+   },
+   "origin": null,
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "open",
+    "after": "none"
+   },
+   "notes": "The same imaginary Jupiter-to-percussion axis and the same periods as the head line (one passage covers both). Benham reads the heart line from the Jupiter side ('They begin under the finger of Jupiter'), the opposite direction to Dale's line of Fortune.",
+   "citation": {
+    "text": "Benham — The Laws of Scientific Hand Reading",
+    "loc": "Part II Ch.IV, p.383, fig. 20",
+    "year": 1900,
+    "source": "benham-1900",
+    "pages": [
+     "383"
+    ],
+    "quote": "Reading periods of time on the lines of the Heart and Head is often useful in order to see whether events marked on them fit into conditions seen on the Life line. To estimate time on these lines the same rules must be observed, and the same remarks and reasoning apply to these lines as to the Life line.",
+    "quoteEdits": 0
+   },
+   "figures": [
+    {
+     "label": "fig. 20",
+     "page": "384",
+     "n": 414
+    }
+   ],
+   "anchors": [
+    {
+     "ref": "axis@0",
+     "age": 6,
+     "basis": "figure",
+     "tolerance": 2,
+     "note": "Fig. 20 prints 6 at the axis's Jupiter end; the text names no age for the start."
+    },
+    {
+     "ref": "axis@0.1",
+     "age": 12,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.2",
+     "age": 18,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.3",
+     "age": 24,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.4",
+     "age": 30,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.5",
+     "age": 36,
+     "basis": "text",
+     "tolerance": 1,
+     "note": "'the same rules must be observed ... as to the Life line' - the centre is 36; fig. 20 draws it at 0.52."
+    },
+    {
+     "ref": "axis@0.625",
+     "age": 43,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.75",
+     "age": 51,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@0.875",
+     "age": 60,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "axis@1",
+     "age": 70,
+     "basis": "text",
+     "tolerance": 1
+    }
+   ],
+   "canonical": {
+    "u": [
+     0.0,
+     0.1,
+     0.2,
+     0.3,
+     0.4,
+     0.5,
+     0.625,
+     0.75,
+     0.875,
+     1.0
+    ],
+    "points": [
+     [
+      0.27,
+      0.24
+     ],
+     [
+      0.339,
+      0.242
+     ],
+     [
+      0.408,
+      0.244
+     ],
+     [
+      0.477,
+      0.246
+     ],
+     [
+      0.546,
+      0.248
+     ],
+     [
+      0.615,
+      0.25
+     ],
+     [
+      0.7012,
+      0.2525
+     ],
+     [
+      0.7875,
+      0.255
+     ],
+     [
+      0.8738,
+      0.2575
+     ],
+     [
+      0.96,
+      0.26
+     ]
+    ]
+   },
+   "direction": "from the Jupiter side across to the percussion",
+   "directionKey": "radial_to_ulnar"
+  },
+  {
+   "id": "S.benham-1900.fate",
+   "author": "Benham",
+   "work": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "source": "benham-1900",
+   "line": "fate",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "fate",
+    "from": "fate|wrist_crease",
+    "toward": "fate|level:finger_base.middle"
+   },
+   "origin": {
+    "ref": "fate|wrist_crease",
+    "age": 0
+   },
+   "anchors": [
+    {
+     "ref": "fate|wrist_crease",
+     "age": 0,
+     "basis": "text",
+     "tolerance": 0
+    },
+    {
+     "ref": "fate×head",
+     "age": 30,
+     "basis": "text",
+     "tolerance": 0
+    },
+    {
+     "ref": "fate×heart",
+     "age": 45,
+     "basis": "text",
+     "tolerance": 2,
+     "note": "Fig. 21 draws the heart line crossing just above its 43 tick; the text says 45."
+    },
+    {
+     "ref": "fate|level:finger_base.middle",
+     "age": 70,
+     "basis": "text",
+     "tolerance": 0
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "none"
+   },
+   "notes": "Read from the bottom upward in three spans: rascette to head line 0-30, head line to heart line 30-45, heart line to the finger of Saturn 45-70; fig. 21 subdivides each span evenly. Benham warns that the middle span assumes the head and heart lines lie in their normal places; when the quadrangle between them is unusually wide or narrow, use S.benham-1900.fate.whole instead.",
+   "citation": {
+    "text": "Benham — The Laws of Scientific Hand Reading",
+    "loc": "Part II Ch.IV, p.383, fig. 21",
+    "year": 1900,
+    "source": "benham-1900",
+    "pages": [
+     "383"
+    ],
+    "quote": "Age on the line of Saturn is read from the bottom upward (21), the space from the rascette to Head line covering the years from 0 to 30, from line of Head (normally placed) to line of Heart 30 to 45, and from line of Heart to finger of Saturn 45 to 70 years.",
+    "quoteEdits": 1
+   },
+   "figures": [
+    {
+     "label": "fig. 21",
+     "page": "384",
+     "n": 414
+    }
+   ],
+   "canonical": {
+    "u": [
+     0.0,
+     0.6152,
+     0.7469,
+     1.0122
+    ],
+    "points": [
+     [
+      0.5021,
+      0.9701
+     ],
+     [
+      0.4723,
+      0.3556
+     ],
+     [
+      0.4668,
+      0.224
+     ],
+     [
+      0.4555,
+      -0.041
+     ]
+    ]
+   },
+   "direction": "from the wrist end upward",
+   "directionKey": "proximal_to_distal"
+  },
+  {
+   "id": "S.benham-1900.fate.whole",
+   "author": "Benham",
+   "work": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "source": "benham-1900",
+   "line": "fate",
+   "status": "anchored",
+   "when": "The head or heart line is misplaced, so the quadrangle between them on the fate line is unusually wide or narrow. Benham gives no number; B1 must set the threshold (on the canonical hand the head-to-heart gap along the fate line is 0.13 of the palm).",
+   "measure": {
+    "kind": "arc",
+    "line": "fate",
+    "from": "fate|wrist_crease",
+    "toward": "fate|level:finger_base.middle"
+   },
+   "origin": {
+    "ref": "fate|wrist_crease",
+    "age": 0
+   },
+   "anchors": [
+    {
+     "ref": "fate|wrist_crease",
+     "age": 0,
+     "basis": "text",
+     "tolerance": 0
+    },
+    {
+     "ref": "frac(fate|wrist_crease,fate|level:finger_base.middle,0.5)",
+     "age": 36,
+     "basis": "text",
+     "tolerance": 1
+    },
+    {
+     "ref": "frac(fate|wrist_crease,fate|level:finger_base.middle,0.625)",
+     "age": 43,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "frac(fate|wrist_crease,fate|level:finger_base.middle,0.75)",
+     "age": 51,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "frac(fate|wrist_crease,fate|level:finger_base.middle,0.875)",
+     "age": 60,
+     "basis": "figure",
+     "tolerance": 2
+    },
+    {
+     "ref": "fate|level:finger_base.middle",
+     "age": 70,
+     "basis": "text",
+     "tolerance": 0
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "none"
+   },
+   "notes": "The whole line measured 'as with the Life line': 0 at the rascette, 36 at the centre, 70 at the finger of Saturn, the later years at equal quarters of the upper half as on the life line (fig. 19).",
+   "citation": {
+    "text": "Benham — The Laws of Scientific Hand Reading",
+    "loc": "Part II Ch.IV, pp.383, 385",
+    "year": 1900,
+    "source": "benham-1900",
+    "pages": [
+     "383",
+     "385"
+    ],
+    "quote": "If they are misplaced, producing a wide or a narrow quadrangle, do not rely on the space between them as covering the ages from 30 to 45, but at once measure the entire line of Saturn for correct dates.",
+    "quoteEdits": 0
+   },
+   "canonical": {
+    "u": [
+     0.0,
+     0.5061,
+     0.6326,
+     0.7591,
+     0.8856,
+     1.0122
+    ],
+    "points": [
+     [
+      0.5021,
+      0.9701
+     ],
+     [
+      0.4771,
+      0.4647
+     ],
+     [
+      0.4716,
+      0.3383
+     ],
+     [
+      0.4663,
+      0.2119
+     ],
+     [
+      0.4609,
+      0.0854
+     ],
+     [
+      0.4555,
+      -0.041
+     ]
+    ]
+   },
+   "direction": "from the wrist end upward",
+   "directionKey": "proximal_to_distal"
+  },
+  {
+   "id": "S.benham-1900.sun",
+   "author": "Benham",
+   "work": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "source": "benham-1900",
+   "line": "sun",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "sun",
+    "from": "sun|wrist_crease",
+    "toward": "sun|level:finger_base.ring"
+   },
+   "origin": {
+    "ref": "sun|wrist_crease",
+    "age": 0
+   },
+   "anchors": [
+    {
+     "ref": "sun|wrist_crease",
+     "age": 0,
+     "basis": "text",
+     "tolerance": 0
+    },
+    {
+     "ref": "sun×head",
+     "age": 30,
+     "basis": "text",
+     "tolerance": 1
+    },
+    {
+     "ref": "sun×heart",
+     "age": 45,
+     "basis": "text",
+     "tolerance": 2
+    },
+    {
+     "ref": "sun|level:finger_base.ring",
+     "age": 70,
+     "basis": "text",
+     "tolerance": 0
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "none"
+   },
+   "notes": "'The same rules and measurements ... as to the line of Saturn': the Saturn scale laid on the line of Apollo, rascette to the finger of Apollo. A sun line usually starts well above the rascette and often above the head line; it is produced downward to meet both, so its own start is dated by where it begins on that scale.",
+   "citation": {
+    "text": "Benham — The Laws of Scientific Hand Reading",
+    "loc": "Part II Ch.IV, p.385, fig. 22",
+    "year": 1900,
+    "source": "benham-1900",
+    "pages": [
+     "385"
+    ],
+    "quote": "The line of Apollo (22) is read from the bottom upward as is the line of Saturn, and the same rules and measurements apply to it as to the line of Saturn, and also the same methods of arriving at exact dates.",
+    "quoteEdits": 0
+   },
+   "figures": [
+    {
+     "label": "fig. 22",
+     "page": "384",
+     "n": 414
+    }
+   ],
+   "canonical": {
+    "u": [
+     0.0,
+     0.5785,
+     0.7313,
+     0.9746
+    ],
+    "points": [
+     [
+      0.6214,
+      0.977
+     ],
+     [
+      0.6531,
+      0.3994
+     ],
+     [
+      0.6591,
+      0.2467
+     ],
+     [
+      0.6725,
+      0.0038
+     ]
+    ]
+   },
+   "direction": "from the wrist end upward",
+   "directionKey": "proximal_to_distal"
+  },
+  {
+   "id": "S.benham-1900.marriage",
+   "author": "Benham",
+   "work": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "source": "benham-1900",
+   "line": "marriage",
+   "status": "anchored",
+   "role": "position",
+   "measure": {
+    "kind": "axis",
+    "line": "marriage",
+    "from": "heart.end:ulnar",
+    "to": "finger_base.little",
+    "project": "orthogonal",
+    "subject": "marriage.end:ulnar"
+   },
+   "origin": {
+    "ref": "heart.end:ulnar",
+    "age": 0
+   },
+   "anchors": [
+    {
+     "ref": "axis@0",
+     "age": 0,
+     "basis": "text",
+     "tolerance": 2,
+     "note": "'take the Heart line as a lower mark ... subdivided into the average years of life' - Benham's average life runs 0 to 70 (p.382)."
+    },
+    {
+     "ref": "axis@0.5",
+     "age": 36,
+     "basis": "text",
+     "tolerance": 1
+    },
+    {
+     "ref": "axis@1",
+     "age": 70,
+     "basis": "text",
+     "tolerance": 1
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "none"
+   },
+   "notes": "Dates an affection line by where it sits on the Mount of Mercury, between the heart line (lower mark) and the top of the mount (upper mark), with 36 at the middle. Fig. 316's tick labels are illegible in this scan. The upper mark is the base of the little finger, which the app can only estimate (finger_base.little); this scale is the one most sensitive to that estimate.",
+   "citation": {
+    "text": "Benham — The Laws of Scientific Hand Reading",
+    "loc": "Part II Ch.IX, p.523, fig. 316",
+    "year": 1900,
+    "source": "benham-1900",
+    "pages": [
+     "523"
+    ],
+    "quote": "In order to determine the age at which an affection occurs, take the Heart line as a lower mark, and the top of the Mount of Mercury as the upper. This space must be subdivided into the average years of life, bringing the middle of the Mount at thirty-six, and the top at seventy years.",
+    "quoteEdits": 1
+   },
+   "figures": [
+    {
+     "label": "fig. 316",
+     "page": "523",
+     "n": 553
+    }
+   ],
+   "canonical": {
+    "u": [
+     0.0,
+     0.5,
+     1.0
+    ],
+    "points": [
+     [
+      0.9,
+      0.3
+     ],
+     [
+      0.8923,
+      0.2154
+     ],
+     [
+      0.8847,
+      0.1309
+     ]
+    ]
+   },
+   "direction": "up the Mount of Mercury from the heart line",
+   "directionKey": "proximal_to_distal"
+  },
+  {
+   "id": "S.benham-1900.marriage.course",
+   "author": "Benham",
+   "work": "The Laws of Scientific Hand Reading",
+   "year": 1900,
+   "source": "benham-1900",
+   "line": "marriage",
+   "status": "unanchorable",
+   "role": "course",
+   "reason": "Benham's second affection scale divides the line's own length, 36 at the middle and 70 at the end, yet in the next sentences says 'the longer the line of Affection, the longer the affection continues' and reads duration from the length. Laid on each line's own length the two cannot both hold - every line would end at seventy whatever its length - and fig. 317, which might fix a standard length, carries no legible scale. So events along an affection line are dated by where the line sits on the mount (S.benham-1900.marriage), as belonging to the affection that position dates.",
+   "citation": {
+    "text": "Benham — The Laws of Scientific Hand Reading",
+    "loc": "Part II Ch.IX, pp.523-524, fig. 317",
+    "year": 1900,
+    "source": "benham-1900",
+    "pages": [
+     "523",
+     "524"
+    ],
+    "quote": "The scale of measurement for such readings begins with the starting of the line and ends with its termination, the line to be divided in the middle as age thirty-six, and seventy to be recorded at the end.",
+    "quoteEdits": 4
+   }
+  },
+  {
+   "id": "S.cheiro-1916.life",
+   "author": "Cheiro",
+   "work": "Palmistry for All",
+   "year": 1916,
+   "source": "cheiro-1916",
+   "line": "life",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "life",
+    "from": "life.end:distal",
+    "toward": "life|wrist_crease"
+   },
+   "origin": {
+    "ref": "life.end:distal",
+    "age": 0
+   },
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "open"
+   },
+   "notes": "Seven-year periods from the start of the line, laid out on Plate XXVI (7 to 98). The plate's arc touches no landmark but its start, so its ticks are carried onto the canonical hand by registering the plate's life-line start and wrist crease onto the canonical ones (timing/plates.py) and read as arc distance from the line's start in rectified (palm-normalised) units - Cheiro's own instruction in 1897 to scale by the length of the palm. On the canonical hand the plate's 98 falls about 0.07 beyond the wrist crease.",
+   "citation": {
+    "text": "Cheiro — Palmistry for All",
+    "loc": "Ch.XIX, p.112, Plate XXVI (p.113)",
+    "year": 1916,
+    "source": "cheiro-1916",
+    "pages": [
+     "112"
+    ],
+    "quote": "The most correct way in which to tell time by the hand is to divide the Line of Life into periods of seven years, and also the Line of Fate, following the accompanying design (Plate XXVI.).",
+    "quoteEdits": 0
+   },
+   "figures": [
+    {
+     "label": "Plate XXVI",
+     "page": "113",
+     "n": 152
+    }
+   ],
+   "anchors": [
+    {
+     "ref": "life.end:distal",
+     "age": 0,
+     "basis": "plate",
+     "tolerance": 0,
+     "note": "The line's start; Cheiro's periods count from it."
+    },
+    {
+     "ref": "arc(life.end:distal,0.0736)",
+     "age": 7,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1449,
+      2262
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.1292)",
+     "age": 14,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1380,
+      2287
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.1933)",
+     "age": 21,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1312,
+      2332
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.2517)",
+     "age": 28,
+     "basis": "plate",
+     "tolerance": 1.1,
+     "platePx": [
+      1257,
+      2378
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.2975)",
+     "age": 35,
+     "basis": "plate",
+     "tolerance": 4,
+     "platePx": [
+      1222,
+      2418
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.3454)",
+     "age": 42,
+     "basis": "plate",
+     "tolerance": 4,
+     "platePx": [
+      1178,
+      2462
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.3873)",
+     "age": 49,
+     "basis": "plate",
+     "tolerance": 4,
+     "platePx": [
+      1160,
+      2512
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.4617)",
+     "age": 56,
+     "basis": "plate",
+     "tolerance": 1.2,
+     "platePx": [
+      1132,
+      2601
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.5212)",
+     "age": 63,
+     "basis": "plate",
+     "tolerance": 1.4,
+     "platePx": [
+      1130,
+      2671
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.5666)",
+     "age": 70,
+     "basis": "plate",
+     "tolerance": 1.4,
+     "platePx": [
+      1135,
+      2730
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.6464)",
+     "age": 77,
+     "basis": "plate",
+     "tolerance": 1.4,
+     "platePx": [
+      1157,
+      2824
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.7031)",
+     "age": 84,
+     "basis": "plate",
+     "tolerance": 1.6,
+     "platePx": [
+      1188,
+      2886
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.7590)",
+     "age": 91,
+     "basis": "plate",
+     "tolerance": 1.6,
+     "platePx": [
+      1225,
+      2938
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.8247)",
+     "age": 98,
+     "basis": "plate",
+     "tolerance": 1.6,
+     "platePx": [
+      1282,
+      2974
+     ]
+    }
+   ],
+   "plate": {
+    "id": "cheiro-1916.xxvi",
+    "label": "Plate XXVI",
+    "caption": "TIME AND DATES OF PRINCIPAL EVENTS.",
+    "leaf": 153,
+    "n": 152,
+    "registration": {
+     "points": [
+      "life.end:distal",
+      "fate|wrist_crease"
+     ],
+     "mirror": true,
+     "scale": 0.000705383067333002,
+     "rotationDeg": 8.66,
+     "sensitivity": {
+      "fourPointScale": 0.0006954695936639614,
+      "scaleRatio": 0.9859,
+      "fourPointResiduals": {
+       "fate|wrist_crease": 0.0189,
+       "fate×head": 0.0305,
+       "fate×heart": 0.0181,
+       "life.end:distal": 0.0326
+      }
+     },
+     "lifeArcCanonical": 0.9509
+    }
+   },
+   "canonical": {
+    "u": [
+     0.0,
+     0.0736,
+     0.1292,
+     0.1933,
+     0.2517,
+     0.2975,
+     0.3454,
+     0.3873,
+     0.4617,
+     0.5212,
+     0.5666,
+     0.6464,
+     0.7031,
+     0.759,
+     0.8247
+    ],
+    "points": [
+     [
+      0.22,
+      0.26
+     ],
+     [
+      0.26,
+      0.3217
+     ],
+     [
+      0.2896,
+      0.3689
+     ],
+     [
+      0.3206,
+      0.4249
+     ],
+     [
+      0.3454,
+      0.4778
+     ],
+     [
+      0.3629,
+      0.5201
+     ],
+     [
+      0.3793,
+      0.5651
+     ],
+     [
+      0.3921,
+      0.605
+     ],
+     [
+      0.4111,
+      0.6769
+     ],
+     [
+      0.4228,
+      0.7353
+     ],
+     [
+      0.4291,
+      0.7802
+     ],
+     [
+      0.4359,
+      0.8597
+     ],
+     [
+      0.4397,
+      0.9163
+     ],
+     [
+      0.444,
+      0.972
+     ],
+     [
+      0.4491,
+      1.0375
+     ]
+    ]
+   },
+   "direction": "from the upper (finger-side) end downward",
+   "directionKey": "distal_to_proximal"
+  },
+  {
+   "id": "S.cheiro-1916.head",
+   "author": "Cheiro",
+   "work": "Palmistry for All",
+   "year": 1916,
+   "source": "cheiro-1916",
+   "line": "head",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "head",
+    "from": "head.end:radial",
+    "toward": "head.end:ulnar"
+   },
+   "origin": {
+    "ref": "head.end:radial",
+    "age": 0
+   },
+   "anchors": [
+    {
+     "ref": "head.end:radial",
+     "age": 0,
+     "basis": "text",
+     "tolerance": 0
+    },
+    {
+     "ref": "head|under:web.index_middle",
+     "age": 21,
+     "basis": "text",
+     "tolerance": 0,
+     "note": "End of the section under the first finger."
+    },
+    {
+     "ref": "head|under:web.middle_ring",
+     "age": 45.5,
+     "range": [
+      42,
+      49
+     ],
+     "basis": "text",
+     "tolerance": 3.5,
+     "note": "The middle-finger section ends at 42 and the third-finger section begins at 49: the boundary carries the whole 42-49 band."
+    },
+    {
+     "ref": "head|under:web.ring_little",
+     "age": 66.5,
+     "range": [
+      63,
+      70
+     ],
+     "basis": "text",
+     "tolerance": 3.5,
+     "note": "The third-finger section ends at 63 and the fourth begins at 70."
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "open"
+   },
+   "notes": "The head line read from its start on the thumb side, in sections under the fingers: first finger 0-21, second 21-42, third 49-63, fourth 70 onward. The finger boundaries are measured as the palm-axis drops through the midpoints of adjacent knuckles. The text leaves 42-49 and 63-70 between sections; those bands are kept as ranges on the boundaries rather than resolved.",
+   "citation": {
+    "text": "Cheiro — Palmistry for All",
+    "loc": "Ch.II, pp.25-26; Ch.XIX, p.112",
+    "year": 1916,
+    "source": "cheiro-1916",
+    "pages": [
+     "25",
+     "26"
+    ],
+    "quote": "Under the first finger the period of the life indicated is the first 21 years, the second period contains another section of the three 7's, and lasts until 42 years of age; the third period of 7's which will be found under the third finger indicates the section from 49 to 63, and the fourth section which takes in the remainder of the hand, under the fourth finger, stands for the period from 70 up to the end.",
+    "quoteEdits": 0
+   },
+   "canonical": {
+    "u": [
+     0.0,
+     0.1325,
+     0.3386,
+     0.5482
+    ],
+    "points": [
+     [
+      0.2,
+      0.32
+     ],
+     [
+      0.3318,
+      0.3329
+     ],
+     [
+      0.5348,
+      0.3688
+     ],
+     [
+      0.7364,
+      0.4257
+     ]
+    ]
+   },
+   "direction": "from the thumb side toward the percussion",
+   "directionKey": "radial_to_ulnar"
+  },
+  {
+   "id": "S.cheiro-1916.heart",
+   "author": "Cheiro",
+   "work": "Palmistry for All",
+   "year": 1916,
+   "source": "cheiro-1916",
+   "line": "heart",
+   "status": "none",
+   "reason": "Palmistry for All gives no dating for the heart line: Ch.XIX names the life, fate and head lines only, and the heart-line chapter (Ch.VII) attaches no age or date to any position.",
+   "searched": [
+    "date",
+    "age",
+    "period",
+    "years",
+    "early in life",
+    "late in life"
+   ]
+  },
+  {
+   "id": "S.cheiro-1916.fate",
+   "author": "Cheiro",
+   "work": "Palmistry for All",
+   "year": 1916,
+   "source": "cheiro-1916",
+   "line": "fate",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "fate",
+    "from": "fate|wrist_crease",
+    "toward": "fate|level:finger_base.middle"
+   },
+   "origin": null,
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "open",
+    "after": "open"
+   },
+   "notes": "Plate XXVI prints 21 to 91 up the fate line: 35 where the head line crosses it, 56 where the heart line crosses it; 21, 28, 42 and 49 are placed between those crossings and the wrist crease as the plate draws them. No age is printed below 21 (read as 'before 21') or at the wrist crease itself, so the scale has no stated origin. The ages above the heart line are printed as a stack of numerals and carry ±5 years.",
+   "citation": {
+    "text": "Cheiro — Palmistry for All",
+    "loc": "Ch.XIX, p.112, Plate XXVI (p.113)",
+    "year": 1916,
+    "source": "cheiro-1916",
+    "pages": [
+     "112"
+    ],
+    "quote": "The most correct way in which to tell time by the hand is to divide the Line of Life into periods of seven years, and also the Line of Fate, following the accompanying design (Plate XXVI.).",
+    "quoteEdits": 0
+   },
+   "figures": [
+    {
+     "label": "Plate XXVI",
+     "page": "113",
+     "n": 152
+    }
+   ],
+   "anchors": [
+    {
+     "ref": "frac(fate|wrist_crease,fate×head,0.360)",
+     "age": 21,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1021,
+      2852
+     ]
+    },
+    {
+     "ref": "frac(fate|wrist_crease,fate×head,0.726)",
+     "age": 28,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1058,
+      2552
+     ]
+    },
+    {
+     "ref": "fate×head",
+     "age": 35,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1091,
+      2328
+     ]
+    },
+    {
+     "ref": "frac(fate×head,fate×heart,0.361)",
+     "age": 42,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1112,
+      2245
+     ]
+    },
+    {
+     "ref": "frac(fate×head,fate×heart,0.720)",
+     "age": 49,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1128,
+      2162
+     ]
+    },
+    {
+     "ref": "fate×heart",
+     "age": 56,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1131,
+      2097
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.172)",
+     "age": 63,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1142,
+      2042
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.343)",
+     "age": 70,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1152,
+      1987
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.530)",
+     "age": 77,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1161,
+      1927
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.700)",
+     "age": 84,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1168,
+      1872
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.886)",
+     "age": 91,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1175,
+      1812
+     ]
+    }
+   ],
+   "plate": {
+    "id": "cheiro-1916.xxvi",
+    "label": "Plate XXVI",
+    "caption": "TIME AND DATES OF PRINCIPAL EVENTS.",
+    "leaf": 153,
+    "n": 152,
+    "registration": null
+   },
+   "canonical": {
+    "u": [
+     0.2215,
+     0.4466,
+     0.6152,
+     0.6628,
+     0.7101,
+     0.7469,
+     0.7926,
+     0.8379,
+     0.8875,
+     0.9326,
+     0.9819
+    ],
+    "points": [
+     [
+      0.4908,
+      0.7489
+     ],
+     [
+      0.4801,
+      0.524
+     ],
+     [
+      0.4723,
+      0.3556
+     ],
+     [
+      0.4703,
+      0.3081
+     ],
+     [
+      0.4683,
+      0.2609
+     ],
+     [
+      0.4668,
+      0.224
+     ],
+     [
+      0.4648,
+      0.1784
+     ],
+     [
+      0.4629,
+      0.1331
+     ],
+     [
+      0.4608,
+      0.0836
+     ],
+     [
+      0.4589,
+      0.0385
+     ],
+     [
+      0.4568,
+      -0.0108
+     ]
+    ]
+   },
+   "direction": "from the wrist end upward",
+   "directionKey": "proximal_to_distal"
+  },
+  {
+   "id": "S.cheiro-1916.sun",
+   "author": "Cheiro",
+   "work": "Palmistry for All",
+   "year": 1916,
+   "source": "cheiro-1916",
+   "line": "sun",
+   "status": "unanchorable",
+   "reason": "Cheiro dates the sun line only by where it rises, in words: from the heart line 'late in life', only on its own mount 'so late in life as to make it hardly worth having'. No age is attached to any measurable position, and Ch.XIX gives the sun line no scale; events on it are dated from the life or fate line.",
+   "citation": {
+    "text": "Cheiro — Palmistry for All",
+    "loc": "Ch.VI, pp.62-64",
+    "year": 1916,
+    "source": "cheiro-1916",
+    "pages": [
+     "62",
+     "63"
+    ],
+    "quote": "From whatever date in the hand the Line of Sun appears, things become brighter, more prosperous and important.",
+    "quoteEdits": 0
+   }
+  },
+  {
+   "id": "S.cheiro-1916.marriage",
+   "author": "Cheiro",
+   "work": "Palmistry for All",
+   "year": 1916,
+   "source": "cheiro-1916",
+   "line": "marriage",
+   "status": "unanchorable",
+   "reason": "The only positional dating is 'lying close to the line of Heart ... early in life', with no age; Cheiro defers to the fate line for the date ('the date of marriage may be more accurately predicted by the place on the Fate Line where the Influence Line joins it', p.77). His 1897 book gives the years (S.cheiro-1897.marriage).",
+   "citation": {
+    "text": "Cheiro — Palmistry for All",
+    "loc": "Ch.VIII, p.73",
+    "year": 1916,
+    "source": "cheiro-1916",
+    "pages": [
+     "73"
+    ],
+    "quote": "When the deep line is found lying close to the line of Heart, the marriage will take place early in life, but the other marks I am going to explain later will give more accurate dates as to when the event will occur.",
+    "quoteEdits": 0
+   }
+  },
+  {
+   "id": "S.cheiro-1897.life",
+   "author": "Cheiro",
+   "work": "Cheiro's Language of the Hand",
+   "year": 1897,
+   "source": "cheiro-1897",
+   "line": "life",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "life",
+    "from": "life.end:distal",
+    "toward": "life|wrist_crease"
+   },
+   "origin": {
+    "ref": "life.end:distal",
+    "age": 0
+   },
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "open"
+   },
+   "notes": "The system of seven: Plate XXIII divides the life line with rays fanned from a point on the Mount of Venus, labelled 21 to 98 (nothing printed below 21; the line's start is 0). The ticks touch no landmark but the start, so they are carried onto the canonical hand by registering the plate's life-line start and wrist crease (timing/plates.py) and read as arc distance from the start in palm-normalised units, which is Cheiro's instruction to 'reduce or increase his scale in accordance with the length of the palm'. The plate's 98 falls at the canonical wrist crease.",
+   "citation": {
+    "text": "Cheiro — Language of the Hand",
+    "loc": "Part II Ch.XXVI, pp.142-143, Plate XXIII",
+    "year": 1897,
+    "source": "cheiro-1897",
+    "pages": [
+     "143"
+    ],
+    "quote": "Every line on the hand can be divided into sections giving dates with more or less accuracy. The most important lines, however, and those usually consulted in reference to dates, are those of life and fate.",
+    "quoteEdits": 0
+   },
+   "figures": [
+    {
+     "label": "Plate XXIII",
+     "page": "",
+     "n": 210
+    }
+   ],
+   "anchors": [
+    {
+     "ref": "life.end:distal",
+     "age": 0,
+     "basis": "plate",
+     "tolerance": 0,
+     "note": "The line's start; Cheiro's periods count from it."
+    },
+    {
+     "ref": "arc(life.end:distal,0.2168)",
+     "age": 21,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1012,
+      1515
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.2818)",
+     "age": 28,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1053,
+      1590
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.3283)",
+     "age": 35,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1072,
+      1648
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.3853)",
+     "age": 42,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1085,
+      1722
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.4430)",
+     "age": 49,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1085,
+      1798
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.5104)",
+     "age": 56,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1068,
+      1885
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.5855)",
+     "age": 63,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1027,
+      1975
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.6323)",
+     "age": 70,
+     "basis": "plate",
+     "tolerance": 1.1,
+     "platePx": [
+      985,
+      2020
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.6660)",
+     "age": 77,
+     "basis": "plate",
+     "tolerance": 1.1,
+     "platePx": [
+      947,
+      2043
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.6955)",
+     "age": 84,
+     "basis": "plate",
+     "tolerance": 1.2,
+     "platePx": [
+      910,
+      2055
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.7251)",
+     "age": 91,
+     "basis": "plate",
+     "tolerance": 1.2,
+     "platePx": [
+      872,
+      2064
+     ]
+    },
+    {
+     "ref": "arc(life.end:distal,0.7553)",
+     "age": 98,
+     "basis": "plate",
+     "tolerance": 1.2,
+     "platePx": [
+      833,
+      2072
+     ]
+    }
+   ],
+   "plate": {
+    "id": "cheiro-1897.xxiii",
+    "label": "Plate XXIII",
+    "caption": "TIME—THE SYSTEM OF SEVEN.",
+    "leaf": 211,
+    "n": 210,
+    "registration": {
+     "points": [
+      "life.end:distal",
+      "fate|wrist_crease"
+     ],
+     "mirror": false,
+     "scale": 0.0007584962466287215,
+     "rotationDeg": 0.19,
+     "sensitivity": {
+      "fourPointScale": 0.0007609113894385855,
+      "scaleRatio": 1.0032,
+      "fourPointResiduals": {
+       "fate|wrist_crease": 0.0326,
+       "fate×head": 0.0696,
+       "fate×heart": 0.0208,
+       "life.end:distal": 0.0374
+      }
+     },
+     "lifeArcCanonical": 0.7715
+    }
+   },
+   "canonical": {
+    "u": [
+     0.0,
+     0.2168,
+     0.2818,
+     0.3283,
+     0.3853,
+     0.443,
+     0.5104,
+     0.5855,
+     0.6323,
+     0.666,
+     0.6955,
+     0.7251,
+     0.7553
+    ],
+    "points": [
+     [
+      0.22,
+      0.26
+     ],
+     [
+      0.3309,
+      0.4461
+     ],
+     [
+      0.3571,
+      0.5055
+     ],
+     [
+      0.3737,
+      0.549
+     ],
+     [
+      0.3916,
+      0.6031
+     ],
+     [
+      0.4068,
+      0.6587
+     ],
+     [
+      0.4209,
+      0.7246
+     ],
+     [
+      0.4311,
+      0.799
+     ],
+     [
+      0.4349,
+      0.8456
+     ],
+     [
+      0.4372,
+      0.8793
+     ],
+     [
+      0.4391,
+      0.9087
+     ],
+     [
+      0.4414,
+      0.9382
+     ],
+     [
+      0.4438,
+      0.9683
+     ]
+    ]
+   },
+   "direction": "from the upper (finger-side) end downward",
+   "directionKey": "distal_to_proximal"
+  },
+  {
+   "id": "S.cheiro-1897.head",
+   "author": "Cheiro",
+   "work": "Cheiro's Language of the Hand",
+   "year": 1897,
+   "source": "cheiro-1897",
+   "line": "head",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "head",
+    "from": "head.end:radial",
+    "toward": "head.end:ulnar"
+   },
+   "origin": null,
+   "anchors": [
+    {
+     "ref": "head|under:lm.middle_mcp",
+     "age": 25,
+     "basis": "text",
+     "tolerance": 2,
+     "note": "'under Saturn ... before he is twenty-five'"
+    },
+    {
+     "ref": "head|under:web.middle_ring",
+     "age": 35,
+     "basis": "text",
+     "tolerance": 2,
+     "note": "'between Saturn and the Sun, before thirty-five'"
+    },
+    {
+     "ref": "head|under:lm.ring_mcp",
+     "age": 45,
+     "basis": "text",
+     "tolerance": 2,
+     "note": "'under the Mount of the Sun, before forty-five'"
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "open",
+    "after": "open"
+   },
+   "notes": "The only head-line ages in the 1897 book: where a misplaced head line rises to meet the heart line, the position under the fingers gives the age, read from the thumb side, ten years for each half-finger ('and so on'). Cheiro uses it for one grim prediction, which is NOT extracted as a rule (it forecasts a violent end); the scale is kept because it is how this book dates positions along the head line, and it disagrees with his own 1916 head scale by about ten years at the middle-ring boundary. No origin is stated.",
+   "citation": {
+    "text": "Cheiro — Language of the Hand",
+    "loc": "Part I, 'Insanity as shown by the line of head', p.96",
+    "year": 1897,
+    "source": "cheiro-1897",
+    "pages": [
+     "96"
+    ],
+    "quote": "If the head and heart meet under Saturn, it will occur before he is twenty-five; between Saturn and the Sun, before thirty-five; under the Mount of the Sun, before forty-five; and so on.",
+    "quoteEdits": 1
+   },
+   "canonical": {
+    "u": [
+     0.2357,
+     0.3386,
+     0.4424
+    ],
+    "points": [
+     [
+      0.4339,
+      0.3485
+     ],
+     [
+      0.5348,
+      0.3688
+     ],
+     [
+      0.6354,
+      0.3943
+     ]
+    ]
+   },
+   "direction": "from the thumb side toward the percussion",
+   "directionKey": "radial_to_ulnar"
+  },
+  {
+   "id": "S.cheiro-1897.heart",
+   "author": "Cheiro",
+   "work": "Cheiro's Language of the Hand",
+   "year": 1897,
+   "source": "cheiro-1897",
+   "line": "heart",
+   "status": "unanchorable",
+   "reason": "The book says every line can be dated but gives the heart line no scale and attaches no age to any position on it; the time chapter and Plate XXIII cover the life and fate lines only.",
+   "citation": {
+    "text": "Cheiro — Language of the Hand",
+    "loc": "Part II Ch.XXVI, p.143",
+    "year": 1897,
+    "source": "cheiro-1897",
+    "pages": [
+     "143"
+    ],
+    "quote": "Every line on the hand can be divided into sections giving dates with more or less accuracy.",
+    "quoteEdits": 0
+   }
+  },
+  {
+   "id": "S.cheiro-1897.fate",
+   "author": "Cheiro",
+   "work": "Cheiro's Language of the Hand",
+   "year": 1897,
+   "source": "cheiro-1897",
+   "line": "fate",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "fate",
+    "from": "fate|wrist_crease",
+    "toward": "fate|level:finger_base.middle"
+   },
+   "origin": null,
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "open",
+    "after": "open"
+   },
+   "notes": "The text fixes three great divisions, 21, 35 and 49; Plate XXIII puts 35 on the head line (a dot at the crossing) and 56 on the heart line, and every other age between the drawn landmarks. Nothing is printed below 21 or at the wrist crease, so no origin is stated. The 1916 plate agrees at 35 and 56 and places 21 higher (0.36 of the wrist-to-head span against 0.27 here).",
+   "citation": {
+    "text": "Cheiro — Language of the Hand",
+    "loc": "Part II Ch.XXVI, p.143, Plate XXIII",
+    "year": 1897,
+    "source": "cheiro-1897",
+    "pages": [
+     "143"
+    ],
+    "quote": "In Plate XXIII. it will be noticed that I have divided the line of fate into three great divisions, namely, twenty-one, thirty-five, and forty-nine, and if the student will keep this in mind he will more easily fill in the subdivisions on the human hand itself.",
+    "quoteEdits": 0
+   },
+   "figures": [
+    {
+     "label": "Plate XXIII",
+     "page": "",
+     "n": 210
+    }
+   ],
+   "anchors": [
+    {
+     "ref": "frac(fate|wrist_crease,fate×head,0.274)",
+     "age": 21,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1152,
+      2118
+     ]
+    },
+    {
+     "ref": "frac(fate|wrist_crease,fate×head,0.717)",
+     "age": 28,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1155,
+      1818
+     ]
+    },
+    {
+     "ref": "fate×head",
+     "age": 35,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1158,
+      1627
+     ]
+    },
+    {
+     "ref": "frac(fate×head,fate×heart,0.342)",
+     "age": 42,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1160,
+      1530
+     ]
+    },
+    {
+     "ref": "frac(fate×head,fate×heart,0.729)",
+     "age": 49,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1161,
+      1420
+     ]
+    },
+    {
+     "ref": "fate×heart",
+     "age": 56,
+     "basis": "plate",
+     "tolerance": 1.0,
+     "platePx": [
+      1162,
+      1343
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.446)",
+     "age": 63,
+     "basis": "plate",
+     "tolerance": 1.2,
+     "platePx": [
+      1163,
+      1240
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.619)",
+     "age": 70,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1163,
+      1200
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.727)",
+     "age": 77,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1163,
+      1175
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.836)",
+     "age": 84,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1163,
+      1150
+     ]
+    },
+    {
+     "ref": "frac(fate×heart,fate|level:finger_base.middle,0.944)",
+     "age": 91,
+     "basis": "plate",
+     "tolerance": 5,
+     "platePx": [
+      1163,
+      1125
+     ]
+    }
+   ],
+   "plate": {
+    "id": "cheiro-1897.xxiii",
+    "label": "Plate XXIII",
+    "caption": "TIME—THE SYSTEM OF SEVEN.",
+    "leaf": 211,
+    "n": 210,
+    "registration": null
+   },
+   "canonical": {
+    "u": [
+     0.1686,
+     0.4411,
+     0.6152,
+     0.6603,
+     0.7112,
+     0.7469,
+     0.8652,
+     0.9111,
+     0.9398,
+     0.9687,
+     0.9973
+    ],
+    "points": [
+     [
+      0.4933,
+      0.8018
+     ],
+     [
+      0.4804,
+      0.5296
+     ],
+     [
+      0.4723,
+      0.3556
+     ],
+     [
+      0.4705,
+      0.3106
+     ],
+     [
+      0.4683,
+      0.2597
+     ],
+     [
+      0.4668,
+      0.224
+     ],
+     [
+      0.4617,
+      0.1058
+     ],
+     [
+      0.4598,
+      0.06
+     ],
+     [
+      0.4586,
+      0.0314
+     ],
+     [
+      0.4574,
+      0.0025
+     ],
+     [
+      0.4561,
+      -0.0261
+     ]
+    ]
+   },
+   "direction": "from the wrist end upward",
+   "directionKey": "proximal_to_distal"
+  },
+  {
+   "id": "S.cheiro-1897.sun",
+   "author": "Cheiro",
+   "work": "Cheiro's Language of the Hand",
+   "year": 1897,
+   "source": "cheiro-1897",
+   "line": "sun",
+   "status": "unanchorable",
+   "reason": "Only in words, by where the line rises: from the line of fate it 'gives more distinction from whatever date it is marked', from the head line success comes 'not until the second half of life is reached', from the heart line distinction comes 'at that late date in life'. No age is attached to any measurable position on the sun line, and the time chapter gives it no scale.",
+   "citation": {
+    "text": "Cheiro — Language of the Hand",
+    "loc": "Part II, 'The line of sun', p.107",
+    "year": 1897,
+    "source": "cheiro-1897",
+    "pages": [
+     "107"
+    ],
+    "quote": "Rising from the line of heart it merely denotes a great taste for art and artistic things, and looking at it from the purely practical standpoint it denotes more distinction and influence in the world at that late date in life.",
+    "quoteEdits": 1
+   }
+  },
+  {
+   "id": "S.cheiro-1897.marriage",
+   "author": "Cheiro",
+   "work": "Cheiro's Language of the Hand",
+   "year": 1897,
+   "source": "cheiro-1897",
+   "line": "marriage",
+   "status": "anchored",
+   "role": "position",
+   "measure": {
+    "kind": "axis",
+    "line": "marriage",
+    "from": "heart.end:ulnar",
+    "to": "finger_base.little",
+    "project": "orthogonal",
+    "subject": "marriage.end:ulnar"
+   },
+   "origin": null,
+   "anchors": [
+    {
+     "ref": "axis@0",
+     "age": 17.5,
+     "range": [
+      14,
+      21
+     ],
+     "basis": "text",
+     "tolerance": 3.5,
+     "note": "'lying close to the line of heart ... about fourteen to twenty-one'"
+    },
+    {
+     "ref": "axis@0.5",
+     "age": 24.5,
+     "range": [
+      21,
+      28
+     ],
+     "basis": "text",
+     "tolerance": 3.5,
+     "note": "'near the center of the mount, about twenty-one to twenty-eight'"
+    },
+    {
+     "ref": "axis@0.75",
+     "age": 31.5,
+     "range": [
+      28,
+      35
+     ],
+     "basis": "text",
+     "tolerance": 3.5,
+     "note": "'three quarters up the mount, twenty-eight to thirty-five'"
+    }
+   ],
+   "interpolation": "piecewise",
+   "extrapolate": {
+    "before": "none",
+    "after": "open"
+   },
+   "notes": "Positions on the Mount of Mercury from the heart line up to the top of the mount (the base of the little finger), each with a seven-year band. 'And so on' past three quarters is left open. Cheiro adds that the fate or life line gives 'almost the exact date'.",
+   "citation": {
+    "text": "Cheiro — Language of the Hand",
+    "loc": "Part I, 'The line of marriage', p.115",
+    "year": 1897,
+    "source": "cheiro-1897",
+    "pages": [
+     "115"
+    ],
+    "quote": "From the position of the marriage-line on the Mount of Mercury a very fair idea of the age at the time of marriage may also be obtained. When the important line is found lying close to the line of heart, the union will be early, about fourteen to twenty-one; near the center of the mount, about twenty-one to twenty-eight; three quarters up the mount, twenty-eight to thirty-five; and so on.",
+    "quoteEdits": 1
+   },
+   "canonical": {
+    "u": [
+     0.0,
+     0.5,
+     0.75
+    ],
+    "points": [
+     [
+      0.9,
+      0.3
+     ],
+     [
+      0.8923,
+      0.2154
+     ],
+     [
+      0.8885,
+      0.1732
+     ]
+    ]
+   },
+   "direction": "up the Mount of Mercury from the heart line",
+   "directionKey": "proximal_to_distal"
+  },
+  {
+   "id": "S.dale-1895.life",
+   "author": "Dale",
+   "work": "Indian Palmistry",
+   "year": 1895,
+   "source": "dale-1895",
+   "line": "life",
+   "status": "anchored",
+   "measure": {
+    "kind": "arc",
+    "line": "life",
+    "from": "life.end:proximal",
+    "toward": "life.end:distal"
+   },
+   "origin": {
+    "ref": "life.end:proximal",
+    "age": 0
+   },
+   "anchors": [
+    {
+     "ref": "life.end:proximal",
+     "age": 0,
+     "basis": "text",
+     "tolerance": 0
+    },
+    {
+     "ref": "life.end:distal",
+     "age": 70,
+     "basis": "text",
+     "tolerance": 0
+    }
+   ],
+   "interpolation": "linear",
+   "extrapolate": {
+    "before": "none",
+    "after": "none"
+   },
+   "notes": "Read from the WRIST UP - the opposite direction to Cheiro and Benham: marks in the lower part of the hand fall in early age, towards the hollow in middle age, and towards the Liver line (Dale's 'natural mean', the modern head line, which the life line meets at its upper end) in declining age. The line itself is divided into seventy equal parts, so the scale is relative to the line's own length.",
+   "citation": {
+    "text": "Dale — Indian Palmistry",
+    "loc": "Sec. The Line of Life — Time of Events, pp.40, 43",
+    "year": 1895,
+    "source": "dale-1895",
+    "pages": [
+     "40",
+     "43"
+    ],
+    "quote": "Should they be found in the lower part of the hand the good or bad will be in early age. In the middle of the hand towards the hollow, in the middle age. If towards the Liver line, in declining age. Danger of death is threatened if this line be broken. To find the exact age this line may be divided into seventy parts, each part counting one year of life.",
+    "quoteEdits": 0
+   },
+   "canonical": {
+    "u": [
+     -0.0,
+     0.7068
+    ],
+    "points": [
+     [
+      0.44,
+      0.92
+     ],
+     [
+      0.22,
+      0.26
+     ]
+    ]
+   },
+   "direction": "from the wrist end upward",
+   "directionKey": "proximal_to_distal"
+  },
+  {
+   "id": "S.dale-1895.head",
+   "author": "Dale",
+   "work": "Indian Palmistry",
+   "year": 1895,
+   "source": "dale-1895",
+   "line": "head",
+   "status": "unanchorable",
+   "reason": "For the Liver line (Dale's head line) the book only implies that its end belongs to old age ('cut at the end ... poverty in old age'); no scale and no age at any position.",
+   "citation": {
+    "text": "Dale — Indian Palmistry",
+    "loc": "Sec. The Liver Line, p.43",
+    "year": 1895,
+    "source": "dale-1895",
+    "pages": [
+     "43"
+    ],
+    "quote": "If cut at the end by a small intervening line, it threatens poverty in old age.",
+    "quoteEdits": 0
+   }
+  },
+  {
+   "id": "S.dale-1895.heart",
+   "author": "Dale",
+   "work": "Indian Palmistry",
+   "year": 1895,
+   "source": "dale-1895",
+   "line": "heart",
+   "status": "unanchorable",
+   "reason": "The positions are measurable (under the little finger, under the ring finger, under the middle finger) but the ages are named stages - first age, manhood, old age - not years, so no anchor can be given an age. Read from the percussion toward the index finger, the opposite direction to Benham. Dale's Samudrika section also ties where the heart line ends to a length of life (Apollo: 'scarcely live ten years'; Saturn: 'thirty years'); that is a lifespan claim, not a dating scale, and is excluded.",
+   "citation": {
+    "text": "Dale — Indian Palmistry",
+    "loc": "Sec. The Line of Fortune, p.47",
+    "year": 1895,
+    "source": "dale-1895",
+    "pages": [
+     "47"
+    ],
+    "quote": "Confused little lines in the line of Fortune denote sickness, and if under Mercury, in the first age; under the mount of the Sun in manhood; under the middle finger in old age.",
+    "quoteEdits": 0
+   }
+  },
+  {
+   "id": "S.dale-1895.fate",
+   "author": "Dale",
+   "work": "Indian Palmistry",
+   "year": 1895,
+   "source": "dale-1895",
+   "line": "fate",
+   "status": "none",
+   "reason": "Indian Palmistry gives no dating for the line of Saturn.",
+   "searched": [
+    "date",
+    "age",
+    "years",
+    "period",
+    "time"
+   ]
+  },
+  {
+   "id": "S.dale-1895.sun",
+   "author": "Dale",
+   "work": "Indian Palmistry",
+   "year": 1895,
+   "source": "dale-1895",
+   "line": "sun",
+   "status": "none",
+   "reason": "Indian Palmistry gives no dating for the Via Solis.",
+   "searched": [
+    "date",
+    "age",
+    "years",
+    "period",
+    "time"
+   ]
+  },
+  {
+   "id": "S.dale-1895.marriage",
+   "author": "Dale",
+   "work": "Indian Palmistry",
+   "year": 1895,
+   "source": "dale-1895",
+   "line": "marriage",
+   "status": "none",
+   "reason": "Dale counts marks on the outer edge above the heart line as marriages but attaches no age to their position.",
+   "searched": [
+    "date",
+    "age",
+    "years",
+    "period",
+    "time",
+    "marriage",
+    "wives"
+   ]
+  }
+ ]
+}

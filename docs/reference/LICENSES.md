@@ -143,6 +143,54 @@ on or retouched. Every plate is the printed figure, only cropped and reduced.
 
 ---
 
+## `data/timing/scales.json` · `data/timing/rules.json` · `data/timing/source-pages.json`
+
+**Data** — Kaal-rekha, the classical systems for reading time on the lines.
+`scales.json` and `rules.json` are our own derived data: each author's time
+scale re-expressed against landmarks the scan measures, and the timed rules
+paraphrased in our own words (Hindi and English). Each carries a short verbatim
+quotation from its source as its citation. `source-pages.json` holds the full
+text of every cited page, as the sources' text layers give it, so
+`test/timing-data.test.ts` can check each quotation. No module imports it.
+
+**Upstream** — four public-domain books. The lab repo's `timing/LICENSES.md`
+records every file's URL, size and SHA-256, rendered by `timing/acquire.py`.
+Scans considered and rejected are listed in the lab's `data/restricted/README.md`.
+
+| | Cheiro, *Palmistry for All* | Cheiro, *Cheiro's Language of the Hand* | W. G. Benham, *The Laws of Scientific Hand Reading* | Mrs. J. B. Dale, *Indian Palmistry* |
+|---|---|---|---|---|
+| Published | G. P. Putnam's Sons, New York and London, 1916 | F. T. Neely, New York, 1897 (first published London, 1894) | G. P. Putnam's Sons, New York and London, December 1900 (the scan is the January 1912 reprint) | Theosophical Publishing Society, London, 1895 |
+| Record | `https://archive.org/details/palmistryforall20480gut` (text); `https://archive.org/details/palmistryforall00cheigoog` (Plate XXVI) | `https://archive.org/details/b28096563` | `https://archive.org/details/lawsscientifich00benhgoog` | `https://archive.org/details/indianpalmistry00daleiala` |
+| Archive status | "Public domain in the USA"; `NOT_IN_COPYRIGHT` | Creative Commons Public Domain Mark 1.0 | `NOT_IN_COPYRIGHT`, copyright region US | `NOT_IN_COPYRIGHT` |
+| Retrieved | 21 September 2026 | 29 September 2026 | 29 September 2026 | 21 September 2026 |
+| Licence | **Public domain** | **Public domain** | **Public domain** | **Public domain** |
+
+### Why public domain
+
+- **Cheiro** (William John Warner, 1866–1936). Both books were published in the
+  United States before 1931, so they are out of US copyright. The author died
+  in 1936, so they are also out of copyright in India (life+60, since 1997)
+  and in life+70 countries (since 2007).
+- **Benham.** Published in the United States in December 1900, so out of US
+  copyright. His death year is not recorded: the Library of Congress name
+  authority (n87874427) carries no dates. The dates "1859–1944" found online
+  belong to a different man, Sir William Gurney Benham of Colchester. Indian
+  copyright (life+60) would still run only if Benham died in 1966 or later,
+  66 years after publishing a 635-page treatise built on long practice. We
+  treat that as not credible, the same test the atlas applied to Dale. This is
+  the one inferred status among the four books.
+- **Dale.** As for the atlas plates above.
+
+### What we did to them
+
+Each quotation is the book's own wording, copied from its text layer. The test
+locates it on its cited pages within a 10% character-edit budget for OCR noise.
+Meanings are our paraphrases. Cheiro's two time charts (Plate XXVI, 1916;
+Plate XXIII, 1897) were digitised as coordinates in the lab
+(`timing/plates.authored.json`) and are not reproduced as images.
+
+---
+
 ## Assets already in the tree, recorded for completeness
 
 | Asset | Origin | Licence |
