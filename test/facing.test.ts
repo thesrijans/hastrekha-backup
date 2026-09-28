@@ -218,19 +218,20 @@ for (const testCase of CASES) {
 
 /**
  * The tilt gate is judged in the space the user tilts in — the preview — and ONE physical tilt must
- * pass the same pose through either camera and with either hand. Two faults broke that, and both are
- * pinned here against frames derived from the physical scene rather than from a fixture's naming.
+ * pass the same pose through either camera and with either hand. It did not: `palmTilt` took the x of
+ * the wrist → index → little winding normal, and that winding points OUT of a palm whose thumb is on
+ * the image's right (a right palm, seen palm-on) and INTO one whose thumb is on the image's left (a
+ * left palm), so the LEFT hand read its every tilt with the opposite sign, through both cameras — its
+ * tilt poses could be passed only by tilting the other way (R1). The right hand was never affected.
  *
- * `palmTilt` took the x of the wrist → index → little winding normal, which points out of the palm for
- * one hand and into it for the other, so the two hands read the same tilt with opposite signs. And a
- * front camera's raw frame is the back camera's mirror image (image x flips, the winding flips, the x
- * of their cross product does not), so the mirror correction turned one physical tilt into opposite
- * verdicts through the two cameras: the pose the front camera passed, the back camera could only pass
- * by tilting the other way (R1 — "no rekhas on my phone").
- *
- * The frames below are built in the landmarker's own axes — image x right and y down; world x right,
- * y down, z away from the lens (MEASURED on a real frame under R1: world y follows image y, world z
- * correlates +0.7 with image z) — so what each camera's raw frame contains is derived, not assumed.
+ * What the camera changes is not the hand's chirality but the lean's direction. A palm shown to
+ * either lens is seen palm-on, thumb on the same side; but image-right is the user's right through
+ * the back camera (it looks the way they look) and their left through the front camera (it looks at
+ * them; the preview mirrors it back). The frames below are built from that physical scene in the
+ * landmarker's own axes — image x right and y down; world x right, y down, z away from the lens
+ * (MEASURED under R1 on every real observation: world y follows image y, world z correlates +0.6–0.7
+ * with image z, whose smaller values are documented as nearer) — so what each camera's raw frame
+ * contains is derived, not assumed.
  */
 
 type Camera = "front" | "back";
@@ -247,15 +248,16 @@ interface RawFrame {
  * The raw frame a camera takes of a palm the user tilts `degrees` toward THEIR left (positive) or
  * right (negative): the lean of the palm's outward normal, as they see it on the preview.
  *
- * The back camera looks the way the user looks, so image-right is the user's right and the preview
- * is the raw frame. The front camera looks AT the user, so image-right is the user's left, and the
- * preview mirrors it back. A right palm shown to a camera has its thumb on the user's right (the
- * thumb is lateral with the palm up), a left palm on the user's left.
+ * Seen palm-on with the fingers up, a right palm has its thumb on the viewer's right — so on the
+ * image's right through EITHER lens (M1 and R1 measured exactly this on raw frames: thumb on the
+ * image's right, label "Right") — and a left palm on the image's left. The back camera looks the way
+ * the user looks, so image-right is the user's right and the preview is the raw frame; the front
+ * camera looks AT the user, so image-right is the user's left, and the preview mirrors it back.
  */
 function rawFrame(hand: Handedness, camera: Camera, degrees: number): RawFrame {
   const shape = syntheticHand().image; // a flat palm, thumb on the image's left
   const usersRightIsImageRight = camera === "back";
-  const thumbOnImageRight = (hand === "Right") === usersRightIsImageRight;
+  const thumbOnImageRight = hand === "Right";
   /* The rotation about the vertical axis that leans the lens-facing normal (0, 0, -1) toward the user's left. */
   const radians = ((usersRightIsImageRight ? degrees : -degrees) * Math.PI) / 180;
   const cos = Math.cos(radians);
@@ -266,7 +268,11 @@ function rawFrame(hand: Handedness, camera: Camera, degrees: number): RawFrame {
   });
   // Orthographic re-projection: the x-extent foreshortens by cos(θ), exactly as a real tilt does.
   const image = world.map((p) => ({ x: 0.5 + p.x * 4, y: 0.9 + p.y * 4, z: p.z }));
-  return { image, world, mirrored: camera === "front", label: palmWinding(image) > 0 ? RIGHT_HAND_LABEL : LEFT_HAND_LABEL };
+  /* The label the landmarker gives this geometry: the one whose expected winding it has (M1: a thumb-right palm is "Right"). */
+  const windingSign = palmWinding(image) > 0 ? 1 : -1;
+  const label = (["Right", "Left"] as const).find((candidate) => expectedWindingSign(candidate) === windingSign);
+  assert.ok(label !== undefined, "one label pairs with this winding");
+  return { image, world, mirrored: camera === "front", label };
 }
 
 function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFrame> {
@@ -291,19 +297,37 @@ function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFr
   assert.ok(FLAT !== undefined && TILT_LEFT !== undefined && TILT_RIGHT !== undefined, "the flat and tilt poses exist");
   const tiltOf = (frame: RawFrame): number => palmTilt(frame.world, frame.mirrored);
 
-  /* The derivation itself, pinned: one scene, and the front camera's raw frame is the back camera's mirror image. */
+  /*
+   * The derivation itself, pinned. One hand through the two cameras: the same palm-on silhouette with
+   * the thumb on the same side — only the lean reverses in the raw frame, because the user's left is
+   * image-left through the back camera and image-right through the front. And the OTHER hand leaning
+   * the OTHER way is the mirror image (which is what a horizontally flipped feed is — not the same
+   * palm through the other camera).
+   */
   for (const hand of ["Right", "Left"] as const) {
     const back = rawFrame(hand, "back", 30);
     const front = rawFrame(hand, "front", 30);
     assert.ok(
-      back.image.every((p, i) => Math.abs(p.x - (1 - front.image[i]!.x)) < 1e-9 && Math.abs(p.y - front.image[i]!.y) < 1e-9),
-      `${hand} hand: the two cameras' raw frames are mirror images`,
+      back.image.every((p, i) => Math.abs(p.x - front.image[i]!.x) < 1e-9 && Math.abs(p.y - front.image[i]!.y) < 1e-9),
+      `${hand} hand: the two cameras see the same silhouette, thumb on the same side`,
     );
     assert.ok(
-      back.world.every((p, i) => Math.abs(p.x + front.world[i]!.x) < 1e-9 && Math.abs(p.z - front.world[i]!.z) < 1e-9),
-      `${hand} hand: …in world space too`,
+      back.world.every((p, i) => Math.abs(p.x - front.world[i]!.x) < 1e-9 && Math.abs(p.z + front.world[i]!.z) < 1e-9),
+      `${hand} hand: …leaning the opposite way in the raw frame`,
     );
-    assert.equal(palmWinding(rawFrame(hand, "back", 0).image) > 0, hand === "Left", `${hand} hand, back camera: the thumb is on the image's ${hand === "Right" ? "right" : "left"}`);
+    for (const camera of ["front", "back"] as const) {
+      assert.equal(palmWinding(rawFrame(hand, camera, 0).image) < 0, hand === "Right", `${hand} hand, ${camera} camera: the thumb is on the image's ${hand === "Right" ? "right" : "left"}`);
+      assert.equal(rawFrame(hand, camera, 0).label, hand, `${hand} hand, ${camera} camera: labelled "${hand}", as the landmarker labels a raw frame`);
+    }
+  }
+  for (const camera of ["front", "back"] as const) {
+    const right = rawFrame("Right", camera, 30);
+    const leftOtherWay = rawFrame("Left", camera, -30);
+    assert.ok(
+      right.image.every((p, i) => Math.abs(p.x - (1 - leftOtherWay.image[i]!.x)) < 1e-9 && Math.abs(p.y - leftOtherWay.image[i]!.y) < 1e-9) &&
+        right.world.every((p, i) => Math.abs(p.x + leftOtherWay.world[i]!.x) < 1e-9 && Math.abs(p.z - leftOtherWay.world[i]!.z) < 1e-9),
+      `${camera} camera: the other hand leaning the other way is the mirror image`,
+    );
   }
 
   for (const hand of ["Right", "Left"] as const) {
@@ -330,11 +354,15 @@ function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFr
       assert.equal(wrongWay.checks.not_palm_up, true, `${who}: …not as a facing failure`);
       assert.equal(wrongWay.hint, "Doosri taraf jhukao", `${who}: …and says which way to go`);
 
-      /* Tilted to the user's right: the mirror of that. */
+      /* Tilted to the user's right: the same, the other way. */
       const right = rawFrame(hand, camera, -30);
       assert.ok(tiltOf(right) > 0.25, `${who}: a palm tilted to the user's right reads right (${tiltOf(right).toFixed(3)})`);
       assert.equal(gradeRaw(right, TILT_RIGHT).ok, true, `${who}: …and passes TILT RIGHT`);
-      assert.equal(gradeRaw(right, TILT_LEFT).checks.tilt_direction, false, `${who}: …and fails TILT LEFT on direction`);
+      const wrongWayRight = gradeRaw(right, TILT_LEFT);
+      assert.equal(wrongWayRight.ok, false, `${who}: TILT LEFT rejects a right-tilted palm`);
+      assert.equal(wrongWayRight.checks.tilt_direction, false, `${who}: …as a tilt-direction failure`);
+      assert.equal(wrongWayRight.checks.not_palm_up, true, `${who}: …not as a facing failure`);
+      assert.equal(wrongWayRight.hint, "Doosri taraf jhukao", `${who}: …and says which way to go`);
     }
   }
 
@@ -347,7 +375,7 @@ function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFr
     );
   }
 
-  /* And the raw measurement is still the raw measurement: mirroring a frame negates its reading. */
+  /* And a mirrored frame — the other hand, leaning the other way — reads as the negation, under the same preview. */
   const raw = rawFrame("Right", "back", 30);
   assert.ok(
     Math.abs(palmTilt(mirrorWorld(raw.world), false) + palmTilt(raw.world, false)) < 1e-9,

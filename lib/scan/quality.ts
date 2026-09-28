@@ -404,18 +404,19 @@ export function spanVariation(history: readonly number[]): number {
  * Two corrections, and the order matters.
  *
  * First the hand. {@link palmNormal} is the wrist → index → little winding, and that winds the
- * opposite way on the other hand: it points OUT of a palm whose thumb is on the image's right and
- * INTO one whose thumb is on the image's left. Its x alone therefore read the same physical tilt with
- * opposite signs for the two hands — and, because a front camera's raw frame is the back camera's
- * mirror image (image x flips, the winding flips, the x of their cross product does not), the mirror
- * flip below then turned ONE physical tilt into opposite verdicts through the two cameras (R1: the
- * tilt pose passable through one camera only by tilting the other way). So the normal is first
- * oriented to face the lens, which the facing gate has already established the palm does; world z
- * grows away from the lens (MEASURED, R1: the landmarker's world z correlates +0.7 with its image z,
- * whose smaller values are documented as nearer).
+ * opposite way on the other hand: seen palm-on, it points OUT of a right palm (thumb on the image's
+ * right) and INTO a left palm (thumb on the image's left), through either lens — chirality is the
+ * hand's, not the camera's. Its x alone therefore read the LEFT hand's every tilt with the opposite
+ * sign, through both cameras, so that hand's tilt poses could be passed only by tilting the other
+ * way (R1); the right hand's reading was already correct through both. The normal is first oriented
+ * to face the lens, which the facing gate has already established the palm does; world z grows away
+ * from the lens (MEASURED, R1: on every real observation the landmarker's world z correlates +0.6–0.7
+ * with its image z, whose smaller values are documented as nearer, and world y runs down like image y).
  *
- * Then the camera. World landmarks come from the RAW frame; a front camera's preview is mirrored, so
- * its x is negated to read in the space the user sees. A back camera's preview is the raw frame.
+ * Then the camera. What the camera changes is not the hand's chirality but which way the user's
+ * left lies in the frame: world landmarks come from the RAW frame, and a front camera's preview is
+ * mirrored, so its x is negated to read in the space the user sees. A back camera's preview is the
+ * raw frame.
  */
 export function palmTilt(world: readonly Landmark3[], mirrored: boolean): number {
   const normal = palmNormal(world);
