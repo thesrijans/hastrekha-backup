@@ -30,9 +30,10 @@ import {
   POTHI_CROP_MAX_CHARS,
   POTHI_GEOMETRY_SESSION_KEY,
   isPothiGeometry,
+  toChapterGeometry,
 } from "../lib/sanctuary/pothi-geometry";
 import { POTHI_READING_SESSION_KEY, readPothiReading } from "../lib/sanctuary/pothi-reading-store";
-import { POTHI_CHAPTERS, resolveChapter } from "../lib/sanctuary/pothi-chapters";
+import { POTHI_CHAPTERS, SEAL_CODES, resolveChapter } from "../lib/sanctuary/pothi-chapters";
 import type { ReadingResponse } from "../app/read/reading-types";
 
 let assertions = 0;
@@ -264,6 +265,45 @@ const heartAt128: (readonly [number, number])[] = [
     scanClient.includes('href="/read/pothi"'),
     "a finished scan offers the manuscript: the hand-off is written whether or not the reader takes it, and an invitation nobody can see is a write with no door on it",
   );
+}
+
+/* --------------- 7. scan-complete G3.2: an unclear line, end to end --------------- */
+
+{
+  const storage = new MemoryStorage();
+  const g = globalThis as { window?: unknown };
+  const before = g.window;
+  g.window = { sessionStorage: storage };
+  try {
+    const result = handOffToPothi({
+      reading,
+      lines: { heart: { points: heartAt128 }, fate: { points: heartAt128 } },
+      space: 128,
+      sessionId: "sess-g3",
+      capturedAt: "2026-09-30T10:00:00.000Z",
+      unclear: { lines: ["fate", "life", "sun"], afterUsableMs: 20_133.4 },
+    });
+    const parsed = JSON.parse(storage.getItem(POTHI_GEOMETRY_SESSION_KEY) ?? "null") as unknown;
+    ok(result.geometryWritten && isPothiGeometry(parsed), "a hand-off carrying unclear lines passes the reader's own validator");
+    const written = parsed as { lines: Record<string, unknown>; unclear?: unknown };
+    ok(written.lines.fate === undefined && written.lines.heart !== undefined && !result.linesCarried.includes("fate"), "the unclear line's geometry is NOT carried — a sealed leaf draws no crease");
+    ok(
+      JSON.stringify(written.unclear) === JSON.stringify({ lines: ["life", "fate"], afterUsableMs: 20133 }),
+      `the unclear plate lines are, in plate order, with the usable time spent — an id the plate cannot draw (sun) is not carried (${JSON.stringify(written.unclear)})`,
+    );
+    const fate = POTHI_CHAPTERS.find((entry) => entry.lineId === "fate");
+    const state = fate === undefined || !isPothiGeometry(parsed) ? null : resolveChapter(fate, reading, toChapterGeometry(parsed));
+    ok(state?.status === "sealed" && state.reason.code === SEAL_CODES.lineUnclear, "…and the pothi seals the fate chapter as unclear: the reader is told what the chamber told them");
+  } finally {
+    g.window = before;
+  }
+
+  const base = { sessionId: "s", capturedAt: "2026-09-30T10:00:00.000Z", space: 128 };
+  ok(!isPothiGeometry({ ...base, lines: { heart: heartAt128 }, unclear: { lines: ["heart"], afterUsableMs: 1 } }), "a crease both drawn and unclear is rejected whole: writer and reader disagree");
+  ok(!isPothiGeometry({ ...base, lines: { heart: heartAt128 }, unclear: { lines: ["palm"], afterUsableMs: 1 } }), "an unknown id is rejected");
+  ok(!isPothiGeometry({ ...base, lines: { heart: heartAt128 }, unclear: { lines: [], afterUsableMs: 1 } }), "an empty list is rejected — an absent key is how a scan says none");
+  ok(!isPothiGeometry({ ...base, lines: { heart: heartAt128 }, unclear: { lines: ["fate"], afterUsableMs: -1 } }), "a negative scanning time is rejected");
+  ok(isPothiGeometry({ ...base, lines: {}, unclear: { lines: ["fate"], afterUsableMs: 20_000 } }), "unclear marks alone make a hand-off present: they are the reason their chapters are sealed");
 }
 
 console.log(`POTHI HANDOFF ASSERTIONS PASSED (${assertions})`);

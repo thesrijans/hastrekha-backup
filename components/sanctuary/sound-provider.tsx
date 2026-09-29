@@ -521,14 +521,22 @@ export function useSound(): SoundContextValue {
  * scan-complete G2.2 adds ONE, by name: "a light haptic tick on entering the
  * band" - the scan's distance meter (lib/scan/distance.ts), debounced there so a
  * palm hovering at the band's edge does not buzz. Still a closed vocabulary.
+ *
+ * scan-complete G3.1 adds ONE more, by name: "Lines at 100% get their ✓ and a
+ * haptic tick" - once per line per palm (lib/scan/detection-progress.ts
+ * newlyConfirmed), so at most four in a scan.
  */
-export type HapticCue = "pageTurn" | "reveal" | "bandEnter";
+export type HapticCue = "pageTurn" | "reveal" | "bandEnter" | "lineConfirmed";
 
-/** Milliseconds. Light and medium; far enough apart to feel different. The band's tick is the light one. */
+/**
+ * Milliseconds. Light and medium; far enough apart to feel different. The band's tick is the light one; a
+ * line's is a little firmer - it marks something found, not somewhere reached - and still lighter than the reveal.
+ */
 export const HAPTIC_PATTERNS: Readonly<Record<HapticCue, number>> = {
   pageTurn: 8,
   reveal: 24,
   bandEnter: 8,
+  lineConfirmed: 14,
 };
 
 /**

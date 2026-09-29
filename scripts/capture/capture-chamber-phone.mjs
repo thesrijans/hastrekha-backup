@@ -277,6 +277,28 @@ async function measure(page) {
       guide: (canvas?.dataset.sncGuide ?? "").split(",").filter(Boolean),
       videoSize: video ? { width: video.videoWidth, height: video.videoHeight } : null,
       pageText: document.body.innerText,
+      /* G3: the ledger — each line's mark (ring / ✓ / —) and the summary row — and whether it fits its handle. */
+      ledger: (() => {
+        const button = document.querySelector('[data-snc-monitor] button');
+        const entries = [...document.querySelectorAll("[data-snc-detect]")];
+        const summary = document.querySelector("[data-snc-overall]");
+        if (button === null || summary === null) return null;
+        const line = button.firstElementChild;
+        /* An inline run returns a rect per fragment (every nested span and ring), so its rows are the height its
+           fragments span over one line's height. */
+        const rects = [...line.getClientRects()].filter((r) => r.height > 0);
+        const span = rects.length === 0 ? 0 : Math.max(...rects.map((r) => r.bottom)) - Math.min(...rects.map((r) => r.top));
+        const rows = Math.max(1, Math.round(span / parseFloat(getComputedStyle(line).lineHeight)));
+        return {
+          marks: entries.map((e) => (e.querySelector("[data-snc-ring]") ? "ring" : e.textContent.includes("✓") ? "✓" : e.textContent.includes("—") ? "—" : "?")),
+          summary: summary.textContent.trim(),
+          rows,
+          summaryRows: Math.round(summary.getBoundingClientRect().height / parseFloat(getComputedStyle(summary).lineHeight)),
+          /* The strip a collapsed sheet shows is the handle's min-block-size (3rem); a taller button is cut off. */
+          handle: Math.round(parseFloat(getComputedStyle(button).minBlockSize) || 0),
+          content: Math.round(button.getBoundingClientRect().height),
+        };
+      })(),
       camera: window.__camera ?? null,
     };
   });
@@ -358,6 +380,17 @@ function score(m, sheetOpen = null) {
       m.guide.length >= 4 ? `centre ${gx},${gy} vs ${Math.round(W / 2)},${Math.round(restCy)}; quad ${gq}px vs ${quad.toFixed(1)}; alpha ${alpha}` : "no guide published",
     );
   }
+  const ledger = m.ledger ?? null;
+  add(
+    "G3 ledger: a ring (or its ✓, or —) per line, and one overall percentage",
+    ledger !== null && ledger.marks.length === 4 && ledger.marks.every((mark) => mark !== "?") && /^पहचान [0-9]{1,3}%/.test(ledger.summary),
+    ledger === null ? "no ledger" : `${ledger.marks.join(" ")} · "${ledger.summary}"`,
+  );
+  add(
+    "G3 ledger fits its handle: one row of lines, one of the summary",
+    ledger !== null && ledger.rows === 1 && ledger.summaryRows === 1 && ledger.content <= ledger.handle,
+    ledger === null ? "no ledger" : `rows ${ledger.rows} + ${ledger.summaryRows}; content ${ledger.content}px in a ${ledger.handle}px handle`,
+  );
   add(
     "G2 instruction: one the chamber has, never 'poora haath'",
     (m.hintText === null || HINT_CANDIDATES.some((hint) => m.hintText.endsWith(hint))) && !/poora haath/i.test(m.pageText ?? ""),

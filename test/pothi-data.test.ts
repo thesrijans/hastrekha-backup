@@ -482,6 +482,24 @@ const chapter = (numeral: string) => {
     "a line with neither a section nor a fired rule seals",
   );
 
+  /* scan-complete G3.2: a line the chamber's budget marked "इस हाथ पर स्पष्ट नहीं" seals SAYING SO — even when
+     the response carries a section and a rule for it, which the chamber's bag would not have let it earn. */
+  const unclearGeometry: PothiGeometry = { ...GEOMETRY, unclear: { lines: ["heart"], afterUsableMs: 20_400 } };
+  const twoUnclear = resolveChapter(chapter("II"), reading(), unclearGeometry);
+  ok(
+    twoUnclear.status === "sealed" && twoUnclear.reason.code === SEAL_CODES.lineUnclear,
+    "G3.2: a line marked unclear seals as line_unclear, before any rule could open it",
+  );
+  ok(
+    twoUnclear.status === "sealed" && twoUnclear.reason.detail.includes("20 second") && twoUnclear.reason.capture === undefined,
+    "…quoting the scanning time the chamber actually spent (20 s), with NO rescan offer: absence is a result, not a failure",
+  );
+  ok(
+    twoUnclear.status === "sealed" && /spasht nahi/.test(twoUnclear.reason.hi) && !/[।]/.test(twoUnclear.reason.detail),
+    "…in the product's Hinglish, like every other seal",
+  );
+  ok(resolveChapter(chapter("II"), reading(), { ...GEOMETRY, unclear: { lines: ["fate"], afterUsableMs: 20_000 } }).status === "content", "…and only the lines it names: the heart chapter opens when the fate line is the unclear one");
+
   const one = resolveChapter(chapter("I"), reading({ rules: [rule({ rule_id: "PALM-HTYPE-002", tags: ["hand_type"] })] }), null);
   ok(one.status === "content", "chapter I opens when a hand.* rule fired");
   ok(

@@ -273,6 +273,40 @@ function extraction(lines: Partial<Record<ActiveLineId, TracedLine>>): LineExtra
     "before any evidence the ledger marks every line not yet seen, and the plate shows only the hand",
   );
   ok(markup.includes('aria-live="polite"'), "the ledger is announced politely as lines are confirmed");
+
+  /* scan-complete G3: with the chamber's detection progress the ledger is a ring per line, its ✓, the unclear
+     mark and one overall percentage. */
+  const progress = require_("../lib/scan/detection-progress") as typeof import("../lib/scan/detection-progress");
+  const detection: import("../lib/scan/detection-progress").DetectionState = {
+    ...progress.DETECTION_IDLE,
+    lines: {
+      heart: { status: "confirmed", progress: 1 },
+      head: { status: "gathering", progress: 0.64 },
+      life: { status: "gathering", progress: 0 },
+      fate: { status: "unclear", progress: 0.3 },
+    },
+    usableMs: 20_000,
+    overall: (1 + 0.64 + 0 + 1) / 4,
+  };
+  const withProgress = render({ snapshot, detection });
+  const entry = (id: string): string => withProgress.match(new RegExp(`<span[^>]*data-snc-detect="[a-z]+"[^>]*>(?:(?!data-snc-detect).)*?${monitor.REKHA_NAMES[id as ActiveLineId]}[\\s\\S]*?</span></span>`))?.[0] ?? "";
+  ok(/data-snc-detect="confirmed"[^>]*data-snc-progress="1.00"/.test(withProgress) && entry("heart").includes("✓"), "G3: a confirmed line keeps its ✓ — the full ring and the tick are one event");
+  ok(/data-snc-detect="gathering"[^>]*data-snc-progress="0.64"/.test(withProgress), "a gathering line carries its progress toward CONFIRMED");
+  const arcs = withProgress.match(/<path class="ringArc"[^>]*d="([^"]+)"/g) ?? [];
+  ok(arcs.length === 1 && (withProgress.match(/data-snc-ring=""/g) ?? []).length === 2, "two rings (head at 64%, life at 0%) and one arc: an empty ring is its track alone");
+  ok(!/stroke-dasharray|strokeDasharray/.test(withProgress), "the arc is a path, never a dash pattern: solid strokes only, never dashed");
+  const arc = monitor.ringArcPath(0.64) ?? "";
+  ok(withProgress.includes(`d="${arc}"`) && / 0 1 1 /.test(arc), "the head's arc is 64% of the circle, clockwise from the top (the large-arc flag set past half)");
+  ok(monitor.ringArcPath(0) === null && / 0 0 1 /.test(monitor.ringArcPath(0.25) ?? ""), "0% draws no arc; a quarter is a small arc");
+  ok(/data-snc-detect="unclear"[\s\S]*?<span aria-hidden="true">—<\/span>/.test(withProgress), "an unclear line's mark is —");
+  ok(withProgress.includes(`${monitor.DETECTION_UNCLEAR_HI}`) && monitor.DETECTION_UNCLEAR_HI === "इस हाथ पर स्पष्ट नहीं", "…and the ledger says what — means, in the spec's words exactly");
+  ok(withProgress.includes('aria-label="Fate line: not clear on this hand"') && withProgress.includes('aria-label="Head line: being gathered"') && withProgress.includes('aria-label="Life line: not yet seen"'), "each entry's accessible name is its status — never a percentage that changes five times a second");
+  ok(withProgress.includes(`पहचान ${monitor.detectionPercent(detection.overall)}%`) && monitor.detectionPercent(detection.overall) === 66, "one overall percentage: पहचान 66%");
+  ok(monitor.detectionPercent(0.996) === 99 && monitor.detectionPercent(1) === 100, "an unfinished detection is never rounded up to 100%");
+  ok(monitor.detectionLedger(detection) === "हृदय ✓ · मस्तिष्क 64% · जीवन 0% · शनि — · पहचान 66%", `the readout's ledger: "${monitor.detectionLedger(detection)}"`);
+  const idleProgress = render({ snapshot: null, detection: progress.DETECTION_IDLE });
+  ok((idleProgress.match(/data-snc-ring=""/g) ?? []).length === 4 && !idleProgress.includes(monitor.DETECTION_UNCLEAR_HI) && idleProgress.includes("पहचान 0%"), "before any evidence: four empty rings, 0%, and no unclear note");
+  ok(!/आपकी|आप |your|reading|पाठ|future|भविष्य/i.test(withProgress.replace(/aria-label="[^"]*"/g, "")), "still detection only: no reading text anywhere on it");
 }
 
 console.log(`REKHA PERSIST ASSERTIONS PASSED (${assertions})`);

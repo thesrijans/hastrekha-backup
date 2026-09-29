@@ -122,6 +122,8 @@ export const SEAL_CODES = {
   areaInsufficient: "area_insufficient",
   /** A line chapter with neither a narration section nor a fired rule. */
   lineUnread: "line_unread",
+  /** scan-complete G3.2: the chamber scanned its whole budget and the line never confirmed — a result, not a retry. */
+  lineUnclear: "line_unclear",
   /** Chapter I with no hand.* rule fired at all. */
   handShapeUnread: "hand_shape_unread",
   /** Chapter I's partial seal: the shape VALUE never reaches the client. */
@@ -168,6 +170,12 @@ export interface PothiGeometry {
   readonly lines: readonly PothiTracedLine[];
   /** Side length of the square the points live in (256 for the rectified crop). */
   readonly size: number;
+  /**
+   * scan-complete G3.2: creases the chamber scanned for its whole budget without confirming (marked
+   * "इस हाथ पर स्पष्ट नहीं" there), and the usable scanning time it spent, in ms. Their chapters are sealed
+   * with {@link SEAL_CODES.lineUnclear}: absence as a result, not a failure to retry.
+   */
+  readonly unclear?: { readonly lines: readonly PothiLineId[]; readonly afterUsableMs: number };
 }
 
 export type ChapterState =
@@ -590,6 +598,23 @@ function areaState(chapter: PothiChapter, areaId: PothiAreaId, reading: ReadingR
 }
 
 function lineState(chapter: PothiChapter, lineId: PothiLineId, reading: ReadingResponse, geometry: PothiGeometry | null): ChapterState {
+  /*
+   * G3.2 first: a line the chamber marked unclear is sealed saying so, whatever else came back — its features
+   * never reached the bag, and a chapter that opened on anything else would contradict what the reader was
+   * shown. No capture instruction: absence is a result, not a failure to retry.
+   */
+  const unclear = geometry?.unclear;
+  if (unclear !== undefined && unclear.lines.includes(lineId)) {
+    const seconds = Math.round(unclear.afterUsableMs / 1000);
+    return sealed(chapter, {
+      code: SEAL_CODES.lineUnclear,
+      hi: `${chapter.titleHi} is haath par spasht nahi.`,
+      detail:
+        `Kaksh ne ${seconds} second ke saaf frames tak is rekha ka saboot jama kiya, magar wo pakka (confirmed) hone tak nahi pahuncha. ` +
+        `Yeh kami nahi, nateeja hai — har haath par har rekha saaf nahi hoti, aur jo saaf nahi dikhi uska paath yahan nahi likha jaata.`,
+    });
+  }
+
   const ids = lineRuleIds(reading, lineId);
   const idSet = new Set(ids);
   const sections = sectionsCiting(reading, idSet);

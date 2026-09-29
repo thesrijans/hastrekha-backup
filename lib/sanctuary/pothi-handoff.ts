@@ -51,6 +51,11 @@ export interface HandOffInput {
   readonly cropDataUrl?: string;
   readonly sessionId: string;
   readonly capturedAt: string;
+  /**
+   * scan-complete G3.2: the lines the chamber's budget marked "इस हाथ पर स्पष्ट नहीं", and the usable scanning time it
+   * had spent (ms) — the pothi seals their chapters saying so. Their geometry is not carried.
+   */
+  readonly unclear?: { readonly lines: readonly string[]; readonly afterUsableMs: number };
 }
 
 export interface HandOffResult {
@@ -90,7 +95,9 @@ function carriedLines(
 export function handOffToPothi(input: HandOffInput): HandOffResult {
   const readingWritten = writePothiReading(input.reading);
 
+  const unclear = PLATE_LINES.filter((id) => input.unclear?.lines.includes(id) === true);
   const lines = carriedLines(input.lines);
+  for (const id of unclear) delete lines[id];
   const oversized = input.cropDataUrl !== undefined && input.cropDataUrl.length > POTHI_CROP_MAX_CHARS;
   const geometry: PothiGeometry = {
     sessionId: input.sessionId,
@@ -98,6 +105,7 @@ export function handOffToPothi(input: HandOffInput): HandOffResult {
     ...(input.cropDataUrl !== undefined && !oversized ? { cropDataUrl: input.cropDataUrl } : {}),
     lines,
     space: input.space,
+    ...(unclear.length === 0 || input.unclear === undefined ? {} : { unclear: { lines: unclear, afterUsableMs: Math.max(0, Math.round(input.unclear.afterUsableMs)) } }),
   };
   const geometryWritten = writePothiGeometry(geometry);
 

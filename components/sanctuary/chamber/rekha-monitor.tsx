@@ -14,7 +14,11 @@
  *   CONFIRMED   2px at 1.0 with the active rung's glow — and its Devanagari
  *               name on a leader, the moment it is confirmed
  *
- * and a ledger beneath: हृदय ✓ · मस्तिष्क … · जीवन ✓ · शनि —. It is DETECTION
+ * and a ledger beneath: हृदय ✓ · मस्तिष्क … · जीवन ✓ · शनि —. With the chamber's
+ * detection progress (scan-complete G3, lib/scan/detection-progress.ts) each
+ * line's mark is a thin gold ring filling toward CONFIRMED, its ✓ at 100%, and
+ * "—" once the budget has marked it इस हाथ पर स्पष्ट नहीं; a second row carries
+ * the one overall percentage. It is DETECTION
  * ONLY: there is no reading text on it anywhere, because what a line means is
  * the Pothi's to say, after the scan, from the whole session. And it never
  * draws a line below CANDIDATE — `RekhaSnapshot` does not carry one, so there is
@@ -33,6 +37,7 @@
  */
 import { useState, type CSSProperties, type ReactElement } from "react";
 import { HandPlate } from "@/components/sanctuary/hand-plate";
+import { DETECTION_LINE_IDS, type DetectionState, type LineDetection } from "@/lib/scan/detection-progress";
 import type { RekhaLine, RekhaSnapshot } from "@/lib/scan/rekha-persist";
 import { ACTIVE_LINE_IDS, MASK_SIZE, type ActiveLineId } from "@/lib/scan/types";
 import { pothiPolylinePath } from "@/lib/sanctuary/pothi-geometry";
@@ -58,6 +63,77 @@ export function ledgerMark(line: RekhaLine | undefined): "✓" | "…" | "—" {
 /** The ledger as one line of text, e.g. "हृदय ✓ · मस्तिष्क … · जीवन ✓ · शनि —". */
 export function rekhaLedger(snapshot: RekhaSnapshot | null): string {
   return ACTIVE_LINE_IDS.map((id) => `${REKHA_NAMES[id]} ${ledgerMark(snapshot?.lines[id])}`).join(" · ");
+}
+
+/* ------------------------- Detection progress (G3) ------------------------- */
+
+/** The mark for a line the scan budget has passed by: the spec's words, exactly. */
+export const DETECTION_UNCLEAR_HI = "इस हाथ पर स्पष्ट नहीं";
+
+/** The overall percentage's word: पहचान, the detection — the word G4's "पहचान पूरी" completes. */
+export const DETECTION_OVERALL_HI = "पहचान";
+
+/** 0–1 as a whole percentage, never rounding an unfinished detection up to 100. */
+export function detectionPercent(fraction: number): number {
+  const percent = Math.round(Math.min(1, Math.max(0, fraction)) * 100);
+  return percent === 100 && fraction < 1 ? 99 : percent;
+}
+
+/** The ledger with progress, as one line of text — the `?cost=1` readout's: "हृदय ✓ · मस्तिष्क 64% · जीवन 12% · शनि — · पहचान 69%". */
+export function detectionLedger(detection: DetectionState): string {
+  const lines = DETECTION_LINE_IDS.map((id) => {
+    const line = detection.lines[id];
+    const mark = line.status === "confirmed" ? "✓" : line.status === "unclear" ? "—" : `${detectionPercent(line.progress)}%`;
+    return `${REKHA_NAMES[id]} ${mark}`;
+  });
+  return `${lines.join(" · ")} · ${DETECTION_OVERALL_HI} ${detectionPercent(detection.overall)}%`;
+}
+
+/** The ring's radius in its 16-unit box. */
+const RING_R = 6;
+
+/**
+ * The ring's filled arc, clockwise from the top, as an SVG path — an arc, not a dash pattern over a circle
+ * (ui-sanctuary-spec §3: solid strokes only, never dashed, anywhere). Null at zero: an empty ring is its track.
+ */
+export function ringArcPath(progress: number): string | null {
+  if (!(progress > 0)) return null;
+  const theta = 2 * Math.PI * Math.min(progress, 0.9999);
+  const x = 8 + RING_R * Math.sin(theta);
+  const y = 8 - RING_R * Math.cos(theta);
+  return `M 8 ${8 - RING_R} A ${RING_R} ${RING_R} 0 ${theta > Math.PI ? 1 : 0} 1 ${x.toFixed(3)} ${y.toFixed(3)}`;
+}
+
+/** What a line's ledger entry says to a screen reader: its status, never a percentage that changes five times a second. */
+function detectionLabel(id: ActiveLineId, line: LineDetection): string {
+  const status =
+    line.status === "confirmed"
+      ? "confirmed"
+      : line.status === "unclear"
+        ? "not clear on this hand"
+        : line.progress > 0
+          ? "being gathered"
+          : "not yet seen";
+  return `${ENGLISH[id]} line: ${status}`;
+}
+
+/** A line's mark in the ledger: its ring while gathering, ✓ once confirmed, — once the budget marks it unclear. */
+function DetectionMark({ line }: { readonly line: LineDetection }): ReactElement {
+  if (line.status === "confirmed") {
+    return (
+      <span className={styles.tick} aria-hidden="true">
+        ✓
+      </span>
+    );
+  }
+  if (line.status === "unclear") return <span aria-hidden="true">—</span>;
+  const arc = ringArcPath(line.progress);
+  return (
+    <svg className={styles.ring} viewBox="0 0 16 16" aria-hidden="true" focusable="false" data-snc-ring="">
+      <circle className={styles.ringTrack} cx="8" cy="8" r={RING_R} vectorEffect="non-scaling-stroke" />
+      {arc === null ? null : <path className={styles.ringArc} d={arc} vectorEffect="non-scaling-stroke" />}
+    </svg>
+  );
 }
 
 /**
@@ -138,15 +214,21 @@ function leadersFor(lines: readonly RekhaLine[]): Leader[] {
 export interface RekhaMonitorProps {
   /** The hook's rekhaPersist snapshot; null before the first frame (the plate shows only the hand). */
   readonly snapshot: RekhaSnapshot | null;
+  /**
+   * scan-complete G3: the chamber's detection progress. Given, the ledger draws a ring per line, its ✓, the
+   * unclear mark and the overall percentage; absent, the S1.4 marks (✓ … —) straight off the snapshot.
+   */
+  readonly detection?: DetectionState | null;
   /** Hidden without unmounting, so the sheet can slide away rather than vanish. */
   readonly visible?: boolean;
   readonly className?: string;
 }
 
-export function RekhaMonitor({ snapshot, visible = true, className }: RekhaMonitorProps): ReactElement {
+export function RekhaMonitor({ snapshot, detection = null, visible = true, className }: RekhaMonitorProps): ReactElement {
   const [open, setOpen] = useState(false);
   const lines = ACTIVE_LINE_IDS.map((id) => snapshot?.lines[id]).filter((line): line is RekhaLine => line !== undefined);
   const leaders = leadersFor(lines);
+  const anyUnclear = detection !== null && DETECTION_LINE_IDS.some((id) => detection.lines[id].status === "unclear");
 
   return (
     <section
@@ -164,6 +246,23 @@ export function RekhaMonitor({ snapshot, visible = true, className }: RekhaMonit
         <span className={styles.ledgerLine} aria-live="polite">
           {ACTIVE_LINE_IDS.map((id, index) => {
             const line = snapshot?.lines[id];
+            const progress = detection?.lines[id];
+            if (progress !== undefined) {
+              return (
+                <span
+                  key={id}
+                  className={styles.entry}
+                  data-snc-state={line?.state ?? "none"}
+                  data-snc-detect={progress.status}
+                  data-snc-progress={progress.progress.toFixed(2)}
+                >
+                  {index > 0 ? <span className={styles.dot} aria-hidden="true"> · </span> : null}
+                  <span lang="hi" aria-label={detectionLabel(id, progress)}>
+                    {REKHA_NAMES[id]} <DetectionMark line={progress} />
+                  </span>
+                </span>
+              );
+            }
             const mark = ledgerMark(line);
             return (
               <span key={id} className={styles.entry} data-snc-state={line?.state ?? "none"}>
@@ -175,6 +274,20 @@ export function RekhaMonitor({ snapshot, visible = true, className }: RekhaMonit
             );
           })}
         </span>
+        {/* G3: the one overall percentage, and — once the budget has passed a line by — what its "—" means.
+            Outside the live region: a percentage that moves five times a second is not an announcement. */}
+        {detection === null ? null : (
+          <span
+            className={styles.summary}
+            lang="hi"
+            data-snc-overall={detection.overall.toFixed(3)}
+            data-snc-usable={Math.round(detection.usableMs)}
+            data-snc-complete={detection.complete ? "" : undefined}
+          >
+            {`${DETECTION_OVERALL_HI} ${detectionPercent(detection.overall)}%`}
+            {anyUnclear ? <span className={styles.unclearNote}>{` · — ${DETECTION_UNCLEAR_HI}`}</span> : null}
+          </span>
+        )}
       </button>
 
       <div className={styles.plateBox}>

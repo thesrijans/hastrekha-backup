@@ -6,18 +6,25 @@
  *  1. target size: its palm quad spans the meter's target share of the frame's
  *     short side, on screen, at the feed's own cover scale (portrait and landscape);
  *  2. centred: on the ring's resting centre, the place the ring asks for the hand;
- *  3. faint: drawn at GUIDE_ALPHA, dashed, one path, context left as found;
+ *  3. faint and solid: the palm one closed path at GUIDE_ALPHA, a 1px hairline,
+ *     never dashed (ui-sanctuary-spec §3), context left as found;
  *  4. fading: in band it eases to nothing — and at nothing it draws nothing;
  *     out of band it comes back;
- *  5. palm-shaped, either hand: mirrored to the thumb's side.
+ *  5. palm-shaped: fingers with rounded tips at their first joint, fading from
+ *     the palm toward the tip (a palm, not rays over the ring — the G2 capture);
+ *  6. either hand: mirrored to the thumb's side.
  * ========================================================================== */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   GUIDE_ALPHA,
-  GUIDE_DASH,
+  GUIDE_FADE_STEPS,
+  GUIDE_FINGERS,
+  GUIDE_LINE_WIDTH,
   GUIDE_QUAD_ASPECT,
+  GUIDE_TIP_ALPHA_SHARE,
   drawPalmGuide,
+  fingerOutline,
   nextGuideAlpha,
   palmGuideGeometry,
 } from "../components/sanctuary/chamber/palm-guide";
@@ -30,33 +37,35 @@ const ok = (condition: boolean, message: string): void => {
   assertions += 1;
 };
 
-/** A context that records its calls and the x of every point it was given. */
+/** A context that records its calls, every point it was given, and the alpha and width of every stroke. */
 function recorder() {
   const calls: string[] = [];
   const xs: number[] = [];
+  const points: [number, number][] = [];
+  const strokes: { alpha: number; width: number }[] = [];
   let depth = 0;
   let dashed = false;
-  let alphaAtStroke = -1;
   const target = {
     save: () => ((depth += 1), calls.push("save")),
     restore: () => ((depth -= 1), calls.push("restore")),
     beginPath: () => calls.push("beginPath"),
     closePath: () => calls.push("closePath"),
-    moveTo: (x: number) => (xs.push(x), calls.push("moveTo")),
-    lineTo: (x: number) => (xs.push(x), calls.push("lineTo")),
-    bezierCurveTo: (_a: number, _b: number, _c: number, _d: number, x: number) => (xs.push(x), calls.push("bezierCurveTo")),
+    moveTo: (x: number, y: number) => (xs.push(x), points.push([x, y]), calls.push("moveTo")),
+    lineTo: (x: number, y: number) => (xs.push(x), points.push([x, y]), calls.push("lineTo")),
+    bezierCurveTo: (_a: number, _b: number, _c: number, _d: number, x: number, y: number) => (xs.push(x), points.push([x, y]), calls.push("bezierCurveTo")),
     stroke: () => {
-      alphaAtStroke = target.globalAlpha;
+      strokes.push({ alpha: target.globalAlpha, width: target.lineWidth });
       calls.push("stroke");
     },
     fill: () => calls.push("fill"),
-    setLineDash: (dash: number[]) => (dashed = dash.length > 0),
+    setLineDash: (dash: number[]) => (dashed = dashed || dash.length > 0),
     globalAlpha: 1,
     lineWidth: 1,
     lineCap: "butt",
+    lineJoin: "miter",
     strokeStyle: "",
   };
-  return { context: target as unknown as CanvasRenderingContext2D, calls, xs, depth: () => depth, dashed: () => dashed, alpha: () => alphaAtStroke };
+  return { context: target as unknown as CanvasRenderingContext2D, calls, xs, points, strokes, depth: () => depth, dashed: () => dashed };
 }
 
 const PHONE = { width: 412, height: 915 };
@@ -80,17 +89,19 @@ const PORTRAIT_FEED = { width: 720, height: 1280 };
   ok(palmGuideGeometry(rest, null, PHONE, true) === null, "no camera size yet, no guide: nothing to scale it to");
 }
 
-/* ---------------------------------- 3. faint, dashed ---------------------------------- */
+/* ------------------------------- 3. faint and solid ------------------------------- */
 
 {
   const g = palmGuideGeometry(ringGeometry(PHONE.width, PHONE.height), PORTRAIT_FEED, PHONE, true)!;
   const r = recorder();
   drawPalmGuide(r.context, g, GUIDE_ALPHA, "var(--color-snc-gold-500)");
-  ok(r.calls.filter((c) => c === "stroke").length === 1 && !r.calls.includes("fill"), "one path, stroked once, never filled — an outline, not a shape laid over a hand");
-  ok(r.dashed() && GUIDE_DASH.length === 2, "dashed: a place to put a hand, not a thing already there");
-  ok(r.alpha() === GUIDE_ALPHA && GUIDE_ALPHA > 0 && GUIDE_ALPHA < 0.5, `faint: drawn at ${GUIDE_ALPHA}, under half`);
+  ok(!r.dashed(), "SOLID: no dash pattern is ever set — ui-sanctuary-spec §3, solid strokes only, never dashed anywhere");
+  ok(GUIDE_LINE_WIDTH === 1 && r.strokes.every((s) => s.width === 1), "a 1px hairline: the linework ladder's secondary rung");
+  ok(!r.calls.includes("fill"), "stroked, never filled — an outline, not a shape laid over a hand");
+  ok(r.strokes[0]?.alpha === GUIDE_ALPHA && GUIDE_ALPHA > 0 && GUIDE_ALPHA < 0.5, `faint: the palm drawn at ${GUIDE_ALPHA}, under half`);
+  const palmPath = r.calls.slice(0, r.calls.indexOf("stroke"));
+  ok(palmPath.includes("closePath") && palmPath.filter((c) => c === "bezierCurveTo").length >= 10, "the palm is ONE closed, curved outline, stroked first");
   ok(r.depth() === 0 && r.calls[0] === "save" && r.calls.at(-1) === "restore", "the context is left as it was found");
-  ok(r.calls.includes("closePath") && r.calls.filter((c) => c === "bezierCurveTo").length >= 10, "a closed, curved palm outline");
 }
 
 /* -------------------------------- 4. fading in band -------------------------------- */
@@ -112,7 +123,52 @@ const PORTRAIT_FEED = { width: 720, height: 1280 };
   ok(Math.abs(back - GUIDE_ALPHA) < 0.01, `out of band again, it comes back to faint within a second (${back.toFixed(3)})`);
 }
 
-/* ------------------------------- 5. either hand ------------------------------- */
+/* ------------------ 5. a palm: fingers with rounded tips, fading ------------------ */
+
+{
+  const g = palmGuideGeometry(ringGeometry(PHONE.width, PHONE.height), PORTRAIT_FEED, PHONE, true)!;
+  const r = recorder();
+  drawPalmGuide(r.context, g, GUIDE_ALPHA, "gold");
+  const fingerStrokes = r.strokes.slice(1);
+  ok(fingerStrokes.length === GUIDE_FADE_STEPS, `the fingers follow the palm in ${GUIDE_FADE_STEPS} strokes, one per step of their fade`);
+  ok(
+    fingerStrokes.every((s, i) => s.alpha < (i === 0 ? GUIDE_ALPHA : fingerStrokes[i - 1]!.alpha)),
+    "each step fainter than the one before: the fingers fade from the palm toward their tips",
+  );
+  const tipAlpha = fingerStrokes.at(-1)!.alpha;
+  ok(
+    tipAlpha > GUIDE_ALPHA * GUIDE_TIP_ALPHA_SHARE * 0.99 && tipAlpha < GUIDE_ALPHA * 0.5,
+    `the tips at ${tipAlpha.toFixed(3)}: faded, and still there — a rounded tip nobody can see closes nothing`,
+  );
+
+  /* Every finger ends in a half circle of its own half-width, whose far point is the first joint. */
+  const unit = g.quadPx;
+  const onScreen = ([x, y]: readonly [number, number]): [number, number] => [g.cx + x * unit, g.cy + y * unit];
+  const drawn = (p: [number, number]): boolean => r.points.some(([x, y]) => Math.hypot(x - p[0], y - p[1]) < 1e-6);
+  for (const finger of GUIDE_FINGERS) {
+    const [bx, by] = finger.base;
+    const norm = Math.hypot(finger.direction[0], finger.direction[1]);
+    const [dx, dy] = [finger.direction[0] / norm, finger.direction[1] / norm];
+    const apex = onScreen([bx + dx * finger.joint, by + dy * finger.joint]);
+    const centre = [bx + dx * (finger.joint - finger.halfWidth), by + dy * (finger.joint - finger.halfWidth)] as const;
+    const outline = fingerOutline(finger);
+    const tip = outline.slice(1, -1);
+    ok(
+      drawn(apex) && tip.every(({ p }) => Math.abs(Math.hypot(p[0] - centre[0], p[1] - centre[1]) - finger.halfWidth) < 1e-9),
+      `the finger at (${finger.base.join(", ")}) is closed by a rounded tip whose far point — its first joint — is drawn`,
+    );
+    ok(
+      outline[0]!.t === 0 && outline.at(-1)!.t === 0 && Math.abs(Math.max(...outline.map((q) => q.t)) - 1) < 1e-12,
+      "…and runs from the palm (0) to the joint (1) and back",
+    );
+  }
+  /* On a 412 x 915 phone the tallest finger's tip is on the glass: a rounded tip above the screen rounds nothing. */
+  const middle = GUIDE_FINGERS[1]!;
+  const middleTip = onScreen([middle.base[0] + (middle.direction[0] / Math.hypot(...middle.direction)) * middle.joint, middle.base[1] + (middle.direction[1] / Math.hypot(...middle.direction)) * middle.joint]);
+  ok(middleTip[1] > 0, `the middle finger's tip is on the phone's screen (y ${middleTip[1].toFixed(0)} of ${PHONE.height})`);
+}
+
+/* ------------------------------- 6. either hand ------------------------------- */
 
 {
   const rest = ringGeometry(PHONE.width, PHONE.height);

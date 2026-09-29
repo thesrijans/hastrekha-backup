@@ -63,6 +63,64 @@
     color: color-mix(in oklab, var(--color-snc-gold-400) 45%, transparent);
   }
 
+  /* G3: once a line has any evidence its name is lit, whatever this frame's extraction caught (its ring says
+     how far it has come); not yet seen, or marked unclear, it is set back — present, named, and not claimed. */
+  .entry[data-snc-detect] {
+    color: var(--color-snc-gold-400);
+  }
+
+  .entry[data-snc-detect="gathering"][data-snc-progress="0.00"],
+  .entry[data-snc-detect="unclear"] {
+    color: color-mix(in oklab, var(--color-snc-gold-400) 45%, transparent);
+  }
+
+  /* THE RING (G3.1): a line's evidence toward CONFIRMED. The linework ladder's two rungs — the track on the
+     secondary (1px @ 0.35), the arc on the active width (2px @ 1.0) without its glow, which at this size would
+     only blur — solid, never dashed: the arc is a path, not a dash pattern. */
+  .ring {
+    display: inline-block;
+    inline-size: 0.8em;
+    block-size: 0.8em;
+    vertical-align: -0.06em;
+    overflow: visible;
+  }
+
+  .ringTrack {
+    fill: none;
+    stroke: var(--color-snc-gold-500);
+    stroke-width: var(--snc-stroke-secondary-width);
+    stroke-opacity: var(--snc-stroke-secondary-opacity);
+    stroke-dasharray: none;
+  }
+
+  .ringArc {
+    fill: none;
+    stroke: var(--color-snc-gold-400);
+    stroke-width: var(--snc-stroke-active-width);
+    stroke-opacity: var(--snc-stroke-active-opacity);
+    stroke-linecap: round;
+    stroke-dasharray: none;
+  }
+
+  /* The ✓ arrives as the leaders' names do: a slow fade, nothing that bounces. */
+  .tick {
+    animation: sncMonitorName 520ms ease both;
+  }
+
+  /* The second row: the overall percentage, and the unclear mark's meaning when one is shown. */
+  .summary {
+    display: block;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.74rem;
+    line-height: 1.4;
+    letter-spacing: normal;
+    color: color-mix(in oklab, var(--color-snc-gold-400) 72%, transparent);
+  }
+
+  .unclearNote {
+    color: color-mix(in oklab, var(--color-snc-gold-400) 58%, transparent);
+  }
+
   .dot {
     color: color-mix(in oklab, var(--color-snc-gold-500) 55%, transparent);
   }

@@ -91,6 +91,12 @@ export interface PothiGeometry {
   readonly lines: Partial<Record<PothiPlateLineId, readonly PothiGeometryPoint[]>>;
   /** Side length of the square the points were traced in. See the header: never assumed. */
   readonly space: number;
+  /**
+   * scan-complete G3.2: creases the chamber scanned for its whole budget without confirming — marked
+   * "इस हाथ पर स्पष्ट नहीं" there, sealed as such here — and the usable scanning time spent (ms). Optional:
+   * a hand-off from before G3, or a scan that found every line, has none. Never also under `lines`.
+   */
+  readonly unclear?: { readonly lines: readonly PothiPlateLineId[]; readonly afterUsableMs: number };
 }
 
 /**
@@ -218,11 +224,26 @@ export function isPothiGeometry(value: unknown): value is PothiGeometry {
     if (!isPolyline(polyline)) return false;
   }
 
+  /* G3.2's unclear lines: known ids, each once, none also drawn — a crease cannot be both traced and unclear. */
+  if (candidate.unclear !== undefined) {
+    const unclear = candidate.unclear as Record<string, unknown> | null;
+    if (typeof unclear !== "object" || unclear === null || Array.isArray(unclear)) return false;
+    if (!isFiniteNumber(unclear.afterUsableMs) || unclear.afterUsableMs < 0) return false;
+    const ids = unclear.lines;
+    if (!Array.isArray(ids) || ids.length === 0 || new Set(ids).size !== ids.length) return false;
+    for (const id of ids) {
+      if (typeof id !== "string" || !(POTHI_PLATE_LINE_IDS as readonly string[]).includes(id)) return false;
+      if ((lines as Record<string, unknown>)[id] !== undefined) return false;
+    }
+  }
+
   /* A hand-off with neither a crop nor a single line carries nothing to draw.
    * Calling that "present" would hand the leaf an empty plate and let it render
    * a frame around nothing; calling it absent lets the caller seal the leaf with
-   * a reason, which is the honest half of the same fact. */
-  return candidate.cropDataUrl !== undefined || Object.keys(lines as object).length > 0;
+   * a reason, which is the honest half of the same fact. Unclear marks (G3.2)
+   * are the exception that proves it: they draw nothing, and they ARE the reason
+   * their chapters are sealed, so a hand-off carrying only them is present. */
+  return candidate.cropDataUrl !== undefined || Object.keys(lines as object).length > 0 || candidate.unclear !== undefined;
 }
 
 /* -------------------------------- Storage ---------------------------------- */
@@ -397,5 +418,5 @@ export function toChapterGeometry(geometry: PothiGeometry): PothiChapterGeometry
     const points = geometry.lines[id];
     if (isPolyline(points)) lines.push({ id, points, observedFraction: null });
   }
-  return { lines, size: geometry.space };
+  return { lines, size: geometry.space, ...(geometry.unclear === undefined ? {} : { unclear: geometry.unclear }) };
 }

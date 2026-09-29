@@ -254,7 +254,8 @@ const SEALED = RESOLVED.flatMap((state) => (state.status === "sealed" ? [state] 
 
 {
   const codes = Object.values(SEAL_CODES);
-  ok(codes.length === 15, `every seal code is driven through the leaf (${codes.length} of them)`);
+  /* 16 since scan-complete G3.2 added line_unclear: a line the chamber's budget passed by, sealed as a result. */
+  ok(codes.length === 16, `every seal code is driven through the leaf (${codes.length} of them)`);
 
   for (const sealCode of codes) {
     const bare = reasonFor(sealCode);

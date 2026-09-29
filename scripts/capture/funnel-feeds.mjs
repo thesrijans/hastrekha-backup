@@ -114,6 +114,47 @@ function summariseG2(samples, vibrations) {
     okEntries,
   };
 }
+/**
+ * G3 over time, from the same 200 ms samples: each line's ledger status and ring (data-snc-detect /
+ * data-snc-progress, heart head life fate), the overall percentage and the usable time the budget counts.
+ * Folded into: when each line was first confirmed, whether any ring ever walked backwards on one palm (a
+ * reset — the usable time falling back, a new palm — excepted), when and after how much usable time lines were marked unclear,
+ * and the line ticks (navigator.vibrate(14)) against the confirmations.
+ */
+const G3_IDS = ["heart", "head", "life", "fate"];
+function summariseG3(samples, vibrations) {
+  const rows = samples.filter((s) => s.g3 !== null && s.g3 !== undefined);
+  if (rows.length === 0) return null;
+  const confirmedAt = {};
+  const unclearAt = {};
+  let backwards = 0;
+  let resets = 0;
+  let confirmations = 0;
+  for (let i = 0; i < rows.length; i += 1) {
+    const row = rows[i];
+    const previous = rows[i - 1];
+    /* A new palm: the usable time only grows on one palm, so a drop means the evidence was reset under it. */
+    const isReset = previous !== undefined && Number(row.g3.usable) < Number(previous.g3.usable);
+    if (isReset) resets += 1;
+    G3_IDS.forEach((id, k) => {
+      const status = row.g3.lines[k][0];
+      const value = Number(row.g3.lines[k].slice(1));
+      if (status === "c" && confirmedAt[id] === undefined) confirmedAt[id] = row.t;
+      if (status === "u" && unclearAt[id] === undefined) unclearAt[id] = { t: row.t, usableMs: Number(row.g3.usable) };
+      if (previous !== undefined && !isReset) {
+        const before = previous.g3.lines[k];
+        if (before[0] === "c" && status !== "c") backwards += 1;
+        else if (value + 1e-9 < Number(before.slice(1))) backwards += 1;
+        if (before[0] !== "c" && status === "c") confirmations += 1;
+      } else if (previous === undefined && status === "c") confirmations += 1;
+    });
+  }
+  const last = rows.at(-1);
+  const lineTicks = vibrations.filter((v) => JSON.stringify(v.pattern) === "14").length;
+  const completeAt = rows.find((r) => r.g3.complete)?.t ?? null;
+  return { confirmedAt, unclearAt, backwards, resets, confirmations, lineTicks, final: last.g3, completeAt };
+}
+
 const range = (s) => (s === null ? "–" : `${s.median} (${s.min}–${s.max})`);
 const pct = (part, whole) => (whole === 0 ? "–" : `${((100 * part) / whole).toFixed(1)}%`);
 
@@ -178,6 +219,18 @@ try {
             distance: gauge?.getAttribute("data-snc-distance") ?? null,
             dot: gauge?.querySelector("circle")?.getAttribute("cx") ?? null,
             guide: document.querySelector("canvas")?.dataset.sncGuide ?? null,
+            /* G3: the ledger's rings, status initial + progress per line, and its summary. */
+            g3: (() => {
+              const entries = [...document.querySelectorAll("[data-snc-detect]")];
+              const summary = document.querySelector("[data-snc-overall]");
+              if (entries.length === 0 || summary === null) return null;
+              return {
+                lines: entries.map((e) => `${e.getAttribute("data-snc-detect")[0]}${e.getAttribute("data-snc-progress")}`),
+                overall: summary.getAttribute("data-snc-overall"),
+                usable: summary.getAttribute("data-snc-usable"),
+                complete: summary.hasAttribute("data-snc-complete"),
+              };
+            })(),
           });
         }, 200);
       });
@@ -208,7 +261,7 @@ try {
       const litany = await page.evaluate(() => [...document.querySelectorAll('[data-snc-litany="in"] p')].map((p) => p.textContent.trim()));
       const name = basename(feed, ".y4m");
       await page.screenshot({ path: join(dir, `${name}.png`) });
-      const entry = { feed: name, expected: expected.get(feed) ?? null, handSeen, errors, failedRequests, litany, readout, funnel: summarise(snapshot), g2: summariseG2(g2raw.samples, g2raw.vibrations), g2samples: g2raw.samples };
+      const entry = { feed: name, expected: expected.get(feed) ?? null, handSeen, errors, failedRequests, litany, readout, funnel: summarise(snapshot), g2: summariseG2(g2raw.samples, g2raw.vibrations), g3: summariseG3(g2raw.samples, g2raw.vibrations), g2samples: g2raw.samples };
       report.feeds.push(entry);
       const f = entry.funnel;
       const g = entry.g2;
@@ -216,6 +269,15 @@ try {
         `${name.padEnd(10)} G2  hints [${g.hints.map((h) => `${(h.t / 1000).toFixed(1)}s ${h.hint}`).join(" | ")}]  states ${JSON.stringify(g.states)}  ` +
           `guide ${g.guide === null ? "none" : `α ${g.guide.alphaMin.toFixed(3)}–${g.guide.alphaMax.toFixed(3)} at ${g.guide.first.slice(1).join(",")} fade ${g.guide.fadeMs ?? "–"} ms`}  ` +
           `vibrate ${g.vibrations}× ${g.vibrationPatterns.join(",")} for ${g.okEntries} band entr${g.okEntries === 1 ? "y" : "ies"}`,
+      );
+      const g3 = entry.g3;
+      console.log(
+        g3 === null
+          ? `${name.padEnd(10)} G3  no ledger`
+          : `${name.padEnd(10)} G3  confirmed [${G3_IDS.map((id) => `${id} ${g3.confirmedAt[id] === undefined ? "–" : `${(g3.confirmedAt[id] / 1000).toFixed(1)}s`}`).join(" ")}]  ` +
+              `unclear [${Object.entries(g3.unclearAt).map(([id, u]) => `${id} ${(u.t / 1000).toFixed(1)}s @${(u.usableMs / 1000).toFixed(1)}s usable`).join(" ") || "none"}]  ` +
+              `final ${g3.final.lines.join(" ")} overall ${(Number(g3.final.overall) * 100).toFixed(0)}% usable ${(Number(g3.final.usable) / 1000).toFixed(1)}s${g3.completeAt === null ? "" : ` complete@${(g3.completeAt / 1000).toFixed(1)}s`}  ` +
+              `backwards ${g3.backwards} resets ${g3.resets}  ticks ${g3.lineTicks} for ${g3.confirmations} confirmation${g3.confirmations === 1 ? "" : "s"}`,
       );
       console.log(
         f === null

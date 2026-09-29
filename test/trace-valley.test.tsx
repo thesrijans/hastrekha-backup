@@ -181,7 +181,10 @@ const inside = new Uint8Array(N * N).fill(1);
   ok(/\{ rgba: warped\.image\.data, inside: warped\.inside, size: warped\.image\.width \}/.test(hook), "the per-frame extraction hands the tracer the crop its mask came from");
 
   const client = withoutComments(source("app", "scan", "chamber", "chamber-client.tsx"));
-  ok(/lines: drawnRef\.current \?\? found\.lines,/.test(client), "the pothi hand-off carries the lines the reader was shown");
+  ok(
+    /const shown: [^=]+= \{ \.\.\.\(drawnRef\.current \?\? found\.lines\) \};/.test(client) && /lines: shown,/.test(client),
+    "the pothi hand-off carries the lines the reader was shown (less any the scan budget marked unclear, scan-complete G3.2)",
+  );
 
   const canvas = source("components", "sanctuary", "chamber", "chamber-canvas.tsx");
   ok(/export const TRACED_EXTENSION_ALPHA = 0\.6;/.test(canvas) && /line\.traced === true \? TRACED_EXTENSION_ALPHA : INFERRED_ALPHA/.test(canvas), "the chamber draws traced extension at 0.6");

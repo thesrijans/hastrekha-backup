@@ -73,7 +73,8 @@ import {
 import { formatFrameCost, withinFrameBudget, type FrameCostSummary } from "@/lib/sanctuary/frame-cost";
 import { formatFunnel } from "@/lib/scan/funnel";
 import { ChamberCanvas } from "@/components/sanctuary/chamber/chamber-canvas";
-import { RekhaMonitor, rekhaLedger } from "@/components/sanctuary/chamber/rekha-monitor";
+import { RekhaMonitor, detectionLedger, rekhaLedger } from "@/components/sanctuary/chamber/rekha-monitor";
+import { bagWithoutLines, DETECTION_IDLE, LINE_TICK_SPACING_MS, newlyConfirmed, nextDetection, unclearLines, type DetectionState } from "@/lib/scan/detection-progress";
 import { CHAMBER_SCAN_FLAGS, withScanFlags } from "@/lib/scan/flags";
 import { ScanLitany, type LitanyHint } from "@/components/sanctuary/chamber/scan-litany";
 import { haptic } from "@/components/sanctuary/sound-provider";
@@ -117,6 +118,8 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
    * capture. Null until anything has been drawn, and then the merged fit is the fallback.
    */
   const drawnRef = useRef<Partial<Record<ActiveLineId, TracedLine>> | null>(null);
+  /* scan-complete G3: the detection progress as it stands, read by the reading when it is asked for. */
+  const detectionRef = useRef<DetectionState>(DETECTION_IDLE);
   const mountedRef = useRef(true);
 
   const [phase, setPhase] = useState<ChamberPhase>("scanning");
@@ -223,10 +226,16 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         );
         sessionRef.current = finalSession;
 
+        /*
+         * scan-complete G3.2: a line the budget marked "इस हाथ पर स्पष्ट नहीं" leaves the bag and the hand-off, and the pothi seals its
+         * chapter saying so: no rule fires on evidence the chamber itself declined to confirm.
+         */
+        const detection = detectionRef.current;
+        const unclear = unclearLines(detection);
         const response = await fetch("/api/reading", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ tier: "free", source: "CAMERA_SCAN", features: sessionBag(finalSession) }),
+          body: JSON.stringify({ tier: "free", source: "CAMERA_SCAN", features: bagWithoutLines(sessionBag(finalSession), unclear) }),
         });
         if (!mountedRef.current) return;
         if (!response.ok) {
@@ -237,10 +246,13 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         const reading = (await response.json()) as ReadingResponse;
         setRulesFired(reading.rules.length);
 
+        const shown: Partial<Record<string, TracedLine>> = { ...(drawnRef.current ?? found.lines) };
+        for (const id of unclear) delete shown[id];
         handOffToPothi({
           reading,
-          lines: drawnRef.current ?? found.lines,
+          lines: shown,
           space: MASK_SIZE,
+          ...(unclear.length === 0 ? {} : { unclear: { lines: unclear, afterUsableMs: detection.usableMs } }),
           ...(cropImage === null ? {} : { cropDataUrl: encodeCrop(cropImage) ?? undefined }),
           sessionId: reading.readingId ?? `chamber-${Math.round(performance.now())}`,
           capturedAt: new Date().toISOString(),
@@ -314,6 +326,26 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
    */
   const hint: LitanyHint | null =
     status !== "running" ? null : reason !== null ? REASON_WORDS[reason] : distanceState !== null ? DISTANCE_WORDS[distanceState] : null;
+
+  /*
+   * scan-complete G3: the detection progress — a ring per line driven by its evidence toward CONFIRMED, the
+   * overall percentage, and after the budget the lines this hand does not show clearly
+   * (lib/scan/detection-progress.ts). Folded in once per accumulator snapshot; each line newly confirmed
+   * earns its ✓ and one haptic tick.
+   */
+  const [detection, setDetection] = useState<DetectionState>(DETECTION_IDLE);
+  useEffect(() => {
+    const previous = detectionRef.current;
+    const next = nextDetection(previous, rekha, performance.now());
+    if (next === previous) return;
+    detectionRef.current = next;
+    setDetection(next);
+    /* One tick per line, spaced: two confirmed together are two ticks, not one. */
+    newlyConfirmed(previous, next).forEach((_, index) => {
+      if (index === 0) haptic("lineConfirmed");
+      else window.setTimeout(() => haptic("lineConfirmed"), index * LINE_TICK_SPACING_MS);
+    });
+  }, [rekha]);
 
   /* G2.2: a light tick on entering the band — at most once in BAND_TICK_MIN_INTERVAL_MS (lib/scan/distance.ts). */
   const previousDistanceRef = useRef<DistanceState | null>(null);
@@ -556,7 +588,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
       ) : null}
 
       {/* S1.4 — the lines found so far, by state, and nothing below CANDIDATE. Detection only. */}
-      <RekhaMonitor snapshot={rekha} visible={scanning} />
+      <RekhaMonitor snapshot={rekha} detection={detection} visible={scanning} />
 
       <ScanLitany
         line={line}
@@ -580,6 +612,8 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
           {rekha === null
             ? null
             : ` · rekha ${rekha.costMs.toFixed(2)} ms/frame · ${rekhaLedger(rekha)} · flicker ${Object.values(rekha.flicker).join("/")}`}
+          {/* G3: the rings as numbers, and the usable time the budget is counting. */}
+          {` · ${detectionLedger(detection)} · usable ${(detection.usableMs / 1000).toFixed(1)} s`}
           {traceMs === null ? null : ` · trace ${traceMs.toFixed(1)} ms/extraction`}
           {activeProfile === null
             ? null
