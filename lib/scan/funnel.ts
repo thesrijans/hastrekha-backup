@@ -6,8 +6,10 @@
  *   lines proposed (per id) → lines held (per id) → drawn
  *
  * plus, per window, a rejection histogram (the FIRST failing gate of each rejected frame — the
- * hint the reader was shown) and the palm's width in source pixels (the landmarks' extent times the
- * frame's width: what the extractor actually has to work with at this distance and lens).
+ * hint the reader was shown), the palm's width in source pixels (the landmarks' extent times the
+ * frame's width: what the extractor actually has to work with at this distance and lens — the
+ * fingertips included), the palm quad's own width (what `too_close` gates on since scan-complete G1),
+ * and per guided pose, how many hand frames passed every gate.
  *
  * Outside the frozen core, and OFF unless asked for: the hook creates one only under `?cost=1`, and
  * every call site is a single `funnel?.` optional chain, so a scan with the readout off does no work
@@ -59,8 +61,15 @@ export interface FunnelWindow {
   drawn: number;
   /** The palm's extent in source pixels, one sample per hand frame (sorted at snapshot). */
   readonly palmWidthPx: number[];
+  /**
+   * The palm quad's width in source pixels, one sample per hand frame — what `too_close` gates on since
+   * scan-complete G1 (the extent above counts the fingertips, which a close palm pushes out of frame).
+   */
+  readonly palmQuadWidthPx: number[];
   /** Hand frames per guided pose ("FLAT", "TILT_LEFT", …; "done" after the sequence). */
   readonly poses: Record<string, number>;
+  /** …and how many of them passed EVERY gate: a pose a reader (or a static test feed) cannot satisfy reads 0 here. */
+  readonly posesPassed: Record<string, number>;
   /** The display-space palm tilt of each hand frame (the tilt gate's own number; sorted at snapshot). */
   readonly tilt: number[];
 }
@@ -72,8 +81,9 @@ export interface FunnelSummaryStat {
   readonly max: number;
 }
 
-export interface FunnelWindowSummary extends Omit<FunnelWindow, "palmWidthPx" | "tilt"> {
+export interface FunnelWindowSummary extends Omit<FunnelWindow, "palmWidthPx" | "palmQuadWidthPx" | "tilt"> {
   readonly palmWidthPx: FunnelSummaryStat | null;
+  readonly palmQuadWidthPx: FunnelSummaryStat | null;
   readonly tilt: FunnelSummaryStat | null;
 }
 
@@ -89,6 +99,8 @@ export interface FunnelFrame {
   readonly hand: boolean;
   /** The landmarks' extent in source pixels, or null without a hand. */
   readonly palmWidthPx: number | null;
+  /** The palm quad's width in source pixels (lib/scan/quality.ts palmQuadWidth), or null without a hand. */
+  readonly palmQuadWidthPx: number | null;
   /** The gate's per-check verdicts for this frame, or null without a hand. */
   readonly checks: Readonly<Record<QualityIssue, boolean>> | null;
   /** The gate's failing checks in hint order (the first is the hint shown). */
@@ -122,7 +134,9 @@ function openWindow(startMs: number): FunnelWindow {
     held: lineRecord(),
     drawn: 0,
     palmWidthPx: [],
+    palmQuadWidthPx: [],
     poses: {},
+    posesPassed: {},
     tilt: [],
   };
 }
@@ -135,8 +149,8 @@ function stat(samples: readonly number[], digits: number): FunnelSummaryStat | n
 }
 
 function summarise(window: FunnelWindow): FunnelWindowSummary {
-  const { palmWidthPx, tilt, ...rest } = window;
-  return { ...rest, palmWidthPx: stat(palmWidthPx, 0), tilt: stat(tilt, 3) };
+  const { palmWidthPx, palmQuadWidthPx, tilt, ...rest } = window;
+  return { ...rest, palmWidthPx: stat(palmWidthPx, 0), palmQuadWidthPx: stat(palmQuadWidthPx, 0), tilt: stat(tilt, 3) };
 }
 
 export class StageFunnel {
@@ -165,9 +179,11 @@ export class StageFunnel {
     if (!frame.hand) return;
     w.handFound += 1;
     if (frame.palmWidthPx !== null) w.palmWidthPx.push(frame.palmWidthPx);
+    if (frame.palmQuadWidthPx !== null) w.palmQuadWidthPx.push(frame.palmQuadWidthPx);
     if (frame.tilt !== null) w.tilt.push(frame.tilt);
     const pose = frame.pose ?? "none";
     w.poses[pose] = (w.poses[pose] ?? 0) + 1;
+    if (frame.issues.length === 0) w.posesPassed[pose] = (w.posesPassed[pose] ?? 0) + 1;
     if (frame.checks !== null) {
       for (const check of ALL_CHECKS) {
         if (frame.checks[check]) w.gates[check].passed += 1;
@@ -207,12 +223,13 @@ export function formatFunnel(w: FunnelWindowSummary): string {
   const reject = ALL_CHECKS.filter((check) => w.rejections[check] > 0)
     .map((check) => `${check} ${w.rejections[check]}`)
     .join(" ");
-  const width = w.palmWidthPx === null ? "–" : `${w.palmWidthPx.median}px (${w.palmWidthPx.min}–${w.palmWidthPx.max})`;
-  const poses = Object.entries(w.poses).map(([pose, n]) => `${pose} ${n}`).join(" ") || "none";
+  const px = (s: FunnelSummaryStat | null): string => (s === null ? "–" : `${s.median}px (${s.min}–${s.max})`);
+  // Each pose's hand frames, and how many passed every gate — a pose that never passes stalls the capture.
+  const poses = Object.entries(w.poses).map(([pose, n]) => `${pose} ${n} (${w.posesPassed[pose] ?? 0} ✓)`).join(" ") || "none";
   const tilt = w.tilt === null ? "–" : `${w.tilt.median} (${w.tilt.min}…${w.tilt.max})`;
   return (
     `funnel ${Math.round((w.endMs - w.startMs) / 1000)}s: captured ${w.captured} → hand ${w.handFound} → palm ${w.palmAccepted} → gates ${w.gatesPassed}` +
     ` → rectified ${w.rectified} → extractions ${w.extractions} → proposed ${ids(w.proposed)} → held ${ids(w.held)} → drawn ${w.drawn}` +
-    ` · rejected ${reject || "none"} · palm ${width} · pose ${poses} · tilt ${tilt}`
+    ` · rejected ${reject || "none"} · palm ${px(w.palmWidthPx)} · quad ${px(w.palmQuadWidthPx)} · pose ${poses} · tilt ${tilt}`
   );
 }

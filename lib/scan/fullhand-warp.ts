@@ -61,6 +61,17 @@ function reprojectionError(h: Matrix3, c: Correspondence): number {
   return p === null ? Number.POSITIVE_INFINITY : Math.hypot(p.x - c.dst.x, p.y - c.dst.y);
 }
 
+/**
+ * Whether the whole hand is in frame — every one of the 21 landmarks the full-hand canonical frame is
+ * laid out from. Since G1 (scan-complete) a close palm passes the gate with its fingertips out of frame;
+ * warping that would fill the model's finger region with replicated edge pixels, which is not the
+ * full-hand framing it was trained on. The caller then sends the palm-quad crop, the path every frame
+ * took before this flag existed.
+ */
+export function fullHandInFrame(landmarks: readonly Landmark3[]): boolean {
+  return landmarks.length >= 21 && landmarks.every((p) => p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1);
+}
+
 /* --------------------------------- Solve --------------------------------- */
 
 /**

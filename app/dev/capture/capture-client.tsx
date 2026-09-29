@@ -25,8 +25,8 @@ import { createHandLandmarker, toObservation, MissingScanAssetError } from "@/li
 import {
   assessSharpness,
   gradeFrame,
-  landmarkJitter,
-  palmSpan,
+  palmJitter,
+  palmQuadSpan,
   CAPTURE_POSES,
   SHARPNESS_MIN_VARIANCE,
   SPAN_HISTORY_FRAMES,
@@ -542,11 +542,12 @@ export function CaptureClient() {
         grade = gradeFrame(null);
         previousLandmarksRef.current = null;
       } else {
-        const jitter = landmarkJitter(previousLandmarksRef.current, observation.landmarks);
+        // G1: the palm's motion and size, the same measures the live scan gates on.
+        const jitter = palmJitter(previousLandmarksRef.current, observation.landmarks);
         previousLandmarksRef.current = observation.landmarks;
         jitterRef.current = jitter;
         const history = spanHistoryRef.current;
-        history.push(palmSpan(observation.landmarks));
+        history.push(palmQuadSpan(observation.landmarks));
         if (history.length > SPAN_HISTORY_FRAMES) history.shift();
         const stats = sampleStats(video);
         statsRef.current = stats;
@@ -559,6 +560,8 @@ export function CaptureClient() {
           jitter,
           score: observation.score,
           spanHistory: history,
+          // The palm margin is a number of pixels on every edge (G1), so the gate needs the frame's shape.
+          frame: { width: video.videoWidth, height: video.videoHeight },
           // Sequence mode gates each still on its choreography pose — the same profiles /scan uses.
           ...(seqActiveRef.current
             ? { pose: CAPTURE_POSES[seqStepRef.current], baselineHandedness: seqBaselineRef.current }

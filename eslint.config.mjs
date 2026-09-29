@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Vendored third-party WASM glue (see scripts/vendor-mediapipe.mjs) — generated, not ours.
     "public/**",
+    // A local `vercel build`'s output (prebuilt deploys) — generated and git-ignored, like .next.
+    ".vercel/**",
     // Prisma's generated client, which ships with its own @ts-nocheck.
     "lib/generated/**",
   ]),

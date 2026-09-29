@@ -40,9 +40,9 @@ const failing = (...issues: QualityIssue[]): Record<QualityIssue, boolean> => {
   const funnel = new StageFunnel();
   for (let i = 0; i < 30; i += 1) {
     const at = i * 100;
-    if (i < 10) funnel.frame(at, { hand: false, palmWidthPx: null, checks: null, issues: ["no_hand"], drawnLines: 0, pose: null, tilt: null });
-    else if (i < 20) funnel.frame(at, { hand: true, palmWidthPx: 400, checks: failing("too_far"), issues: ["too_far"], drawnLines: 0, pose: null, tilt: null });
-    else funnel.frame(at, { hand: true, palmWidthPx: 520, checks: passing(), issues: [], drawnLines: i >= 25 ? 2 : 0, pose: "TILT_LEFT", tilt: -0.3 });
+    if (i < 10) funnel.frame(at, { hand: false, palmWidthPx: null, palmQuadWidthPx: null, checks: null, issues: ["no_hand"], drawnLines: 0, pose: null, tilt: null });
+    else if (i < 20) funnel.frame(at, { hand: true, palmWidthPx: 400, palmQuadWidthPx: 180, checks: failing("too_far"), issues: ["too_far"], drawnLines: 0, pose: null, tilt: null });
+    else funnel.frame(at, { hand: true, palmWidthPx: 520, palmQuadWidthPx: 260, checks: passing(), issues: [], drawnLines: i >= 25 ? 2 : 0, pose: "TILT_LEFT", tilt: -0.3 });
   }
   funnel.rectified(2100);
   funnel.rectified(2600);
@@ -60,16 +60,19 @@ const failing = (...issues: QualityIssue[]): Record<QualityIssue, boolean> => {
   ok(/captured 30 → hand 20 → palm 20 → gates 10 → rectified 2 → extractions 2 → proposed heart 2 head 2 life 1 → held heart 1 → drawn 5/.test(line), `the readout line reads in order: ${line}`);
   ok(/rejected too_far 10/.test(line) && /palm 520px \(400–520\)/.test(line), "…with the rejections and the palm width");
   ok(w.poses.TILT_LEFT === 10 && w.poses.none === 10 && w.tilt !== null && w.tilt.median === -0.3 && w.tilt.n === 10, `…and the pose and the tilt of each hand frame (${JSON.stringify(w.poses)}, tilt ${JSON.stringify(w.tilt)})`);
-  ok(/pose none 10 TILT_LEFT 10 · tilt -0\.3 \(-0\.3…-0\.3\)/.test(line), "…printed after the palm width");
+  /* scan-complete G1: the palm quad's width (what too_close gates on) and, per pose, the frames through every gate. */
+  ok(w.palmQuadWidthPx !== null && w.palmQuadWidthPx.n === 20 && w.palmQuadWidthPx.min === 180 && w.palmQuadWidthPx.max === 260, `palm quad width summarised (${JSON.stringify(w.palmQuadWidthPx)})`);
+  ok(w.posesPassed.TILT_LEFT === 10 && (w.posesPassed.none ?? 0) === 0, `per-pose passes: the failing pose reads 0 (${JSON.stringify(w.posesPassed)})`);
+  ok(/palm 520px \(400–520\) · quad 260px \(180–260\) · pose none 10 \(0 ✓\) TILT_LEFT 10 \(10 ✓\) · tilt -0\.3 \(-0\.3…-0\.3\)/.test(line), `…printed after the palm width: ${line}`);
 }
 
 /* ------------------------------ 2. windows close on time ------------------------------ */
 
 {
   const funnel = new StageFunnel();
-  funnel.frame(0, { hand: true, palmWidthPx: 300, checks: passing(), issues: [], drawnLines: 0, pose: null, tilt: null });
-  funnel.frame(FUNNEL_WINDOW_MS - 1, { hand: true, palmWidthPx: 300, checks: passing(), issues: [], drawnLines: 0, pose: null, tilt: null });
-  funnel.frame(FUNNEL_WINDOW_MS + 5, { hand: false, palmWidthPx: null, checks: null, issues: ["no_hand"], drawnLines: 0, pose: null, tilt: null });
+  funnel.frame(0, { hand: true, palmWidthPx: 300, palmQuadWidthPx: 140, checks: passing(), issues: [], drawnLines: 0, pose: null, tilt: null });
+  funnel.frame(FUNNEL_WINDOW_MS - 1, { hand: true, palmWidthPx: 300, palmQuadWidthPx: 140, checks: passing(), issues: [], drawnLines: 0, pose: null, tilt: null });
+  funnel.frame(FUNNEL_WINDOW_MS + 5, { hand: false, palmWidthPx: null, palmQuadWidthPx: null, checks: null, issues: ["no_hand"], drawnLines: 0, pose: null, tilt: null });
   const snap = funnel.snapshot(FUNNEL_WINDOW_MS + 10);
   ok(snap.windows.length === 1 && snap.windows[0]!.captured === 2 && snap.windows[0]!.handFound === 2, "the first window closed with its two hand frames");
   ok(snap.current.captured === 1 && snap.current.handFound === 0 && snap.current.startMs === FUNNEL_WINDOW_MS, "the next window opened at the boundary with the frame that crossed it");
@@ -102,7 +105,7 @@ const failing = (...issues: QualityIssue[]): Record<QualityIssue, boolean> => {
   const funnel = new StageFunnel();
   const checks = failing("unsteady");
   const started = performance.now();
-  for (let i = 0; i < 10_000; i += 1) funnel.frame(i * 16.7, { hand: true, palmWidthPx: 500 + (i % 7), checks, issues: ["unsteady"], drawnLines: 1, pose: "FLAT", tilt: 0.01 });
+  for (let i = 0; i < 10_000; i += 1) funnel.frame(i * 16.7, { hand: true, palmWidthPx: 500 + (i % 7), palmQuadWidthPx: 240 + (i % 5), checks, issues: ["unsteady"], drawnLines: 1, pose: "FLAT", tilt: 0.01 });
   const perFrameUs = ((performance.now() - started) / 10_000) * 1000;
   ok(perFrameUs < 20, `a hand frame costs the funnel ${perFrameUs.toFixed(2)} µs — under 20 µs, two hundredths of the readout's budget`);
   ok(funnel.snapshot().windows.length === FUNNEL_KEEP_WINDOWS, `and it keeps only the last ${FUNNEL_KEEP_WINDOWS} windows however long the scan runs`);

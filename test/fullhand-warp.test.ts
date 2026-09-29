@@ -15,6 +15,7 @@ import {
   FULLHAND_FIXED_SUBSET,
   RANSAC_THRESHOLD_FRAC,
   UNET_INPUT_SIZE,
+  fullHandInFrame,
   fullHandToPalmQuad,
   matrixFromBuffer,
   matrixToBuffer,
@@ -298,6 +299,18 @@ ok(DEFAULT_SCAN_FLAGS.unetFullHand === false, "unetFullHand defaults OFF");
   const perCall = (performance.now() - t0) / N;
   console.log(`  warpFullHand@256 on 1280×720: ${perCall.toFixed(2)} ms/call (${N} warm iterations)`);
   ok(perCall <= 6, `within the 6 ms budget (got ${perCall.toFixed(2)} ms)`);
+}
+
+/* ---- scan-complete G1.2: a close palm (fingertips out of frame) falls back to the palm-quad crop ---- */
+
+{
+  const whole: Landmark3[] = CANONICAL_FULLHAND_21.map(([x, y]) => ({ x: 0.2 + x * 0.6, y: 0.1 + y * 0.8, z: 0 }));
+  ok(fullHandInFrame(whole), "the whole hand in frame gets the full-hand framing");
+  const tipOut = whole.map((p, i) => (i === 12 ? { ...p, y: -0.04 } : p));
+  ok(!fullHandInFrame(tipOut), "one fingertip off the top and it does not — the finger region would be replicated edge");
+  ok(!fullHandInFrame(whole.slice(0, 20)), "…nor does a short landmark list");
+  const hook = readFileSync("components/scan/use-hand-scan.ts", "utf8");
+  ok(/scanFlags\.snapshot\(\)\.unetFullHand && fullHandInFrame\(next\.landmarks\)/.test(hook), "the hook attaches the full-hand warp only then; otherwise the worker gets the palm-quad crop, never a throw");
 }
 
 console.log(`FULLHAND WARP ASSERTIONS PASSED (${assertions})`);

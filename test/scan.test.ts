@@ -1,18 +1,27 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { applyHomography, canonicalQuad, palmQuad, solveHomography } from "../lib/scan/rectify";
+import { applyHomography, canonicalQuad, palmAnchors, palmQuad, solveHomography } from "../lib/scan/rectify";
 import {
   CAPTURE_POSES,
   fingerExtension,
   MIN_FINGER_EXTENSION,
+  PALM_FRAME_MARGIN,
+  PALM_QUAD_MAX_WIDTH,
   gradeFrame,
   landmarkJitter,
   palmFacing,
+  palmFrameMargins,
+  palmFramePoints,
+  palmJitter,
+  palmQuadSpan,
+  palmQuadWidth,
   palmSpan,
   spanVariation,
   type QualityInput,
 } from "../lib/scan/quality";
-import { featuresFromLandmarks, measure } from "../lib/scan/features";
+import { featuresFromLandmarks, landmarksInFrame, measure } from "../lib/scan/features";
+import { LM } from "../lib/scan/landmark-index";
+import { derivePalmEdge } from "../lib/scan/landmarks";
 import { emptyLatch, markGateFail, standingOf, updateLatch, type LatchOptions } from "../lib/scan/latch";
 import { createNoopSegmenter, imageDataToNchw, sigmoidInPlace } from "../lib/scan/segmenter";
 import { confidenceOf, emptyFusion, fuse, markHandSeen, mergeMax, resetFusion, shouldReset } from "../lib/scan/fusion";
@@ -26,7 +35,7 @@ import {
   tickCapture,
   AUTO_CAPTURE_HOLD_MS,
 } from "../lib/scan/capture";
-import { ACTIVE_LINE_IDS, MASK_SIZE, RECTIFIED_SIZE, RESERVED_LINE_IDS, type LineMask, type Point2 } from "../lib/scan/types";
+import { ACTIVE_LINE_IDS, MASK_SIZE, RECTIFIED_SIZE, RESERVED_LINE_IDS, type Landmark3, type LineMask, type Point2 } from "../lib/scan/types";
 import { curledHand, syntheticHand } from "./hand-fixture";
 
 const LATCH: LatchOptions = { confirmAfter: 3, decayAfterMs: 2000 };
@@ -157,6 +166,78 @@ function baseInput(overrides: Partial<QualityInput> = {}): QualityInput {
   assert.ok(swapped.checks.wrong_hand === true, "showing the other hand passes it");
 }
 
+/* ----------------- G1 (scan-complete): the frame gate measures the palm ----------------- */
+
+{
+  const { image } = syntheticHand();
+  const QUAD = [LM.WRIST, LM.THUMB_CMC, LM.INDEX_MCP, LM.PINKY_MCP];
+  const centre = {
+    x: (Math.min(...QUAD.map((i) => image[i].x)) + Math.max(...QUAD.map((i) => image[i].x))) / 2,
+    y: (Math.min(...QUAD.map((i) => image[i].y)) + Math.max(...QUAD.map((i) => image[i].y))) / 2,
+  };
+  /** The fixture brought closer: scaled about its palm quad's centre (`sx`, `sy`), then shifted. */
+  const framed = (sx: number, sy: number, dx = 0, dy = 0): Landmark3[] =>
+    image.map((p) => ({ x: centre.x + (p.x - centre.x) * sx + dx, y: centre.y + (p.y - centre.y) * sy + dy, z: p.z }));
+  const grade = (landmarks: Landmark3[], extra: Partial<QualityInput> = {}) => gradeFrame(baseInput({ landmarks, ...extra }));
+
+  /* The recordings' framing (docs/specs/phone-scan-2026-09-29-findings.md): the fingertips off the top,
+     the thumb tip off the side, the palm itself in plain view. */
+  const close = framed(1.6, 1.6, 0, -0.08);
+  const outside = close.flatMap((p, i) => (p.x < 0 || p.x > 1 || p.y < 0 || p.y > 1 ? [i] : []));
+  assert.ok(outside.includes(LM.MIDDLE_TIP) && outside.includes(LM.THUMB_TIP), `the close palm's fingertips are out of frame (landmarks ${outside.join(",")})`);
+  assert.ok(palmSpan(close) > 1, `…its span, fingertips included, is past the whole frame (${palmSpan(close).toFixed(2)})`);
+  const closeVerdict = grade(close);
+  assert.ok(closeVerdict.checks.out_of_frame, "the close palm passes out_of_frame — every palm anchor is inside");
+  assert.ok(closeVerdict.checks.too_close, `…and too_close: its quad is ${palmQuadWidth(palmFramePoints(close)!).toFixed(2)} of the width, under ${PALM_QUAD_MAX_WIDTH}`);
+  assert.ok(closeVerdict.ok, `…and the whole gate (issues: ${closeVerdict.issues.join(",") || "none"})`);
+  assert.ok(closeVerdict.score >= gradeFrame(baseInput()).score, `…and scores no lower than the whole hand in view (${closeVerdict.score.toFixed(3)})`);
+
+  /* A palm that is NOT in frame is still rejected: the wrist off the bottom, a thumb root in the margin. */
+  const wristCut = framed(1, 1, 0, 0.1);
+  assert.ok(wristCut[LM.WRIST].y >= 1 && grade(wristCut).issues[0] === "out_of_frame", "a wrist cut off the bottom is rejected, first, as out_of_frame");
+  const thumbRoot = framed(1, 1, 0.02 - image[LM.THUMB_CMC].x, 0);
+  assert.ok(!grade(thumbRoot).checks.out_of_frame, `a thumb root 2% from the edge is rejected — the margin is ${PALM_FRAME_MARGIN * 100}%`);
+
+  /* The margin is 3% of the SHORT side: the same pixels on every edge of a portrait frame. */
+  const portrait = { width: 720, height: 1280 };
+  const margins = palmFrameMargins(portrait);
+  assert.ok(Math.abs(margins.x - 0.03) < 1e-12 && Math.abs(margins.y - (0.03 * 720) / 1280) < 1e-12, `21.6 px on each edge of 720×1280 (x ${margins.x}, y ${margins.y.toFixed(5)})`);
+  const lowWrist = framed(1, 1, 0, 0.975 - image[LM.WRIST].y);
+  assert.ok(grade(lowWrist, { frame: portrait }).checks.out_of_frame, "a wrist 32 px above the bottom of a 720×1280 frame is inside its 21.6 px margin");
+  assert.ok(!grade(lowWrist).checks.out_of_frame, "…and outside a square frame's 3%");
+
+  /* The percussion point counts exactly when the rectifier uses it. */
+  const percussion0 = derivePalmEdge(image)!.percussionTop.x;
+  const nearEdge = framed(1, 1, 0.98 - percussion0, 0);
+  assert.ok(palmAnchors(nearEdge, 1, 1)!.usedPercussion && palmFramePoints(nearEdge)!.length === 5, "a percussion point 2% from the edge is one the rectifier uses — so it is a palm point");
+  assert.ok(!grade(nearEdge).checks.out_of_frame, "…held to the margin, and rejected");
+  const pastEdge = framed(1, 1, 0.995 - percussion0, 0);
+  assert.ok(!palmAnchors(pastEdge, 1, 1)!.usedPercussion && palmFramePoints(pastEdge)!.length === 4, "past the rectifier's 1% it takes the four-anchor solve, and the gate measures those four");
+
+  /* too_close is the palm quad's width (G1); too_far is still the whole hand's span. */
+  const underCeiling = framed(2.1, 1, -0.02, 0);
+  const overCeiling = framed(2.2, 1, -0.02, 0);
+  const underWidth = palmQuadWidth(palmFramePoints(underCeiling)!);
+  const overWidth = palmQuadWidth(palmFramePoints(overCeiling)!);
+  assert.ok(underWidth < PALM_QUAD_MAX_WIDTH && grade(underCeiling).checks.too_close, `a quad ${underWidth.toFixed(3)} of the width is not too close`);
+  assert.ok(overWidth > PALM_QUAD_MAX_WIDTH && !grade(overCeiling).checks.too_close && grade(overCeiling).checks.out_of_frame, `a quad ${overWidth.toFixed(3)} of the width is too close — while still inside the frame`);
+  assert.ok(!grade(framed(0.35, 0.35)).checks.too_far, "a small, far hand is too_far, on the whole hand's span as before");
+
+  /* The standing rule (G1): the palm's motion and size, not the fingertips'. The landmarker's
+     extrapolated fingertips wobble on a hand that is perfectly still (tight-02: half the frames over
+     the jitter limit on all 21 points, none on the palm quad); a palm that moves still reads as moving. */
+  const wobble = close.map((p, i) => (outside.includes(i) ? { ...p, x: p.x + 0.06, y: p.y - 0.04 } : p));
+  assert.ok(landmarkJitter(close, wobble) > 0.012, `the fingertips' wobble alone is past the jitter limit on all 21 points (${landmarkJitter(close, wobble).toFixed(4)})`);
+  assert.equal(palmJitter(close, wobble), 0, "…and nothing on the palm quad");
+  assert.ok(grade(wobble, { jitter: palmJitter(close, wobble) }).checks.unsteady, "a still palm with wobbling fingertips is steady");
+  const moved = close.map((p) => ({ ...p, x: p.x + 0.02 }));
+  assert.ok(palmJitter(close, moved) > 0.012 && !grade(moved, { jitter: palmJitter(close, moved) }).checks.unsteady, "a palm that moves 2% of the frame is unsteady, threshold unchanged");
+  assert.ok(Math.abs(palmQuadSpan(wobble) - palmQuadSpan(close)) < 1e-12 && palmSpan(wobble) !== palmSpan(close), "the palm quad's span ignores the fingertips; the whole hand's does not");
+  assert.ok(Math.abs(palmQuadSpan(image) - 0.45) < 1e-9, `the fixture's palm quad spans 0.45 of the frame (${palmQuadSpan(image)})`);
+  const quadHistory = [close, wobble, close, wobble, close].map(palmQuadSpan);
+  assert.ok(grade(wobble, { spanHistory: quadHistory }).checks.inconsistent, "a palm-quad span history is not thrown by the fingertips — inconsistent passes");
+}
+
 /* -------------------------------- Rectify --------------------------------- */
 
 {
@@ -186,6 +267,37 @@ function baseInput(overrides: Partial<QualityInput> = {}): QualityInput {
   }
   assert.ok(!("mounts" in bag), "mounts are never derived from landmarks");
   assert.equal(featuresFromLandmarks([], {}), null, "too few landmarks yields nothing");
+}
+
+/* ------------- G1.2 (scan-complete): no feature from a fingertip the camera did not see ------------- */
+
+{
+  const { image, world } = syntheticHand();
+  const whole = featuresFromLandmarks(world, { quality: 0.8 })!;
+  const wholeSeen = featuresFromLandmarks(world, { quality: 0.8, inFrame: landmarksInFrame(image) })!;
+  assert.ok(landmarksInFrame(image).every(Boolean), "the fixture's whole hand is in frame");
+  assert.equal(JSON.stringify(wholeSeen.features), JSON.stringify(whole.features), "whole hand in view: the feature bag is byte-identical, keys and order");
+
+  /* The close palm's frame: every fingertip and the thumb tip out, extrapolated by the landmarker. */
+  const cut = new Set<number>([LM.THUMB_TIP, LM.INDEX_TIP, LM.MIDDLE_TIP, LM.RING_TIP, LM.PINKY_TIP]);
+  const close = featuresFromLandmarks(world, { quality: 0.8, inFrame: image.map((_, i) => !cut.has(i)) })!;
+  const fingers = close.features.fingers as Record<string, unknown>;
+  const thumb = close.features.thumb as Record<string, unknown>;
+  for (const key of ["length_vs_palm", "jupiter", "saturn", "sun", "jupiter_vs_apollo", "spacing"]) {
+    assert.ok(!(key in fingers), `fingers.${key} is not emitted with the fingertips out of frame`);
+  }
+  assert.ok(!("mercury" in fingers) || !("length" in (fingers.mercury as Record<string, unknown>)), "nor the little finger's length");
+  assert.ok(!("straight_full" in thumb) && !("nail_phalange_long" in thumb), "nor the thumb's tip features");
+  assert.equal(thumb.present, true, "the thumb is still reported present");
+  assert.ok(close.shapeSuggestion === null && !("shape" in ((close.features.hand ?? {}) as Record<string, unknown>)), "no hand shape: it reads the middle finger and the tips");
+  assert.equal((close.features.hand as Record<string, unknown> | undefined)?.overall_quality, 0.8, "the frame's quality still is");
+  assert.ok(Number.isFinite(close.metrics.middleOverPalm), "the raw metrics are still measured for the HUD — never thrown on");
+
+  /* One finger out is one finger's features: the index gone takes jupiter and jupiter_vs_apollo, not saturn. */
+  const indexOut = featuresFromLandmarks(world, { quality: 0.8, inFrame: image.map((_, i) => i !== LM.INDEX_TIP) })!;
+  const indexFingers = indexOut.features.fingers as Record<string, unknown>;
+  assert.ok(!("jupiter" in indexFingers) && !("jupiter_vs_apollo" in indexFingers) && !("spacing" in indexFingers), "the index tip out drops what the index is measured in");
+  assert.deepEqual(indexFingers.saturn, (whole.features.fingers as Record<string, unknown>).saturn, "…and keeps what it is not");
 }
 
 /* ---------------------------------- Latch --------------------------------- */

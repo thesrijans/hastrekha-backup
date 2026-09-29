@@ -15,12 +15,16 @@ import {
   type CameraFacing,
 } from "@/lib/scan/camera-select";
 import { FULL_SCAN_PROFILE, type ScanProfile } from "@/lib/scan/scan-profile";
-import { featuresFromLandmarks, type LandmarkFeatureResult } from "@/lib/scan/features";
+import { featuresFromLandmarks, landmarksInFrame, type LandmarkFeatureResult } from "@/lib/scan/features";
 import {
   CAPTURE_POSES,
   FUSION_MIN_SCORE,
   gradeFrame,
-  landmarkJitter,
+  palmFramePoints,
+  palmInFrame,
+  palmJitter,
+  palmQuadSpan,
+  palmQuadWidth,
   palmSpan,
   segmentationEligible,
   SPAN_HISTORY_FRAMES,
@@ -33,7 +37,7 @@ import type { ValleyTracer } from "@/lib/scan/trace-valley";
 import { derivePalmEdge } from "@/lib/scan/landmarks";
 import { emptyStabiliser, resetStabiliser, stabiliseAnchors, type AnchorStabiliser } from "@/lib/scan/stabilise";
 import { scanFlags } from "@/lib/scan/flags";
-import { matrixToBuffer, palmQuadToFullHand, solveFullHandHomography, warpFullHand } from "@/lib/scan/fullhand-warp";
+import { fullHandInFrame, matrixToBuffer, palmQuadToFullHand, solveFullHandHomography, warpFullHand } from "@/lib/scan/fullhand-warp";
 import {
   applyPhotometricEvidence,
   mergeBracket,
@@ -641,20 +645,23 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       if (next !== null) recordStage(telemetryRef.current, "handDetected", now);
 
       /*
-       * ── Degraded: part of the hand is outside the frame ──────────────────────────────────────
+       * ── Degraded: part of the PALM is outside the frame ──────────────────────────────────────
        *
-       * MediaPipe returns 21 points whatever it can see; the ones off-screen are extrapolated, and
-       * `derivePalmEdge` then builds the percussion anchor out of them. Measured on a hand pushed a
-       * third of a frame off the edge: three landmarks outside, and `coverage` still exactly 1.000 —
-       * so the segmentation eligibility check cannot catch this, because the crop is defined by the
-       * palm anchors and those can still be in view while the fingers are not.
+       * MediaPipe returns 21 points whatever it can see; the ones off-screen are extrapolated. When a
+       * palm anchor is among them the rectified crop is fitted to guessed geometry, and `coverage` can
+       * still read 1.000 (measured on a hand pushed a third of a frame off the edge), so the
+       * segmentation eligibility check cannot catch it.
        *
        * Evidence still accumulates, because a partly-clipped palm still shows real creases. What
        * stops is the CLAIM: no line features are emitted while this is true, because a line placed
        * from guessed geometry is worse than no line at all.
+       *
+       * The fingers are not part of it (scan-complete G1.2). The crop is fitted to the palm's anchors
+       * alone (rectify.ts palmAnchors, the percussion point derived from palm landmarks), so a close
+       * palm with its fingertips out of frame is measured geometry — and refusing it here would withhold
+       * every line the close palm gives, which is the frame the gate now accepts.
        */
-      const clipped =
-        next !== null && next.landmarks.some((p) => p.x < 0 || p.x > 1 || p.y < 0 || p.y > 1);
+      const clipped = next !== null && !palmInFrame(palmFramePoints(next.landmarks) ?? [], { x: 0, y: 0 });
       if (clipped !== degradedRef.current) {
         degradedRef.current = clipped;
         setDegraded(clipped);
@@ -716,11 +723,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       } else {
         if (baselineHandRef.current === null) baselineHandRef.current = next.handedness;
 
-        const jitter = landmarkJitter(previousLandmarksRef.current, next.landmarks);
+        // G1: the palm's motion and size — extrapolated fingertips wobble on a hand that is perfectly still.
+        const jitter = palmJitter(previousLandmarksRef.current, next.landmarks);
         previousLandmarksRef.current = next.landmarks;
 
         const history = spanHistoryRef.current;
-        history.push(palmSpan(next.landmarks));
+        history.push(palmQuadSpan(next.landmarks));
         if (history.length > SPAN_HISTORY_FRAMES) history.shift();
 
         verdict = gradeFrame({
@@ -734,6 +742,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           spanHistory: history,
           pose: pose ?? undefined,
           baselineHandedness: baselineHandRef.current,
+          // G1: the palm margin is a number of pixels on every edge, so the gate needs the frame's shape.
+          frame: videoSizeRef.current ?? undefined,
         });
       }
       setQuality(verdict);
@@ -746,6 +756,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         funnelNow.frame(now, {
           hand: next !== null,
           palmWidthPx: next === null || width === 0 ? null : palmSpan(next.landmarks) * width,
+          palmQuadWidthPx: next === null || width === 0 ? null : palmQuadWidth(palmFramePoints(next.landmarks) ?? []) * width,
           checks: next === null ? null : verdict.checks,
           issues: verdict.issues,
           drawnLines: drawnLinesRef.current,
@@ -1200,7 +1211,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
              * non-UNet frames. Any null along the way falls back to the unchanged message.
              */
             let fullHand: { rgba: Uint8ClampedArray; pqToFullHand: ArrayBuffer } | undefined;
-            if (scanFlags.snapshot().unetFullHand) {
+            // G1.2: only a whole hand in frame gets the full-hand framing; a close palm sends the palm-quad crop.
+            if (scanFlags.snapshot().unetFullHand && fullHandInFrame(next.landmarks)) {
               const tFullhand = performance.now();
               const toCropFullHand = solveFullHandHomography(next.landmarks, source.width, source.height, "fixed");
               const pqToFull = toCropFullHand === null ? null : palmQuadToFullHand(warped.toCrop, toCropFullHand);
@@ -1469,6 +1481,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         const derived = featuresFromLandmarks(next.world, {
           quality: verdict.score,
           linesAvailable: fusionRef.current.frames > 0,
+          // G1.2: a close palm passes with its fingertips out of frame — no feature from a guessed joint.
+          inFrame: landmarksInFrame(next.landmarks),
         });
         setFeatures(derived);
         if (derived !== null) onFeatures?.(derived, verdict.score);

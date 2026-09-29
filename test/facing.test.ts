@@ -5,7 +5,7 @@ import {
   expectedWindingSign,
   gradeFrame,
   HANDEDNESS_TRUST_SCORE,
-  palmSpan,
+  palmQuadSpan,
   palmTilt,
   palmWinding,
   physicalHandedness,
@@ -108,7 +108,7 @@ const CASES: readonly Case[] = (["front", "back"] as const).flatMap((camera) => 
 for (const testCase of CASES) {
   const readout = assessFacing({
     landmarks: testCase.image,
-    span: palmSpan(testCase.image),
+    span: palmQuadSpan(testCase.image),
     world: testCase.world,
     handedness: testCase.label,
     handednessScore: 0.95,
@@ -148,7 +148,7 @@ for (const testCase of CASES) {
 {
   const right = assessFacing({
     landmarks: rightPalmImage,
-    span: palmSpan(rightPalmImage),
+    span: palmQuadSpan(rightPalmImage),
     world: rightPalmWorld,
     handedness: RIGHT_HAND_LABEL,
     handednessScore: 0.95,
@@ -156,7 +156,7 @@ for (const testCase of CASES) {
   });
   const left = assessFacing({
     landmarks: leftPalmImage,
-    span: palmSpan(leftPalmImage),
+    span: palmQuadSpan(leftPalmImage),
     world: leftPalmWorld,
     handedness: LEFT_HAND_LABEL,
     handednessScore: 0.95,
@@ -178,7 +178,7 @@ for (const testCase of CASES) {
   /* Below the trust score the sign is not enforced, so a mislabelled palm still passes. */
   const mislabelled = assessFacing({
     landmarks: rightPalmImage,
-    span: palmSpan(rightPalmImage),
+    span: palmQuadSpan(rightPalmImage),
     world: rightPalmWorld,
     handedness: LEFT_HAND_LABEL, // the other hand's label on a right palm
     handednessScore: lowScore,
@@ -192,7 +192,7 @@ for (const testCase of CASES) {
   /* Squareness is still required — an edge-on hand is rejected in either regime. */
   const edgeOn = assessFacing({
     landmarks: rightPalmImage,
-    span: palmSpan(rightPalmImage),
+    span: palmQuadSpan(rightPalmImage),
     world: rightPalmWorld.map((p) => ({ x: p.x, y: 0, z: p.y })), // palm rotated into the view axis
     handedness: RIGHT_HAND_LABEL,
     handednessScore: lowScore,
@@ -204,7 +204,7 @@ for (const testCase of CASES) {
   /* Above the threshold the sign IS enforced, so the same mislabelling is caught. */
   const trusted = assessFacing({
     landmarks: rightPalmImage,
-    span: palmSpan(rightPalmImage),
+    span: palmQuadSpan(rightPalmImage),
     world: rightPalmWorld,
     handedness: LEFT_HAND_LABEL,
     handednessScore: HANDEDNESS_TRUST_SCORE,
@@ -276,7 +276,7 @@ function rawFrame(hand: Handedness, camera: Camera, degrees: number): RawFrame {
 }
 
 function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFrame> {
-  const span = palmSpan(frame.image);
+  const span = palmQuadSpan(frame.image);
   return gradeFrame({
     landmarks: frame.image,
     world: frame.world,
@@ -398,7 +398,7 @@ function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFr
 
   const full = assessFacing({
     landmarks: image,
-    span: palmSpan(image),
+    span: palmQuadSpan(image),
     world,
     handedness: RIGHT_HAND_LABEL,
     handednessScore: 0.95,
@@ -410,7 +410,7 @@ function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFr
   const flattened = squeeze(0.15);
   const foreshortened = assessFacing({
     landmarks: flattened,
-    span: palmSpan(flattened),
+    span: palmQuadSpan(flattened),
     world,
     handedness: RIGHT_HAND_LABEL,
     handednessScore: 0.95,
@@ -423,7 +423,7 @@ function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFr
   /* With the sign unreadable, the WRONG handedness label can no longer veto a palm. */
   const wrongLabel = assessFacing({
     landmarks: flattened,
-    span: palmSpan(flattened),
+    span: palmQuadSpan(flattened),
     world,
     handedness: LEFT_HAND_LABEL,
     handednessScore: 0.95,
@@ -437,7 +437,7 @@ function gradeRaw(frame: RawFrame, pose: PoseProfile): ReturnType<typeof gradeFr
    */
   const wrongLabelSquare = assessFacing({
     landmarks: image,
-    span: palmSpan(image),
+    span: palmQuadSpan(image),
     world,
     handedness: LEFT_HAND_LABEL,
     handednessScore: 0.95,

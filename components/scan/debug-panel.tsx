@@ -449,8 +449,9 @@ export function DebugPanel({
           <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
             {degraded ? (
               <p className="rounded-lg border border-dashed border-line-glow/50 px-3 py-2 text-xs leading-5 text-line-glow">
-                Degraded — haath frame se bahar hai. Evidence jama ho rahi hai, par koi line feature
-                nahi bheji ja rahi: crop ka ek hissa aise landmarks se bana hai jo dikhe hi nahi.
+                Degraded — hatheli ka ek hissa frame se bahar hai. Evidence jama ho rahi hai, par koi line
+                feature nahi bheji ja rahi: crop ka ek hissa aise landmarks se bana hai jo dikhe hi nahi.
+                (Ungliyan bahar hon to koi baat nahi — crop sirf hatheli se banta hai.)
               </p>
             ) : null}
             <div className="flex items-baseline justify-between gap-3">

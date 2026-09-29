@@ -178,7 +178,21 @@ function suggestShape(metrics: LandmarkMetrics): ShapeSuggestion | null {
   return null;
 }
 
+/**
+ * Which of the 21 landmarks the camera actually saw: inside the frame on both axes (normalised 0–1).
+ * MediaPipe returns all 21 whatever it can see, the ones off the frame extrapolated — and since G1 lets a
+ * close palm through with its fingertips out of frame, the features below must know which are guesses.
+ */
+export function landmarksInFrame(image: readonly Landmark3[]): boolean[] {
+  return image.map((p) => p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1);
+}
+
 export interface FeatureOptions {
+  /**
+   * Per landmark, whether it was in frame ({@link landmarksInFrame}). A feature is emitted only when
+   * every landmark it is measured from was seen — never from an extrapolated fingertip. Absent: all 21.
+   */
+  readonly inFrame?: readonly boolean[];
   /** Gate score for this capture; becomes `hand.overall_quality`. */
   readonly quality?: number;
   /** True once line extraction is producing usable traces. Gates `reading.lines_available`. */
@@ -208,34 +222,59 @@ export function featuresFromLandmarks(
   const hand: Record<string, unknown> = {};
   const reading: Record<string, unknown> = {};
 
+  /*
+   * G1.2 (scan-complete): what the camera saw. A close palm passes the gate with its fingertips out of
+   * frame, and their landmarks are then MediaPipe's extrapolation — so each feature below is emitted only
+   * when every landmark it is measured from was seen. With the whole hand in view nothing changes.
+   */
+  const seen = (...indices: number[]): boolean => indices.every((index) => options.inFrame?.[index] ?? true);
+  const lengthSeen = (finger: { mcp: number; pip: number; dip: number; tip: number }): boolean =>
+    seen(finger.mcp, finger.pip, finger.dip, finger.tip);
+  const palmSeen = seen(LM.WRIST, LM.MIDDLE_MCP, LM.INDEX_MCP, LM.PINKY_MCP);
+  const jupiterSeen = lengthSeen(FINGER_MOUNTS.jupiter);
+  const saturnSeen = lengthSeen(FINGER_MOUNTS.saturn);
+  const sunSeen = lengthSeen(FINGER_MOUNTS.sun);
+  const tipsSeen = seen(LM.INDEX_TIP, LM.MIDDLE_TIP, LM.RING_TIP, LM.PINKY_TIP);
+  const thumbTipSeen = seen(LM.THUMB_MCP, LM.THUMB_IP, LM.THUMB_TIP);
+
   /* ------------------------------- Fingers ------------------------------- */
 
-  if (metrics.middleOverPalm >= 1.0) fingers.length_vs_palm = "long";
+  if (palmSeen && saturnSeen && metrics.middleOverPalm >= 1.0) fingers.length_vs_palm = "long";
 
-  if (metrics.indexOverMiddle >= 0.95) fingers.jupiter = { length: "long" };
-  else if (metrics.indexOverMiddle <= 0.86) fingers.jupiter = { length: "short" };
+  if (jupiterSeen && saturnSeen) {
+    if (metrics.indexOverMiddle >= 0.95) fingers.jupiter = { length: "long" };
+    else if (metrics.indexOverMiddle <= 0.86) fingers.jupiter = { length: "short" };
+  }
 
-  if (metrics.middleOverPalm >= 1.05) fingers.saturn = { length: "long" };
-  else if (metrics.middleOverPalm <= 0.88) fingers.saturn = { length: "short" };
+  if (palmSeen && saturnSeen) {
+    if (metrics.middleOverPalm >= 1.05) fingers.saturn = { length: "long" };
+    else if (metrics.middleOverPalm <= 0.88) fingers.saturn = { length: "short" };
+  }
 
-  if (metrics.ringOverMiddle >= 1.0) fingers.sun = { length: "excessive" };
-  else if (metrics.ringOverMiddle >= 0.96) fingers.sun = { length: "long" };
-  else if (metrics.ringOverMiddle <= 0.88) fingers.sun = { length: "short" };
+  if (sunSeen && saturnSeen) {
+    if (metrics.ringOverMiddle >= 1.0) fingers.sun = { length: "excessive" };
+    else if (metrics.ringOverMiddle >= 0.96) fingers.sun = { length: "long" };
+    else if (metrics.ringOverMiddle <= 0.88) fingers.sun = { length: "short" };
+  }
 
   // Reaching past the ring finger's top joint is the classical "long Mercury".
-  if (metrics.pinkyReachOnRing >= 0.78) fingers.mercury = { length: "long_past_apollo_nail" };
-  else if (metrics.pinkyReachOnRing >= 0.68) fingers.mercury = { length: "long" };
-  else if (metrics.pinkyReachOnRing <= 0.55) fingers.mercury = { length: "short" };
+  if (seen(LM.PINKY_TIP, LM.RING_MCP, LM.RING_TIP)) {
+    if (metrics.pinkyReachOnRing >= 0.78) fingers.mercury = { length: "long_past_apollo_nail" };
+    else if (metrics.pinkyReachOnRing >= 0.68) fingers.mercury = { length: "long" };
+    else if (metrics.pinkyReachOnRing <= 0.55) fingers.mercury = { length: "short" };
+  }
 
-  const indexRingGap = Math.abs(1 - metrics.indexOverRing);
-  if (indexRingGap < 0.02) fingers.jupiter_vs_apollo = "equal";
-  else if (metrics.indexOverRing < 0.94) fingers.jupiter_vs_apollo = "apollo_much_longer";
-  else if (metrics.indexOverMiddle >= 0.97) fingers.jupiter_vs_apollo = "jupiter_near_saturn_length";
+  if (jupiterSeen && saturnSeen && sunSeen) {
+    const indexRingGap = Math.abs(1 - metrics.indexOverRing);
+    if (indexRingGap < 0.02) fingers.jupiter_vs_apollo = "equal";
+    else if (metrics.indexOverRing < 0.94) fingers.jupiter_vs_apollo = "apollo_much_longer";
+    else if (metrics.indexOverMiddle >= 0.97) fingers.jupiter_vs_apollo = "jupiter_near_saturn_length";
+  }
 
-  fingers.spacing = Number(metrics.fingerSpacing.toFixed(3));
+  if (tipsSeen && palmSeen) fingers.spacing = Number(metrics.fingerSpacing.toFixed(3));
 
   // A markedly bent last segment on the little finger; the KB only cares that it is crooked.
-  if (metrics.pinkyDeviationDeg < 155) {
+  if (seen(LM.PINKY_MCP, LM.PINKY_PIP, LM.PINKY_TIP) && metrics.pinkyDeviationDeg < 155) {
     const mercury = (fingers.mercury as Record<string, unknown> | undefined) ?? {};
     fingers.mercury = { ...mercury, crooked: true };
   }
@@ -243,13 +282,14 @@ export function featuresFromLandmarks(
   /* -------------------------------- Thumb -------------------------------- */
 
   thumb.present = true;
-  if (metrics.thumbAbductionDeg < 25) thumb.cramped_to_palm = true;
-  if (metrics.thumbIpAngleDeg > 160) thumb.straight_full = true;
-  if (metrics.thumbNailOverWill > 1.05) thumb.nail_phalange_long = true;
+  if (seen(LM.THUMB_MCP, LM.THUMB_CMC, LM.INDEX_MCP) && metrics.thumbAbductionDeg < 25) thumb.cramped_to_palm = true;
+  if (thumbTipSeen && metrics.thumbIpAngleDeg > 160) thumb.straight_full = true;
+  if (thumbTipSeen && metrics.thumbNailOverWill > 1.05) thumb.nail_phalange_long = true;
 
   /* --------------------------------- Hand -------------------------------- */
 
-  const shapeSuggestion = suggestShape(metrics);
+  // The shape reads the middle finger against the palm and the tips' spacing: all of them, or no shape.
+  const shapeSuggestion = palmSeen && saturnSeen && tipsSeen ? suggestShape(metrics) : null;
   if (shapeSuggestion !== null && shapeSuggestion.confidence >= SHAPE_CONFIDENCE_FLOOR) {
     hand.shape = shapeSuggestion.shape;
     hand.shape_type_available = true;

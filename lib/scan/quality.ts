@@ -11,14 +11,26 @@
  * individually so the debug HUD can show exactly which is failing.
  */
 import { FINGER_MOUNTS, LM } from "./landmark-index";
-import type { FacingReadout, FrameStats, Handedness, Landmark3, QualityIssue, QualityVerdict } from "./types";
+import { PALM_ANCHORS, palmAnchors } from "./rectify";
+import type { FacingReadout, FrameStats, Handedness, Landmark3, Point2, QualityIssue, QualityVerdict } from "./types";
 
 const MIN_LUMA = 0.18;
 const MAX_LUMA = 0.92;
 const MAX_CLIPPED = 0.12;
 /** Landmark drift, in fractions of the frame, above which the hand counts as moving. */
 const MAX_JITTER = 0.012;
-const FRAME_MARGIN = 0.02;
+/**
+ * How far inside every edge the palm must sit for `out_of_frame` to pass (scan-complete G1): a fraction
+ * of the frame's SHORT side, so the margin is the same number of pixels on all four edges of a portrait
+ * phone frame and a landscape webcam frame alike (21.6 px at 720×1280).
+ */
+export const PALM_FRAME_MARGIN = 0.03;
+/**
+ * The closest a palm may come (G1): `too_close` fails once the palm quad is wider than this fraction of
+ * the frame's width. The distance meter (G2) reads the same constant as its upper bound, so the meter and
+ * the gate cannot disagree about "too close".
+ */
+export const PALM_QUAD_MAX_WIDTH = 0.85;
 /** MediaPipe's own confidence in the hand it reports. Below this the landmarks are guesswork. */
 const MIN_DETECTION_SCORE = 0.7;
 /**
@@ -82,7 +94,13 @@ export interface PoseProfile {
   readonly label: string;
   readonly instruction: string;
   readonly minFacing: number;
+  /** The whole hand's span below which the pose is `too_far`. */
   readonly minSpan: number;
+  /**
+   * The top of the span band the frame score rewards. No longer a gate (G1): `too_close` measures the
+   * palm quad against {@link PALM_QUAD_MAX_WIDTH}, because the fingertips are the first thing to leave a
+   * close palm's frame and a close palm is the best crease evidence there is.
+   */
   readonly maxSpan: number;
   /** Signed image-space tilt the pose expects; null means "don't care". */
   readonly tiltSign: -1 | 1 | null;
@@ -370,6 +388,73 @@ export function palmSpan(landmarks: readonly Landmark3[]): number {
   return Math.max(maxX - minX, maxY - minY);
 }
 
+/* ------------------------------- The palm frame ------------------------------ */
+
+/** A frame's size in pixels — what the normalised landmarks are fractions of. */
+export interface FrameSize {
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * The points the frame gate measures (G1): the rectifier's own palm quad — wrist, thumb root, index and
+ * little knuckles — plus the percussion point exactly when the rectifier uses it (rectify.ts
+ * `palmAnchors`), normalised to the frame. The fingers are not among them: they are the first thing to
+ * leave a close palm's frame, and nothing the rectified crop holds depends on them.
+ */
+export function palmFramePoints(landmarks: readonly Landmark3[]): Point2[] | null {
+  const anchors = palmAnchors(landmarks, 1, 1);
+  return anchors === null ? null : anchors.src.map((p) => ({ x: p.x, y: p.y }));
+}
+
+/** {@link PALM_FRAME_MARGIN} per axis, in normalised units. Without a frame size, a square frame. */
+export function palmFrameMargins(frame?: FrameSize): { readonly x: number; readonly y: number } {
+  if (frame === undefined || frame.width <= 0 || frame.height <= 0) return { x: PALM_FRAME_MARGIN, y: PALM_FRAME_MARGIN };
+  const pixels = PALM_FRAME_MARGIN * Math.min(frame.width, frame.height);
+  return { x: pixels / frame.width, y: pixels / frame.height };
+}
+
+/** Whether every point lies at least `margins` inside every edge of the frame. */
+export function palmInFrame(points: readonly Point2[], margins: { readonly x: number; readonly y: number }): boolean {
+  return points.every((p) => p.x >= margins.x && p.x <= 1 - margins.x && p.y >= margins.y && p.y <= 1 - margins.y);
+}
+
+/**
+ * Largest normalised extent of the palm quad's four anchors (rectify.ts PALM_ANCHORS) — the palm's own
+ * size, fingers excluded (G1). The percussion point is left out: it is derived from these four, and it
+ * enters and leaves the anchor set near an edge, which would read as the palm changing size.
+ */
+export function palmQuadSpan(landmarks: readonly Landmark3[]): number {
+  if (landmarks.length < 21) return 0;
+  return palmSpan(PALM_ANCHORS.map((index) => landmarks[index]));
+}
+
+/**
+ * Mean movement of the palm quad's four anchors between two frames, in frame fractions — what
+ * `unsteady` measures since G1. On a static close-up the extrapolated fingertips alone wobbled past
+ * the limit on half the frames (tight-02: 50% over, palm quad 0%); a hand that really moves moves its
+ * palm too.
+ */
+export function palmJitter(previous: readonly Landmark3[] | null, current: readonly Landmark3[]): number {
+  if (previous === null || previous.length < 21 || current.length < 21) return 0;
+  return landmarkJitter(
+    PALM_ANCHORS.map((index) => previous[index]),
+    PALM_ANCHORS.map((index) => current[index]),
+  );
+}
+
+/** The palm quad's width as a fraction of the frame's width: its points' horizontal extent. */
+export function palmQuadWidth(points: readonly Point2[]): number {
+  if (points.length === 0) return 0;
+  let min = Infinity;
+  let max = -Infinity;
+  for (const p of points) {
+    if (p.x < min) min = p.x;
+    if (p.x > max) max = p.x;
+  }
+  return max - min;
+}
+
 /** Mean per-landmark movement between two frames, in frame fractions. */
 export function landmarkJitter(previous: readonly Landmark3[] | null, current: readonly Landmark3[]): number {
   if (previous === null || previous.length !== current.length || current.length === 0) return 0;
@@ -430,8 +515,15 @@ const MIN_TILT = 0.25;
  * Minimum |winding| / span² for the winding SIGN to be evidence. Below this the wrist→index and
  * wrist→pinky vectors are nearly parallel in projection — a foreshortened palm — and the cross
  * product is dominated by landmark jitter.
+ *
+ * The span is the palm quad's own ({@link palmQuadSpan}) since scan-complete G1: it used to be the
+ * whole hand's, so a close palm's extrapolated fingertips — and the length of anyone's fingers — fed
+ * into a decision about the palm's triangle. The floor is the old 0.06 carried into palm-quad units,
+ * not re-tuned: ×4.12, the median (hand span / palm-quad span)² on the 15 golden session stills (range
+ * 4.01–4.43), under which every one of them reads exactly as before (0.085–0.095 against 0.06, now
+ * 0.348–0.401 against 0.247).
  */
-const MIN_WINDING_STRENGTH = 0.06;
+const MIN_WINDING_STRENGTH = 0.06 * 4.12;
 
 /* ------------------------- Segmentation eligibility ------------------------ */
 
@@ -466,14 +558,20 @@ export interface QualityInput {
    */
   readonly mirrored: boolean;
   readonly stats: FrameStats;
+  /** The palm quad's movement since the previous frame ({@link palmJitter}; G1 — never the fingertips'). */
   readonly jitter: number;
   /** MediaPipe's confidence in this detection. */
   readonly score: number;
-  /** Recent palm spans, oldest first. */
+  /** Recent palm-quad spans ({@link palmQuadSpan}; G1 — the palm's size, not the fingertips'), oldest first. */
   readonly spanHistory: readonly number[];
   readonly pose?: PoseProfile;
   /** The hand seen at the start of the session, so OTHER_HAND can require the opposite one. */
   readonly baselineHandedness?: Handedness | null;
+  /**
+   * The frame the landmarks are fractions of, so the palm margin is the same number of pixels on every
+   * edge (G1). Absent: a square frame.
+   */
+  readonly frame?: FrameSize;
 }
 
 /** Maps a measurement to 0–1 by how comfortably it sits inside its acceptable band. */
@@ -482,6 +580,19 @@ function bandScore(value: number, min: number, max: number): number {
   const mid = (min + max) / 2;
   const half = (max - min) / 2;
   return Math.max(0, 1 - Math.abs(value - mid) / half);
+}
+
+/**
+ * How comfortably the hand's size sits inside what the size gates accept. The far side ramps up from
+ * `minSpan` to the middle of the pose's span band, as it always did. The near side no longer ramps down
+ * (G1): the only ceiling is the palm quad's width, and up to it a closer palm is better crease evidence,
+ * not worse — the score becomes `hand.overall_quality` and every landmark feature's confidence, so a
+ * penalty here would still mark down the frames the gate now accepts.
+ */
+function sizeScore(span: number, quadWidth: number, pose: PoseProfile): number {
+  if (quadWidth > PALM_QUAD_MAX_WIDTH) return 0;
+  const middle = (pose.minSpan + pose.maxSpan) / 2;
+  return span >= middle ? 1 : bandScore(span, pose.minSpan, pose.maxSpan);
 }
 
 function allPassing(): Record<QualityIssue, boolean> {
@@ -502,19 +613,30 @@ export function gradeFrame(input: QualityInput | null): QualityVerdict {
     return { ok: false, issues: ["no_hand"], hint: HINTS.no_hand, score: 0, checks, facingReadout: null };
   }
 
-  const { landmarks, world, handedness, mirrored, stats, jitter, score, spanHistory, baselineHandedness } = input;
+  const { landmarks, world, handedness, mirrored, stats, jitter, score, spanHistory, baselineHandedness, frame } = input;
   const pose = input.pose ?? DEFAULT_POSE;
   const checks = allPassing();
 
   if (score < MIN_DETECTION_SCORE) checks.low_confidence = false;
 
-  if (landmarks.some((p) => p.x < FRAME_MARGIN || p.x > 1 - FRAME_MARGIN || p.y < FRAME_MARGIN || p.y > 1 - FRAME_MARGIN)) {
-    checks.out_of_frame = false;
-  }
+  /*
+   * G1: the frame gate measures the PALM — the rectifier's own anchors, 3% of the short side inside every
+   * edge. Fingertips and finger joints may leave the frame. The phone recordings of 2026-09-29 lost 818 of
+   * 839 hand frames to the old test (all 21 points 2% inside), with the palm itself in plain view: a close
+   * palm is the best crease evidence there is, and its fingertips are the first thing out.
+   */
+  const palm = palmFramePoints(landmarks) ?? [];
+  if (palm.length === 0 || !palmInFrame(palm, palmFrameMargins(frame))) checks.out_of_frame = false;
 
+  /*
+   * too_far is the whole hand's span, as it always was: a far hand is whole in view. too_close is the palm
+   * quad's width (G1) — a span that counted the fingertips would reject exactly the close palm the frame
+   * gate now lets through (at the recordings' framing its span is 1.08 against FLAT's old ceiling of 0.86).
+   */
   const span = palmSpan(landmarks);
+  const quadWidth = palmQuadWidth(palm);
   if (span < pose.minSpan) checks.too_far = false;
-  else if (span > pose.maxSpan) checks.too_close = false;
+  if (quadWidth > PALM_QUAD_MAX_WIDTH) checks.too_close = false;
 
   const facingReadout = assessFacing({
     landmarks,
@@ -522,7 +644,8 @@ export function gradeFrame(input: QualityInput | null): QualityVerdict {
     handedness,
     handednessScore: score,
     minFacing: pose.minFacing,
-    span,
+    // G1: the palm's own size normalises the palm's winding triangle — no fingertip in a palm decision.
+    span: palmQuadSpan(landmarks),
   });
   const facing = facingReadout.facing;
   // The back-of-hand test, relaxed only where the projection cannot carry a sign (see assessFacing).
@@ -552,7 +675,7 @@ export function gradeFrame(input: QualityInput | null): QualityVerdict {
 
   const issues = ALL_CHECKS.filter((check) => !checks[check]);
   const raw =
-    bandScore(span, pose.minSpan, pose.maxSpan) * 0.25 +
+    sizeScore(span, quadWidth, pose) * 0.25 +
     Math.min(1, facing / Math.max(pose.minFacing, 1e-6)) * 0.25 +
     Math.min(1, extension / MIN_FINGER_EXTENSION) * 0.2 +
     bandScore(stats.luma, MIN_LUMA, MAX_LUMA) * 0.15 +
