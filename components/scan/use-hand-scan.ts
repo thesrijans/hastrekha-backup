@@ -23,14 +23,16 @@ import {
   palmFramePoints,
   palmInFrame,
   palmJitter,
+  palmQuadFill,
   palmQuadSpan,
-  palmQuadWidth,
   palmSpan,
   segmentationEligible,
   SPAN_HISTORY_FRAMES,
   type PoseProfile,
 } from "@/lib/scan/quality";
 import { StageFunnel, type FunnelSnapshot } from "@/lib/scan/funnel";
+import { nextDistanceState, type DistanceReading, type DistanceState } from "@/lib/scan/distance";
+import { frameReason, palmNearEdge, ReasonWindow, type LastSeenPalm, type ReasonKey } from "@/lib/scan/scan-reason";
 import { canonicalAnchors, conventionRemap, palmAnchors, rectifyPalm, solveHomography, type RectifyResult } from "@/lib/scan/rectify";
 import type { RekhaPersistence, RekhaSnapshot } from "@/lib/scan/rekha-persist";
 import type { ValleyTracer } from "@/lib/scan/trace-valley";
@@ -526,6 +528,18 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const lastFunnelPublishRef = useRef(0);
   /** How many lines the overlay has to draw right now (the funnel's "drawn" stage). */
   const drawnLinesRef = useRef(0);
+  /*
+   * scan-complete G2: the distance meter and the litany's reason, always on. The reading is written to a ref
+   * every frame (the leaf's ink gauge and the canvas's guide read it at their own frame rate); React hears only
+   * when the meter's STATE or the top reason changes, which is a few times a scan, not sixty times a second.
+   */
+  const distanceRef = useRef<DistanceReading | null>(null);
+  const [distanceState, setDistanceState] = useState<DistanceState | null>(null);
+  const reasonWindowRef = useRef(new ReasonWindow());
+  /** Where the palm was last seen, so a palm that is LOST can still be told why (G2: left by an edge, or too close). */
+  const lastSeenRef = useRef<LastSeenPalm | null>(null);
+  const lastReasonRef = useRef<ReasonKey | null>(null);
+  const [reason, setReason] = useState<ReasonKey | null>(null);
   const landmarkSamplesRef = useRef<number[]>([]);
   const lastLandmarkPublishRef = useRef(0);
   useEffect(() => {
@@ -749,14 +763,38 @@ export function useHandScan(options: UseHandScanOptions = {}) {
       setQuality(verdict);
       latestRef.current.quality = verdict;
 
+      /* G2: the meter reads the gate's own measure (the palm quad's fill of the short side), and the leaf's
+         reason is the top rejection of the last second — see lib/scan/distance.ts and scan-reason.ts. */
+      const frameSize = videoSizeRef.current ?? undefined;
+      const previousDistance = distanceRef.current?.state ?? null;
+      if (next === null) {
+        distanceRef.current = null;
+      } else {
+        const fill = palmQuadFill(palmFramePoints(next.landmarks) ?? [], frameSize);
+        distanceRef.current = { fill, state: nextDistanceState(fill, previousDistance) };
+        lastSeenRef.current = { atMs: now, fill, edge: palmNearEdge(next.landmarks, mirrored) };
+      }
+      const distanceNow = distanceRef.current?.state ?? null;
+      if (distanceNow !== previousDistance) setDistanceState(distanceNow);
+      reasonWindowRef.current.record(
+        now,
+        frameReason({ verdict, landmarks: next?.landmarks ?? null, frame: frameSize, mirrored, pose, lastSeen: lastSeenRef.current, nowMs: now }),
+      );
+      const topReason = reasonWindowRef.current.top(now);
+      if (topReason !== lastReasonRef.current) {
+        lastReasonRef.current = topReason;
+        setReason(topReason);
+      }
+
       /* R1: the funnel's frame stage — nothing runs here unless ?cost=1 asked for it. */
       const funnelNow = funnelRef.current;
       if (funnelNow !== null) {
         const width = videoSizeRef.current?.width ?? 0;
+        const shortSide = videoSizeRef.current === null ? 0 : Math.min(videoSizeRef.current.width, videoSizeRef.current.height);
         funnelNow.frame(now, {
           hand: next !== null,
           palmWidthPx: next === null || width === 0 ? null : palmSpan(next.landmarks) * width,
-          palmQuadWidthPx: next === null || width === 0 ? null : palmQuadWidth(palmFramePoints(next.landmarks) ?? []) * width,
+          palmQuadPx: next === null || shortSide === 0 ? null : (distanceRef.current?.fill ?? 0) * shortSide,
           checks: next === null ? null : verdict.checks,
           issues: verdict.issues,
           drawnLines: drawnLinesRef.current,
@@ -1599,6 +1637,13 @@ export function useHandScan(options: UseHandScanOptions = {}) {
 
     setStatus("starting");
     setCameraErrorName(null);
+    /* G2: a new session starts with no distance and no reason — a previous scan's last word is not this one's. */
+    distanceRef.current = null;
+    setDistanceState(null);
+    lastSeenRef.current = null;
+    reasonWindowRef.current.reset();
+    lastReasonRef.current = null;
+    setReason(null);
     /* R1: the funnel, only when asked for; the rig reads it as window.__hrFunnel. */
     if (funnelWantedRef.current) {
       const created = new StageFunnel();
@@ -1961,6 +2006,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     landmarkMs,
     /** R1: the stage funnel's latest snapshot (options.funnel only), published once a second. */
     funnel,
+    /** scan-complete G2: the distance meter's state (far / ok / near), null without a hand; changes rarely. */
+    distanceState,
+    /** …and its live reading ({ fill, state }), written every frame — read it in a frame loop, never in render. */
+    distanceRef,
+    /** G2.3: the top rejection of the last second — the specific thing to tell the reader — or null. */
+    reason,
     setVideoElement,
     start,
     stop,

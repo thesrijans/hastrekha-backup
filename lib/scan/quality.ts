@@ -26,11 +26,12 @@ const MAX_JITTER = 0.012;
  */
 export const PALM_FRAME_MARGIN = 0.03;
 /**
- * The closest a palm may come (G1): `too_close` fails once the palm quad is wider than this fraction of
- * the frame's width. The distance meter (G2) reads the same constant as its upper bound, so the meter and
- * the gate cannot disagree about "too close".
+ * The closest a palm may come (G1): `too_close` fails once the palm quad spans more than this fraction of
+ * the frame's SHORT side ({@link palmQuadFill}) — its width on a phone held upright, which is the whole of
+ * G1's measure there. The distance meter (G2, lib/scan/distance.ts) reads the same constant and the same
+ * fill as its upper bound, so the meter and the gate cannot disagree about "too close".
  */
-export const PALM_QUAD_MAX_WIDTH = 0.85;
+export const PALM_QUAD_MAX_FILL = 0.85;
 /** MediaPipe's own confidence in the hand it reports. Below this the landmarks are guesswork. */
 const MIN_DETECTION_SCORE = 0.7;
 /**
@@ -54,7 +55,8 @@ export const SPAN_HISTORY_FRAMES = 5;
 const HINTS: Readonly<Record<QualityIssue, string>> = {
   no_hand: "Hatheli camera ke saamne laao",
   low_confidence: "Haath saaf nahi dikh raha",
-  out_of_frame: "Poora haath frame mein laao",
+  // G1: the frame gate measures the palm — the fingertips may leave, so "poora haath" (the whole hand) is not the ask.
+  out_of_frame: "Hatheli frame mein laao",
   not_palm_up: "Hatheli camera ki taraf ghumao",
   tilt_direction: "Doosri taraf jhukao",
   fingers_curled: "Ungliyan khol kar seedhi rakho",
@@ -70,13 +72,18 @@ const HINTS: Readonly<Record<QualityIssue, string>> = {
 const HINT_ORDER: readonly QualityIssue[] = [
   "no_hand",
   "low_confidence",
+  /*
+   * too_close BEFORE out_of_frame (scan-complete G2): a palm too big for the frame usually also has an anchor
+   * in the margin, and "move the phone back" fixes both where "bring your palm into the frame" fixes neither —
+   * the recordings of 2026-09-29 were shown the second for 50 s while the first was the real problem.
+   */
+  "too_close",
   "out_of_frame",
   "not_palm_up",
   "tilt_direction",
   "fingers_curled",
   "wrong_hand",
   "too_far",
-  "too_close",
   "too_dark",
   "too_bright",
   "unsteady",
@@ -98,7 +105,7 @@ export interface PoseProfile {
   readonly minSpan: number;
   /**
    * The top of the span band the frame score rewards. No longer a gate (G1): `too_close` measures the
-   * palm quad against {@link PALM_QUAD_MAX_WIDTH}, because the fingertips are the first thing to leave a
+   * palm quad against {@link PALM_QUAD_MAX_FILL}, because the fingertips are the first thing to leave a
    * close palm's frame and a close palm is the best crease evidence there is.
    */
   readonly maxSpan: number;
@@ -443,14 +450,22 @@ export function palmJitter(previous: readonly Landmark3[] | null, current: reado
   );
 }
 
-/** The palm quad's width as a fraction of the frame's width: its points' horizontal extent. */
-export function palmQuadWidth(points: readonly Point2[]): number {
+/**
+ * How much of the frame's SHORT side the palm quad spans: its horizontal extent on a portrait (or square,
+ * or unsized) frame, its vertical extent on a landscape one. On a phone held upright that is exactly the
+ * palm quad's width over the frame's width (G1, and scan-complete G2's "palm quad width vs frame width");
+ * on a landscape webcam the width could never reach the band — the palm would leave the frame's height long
+ * before it filled 85% of its width — so the short side is the one that can.
+ */
+export function palmQuadFill(points: readonly Point2[], frame?: FrameSize): number {
   if (points.length === 0) return 0;
+  const landscape = frame !== undefined && frame.width > frame.height;
   let min = Infinity;
   let max = -Infinity;
   for (const p of points) {
-    if (p.x < min) min = p.x;
-    if (p.x > max) max = p.x;
+    const v = landscape ? p.y : p.x;
+    if (v < min) min = v;
+    if (v > max) max = v;
   }
   return max - min;
 }
@@ -589,8 +604,8 @@ function bandScore(value: number, min: number, max: number): number {
  * not worse — the score becomes `hand.overall_quality` and every landmark feature's confidence, so a
  * penalty here would still mark down the frames the gate now accepts.
  */
-function sizeScore(span: number, quadWidth: number, pose: PoseProfile): number {
-  if (quadWidth > PALM_QUAD_MAX_WIDTH) return 0;
+function sizeScore(span: number, quadFill: number, pose: PoseProfile): number {
+  if (quadFill > PALM_QUAD_MAX_FILL) return 0;
   const middle = (pose.minSpan + pose.maxSpan) / 2;
   return span >= middle ? 1 : bandScore(span, pose.minSpan, pose.maxSpan);
 }
@@ -630,13 +645,14 @@ export function gradeFrame(input: QualityInput | null): QualityVerdict {
 
   /*
    * too_far is the whole hand's span, as it always was: a far hand is whole in view. too_close is the palm
-   * quad's width (G1) — a span that counted the fingertips would reject exactly the close palm the frame
-   * gate now lets through (at the recordings' framing its span is 1.08 against FLAT's old ceiling of 0.86).
+   * quad's fill of the short side (G1; its width on a phone held upright) — a span that counted the
+   * fingertips would reject exactly the close palm the frame gate now lets through (at the recordings'
+   * framing its span is 1.08 against FLAT's old ceiling of 0.86).
    */
   const span = palmSpan(landmarks);
-  const quadWidth = palmQuadWidth(palm);
+  const quadFill = palmQuadFill(palm, frame);
   if (span < pose.minSpan) checks.too_far = false;
-  if (quadWidth > PALM_QUAD_MAX_WIDTH) checks.too_close = false;
+  if (quadFill > PALM_QUAD_MAX_FILL) checks.too_close = false;
 
   const facingReadout = assessFacing({
     landmarks,
@@ -675,7 +691,7 @@ export function gradeFrame(input: QualityInput | null): QualityVerdict {
 
   const issues = ALL_CHECKS.filter((check) => !checks[check]);
   const raw =
-    sizeScore(span, quadWidth, pose) * 0.25 +
+    sizeScore(span, quadFill, pose) * 0.25 +
     Math.min(1, facing / Math.max(pose.minFacing, 1e-6)) * 0.25 +
     Math.min(1, extension / MIN_FINGER_EXTENSION) * 0.2 +
     bandScore(stats.luma, MIN_LUMA, MAX_LUMA) * 0.15 +

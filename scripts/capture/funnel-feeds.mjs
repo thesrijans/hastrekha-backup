@@ -9,7 +9,7 @@
  * hand frames, frames through EVERY gate, the first failing gate of the rest, each gate's own failures,
  * extractions, lines proposed and held, and the palm's size by both of the readout's measures.
  *
- *   node scripts/capture/funnel-feeds.mjs [--build] [--label name] [--seconds 20] [--feeds dir] [--only tight-00,normal]
+ *   node scripts/capture/funnel-feeds.mjs [--build] [--label name] [--seconds 20] [--feeds dir] [--only tight-00,normal] [--shots]
  *
  * Writes captures/ui/<stamp>-<label>/ (git-ignored: the feeds are the reader's palm): one screenshot per
  * feed and funnel.json. Real GPU (gpu-probe's flags) and no WebGPU, for the same reason
@@ -29,6 +29,8 @@ const label = arg("--label", "g1-funnel");
 const seconds = Number(arg("--seconds", "20"));
 const feedDir = resolve(arg("--feeds", join(REPO, "captures", "ui", "feeds", "tight")));
 const only = argv.includes("--only") ? arg("--only").split(",") : null;
+/** G2: a screenshot each time the leaf's instruction changes (at most eight a feed), for the visual review. */
+const shots = argv.includes("--shots");
 
 if (!existsSync(feedDir)) throw new Error(`No feeds at ${feedDir} — run scripts/capture/make-tight-feeds.py first.`);
 const feeds = readdirSync(feedDir)
@@ -75,11 +77,43 @@ function summarise(snapshot) {
     poses: record("poses"),
     posesPassed: record("posesPassed"),
     palmPx: stat("palmWidthPx"),
-    palmQuad: stat("palmQuadWidthPx"),
+    /* G2 renamed the funnel's field (palmQuadWidthPx -> palmQuadPx, the short side's extent); older reports keep the old one. */
+    palmQuad: stat("palmQuadPx") ?? stat("palmQuadWidthPx"),
   };
 }
 
 const text = (record) => Object.entries(record).map(([id, n]) => `${id} ${n}`).join(" ") || "none";
+
+/** scan-complete G2: every navigator.vibrate call, timed — the band's haptic tick is counted, not assumed. */
+const VIBRATE_RECORDER = () => {
+  const calls = [];
+  window.__vibrations = calls;
+  Object.defineProperty(navigator, "vibrate", { configurable: true, value: (pattern) => (calls.push({ at: Math.round(performance.now()), pattern }), true) });
+};
+
+/**
+ * G2 over time, sampled in the page every 200 ms from the tap: the leaf's instruction, the ink gauge's state
+ * and dot, and the guide's published alpha/geometry (canvas data-snc-guide) — then folded into transitions.
+ */
+function summariseG2(samples, vibrations) {
+  const hints = [];
+  for (const s of samples) if (hints.length === 0 || hints.at(-1).hint !== s.hint) hints.push({ t: s.t, hint: s.hint });
+  const states = {};
+  for (const s of samples) states[s.distance ?? "none"] = (states[s.distance ?? "none"] ?? 0) + 1;
+  const guide = samples.map((s) => (s.guide ? s.guide.split(",") : null)).filter(Boolean);
+  const alphas = guide.map((g) => Number(g[0]));
+  const firstOk = samples.find((s) => s.distance === "ok");
+  const faded = firstOk === undefined ? undefined : samples.find((s) => s.t >= firstOk.t && s.guide && Number(s.guide.split(",")[0]) < 0.02);
+  const okEntries = samples.filter((s, i) => s.distance === "ok" && (i === 0 || samples[i - 1].distance !== "ok")).length;
+  return {
+    hints,
+    states,
+    guide: guide.length === 0 ? null : { first: guide[0], alphaMin: Math.min(...alphas), alphaMax: Math.max(...alphas), fadeMs: faded === undefined ? null : faded.t - firstOk.t },
+    vibrations: vibrations.length,
+    vibrationPatterns: [...new Set(vibrations.map((v) => JSON.stringify(v.pattern)))],
+    okEntries,
+  };
+}
 const range = (s) => (s === null ? "–" : `${s.median} (${s.min}–${s.max})`);
 const pct = (part, whole) => (whole === 0 ? "–" : `${((100 * part) / whole).toFixed(1)}%`);
 
@@ -121,6 +155,7 @@ try {
         permissions: ["camera"],
       });
       await context.addInitScript(ANDROID_CAMERA_STUB);
+      await context.addInitScript(VIBRATE_RECORDER);
       const page = await context.newPage();
       const errors = [];
       const failedRequests = [];
@@ -130,19 +165,58 @@ try {
       await page.goto(`${server.base}/scan/chamber?cost=1`, { waitUntil: "load", timeout: 60_000 });
       await page.waitForTimeout(600);
       await page.tap("button:has-text('Kaksh mein pravesh')");
+      await page.evaluate(() => {
+        const samples = [];
+        window.__g2samples = samples;
+        const t0 = performance.now();
+        setInterval(() => {
+          const hint = document.querySelector("[data-snc-hint]");
+          const gauge = document.querySelector("[data-snc-gauge]");
+          samples.push({
+            t: Math.round(performance.now() - t0),
+            hint: hint?.textContent?.trim() ?? null,
+            distance: gauge?.getAttribute("data-snc-distance") ?? null,
+            dot: gauge?.querySelector("circle")?.getAttribute("cx") ?? null,
+            guide: document.querySelector("canvas")?.dataset.sncGuide ?? null,
+          });
+        }, 200);
+      });
       const handSeen = await page
         .waitForFunction(() => document.querySelector("canvas")?.dataset.sncHand, null, { timeout: 45_000 })
         .then(() => true)
         .catch(() => false);
-      await page.waitForTimeout(seconds * 1000);
+      if (shots) {
+        /* Poll the instruction from here and photograph each new one — the moments G2 is about. */
+        const until = Date.now() + seconds * 1000;
+        let last = "";
+        let taken = 0;
+        while (Date.now() < until) {
+          const hint = await page.evaluate(() => document.querySelector("[data-snc-hint]")?.textContent?.trim() ?? "");
+          if (hint !== "" && hint !== last && taken < 8) {
+            last = hint;
+            taken += 1;
+            await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-shot-${taken}.png`) });
+          }
+          await page.waitForTimeout(250);
+        }
+      } else {
+        await page.waitForTimeout(seconds * 1000);
+      }
       const snapshot = await page.evaluate(() => (typeof window.__hrFunnel === "function" ? window.__hrFunnel() : null));
+      const g2raw = await page.evaluate(() => ({ samples: window.__g2samples ?? [], vibrations: window.__vibrations ?? [] }));
       const readout = await page.evaluate(() => document.querySelector("[data-snc-budget]")?.textContent ?? null);
       const litany = await page.evaluate(() => [...document.querySelectorAll('[data-snc-litany="in"] p')].map((p) => p.textContent.trim()));
       const name = basename(feed, ".y4m");
       await page.screenshot({ path: join(dir, `${name}.png`) });
-      const entry = { feed: name, expected: expected.get(feed) ?? null, handSeen, errors, failedRequests, litany, readout, funnel: summarise(snapshot) };
+      const entry = { feed: name, expected: expected.get(feed) ?? null, handSeen, errors, failedRequests, litany, readout, funnel: summarise(snapshot), g2: summariseG2(g2raw.samples, g2raw.vibrations), g2samples: g2raw.samples };
       report.feeds.push(entry);
       const f = entry.funnel;
+      const g = entry.g2;
+      console.log(
+        `${name.padEnd(10)} G2  hints [${g.hints.map((h) => `${(h.t / 1000).toFixed(1)}s ${h.hint}`).join(" | ")}]  states ${JSON.stringify(g.states)}  ` +
+          `guide ${g.guide === null ? "none" : `α ${g.guide.alphaMin.toFixed(3)}–${g.guide.alphaMax.toFixed(3)} at ${g.guide.first.slice(1).join(",")} fade ${g.guide.fadeMs ?? "–"} ms`}  ` +
+          `vibrate ${g.vibrations}× ${g.vibrationPatterns.join(",")} for ${g.okEntries} band entr${g.okEntries === 1 ? "y" : "ies"}`,
+      );
       console.log(
         f === null
           ? `${name}: no funnel (?cost=1 not honoured)`

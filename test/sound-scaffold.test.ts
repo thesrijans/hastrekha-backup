@@ -269,9 +269,13 @@ const SOURCE = readFileSync(SOURCE_PATH, "utf8");
 /* ------------------------- haptics are a separate sense ------------------- */
 
 {
-  const cues: readonly HapticCue[] = ["pageTurn", "reveal"];
-  ok(Object.keys(HAPTIC_PATTERNS).length === 2, 'spec 5 allows two haptics and "none elsewhere" - the vocabulary is closed');
-  ok(cues.every((cue) => typeof HAPTIC_PATTERNS[cue] === "number"), "both named cues carry a duration");
+  const cues: readonly HapticCue[] = ["pageTurn", "reveal", "bandEnter"];
+  ok(
+    Object.keys(HAPTIC_PATTERNS).length === 3,
+    'spec 5 allowed two haptics and "none elsewhere"; scan-complete G2.2 names a third (the distance band tick) - the vocabulary is still closed',
+  );
+  ok(cues.every((cue) => typeof HAPTIC_PATTERNS[cue] === "number"), "every named cue carries a duration");
+  ok(HAPTIC_PATTERNS.bandEnter < HAPTIC_PATTERNS.reveal, "the band's tick is a LIGHT one, as G2.2 says - lighter than the reveal");
   ok(
     HAPTIC_PATTERNS.pageTurn < HAPTIC_PATTERNS.reveal,
     "light tick on page turn, medium on reveal - the reveal must be the heavier of the two",

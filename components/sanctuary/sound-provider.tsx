@@ -514,16 +514,21 @@ export function useSound(): SoundContextValue {
 /* ------------------------------ haptics ----------------------------------- */
 
 /**
- * The spec allows exactly two: "light tick on page turn, medium on reveal, none
+ * The spec allowed exactly two: "light tick on page turn, medium on reveal, none
  * elsewhere". The vocabulary is the type, so "none elsewhere" is enforced by
  * the compiler instead of by discipline - there is no id to pass for a hover.
+ *
+ * scan-complete G2.2 adds ONE, by name: "a light haptic tick on entering the
+ * band" - the scan's distance meter (lib/scan/distance.ts), debounced there so a
+ * palm hovering at the band's edge does not buzz. Still a closed vocabulary.
  */
-export type HapticCue = "pageTurn" | "reveal";
+export type HapticCue = "pageTurn" | "reveal" | "bandEnter";
 
-/** Milliseconds. Light and medium, the only two the spec names; far enough apart to feel different. */
+/** Milliseconds. Light and medium; far enough apart to feel different. The band's tick is the light one. */
 export const HAPTIC_PATTERNS: Readonly<Record<HapticCue, number>> = {
   pageTurn: 8,
   reveal: 24,
+  bandEnter: 8,
 };
 
 /**

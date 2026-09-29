@@ -34,7 +34,7 @@
  *
  * Writes captures/ui/<stamp>-<label>/ (git-ignored): PNGs, report.json, and a scored checklist.
  */
-import { mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import { buildProduction, startServer } from "./capture.mjs";
@@ -119,27 +119,75 @@ const SCENARIOS = [
  * crashes React's next reconcile). The clone stays for the screenshot and is removed after.
  * Its top must stay below the ring: the band's bottom reserve (scan-ring.ts) is sized for this leaf.
  */
+/**
+ * scan-complete G2: every instruction the leaf can carry — each reason and each of the distance meter's three —
+ * read from their source, so the tallest-leaf check can never be run against a string the chamber no longer shows.
+ */
+const HINT_CANDIDATES = [
+  ...new Set(
+    ["scan-reason.ts", "distance.ts"].flatMap((file) =>
+      [...readFileSync(join(REPO, "lib", "scan", file), "utf8").matchAll(/hi: "([^"]+)"/g)].map((match) => match[1]),
+    ),
+  ),
+];
+
+/** G2.2's target fill and the guide's quad aspect, read from their source so this check can never drift from them. */
+const constantOf = (file, name) => Number(readFileSync(join(REPO, file), "utf8").match(new RegExp(`export const ${name} = ([0-9.]+);`))?.[1]);
+const GUIDE_TARGET_FILL = constantOf("lib/scan/distance.ts", "PALM_QUAD_TARGET_FILL");
+const GUIDE_ASPECT = constantOf("components/sanctuary/chamber/palm-guide.ts", "GUIDE_QUAD_ASPECT");
+
 async function tallestLeafTop(page) {
-  return page.evaluate(() => {
+  return page.evaluate((hints) => {
     const dock = document.querySelector('[data-snc-litany="in"]');
     if (!dock) return null;
-    const twin = dock.cloneNode(true);
-    twin.setAttribute("data-snc-twin", "");
-    twin.style.zIndex = "7";
-    const leaf = twin.firstElementChild;
-    const paragraphs = [...leaf.querySelectorAll("p")];
-    const stage = paragraphs[0];
-    const line = (text) => {
-      const node = stage.cloneNode(false);
-      node.textContent = text;
-      return node;
+    /* G2: the instruction is tried in the leaf's REAL hint line, ink gauge and all, when one is showing; the
+       stage line's larger face stands in for it (the old, conservative way) when none is. */
+    const build = (hint) => {
+      const twin = dock.cloneNode(true);
+      twin.setAttribute("data-snc-twin", "");
+      twin.style.zIndex = "7";
+      const leaf = twin.firstElementChild;
+      const paragraphs = [...leaf.querySelectorAll("p")];
+      const stage = paragraphs[0];
+      const realHint = leaf.querySelector("[data-snc-hint]");
+      const empty = stage.cloneNode(false);
+      empty.textContent = "इस बार नहीं मिला";
+      let hintLine;
+      if (realHint) {
+        hintLine = realHint.cloneNode(true);
+        /* Set as the leaf sets it (scan-litany.tsx hintParts): each half an inline-block, the break at "·". */
+        const template = hintLine.querySelector("[data-snc-hint-part]");
+        const holder = template?.parentElement ?? null;
+        if (template && holder) {
+          const parts = hint.split(" · ");
+          holder.replaceChildren();
+          parts.forEach((part, i) => {
+            if (i > 0) holder.append(" ");
+            const node = template.cloneNode(false);
+            node.textContent = i < parts.length - 1 ? `${part} ·` : part;
+            holder.append(node);
+          });
+        } else hintLine.textContent = hint;
+      } else {
+        hintLine = stage.cloneNode(false);
+        hintLine.textContent = hint;
+      }
+      stage.textContent = "पारंपरिक पाठ से मिलान…";
+      for (const extra of paragraphs.slice(1)) extra.remove();
+      stage.after(empty, hintLine);
+      dock.parentElement.appendChild(twin);
+      return { twin, top: leaf.getBoundingClientRect().top, withGauge: realHint !== null };
     };
-    stage.textContent = "पारंपरिक पाठ से मिलान…";
-    for (const extra of paragraphs.slice(1)) extra.remove();
-    stage.after(line("इस बार नहीं मिला"), line("Bahut tez roshni — thoda hatt jao"));
-    dock.parentElement.appendChild(twin);
-    return leaf.getBoundingClientRect().top;
-  });
+    let tallest = null;
+    for (const hint of hints) {
+      const { twin, top, withGauge } = build(hint);
+      twin.remove();
+      if (tallest === null || top < tallest.top) tallest = { top, hint, withGauge };
+    }
+    /* The tallest stays for the screenshot; removeTwin takes it away after. */
+    if (tallest !== null) build(tallest.hint);
+    return tallest;
+  }, HINT_CANDIDATES);
 }
 
 async function removeTwin(page) {
@@ -223,6 +271,12 @@ async function measure(page) {
         return points.map(([x, y]) => monitor?.contains(document.elementFromPoint(x, y)) ?? false);
       })(),
       cost: document.querySelector("[data-snc-budget]")?.textContent ?? null,
+      /* scan-complete G2: the leaf's instruction, the ink gauge's state, the guide's published geometry, the feed's size. */
+      hintText: document.querySelector("[data-snc-hint]")?.textContent?.trim() ?? null,
+      gaugeState: document.querySelector("[data-snc-gauge]")?.getAttribute("data-snc-distance") ?? null,
+      guide: (canvas?.dataset.sncGuide ?? "").split(",").filter(Boolean),
+      videoSize: video ? { width: video.videoWidth, height: video.videoHeight } : null,
+      pageText: document.body.innerText,
       camera: window.__camera ?? null,
     };
   });
@@ -282,6 +336,33 @@ function score(m, sheetOpen = null) {
   const names = Object.keys(ui);
   for (let i = 0; i < names.length; i += 1) for (let j = i + 1; j < names.length; j += 1) if (intersects(ui[names[i]], ui[names[j]])) hits.push(`${names[i]}×${names[j]}`);
   add("nothing overlapping the feed (ring clear, no UI on UI)", hits.length === 0, hits.length === 0 ? `ring ${ring.cy - ring.r | 0}–${ring.cy + ring.r | 0} clear of ${Object.keys(ui).filter((k) => ui[k]).join(", ")}` : hits.join(", "));
+
+  /* scan-complete G2: the guide on the ring's REST centre at the meter's target size (scan-ring.ts ringGeometry
+     with no hand; palm-guide.ts palmGuideGeometry), and an instruction the chamber really has. */
+  if (m.videoSize && m.videoSize.width > 0) {
+    const portrait = H > W;
+    const phone = portrait && W <= 899;
+    const largest = Math.min(W, H) * 0.42;
+    const top = phone ? 64 : 0;
+    const bottom = phone ? H - 268 : H;
+    const cap = phone ? Math.max(0, Math.min(largest, (bottom - top) / 2)) : largest;
+    const thumb = H * (portrait ? 0.58 : 0.5);
+    const restCy = phone ? Math.min(Math.max(thumb, top + cap), Math.max(top + cap, bottom - cap)) : thumb;
+    const { width: vw, height: vh } = m.videoSize;
+    const scale = Math.max(W / vw, H / vh);
+    const quad = (GUIDE_TARGET_FILL * Math.min(vw, vh) * scale) / (vw > vh ? GUIDE_ASPECT : 1);
+    const [alpha, gx, gy, gq] = m.guide.map(Number);
+    add(
+      "G2 guide: on the ring's rest centre, at the target size",
+      m.guide.length >= 4 && Math.abs(gx - W / 2) <= 1 && Math.abs(gy - restCy) <= 1 && Math.abs(gq - quad) <= 1.5,
+      m.guide.length >= 4 ? `centre ${gx},${gy} vs ${Math.round(W / 2)},${Math.round(restCy)}; quad ${gq}px vs ${quad.toFixed(1)}; alpha ${alpha}` : "no guide published",
+    );
+  }
+  add(
+    "G2 instruction: one the chamber has, never 'poora haath'",
+    (m.hintText === null || HINT_CANDIDATES.some((hint) => m.hintText.endsWith(hint))) && !/poora haath/i.test(m.pageText ?? ""),
+    `"${m.hintText}" (gauge ${m.gaugeState})`,
+  );
   return rows;
 }
 
@@ -478,8 +559,8 @@ try {
       const ringBottom = scanning.ring.cy + scanning.ring.r;
       entry.checklist.push({
         item: "leaf at its tallest stays clear of the ring",
-        verdict: tallest !== null && tallest >= ringBottom ? "PASS" : "FAIL",
-        measured: tallest === null ? "no leaf" : `tallest leaf top ${tallest.toFixed(0)} vs ring bottom ${ringBottom.toFixed(0)}`,
+        verdict: tallest !== null && tallest.top >= ringBottom ? "PASS" : "FAIL",
+        measured: tallest === null ? "no leaf" : `tallest leaf top ${tallest.top.toFixed(0)} vs ring bottom ${ringBottom.toFixed(0)} (instruction "${tallest.hint}"${tallest.withGauge ? " with the gauge" : ", stage face"})`,
       });
     }
     report.scenarios[s.id] = entry;

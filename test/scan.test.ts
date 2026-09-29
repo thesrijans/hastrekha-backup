@@ -6,7 +6,7 @@ import {
   fingerExtension,
   MIN_FINGER_EXTENSION,
   PALM_FRAME_MARGIN,
-  PALM_QUAD_MAX_WIDTH,
+  PALM_QUAD_MAX_FILL,
   gradeFrame,
   landmarkJitter,
   palmFacing,
@@ -14,7 +14,7 @@ import {
   palmFramePoints,
   palmJitter,
   palmQuadSpan,
-  palmQuadWidth,
+  palmQuadFill,
   palmSpan,
   spanVariation,
   type QualityInput,
@@ -188,7 +188,7 @@ function baseInput(overrides: Partial<QualityInput> = {}): QualityInput {
   assert.ok(palmSpan(close) > 1, `…its span, fingertips included, is past the whole frame (${palmSpan(close).toFixed(2)})`);
   const closeVerdict = grade(close);
   assert.ok(closeVerdict.checks.out_of_frame, "the close palm passes out_of_frame — every palm anchor is inside");
-  assert.ok(closeVerdict.checks.too_close, `…and too_close: its quad is ${palmQuadWidth(palmFramePoints(close)!).toFixed(2)} of the width, under ${PALM_QUAD_MAX_WIDTH}`);
+  assert.ok(closeVerdict.checks.too_close, `…and too_close: its quad is ${palmQuadFill(palmFramePoints(close)!).toFixed(2)} of the width, under ${PALM_QUAD_MAX_FILL}`);
   assert.ok(closeVerdict.ok, `…and the whole gate (issues: ${closeVerdict.issues.join(",") || "none"})`);
   assert.ok(closeVerdict.score >= gradeFrame(baseInput()).score, `…and scores no lower than the whole hand in view (${closeVerdict.score.toFixed(3)})`);
 
@@ -217,10 +217,10 @@ function baseInput(overrides: Partial<QualityInput> = {}): QualityInput {
   /* too_close is the palm quad's width (G1); too_far is still the whole hand's span. */
   const underCeiling = framed(2.1, 1, -0.02, 0);
   const overCeiling = framed(2.2, 1, -0.02, 0);
-  const underWidth = palmQuadWidth(palmFramePoints(underCeiling)!);
-  const overWidth = palmQuadWidth(palmFramePoints(overCeiling)!);
-  assert.ok(underWidth < PALM_QUAD_MAX_WIDTH && grade(underCeiling).checks.too_close, `a quad ${underWidth.toFixed(3)} of the width is not too close`);
-  assert.ok(overWidth > PALM_QUAD_MAX_WIDTH && !grade(overCeiling).checks.too_close && grade(overCeiling).checks.out_of_frame, `a quad ${overWidth.toFixed(3)} of the width is too close — while still inside the frame`);
+  const underWidth = palmQuadFill(palmFramePoints(underCeiling)!);
+  const overWidth = palmQuadFill(palmFramePoints(overCeiling)!);
+  assert.ok(underWidth < PALM_QUAD_MAX_FILL && grade(underCeiling).checks.too_close, `a quad ${underWidth.toFixed(3)} of the width is not too close`);
+  assert.ok(overWidth > PALM_QUAD_MAX_FILL && !grade(overCeiling).checks.too_close && grade(overCeiling).checks.out_of_frame, `a quad ${overWidth.toFixed(3)} of the width is too close — while still inside the frame`);
   assert.ok(!grade(framed(0.35, 0.35)).checks.too_far, "a small, far hand is too_far, on the whole hand's span as before");
 
   /* The standing rule (G1): the palm's motion and size, not the fingertips'. The landmarker's

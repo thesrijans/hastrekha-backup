@@ -16,10 +16,34 @@
  * say.
  */
 
-import type { ReactElement } from "react";
+import { Fragment, type ReactElement } from "react";
 import { Parchment } from "@/components/sanctuary/material";
 import { CHAMBER_EMPTY_LINE, type ChamberLitanyLine } from "@/lib/sanctuary/chamber-stages";
+import type { DistanceReading } from "@/lib/scan/distance";
+import { DistanceGauge } from "./distance-gauge";
 import styles from "./scan-litany.module.css";
+
+/** The leaf's one instruction: Devanagari ink, and the English its accessible name carries. */
+export interface LitanyHint {
+  readonly hi: string;
+  readonly en: string;
+}
+
+/**
+ * The instruction's halves — what is wrong · what to do — each set as one unit, so a line too long for the
+ * leaf breaks at the "·" and never strands the remedy's last word on a line of its own. The text is unedited.
+ */
+function hintParts(text: string): ReactElement[] {
+  const parts = text.split(" · ");
+  return parts.map((part, i) => (
+    <Fragment key={i}>
+      {i > 0 ? " " : null}
+      <span className={styles.hintPart} data-snc-hint-part="">
+        {i < parts.length - 1 ? `${part} ·` : part}
+      </span>
+    </Fragment>
+  ));
+}
 
 /** The leaf's own seed. Constant: the chamber has one leaf, and it does not re-tear as the scan runs. */
 const LITANY_SEED = 4127;
@@ -28,18 +52,24 @@ export interface ScanLitanyProps {
   /** The stage being worked on, from `chamberCurrentLine`. */
   readonly line: ChamberLitanyLine;
   /**
-   * The pose hint the quality gate is currently giving, or null.
+   * The one instruction on the leaf's second line (scan-complete G2.3), or null: the SPECIFIC thing stopping
+   * the scan — the top rejection of the last second, in plain words (lib/scan/scan-reason.ts) — or, when
+   * nothing is, the distance meter's own words (lib/scan/distance.ts).
    *
-   * The gate's own words, unedited. It is the one piece of copy on this screen
-   * that changes because of something the READER can do, so it is set apart
-   * from the stage line rather than concatenated with it.
+   * It is the one piece of copy on this screen that changes because of something the READER can do, so it
+   * is set apart from the stage line rather than concatenated with it.
    */
-  readonly hint: string | null;
+  readonly hint: LitanyHint | null;
+  /**
+   * G2.1: the distance meter's live reading. Given while a palm is in view, and the ink gauge then heads the
+   * instruction's line — inside it, never as a line of its own (the leaf's height is the ring's reserve).
+   */
+  readonly distance?: { readonly current: DistanceReading | null } | null;
   /** Hidden once the reveal beat begins: the beat owns the screen from that point. */
   readonly visible: boolean;
 }
 
-export function ScanLitany({ line, hint, visible }: ScanLitanyProps): ReactElement {
+export function ScanLitany({ line, hint, visible, distance = null }: ScanLitanyProps): ReactElement {
   const empty = line.status === "empty";
 
   return (
@@ -62,7 +92,14 @@ export function ScanLitany({ line, hint, visible }: ScanLitanyProps): ReactEleme
           </p>
         ) : null}
 
-        {hint === null ? null : <p className={styles.hint}>{hint}</p>}
+        {/* Polite, like the stage line: the reason is the top of a whole second, so it changes a few times a
+            scan, and each change is something the reader can act on. */}
+        {hint === null ? null : (
+          <p className={styles.hint} lang="hi" aria-live="polite" aria-label={hint.en} data-snc-hint="">
+            {distance === null ? null : <DistanceGauge reading={distance} />}
+            <span>{hintParts(hint.hi)}</span>
+          </p>
+        )}
       </Parchment>
     </div>
   );

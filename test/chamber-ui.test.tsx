@@ -88,7 +88,7 @@ const stage = (id: string) => CHAMBER_STAGES.find((s) => s.id === id) ?? CHAMBER
 {
   const working = render(ScanLitany, {
     line: { stage: stage("major"), status: "working" },
-    hint: "Bilkul sahi — hold karo",
+    hint: { hi: "हाथ स्थिर रखें", en: "Hold your hand still" },
     visible: true,
   });
   ok(working.includes(stage("major").hi), "the leaf carries the stage being worked on, in Devanagari");
@@ -98,11 +98,36 @@ const stage = (id: string) => CHAMBER_STAGES.find((s) => s.id === id) ?? CHAMBER
     !working.includes(CHAMBER_EMPTY_LINE),
     "a stage still being worked shows NO empty line: nothing found yet is not nothing found, and this is where A2 is broken most easily",
   );
-  ok(working.includes("Bilkul sahi"), "the gate's own words are carried through unedited");
+  /* scan-complete G2.3: the instruction is the specific reason, in plain Devanagari, with its English name. */
+  ok(working.includes("हाथ स्थिर रखें"), "the instruction's words are carried through unedited");
+  ok(working.includes('aria-label="Hold your hand still"') && /data-snc-hint=""[^>]*lang="hi"|lang="hi"[^>]*data-snc-hint=""/.test(working), "…marked Hindi, with the English as its accessible name");
+  ok(!working.includes("data-snc-gauge"), "no live reading given, no gauge drawn: the gauge never guesses");
+
+  /* G2.1: with a live reading the ink gauge heads the SAME line — the leaf gains no row. */
+  const measuring = render(ScanLitany, {
+    line: { stage: stage("major"), status: "working" },
+    hint: { hi: "सही दूरी ✓", en: "Right distance" },
+    visible: true,
+    distance: { current: { fill: 0.6, state: "ok" } },
+  });
+  const hintLine = measuring.match(/<p[^>]*data-snc-hint=""[^>]*>[\s\S]*?<\/p>/)?.[0] ?? "";
+  ok(hintLine.includes("data-snc-gauge") && hintLine.includes("सही दूरी ✓"), "the gauge and the meter's words share one line");
+  ok((measuring.match(/<p /g) ?? []).length === 2, `the leaf still carries exactly two lines (${(measuring.match(/<p /g) ?? []).length})`);
+
+  /* A two-part instruction wraps at its "·", never inside the remedy — and its words are still unedited. */
+  const leaving = render(ScanLitany, {
+    line: { stage: stage("major"), status: "working" },
+    hint: { hi: "हथेली ऊपर से बाहर · थोड़ा नीचे लाएँ", en: "The palm leaves the top — bring it down a little" },
+    visible: true,
+  });
+  const leavingLine = leaving.match(/<p[^>]*data-snc-hint=""[^>]*>[\s\S]*?<\/p>/)?.[0] ?? "";
+  const parts = [...leavingLine.matchAll(/<span[^>]*data-snc-hint-part=""[^>]*>([^<]*)<\/span>/g)].map((m) => m[1]);
+  ok(parts.length === 2 && parts[0] === "हथेली ऊपर से बाहर ·" && parts[1] === "थोड़ा नीचे लाएँ", `the instruction is set in two halves that each wrap as one (${JSON.stringify(parts)})`);
+  ok(leavingLine.replace(/<[^>]+>/g, "") === "हथेली ऊपर से बाहर · थोड़ा नीचे लाएँ", "…and reads, tags aside, exactly as written");
 
   const empty = render(ScanLitany, { line: { stage: stage("minor"), status: "empty" }, hint: null, visible: true });
   ok(empty.includes(CHAMBER_EMPTY_LINE), "a stage that ran and found nothing says so, in the reader's own language");
-  ok(!empty.includes("Bilkul sahi"), "and a hint that was not given is not invented");
+  ok(!empty.includes("हाथ स्थिर रखें") && !empty.includes("data-snc-hint"), "and a hint that was not given is not invented");
 
   const found = render(ScanLitany, { line: { stage: stage("leaf"), status: "found" }, hint: null, visible: true });
   ok(!found.includes(CHAMBER_EMPTY_LINE), "a stage that found something does not also report nothing");

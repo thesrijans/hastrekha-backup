@@ -62,10 +62,11 @@ export interface FunnelWindow {
   /** The palm's extent in source pixels, one sample per hand frame (sorted at snapshot). */
   readonly palmWidthPx: number[];
   /**
-   * The palm quad's width in source pixels, one sample per hand frame — what `too_close` gates on since
-   * scan-complete G1 (the extent above counts the fingertips, which a close palm pushes out of frame).
+   * The palm quad's extent along the frame's short side in source pixels (its width on a phone held
+   * upright), one sample per hand frame — what `too_close` gates on since scan-complete G1 (the extent above
+   * counts the fingertips, which a close palm pushes out of frame).
    */
-  readonly palmQuadWidthPx: number[];
+  readonly palmQuadPx: number[];
   /** Hand frames per guided pose ("FLAT", "TILT_LEFT", …; "done" after the sequence). */
   readonly poses: Record<string, number>;
   /** …and how many of them passed EVERY gate: a pose a reader (or a static test feed) cannot satisfy reads 0 here. */
@@ -81,9 +82,9 @@ export interface FunnelSummaryStat {
   readonly max: number;
 }
 
-export interface FunnelWindowSummary extends Omit<FunnelWindow, "palmWidthPx" | "palmQuadWidthPx" | "tilt"> {
+export interface FunnelWindowSummary extends Omit<FunnelWindow, "palmWidthPx" | "palmQuadPx" | "tilt"> {
   readonly palmWidthPx: FunnelSummaryStat | null;
-  readonly palmQuadWidthPx: FunnelSummaryStat | null;
+  readonly palmQuadPx: FunnelSummaryStat | null;
   readonly tilt: FunnelSummaryStat | null;
 }
 
@@ -99,8 +100,8 @@ export interface FunnelFrame {
   readonly hand: boolean;
   /** The landmarks' extent in source pixels, or null without a hand. */
   readonly palmWidthPx: number | null;
-  /** The palm quad's width in source pixels (lib/scan/quality.ts palmQuadWidth), or null without a hand. */
-  readonly palmQuadWidthPx: number | null;
+  /** The palm quad's short-side extent in source pixels (lib/scan/quality.ts palmQuadFill), or null without a hand. */
+  readonly palmQuadPx: number | null;
   /** The gate's per-check verdicts for this frame, or null without a hand. */
   readonly checks: Readonly<Record<QualityIssue, boolean>> | null;
   /** The gate's failing checks in hint order (the first is the hint shown). */
@@ -134,7 +135,7 @@ function openWindow(startMs: number): FunnelWindow {
     held: lineRecord(),
     drawn: 0,
     palmWidthPx: [],
-    palmQuadWidthPx: [],
+    palmQuadPx: [],
     poses: {},
     posesPassed: {},
     tilt: [],
@@ -149,8 +150,8 @@ function stat(samples: readonly number[], digits: number): FunnelSummaryStat | n
 }
 
 function summarise(window: FunnelWindow): FunnelWindowSummary {
-  const { palmWidthPx, palmQuadWidthPx, tilt, ...rest } = window;
-  return { ...rest, palmWidthPx: stat(palmWidthPx, 0), palmQuadWidthPx: stat(palmQuadWidthPx, 0), tilt: stat(tilt, 3) };
+  const { palmWidthPx, palmQuadPx, tilt, ...rest } = window;
+  return { ...rest, palmWidthPx: stat(palmWidthPx, 0), palmQuadPx: stat(palmQuadPx, 0), tilt: stat(tilt, 3) };
 }
 
 export class StageFunnel {
@@ -179,7 +180,7 @@ export class StageFunnel {
     if (!frame.hand) return;
     w.handFound += 1;
     if (frame.palmWidthPx !== null) w.palmWidthPx.push(frame.palmWidthPx);
-    if (frame.palmQuadWidthPx !== null) w.palmQuadWidthPx.push(frame.palmQuadWidthPx);
+    if (frame.palmQuadPx !== null) w.palmQuadPx.push(frame.palmQuadPx);
     if (frame.tilt !== null) w.tilt.push(frame.tilt);
     const pose = frame.pose ?? "none";
     w.poses[pose] = (w.poses[pose] ?? 0) + 1;
@@ -230,6 +231,6 @@ export function formatFunnel(w: FunnelWindowSummary): string {
   return (
     `funnel ${Math.round((w.endMs - w.startMs) / 1000)}s: captured ${w.captured} → hand ${w.handFound} → palm ${w.palmAccepted} → gates ${w.gatesPassed}` +
     ` → rectified ${w.rectified} → extractions ${w.extractions} → proposed ${ids(w.proposed)} → held ${ids(w.held)} → drawn ${w.drawn}` +
-    ` · rejected ${reject || "none"} · palm ${px(w.palmWidthPx)} · quad ${px(w.palmQuadWidthPx)} · pose ${poses} · tilt ${tilt}`
+    ` · rejected ${reject || "none"} · palm ${px(w.palmWidthPx)} · quad ${px(w.palmQuadPx)} · pose ${poses} · tilt ${tilt}`
   );
 }

@@ -110,11 +110,66 @@
    */
   .hint {
     margin: 0.5rem 0 0;
-    font-family: var(--font-snc-serif);
+    /* scan-complete G2.3: the instruction is plain Devanagari now, the stage line's script — set in its face,
+       never letter-spaced (see .stage), smaller and lighter than it. */
+    font-family: var(--font-snc-devanagari);
     font-size: 0.82rem;
     line-height: 1.6;
+    letter-spacing: normal;
     color: color-mix(in oklab, var(--color-snc-ink) 76%, transparent);
     text-align: center;
+  }
+
+  /* Each half of the instruction wraps as a unit: a long one breaks at its "·" (2026-09-29 capture: "लाएँ"
+     alone on the second line at 412px). A half wider than the leaf still wraps inside itself. */
+  .hintPart {
+    display: inline-block;
+  }
+
+  /*
+   * THE INK GAUGE (G2.1) at the head of the instruction's line: a 44px measuring rule, far to near, the band
+   * inked heavier and a dot where the palm is. Inline, so the leaf never gains a row the ring's reserve was
+   * not measured for.
+   */
+  .gauge {
+    display: inline-block;
+    inline-size: 3rem;
+    block-size: 0.625rem;
+    margin-inline-end: 0.45rem;
+    vertical-align: -0.05em;
+    overflow: visible;
+  }
+
+  .gaugeRule {
+    stroke: color-mix(in oklab, var(--color-snc-ink) 45%, transparent);
+    stroke-width: 0.75;
+  }
+
+  .gaugeBand {
+    stroke: var(--color-snc-ink);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .gaugeTick {
+    stroke: color-mix(in oklab, var(--color-snc-ink) 70%, transparent);
+    stroke-width: 0.75;
+  }
+
+  .gaugeDot {
+    fill: var(--color-snc-ink);
+    transition: opacity 200ms ease;
+  }
+
+  /* No palm, no reading: the rule stays, the dot does not guess. */
+  .gauge[data-snc-distance="none"] .gaugeDot {
+    opacity: 0;
+  }
+
+  /* Out of the band the dot is marked in the marginalia red — the same pigment as a sealed leaf's reason. */
+  .gauge[data-snc-distance="far"] .gaugeDot,
+  .gauge[data-snc-distance="near"] .gaugeDot {
+    fill: var(--color-snc-ink-red);
   }
 
   /*

@@ -10,6 +10,9 @@ that measure, from each still's stored landmarks:
              centred across the frame, the middle fingertip 40-85 px ABOVE the top edge, the wrist inside.
   normal     still 0 as make-phone-feed.py frames it (scale 0.67): the whole hand in view, ~45% wide.
   wrist-cut  still 0 at hand extent ~600 px, shifted down until the wrist sits 60 px BELOW the bottom.
+  approach   (scan-complete G2) still 0 brought steadily closer, palm quad 0.45 -> 0.95 of the width over 2 s,
+             held 1 s, 15 fps. A STATIC palm that close is never found by the landmarker at all (a sweep lost it
+             between 0.50 and 0.56); a palm that arrives there is tracked in, and the meter must say too close.
 
 A tight crop is an upscale (1.6-2.2x) of a laptop still, and upscaling is a low-pass: the palm box's
 variance of Laplacian falls from 106-454 native to 8-90, under the rekha accumulator's floor (60) —
@@ -25,7 +28,10 @@ scale is multiplied by target / the funnel's measured median, and the factor goe
 Writes captures/ui/feeds/tight/ (git-ignored: raw palm frames never leave the machine): one .y4m (4
 identical frames, which Chromium's fake camera loops) and one .png per feed, and manifest.json.
 
-    ../hastrekha-lab/.venv/Scripts/python.exe scripts/capture/make-tight-feeds.py [--calibrate captures/ui/<run>/funnel.json]
+    ../hastrekha-lab/.venv/Scripts/python.exe scripts/capture/make-tight-feeds.py [--calibrate captures/ui/<run>/funnel.json] [--only approach,normal]
+
+`--only` regenerates just the named feeds and carries every other one over from the manifest untouched, so a
+new control feed never re-rolls the calibrated crops.
 """
 import json
 import pathlib
@@ -119,6 +125,18 @@ def write_feed(name: str, frame: np.ndarray, meta: dict, manifest: list) -> None
     print(f"{name:10s} {json.dumps(meta)}")
 
 
+def write_sequence(name: str, frames: list, fps: int, meta: dict, manifest: list) -> None:
+    """A feed that MOVES: `frames` in order at `fps`, which Chromium's fake camera loops. The .png is the last."""
+    with (OUT / f"{name}.y4m").open("wb") as f:
+        f.write(f"YUV4MPEG2 W{W} H{H} F{fps}:1 Ip A1:1 C420jpeg\n".encode())
+        for frame in frames:
+            f.write(b"FRAME\n")
+            f.write(cv2.cvtColor(frame, cv2.COLOR_BGR2YUV_I420).tobytes())
+    cv2.imwrite(str(OUT / f"{name}.png"), frames[-1])
+    manifest.append({"feed": f"{name}.y4m", **meta})
+    print(f"{name:10s} {json.dumps(meta)}")
+
+
 def calibration() -> tuple[str | None, dict[str, float]]:
     """Per tight feed, the landmarker's measured median extent from a funnel run, if one was given."""
     if "--calibrate" not in sys.argv:
@@ -135,12 +153,24 @@ def main() -> int:
     stills = meta["stills"]
     manifest: list = []
     calibrated_from, measured = calibration()
-    previous = {}
-    if calibrated_from is not None and (OUT / "manifest.json").exists():
-        # Keyed like the funnel run (feed name without ".y4m"), which is what `measured` is keyed by.
-        previous = {pathlib.Path(entry["feed"]).stem: entry for entry in json.loads((OUT / "manifest.json").read_text(encoding="utf-8"))["feeds"]}
+    old_manifest = json.loads((OUT / "manifest.json").read_text(encoding="utf-8")) if (OUT / "manifest.json").exists() else {"feeds": []}
+    # Keyed like the funnel run (feed name without ".y4m"), which is what `measured` is keyed by.
+    previous = {pathlib.Path(entry["feed"]).stem: entry for entry in old_manifest["feeds"]}
+    only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
+    if only is not None:
+        calibrated_from = old_manifest.get("calibratedFrom")
+
+    def wanted(name: str) -> bool:
+        """Regenerate this feed? Otherwise its manifest entry (and its files) are kept exactly as they were."""
+        if only is None or name in only:
+            return True
+        if name in previous:
+            manifest.append(previous[name])
+        return False
 
     for i, still in enumerate(stills):
+        if not wanted(f"tight-{i:02d}"):
+            continue
         pts = landmarks_px(still, still["width"], still["height"])
         hand_x = max(x for x, _ in pts) - min(x for x, _ in pts)
         hand_y = max(y for _, y in pts) - min(y for _, y in pts)
@@ -150,7 +180,7 @@ def main() -> int:
         k = target / hand_x
         name = f"tight-{i:02d}"
         correction = 1.0
-        if name in measured and name in previous:
+        if calibrated_from is not None and name in measured and name in previous:
             # The run measured the crop made at the PREVIOUS scale; carry that scale to the target.
             correction = previous[name]["scale"] * target / measured[name] / k
         k *= correction
@@ -175,6 +205,20 @@ def main() -> int:
     ys = [y for _, y in pts]
 
     # normal: make-phone-feed.py's framing — scale 0.67, the hand's box centred, nothing sharpened.
+    if wanted("normal"):
+        normal_feed(still, pts, xs, ys, manifest)
+    if wanted("wrist-cut"):
+        wrist_cut_feed(still, pts, xs, manifest)
+    if wanted("approach"):
+        approach_feed(still, pts, manifest)
+
+    (OUT / "manifest.json").write_text(json.dumps({"session": SESSION.name, "size": [W, H], "sharpen": {"sigmaPerScale": USM_SIGMA, "amount": USM_AMOUNT}, "calibratedFrom": calibrated_from, "feeds": manifest}, indent=2), encoding="utf-8")
+    regenerated = f" (regenerated: {', '.join(sorted(only))})" if only else ""
+    print(f"\n{len(manifest)} feeds -> {OUT.relative_to(REPO)}{regenerated}")
+    return 0
+
+
+def normal_feed(still: dict, pts: list, xs: list, ys: list, manifest: list) -> None:
     k = 0.67
     image = scaled_still(still, k, sharpen=False)
     scaled = [(x * k, y * k) for x, y in pts]
@@ -185,7 +229,9 @@ def main() -> int:
     crop_pts = [(x - x0, y - y0) for x, y in scaled]
     write_feed("normal", frame, {"still": 0, "scale": k, "vol": round(vol_palm_box(frame, crop_pts)), **geometry(crop_pts)}, manifest)
 
-    # wrist-cut: the whole hand's width in view, the wrist 60 px below the bottom edge.
+
+def wrist_cut_feed(still: dict, pts: list, xs: list, manifest: list) -> None:
+    """The whole hand's width in view, the wrist 60 px below the bottom edge."""
     k = 600 / (max(xs) - min(xs))
     image = scaled_still(still, k, sharpen=True)
     scaled = [(x * k, y * k) for x, y in pts]
@@ -198,9 +244,23 @@ def main() -> int:
     assert g["wristY"] > H, "the wrist is still in view"
     write_feed("wrist-cut", frame, {"still": 0, "scale": round(k, 3), "vol": round(vol_palm_box(frame, crop_pts)), **g}, manifest)
 
-    (OUT / "manifest.json").write_text(json.dumps({"session": SESSION.name, "size": [W, H], "sharpen": {"sigmaPerScale": USM_SIGMA, "amount": USM_AMOUNT}, "calibratedFrom": calibrated_from, "feeds": manifest}, indent=2), encoding="utf-8")
-    print(f"\n{len(manifest)} feeds -> {OUT.relative_to(REPO)}")
-    return 0
+
+def approach_feed(still: dict, pts: list, manifest: list) -> None:
+    """G2: the phone brought steadily closer — the palm quad from 0.45 of the width to 0.95 over 2 s (the
+    tight crops' placement: the middle fingertip 60 px above the top), then held there for 1 s, at 15 fps, looped.
+    Too close for the landmarker to find from a standing start, so whether it follows the palm in or lets go
+    of it, the chamber's answer at the end must be the same: too close."""
+    qx = [pts[j][0] for j in PALM_QUAD]
+    frames = []
+    fills = [0.45 + (0.95 - 0.45) * i / 29 for i in range(30)] + [0.95] * 15
+    for fill in fills:
+        k = fill * W / (max(qx) - min(qx))
+        image = scaled_still(still, k, sharpen=True)
+        scaled = [(x * k, y * k) for x, y in pts]
+        x0 = int(round((min(qx) + max(qx)) / 2 * k - W / 2))
+        y0 = int(round(scaled[MIDDLE_TIP][1] + 60))
+        frames.append(window(image, x0, y0))
+    write_sequence("approach", frames, 15, {"still": 0, "fills": [round(fills[0], 2), round(fills[-1], 2)], "frames": len(frames), "fps": 15}, manifest)
 
 
 if __name__ == "__main__":

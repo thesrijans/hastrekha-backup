@@ -32,9 +32,12 @@ import { palmBoundary } from "@/lib/scan/landmarks";
 import { HAND_BONES } from "@/lib/scan/landmark-index";
 import { coverTransform, videoNormToCanvas, videoPxToCanvas, type CoverTransform } from "@/lib/scan/view-transform";
 import { MASK_SIZE, type ActiveLineId, type Landmark3, type Point2, type TracedLine } from "@/lib/scan/types";
+import { LM } from "@/lib/scan/landmark-index";
+import type { DistanceReading } from "@/lib/scan/distance";
 import { placeLeaders } from "@/lib/sanctuary/chamber-leaders";
 import { createFrameCost, type FrameCostSummary } from "@/lib/sanctuary/frame-cost";
 import { drawScanRing, ringGeometry, RING_HAND_MARGIN } from "./scan-ring";
+import { drawPalmGuide, GUIDE_ALPHA, nextGuideAlpha, palmGuideGeometry } from "./palm-guide";
 
 /** How long a newly found line takes to come up to full brightness. Slow enough to be a reveal. */
 const REVEAL_MS = 900;
@@ -116,6 +119,11 @@ export interface ChamberCanvasProps {
   readonly gatePassing: boolean;
   /** Called with the frame-cost summary as it updates, so the route can report §10's number. */
   readonly onCost?: (summary: FrameCostSummary | null) => void;
+  /**
+   * scan-complete G2: the distance meter's live reading (use-hand-scan's `distanceRef`), read once a frame so
+   * the palm guide can fade out while the palm is in the band. Absent: no guide.
+   */
+  readonly distance?: { readonly current: DistanceReading | null };
   readonly className?: string;
 }
 
@@ -155,6 +163,7 @@ export function ChamberCanvas({
   mirrored,
   gatePassing,
   onCost,
+  distance,
   className,
 }: ChamberCanvasProps): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -162,14 +171,14 @@ export function ChamberCanvas({
      rAF chain is started once per mount instead of being torn down and rebuilt
      on every landmark update — which at frame rate is a cancel and a schedule
      per frame, and shows up in exactly the measurement this component reports. */
-  const propsRef = useRef({ landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing });
+  const propsRef = useRef({ landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing, distance });
   /* Written in an effect rather than during render. Writing a ref while
      rendering is what `react-hooks/refs` forbids, and the rule is right: React
      may render this component and throw the result away, and a ref written on a
      discarded render is state the loop would then draw from. */
   useEffect(() => {
-    propsRef.current = { landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing };
-  }, [landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing]);
+    propsRef.current = { landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing, distance };
+  }, [landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing, distance]);
 
   const costRef = useRef(createFrameCost(nowMs));
   const onCostRef = useRef(onCost);
@@ -222,6 +231,10 @@ export function ChamberCanvas({
 
     /* M1.3: the ring's radius, eased toward the hand's extent; null until a hand has been seen. */
     let ringExtent: number | null = null;
+    /* G2.2: the guide's alpha, easing toward faint (guiding) or zero (in band), and the side of the last palm's
+       thumb in the RAW frame — read off its landmarks, thumb root against little knuckle; null before any. */
+    let guideAlpha = GUIDE_ALPHA;
+    let rawThumbRight: boolean | null = null;
 
     const frame = (timestamp: number): void => {
       if (started === 0) started = timestamp;
@@ -231,8 +244,13 @@ export function ChamberCanvas({
         const rest = ringGeometry(box.width, box.height).radius;
         const aim = target ?? rest;
         ringExtent = ringExtent === null ? aim : ringExtent + (aim - ringExtent) * RING_EASE;
+        const marks = state.landmarks;
+        if (marks !== null && marks.length >= 21) rawThumbRight = marks[LM.THUMB_CMC].x > marks[LM.PINKY_MCP].x;
+        guideAlpha = state.distance === undefined ? 0 : nextGuideAlpha(guideAlpha, state.distance.current?.state === "ok");
+        /* Before any palm, a right one: on the back camera its thumb is on the display's right (the raw frame's). */
+        const thumbRight = (rawThumbRight ?? true) !== state.mirrored;
         context.setTransform(dpr, 0, 0, dpr, 0, 0);
-        drawChamber(context, box, palette, { ...state, ringExtent }, firstSeenRef.current, timestamp, timestamp - started);
+        drawChamber(context, box, palette, { ...state, ringExtent, guide: { alpha: guideAlpha, thumbRight } }, firstSeenRef.current, timestamp, timestamp - started);
       });
       /* Reported four times a second rather than every frame: a readout that
          re-renders React sixty times a second is itself a frame cost, and would
@@ -245,6 +263,9 @@ export function ChamberCanvas({
         const hand = handRingExtent(propsRef.current.landmarks, propsRef.current.videoSize, box.width, box.height, propsRef.current.mirrored);
         canvas.dataset.sncRing = `${Math.round(ring.cx)},${Math.round(ring.cy)},${Math.round(ring.radius)}`;
         canvas.dataset.sncHand = hand === null ? "" : String(Math.round(hand));
+        /* …and the guide's (G2.2): alpha, centre, palm-quad width on screen, and the thumb's side. */
+        const guide = palmGuideGeometry(ringGeometry(box.width, box.height), propsRef.current.videoSize, box, (rawThumbRight ?? true) !== propsRef.current.mirrored);
+        canvas.dataset.sncGuide = guide === null ? "" : `${guideAlpha.toFixed(3)},${Math.round(guide.cx)},${Math.round(guide.cy)},${Math.round(guide.quadPx)},${guide.thumbRight ? "R" : "L"}`;
       }
       raf = requestAnimationFrame(frame);
     };
@@ -272,6 +293,8 @@ interface DrawState {
   readonly gatePassing: boolean;
   /** M1.3: the ring's smoothed extent (see handRingExtent); absent or null rests the ring at its largest. */
   readonly ringExtent?: number | null;
+  /** G2.2: the palm guide's alpha this frame and the side its thumb is drawn on; absent draws none. */
+  readonly guide?: { readonly alpha: number; readonly thumbRight: boolean };
 }
 
 /**
@@ -315,6 +338,15 @@ export function drawChamber(
     palette: { line: palette.gold, fill: palette.warm },
     extent: state.ringExtent ?? null,
   });
+
+  /* ── 2b. the guide (G2.2) ──────────────────────────────────────────────────
+     At the ring's REST centre and the meter's target size, under everything the hand brings: the reader's
+     own palm and its creases are always drawn over the place it was asked to go. Drawn with or without a
+     hand — the guide matters most before one arrives. */
+  if (state.guide !== undefined) {
+    const geometry = palmGuideGeometry(ringGeometry(width, height), state.videoSize, { width, height }, state.guide.thumbRight);
+    if (geometry !== null) drawPalmGuide(context, geometry, state.guide.alpha, palette.gold);
+  }
 
   const marks = state.landmarks;
   if (marks === null || marks.length < 21 || state.videoSize === null) return;

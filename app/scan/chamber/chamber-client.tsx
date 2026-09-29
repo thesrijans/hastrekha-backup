@@ -75,7 +75,10 @@ import { formatFunnel } from "@/lib/scan/funnel";
 import { ChamberCanvas } from "@/components/sanctuary/chamber/chamber-canvas";
 import { RekhaMonitor, rekhaLedger } from "@/components/sanctuary/chamber/rekha-monitor";
 import { CHAMBER_SCAN_FLAGS, withScanFlags } from "@/lib/scan/flags";
-import { ScanLitany } from "@/components/sanctuary/chamber/scan-litany";
+import { ScanLitany, type LitanyHint } from "@/components/sanctuary/chamber/scan-litany";
+import { haptic } from "@/components/sanctuary/sound-provider";
+import { bandTickDue, DISTANCE_WORDS, type DistanceState } from "@/lib/scan/distance";
+import { REASON_WORDS } from "@/lib/scan/scan-reason";
 import { RevealBeat } from "@/components/sanctuary/chamber/reveal-beat";
 import { Parchment } from "@/components/sanctuary/material";
 import { BuildStamp } from "@/components/sanctuary/shell/build-stamp";
@@ -299,7 +302,31 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     activeProfile,
     landmarkMs,
     funnel,
+    distanceState,
+    distanceRef,
+    reason,
   } = useHandScan({ onFeatures, onLineFeatures, onCaptureComplete, cameraSelection: "auto", profile, funnel: showCost });
+
+  /*
+   * scan-complete G2: the leaf's one instruction. The SPECIFIC top reason of the last second when something
+   * is stopping the scan (G2.3); when nothing is, the distance meter's own words (G2.1) — so the reader is
+   * always told either what to fix or that the distance is right, and never a generic "poora haath".
+   */
+  const hint: LitanyHint | null =
+    status !== "running" ? null : reason !== null ? REASON_WORDS[reason] : distanceState !== null ? DISTANCE_WORDS[distanceState] : null;
+
+  /* G2.2: a light tick on entering the band — at most once in BAND_TICK_MIN_INTERVAL_MS (lib/scan/distance.ts). */
+  const previousDistanceRef = useRef<DistanceState | null>(null);
+  const lastBandTickRef = useRef<number | null>(null);
+  useEffect(() => {
+    const previous = previousDistanceRef.current;
+    previousDistanceRef.current = distanceState;
+    const now = performance.now();
+    if (bandTickDue(previous, distanceState, lastBandTickRef.current, now)) {
+      lastBandTickRef.current = now;
+      haptic("bandEnter");
+    }
+  }, [distanceState]);
 
   useEffect(() => {
     cropRef.current = rectified?.image ?? cropRef.current;
@@ -413,6 +440,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         mirrored={mirrored}
         gatePassing={quality.ok}
         onCost={setCost}
+        distance={distanceRef}
       />
 
       {/* THE BACK MARK. A mark and not a button: no fill, no border, no radius —
@@ -532,7 +560,8 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
 
       <ScanLitany
         line={line}
-        hint={status === "running" && !quality.ok ? quality.hint : null}
+        hint={hint}
+        distance={distanceState === null ? null : distanceRef}
         visible={blocked === null && !idle && phase !== "revealing"}
       />
 
