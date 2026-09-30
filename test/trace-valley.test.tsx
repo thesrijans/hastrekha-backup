@@ -185,7 +185,7 @@ const inside = new Uint8Array(N * N).fill(1);
 
   const client = withoutComments(source("app", "scan", "chamber", "chamber-client.tsx"));
   ok(
-    /const shown: [^=]+= \{ \.\.\.\(drawnRef\.current \?\? found\.lines\) \};/.test(client) && /lines: shown,/.test(client),
+    /const shown: [^=]+= \{ \.\.\.\(heldLines \?\? drawnRef\.current \?\? found\.lines\) \};/.test(client) && /lines: shown,/.test(client),
     "the pothi hand-off carries the lines the reader was shown (less any the scan budget marked unclear, scan-complete G3.2)",
   );
 

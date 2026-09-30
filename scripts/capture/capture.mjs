@@ -207,8 +207,25 @@ export async function buildProduction() {
   });
 }
 
-/** Start `next start` on the gate-open build, and resolve once it answers. */
-export async function startServer() {
+/**
+ * OFFLINE: a server that can run the whole reading path without leaving this machine (G5). The reading route
+ * persists every reading to the database in .env.local and narrates through OpenRouter with the key there; a
+ * capture must do neither — no test rows in a real database, no feature bag sent to a model, no spend. The
+ * database becomes an address nothing listens on (the write fails, and the route returns the reading without an
+ * id, as it is built to), and every outbound request from the server goes to a proxy nothing listens on (Node 24:
+ * NODE_USE_ENV_PROXY), so the narrator falls back to its template. process.env wins over .env.local in Next.
+ */
+export const OFFLINE_ENV = {
+  DATABASE_URL: "postgresql://capture:capture@127.0.0.1:9/offline",
+  OPENROUTER_API_KEY: "offline-capture",
+  NODE_USE_ENV_PROXY: "1",
+  HTTP_PROXY: "http://127.0.0.1:9",
+  HTTPS_PROXY: "http://127.0.0.1:9",
+  NO_PROXY: "localhost,127.0.0.1",
+};
+
+/** Start `next start` on the gate-open build, and resolve once it answers. `offline`: see {@link OFFLINE_ENV}. */
+export async function startServer({ offline = false } = {}) {
   if (!(await exists(join(REPO, ".next")))) {
     throw new Error("No production build found at .next — run with --build, or `NEXT_PUBLIC_SANCTUARY=1 SNC_MEASURE=1 npm run build` first.");
   }
@@ -218,7 +235,7 @@ export async function startServer() {
   const nextBin = join(REPO, "node_modules", "next", "dist", "bin", "next");
   const child = spawn(process.execPath, [nextBin, "start", "--port", String(PORT)], {
     cwd: REPO,
-    env: { ...process.env, NEXT_PUBLIC_SANCTUARY: "1", SNC_MEASURE: "1", NODE_ENV: "production" },
+    env: { ...process.env, NEXT_PUBLIC_SANCTUARY: "1", SNC_MEASURE: "1", NODE_ENV: "production", ...(offline ? OFFLINE_ENV : {}) },
     stdio: ["ignore", "pipe", "pipe"],
   });
   const base = `http://localhost:${PORT}`;

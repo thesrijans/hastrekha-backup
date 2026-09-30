@@ -78,6 +78,7 @@ import {
   bagWithoutLines,
   BLUR_WORDS,
   blurStalled,
+  concludeDetection,
   DETECTION_IDLE,
   DETECTION_LINE_IDS,
   LINE_TICK_SPACING_MS,
@@ -111,6 +112,7 @@ import {
 import { growthStillOf, handOf, openSnapStore, type SnapPair, type SnapStore } from "@/lib/scan/snap-store";
 import type { RekhaLine, RekhaSnapshot } from "@/lib/scan/rekha-persist";
 import { ChakraResult, type LegendEntry } from "@/components/sanctuary/chamber/chakra-result";
+import { asTracedLines } from "@/components/sanctuary/chamber/result-render";
 import { fallbackFreeze, makeSnaps, readSnapPalette, revokeSnaps, type CompletionSnaps } from "@/components/sanctuary/chamber/completion-snaps";
 import { CHAMBER_SCAN_FLAGS, withScanFlags } from "@/lib/scan/flags";
 import { ScanLitany, type LitanyHint } from "@/components/sanctuary/chamber/scan-litany";
@@ -306,7 +308,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
    * drew every line at a quarter of its span (2db5c39).
    */
   const buildReading = useCallback(
-    async (capture: CaptureState, cropImage: ImageData | null) => {
+    async (capture: CaptureState, cropImage: ImageData | null, heldLines: Partial<Record<ActiveLineId, TracedLine>> | null) => {
       setPhase("building");
       try {
         const merged = mergedMask(capture, MASK_SIZE);
@@ -341,7 +343,12 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         const reading = (await response.json()) as ReadingResponse;
         setRulesFired(reading.rules.length);
 
-        const shown: Partial<Record<string, TracedLine>> = { ...(drawnRef.current ?? found.lines) };
+        /*
+         * G5: the geometry is the HELD lines on the frozen frame's own crop — what the result screen showed — so the
+         * pothi's plate draws the reader's lines on the reader's palm, in one canonical space. Without a completion
+         * (never, on this path) the lines last drawn live, as before.
+         */
+        const shown: Partial<Record<string, TracedLine>> = { ...(heldLines ?? drawnRef.current ?? found.lines) };
         for (const id of unclear) delete shown[id];
         handOffToPothi({
           reading,
@@ -578,6 +585,17 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
       const snapshot = rekhaLatestRef.current;
       const wasMirrored = mirroredRef.current;
       const projectionNow = liveProjectionRef.current;
+      /*
+       * G5: completed by the reader (the shutter, the palm gone) before every line was a result — a line still
+       * gathering is marked unclear exactly as the budget marks it, so the ring, the legend and the reading all say so.
+       */
+      if (reason !== "detected") {
+        const concluded = concludeDetection(detectionRef.current, reason);
+        if (concluded !== detectionRef.current) {
+          detectionRef.current = concluded;
+          setDetection(concluded);
+        }
+      }
       const detectionNow = detectionRef.current;
       const pose = currentPose(captureRef.current)?.pose ?? "done";
       stop();
@@ -861,9 +879,13 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     void start();
   }, [resetForNewScan, start]);
 
-  /* "पाठ खोलें": the reading, built now from the session and whatever of the choreography's masks there are. */
+  /*
+   * "पाठ खोलें": the reading, built now from the session — the held lines' features, every other line unclear — and
+   * whatever of the choreography's masks there are; the hand-off carries the held lines on the frozen frame's crop.
+   */
   const onOpenReading = useCallback(() => {
-    void buildReading(capture, cropRef.current);
+    const done = completionRef.current;
+    void buildReading(capture, done?.frozen.crop ?? cropRef.current, done === null ? null : asTracedLines(done.lines));
   }, [buildReading, capture]);
 
   /* The frozen photograph is the screen from the freeze until the reveal beat takes it; the ring seals over it first. */
@@ -935,7 +957,8 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
           lines={extraction?.lines ?? {}}
           projection={projection}
           liveProjection={liveProjectionRef}
-          chakra={chakra}
+          /* The reveal beat's words stand at the wheel's centre: behind them, the bare wheel, as before G4b. */
+          chakra={phase === "revealing" ? null : chakra}
           sealing={sealing}
           onSealed={onSealed}
           mirrored={mirrored}

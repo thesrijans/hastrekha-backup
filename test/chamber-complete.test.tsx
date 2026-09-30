@@ -223,7 +223,14 @@ const withoutComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\/
   ok(/const onRetake = useCallback\(\(\) => \{\s*resetForNewScan\(\);\s*setPhase\("scanning"\);\s*void start\(\);/.test(client), "\"दोबारा स्कैन\": everything starts again, and the camera with it");
   ok(/onClick=\{\(\) => \{\s*resetForNewScan\(\);/.test(client), "…a failure's retry starts again the same way, so a finished detection cannot freeze the next scan at once");
   ok(/completingRef\.current = false;/.test(client), "…and a new scan can complete again");
-  ok(/const onOpenReading = useCallback\(\(\) => \{\s*void buildReading\(capture, cropRef\.current\);/.test(client), "\"पाठ खोलें\": the reading, built now");
+  ok(
+    /const onOpenReading = useCallback\(\(\) => \{\s*const done = completionRef\.current;\s*void buildReading\(capture, done\?\.frozen\.crop \?\? cropRef\.current, done === null \? null : asTracedLines\(done\.lines\)\);/.test(client),
+    "\"पाठ खोलें\": the reading, built now — handing off the held lines on the frozen frame's crop (G5)",
+  );
+  ok(
+    /if \(reason !== "detected"\) \{\s*const concluded = concludeDetection\(detectionRef\.current, reason\);/.test(client),
+    "G5: a shutter or palm-left completion marks every line still gathering unclear — exactly as the budget does — before the legend and the lines are read",
+  );
   ok(/growthAvailable=\{snapStore !== null && completion\.frozen\.anchors\.length > 0\}/.test(client), "the opt-in is offered only where the pair can be kept and replayed");
   ok(/blurShown\s*\?\s*BLUR_WORDS/.test(client) && /PLACEMENT_REASONS\.has\(reason\)/.test(client), "the blur's words lead — unless the palm itself is misplaced");
   ok(/blurShown && torch === "off" && cameraFacing === "environment" \? \{ \.\.\.TORCH_OFFER, onPress: \(\) => void toggleTorch\(\) \}/.test(client), "the torch is offered on the back camera, when it has one and it is off");

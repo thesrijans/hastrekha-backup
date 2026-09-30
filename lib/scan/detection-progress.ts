@@ -79,8 +79,12 @@ export interface DetectionState {
   readonly usableMs: number;
   /** When this palm's first usable frame arrived — the wall-clock budget runs from it. */
   readonly firstUsableAtMs: number | null;
-  /** Which budget ran out, once one has: the usable time or the wall clock. */
-  readonly spentBy: "usable" | "wall" | null;
+  /**
+   * What ended the gathering, once something has: the usable time or the wall clock (the budget, G3.2/G4) — or the
+   * reader, completing the scan before every line was a result (G5, chakra §2: the shutter, or the palm gone with
+   * three majors held; {@link concludeDetection}). Either way a line not yet confirmed is marked unclear.
+   */
+  readonly spentBy: "usable" | "wall" | "shutter" | "palm-left" | null;
   /** The overall percentage, 0–1: the mean of the rings, a confirmed or an unclear line counting whole — both are results. */
   readonly overall: number;
   /** Every line is a result, confirmed or unclear — the condition G4's "पहचान पूरी" waits for. */
@@ -175,6 +179,25 @@ export function nextDetection(state: DetectionState, snapshot: RekhaSnapshot | n
   };
 }
 
+/**
+ * THE SCAN ENDED BEFORE EVERY LINE WAS A RESULT (G5): the reader pressed the shutter (chakra 2b), or the palm left
+ * with three majors held (2c). Exactly as when the budget runs out, every line not yet confirmed is marked
+ * "इस हाथ पर स्पष्ट नहीं" — its progress kept for the record — so the ring shows its "—", its features leave the
+ * bag ({@link bagWithoutLines}) and the pothi seals its chapter saying so: the reading is the HELD lines'. A line
+ * still gathering is an unfinished measurement, and a reading built on one would be claiming more than the chamber
+ * confirmed. `spentBy` records what ended it (a budget that had already run out keeps its own name). Returns the same
+ * object when every line is already a result.
+ */
+export function concludeDetection(state: DetectionState, by: "shutter" | "palm-left"): DetectionState {
+  if (state.complete) return state;
+  const lines = {} as Record<ActiveLineId, LineDetection>;
+  for (const id of DETECTION_LINE_IDS) {
+    const line = state.lines[id];
+    lines[id] = line.status === "gathering" ? { status: "unclear", progress: line.progress } : line;
+  }
+  return { ...state, lines, spentBy: state.spentBy ?? by, overall: 1, complete: true };
+}
+
 /** The lines confirmed between two states — each earns its ✓ and one haptic tick. */
 export function newlyConfirmed(previous: DetectionState, next: DetectionState): readonly ActiveLineId[] {
   return DETECTION_LINE_IDS.filter((id) => next.lines[id].status === "confirmed" && previous.lines[id].status !== "confirmed");
@@ -210,14 +233,47 @@ export function unclearLines(state: DetectionState): readonly ActiveLineId[] {
 }
 
 /**
- * The feature bag without the given lines' own features (`lines.<id>`): what the chamber posts once it has
- * marked a line unclear, so no rule fires on the weak evidence the chamber itself declined to confirm.
- * Cross-line keys are left: they already take the WEAKEST contributing line's confidence (reading-session.ts).
+ * The keys outside `lines.<id>` that describe one particular line (lib/scan/lines.ts FEATURE_MAPPING): a fork at the
+ * head line's end, head and heart fused into one crease, the head–heart gap. They leave the bag with that line.
+ * Keys about the palm's creases as a whole (`lines.quality.wavy`, `lines.quality.forked_lines_general`) stay.
+ */
+export const LINE_BOUND_KEYS: Readonly<Record<ActiveLineId, readonly string[]>> = {
+  heart: ["lines.head_heart_blended_single", "geometry.quadrangle_shape"],
+  head: ["lines.head_heart_blended_single", "lines.quality.head_end_fork", "geometry.quadrangle_shape"],
+  life: [],
+  fate: [],
+};
+
+/** `node` without the value at `path`, cloned only along the path — the same object when there was nothing there. */
+function withoutPath(node: Record<string, unknown>, path: readonly string[]): Record<string, unknown> {
+  const [key, ...rest] = path;
+  if (key === undefined || !Object.prototype.hasOwnProperty.call(node, key)) return node;
+  if (rest.length === 0) {
+    const copy = { ...node };
+    delete copy[key];
+    return copy;
+  }
+  const child = node[key];
+  if (typeof child !== "object" || child === null || Array.isArray(child)) return node;
+  const next = withoutPath(child as Record<string, unknown>, rest);
+  return next === child ? node : { ...node, [key]: next };
+}
+
+/**
+ * The feature bag without the given lines: their own features (`lines.<id>`) and every key that describes them
+ * ({@link LINE_BOUND_KEYS}) — what the chamber posts once it has marked a line unclear, so no rule fires on
+ * evidence the chamber itself declined to confirm, and the reading is the HELD lines' (G5). G3 left the cross-line
+ * keys in; a fork at the end of a head line the chamber could not confirm is still a claim about that line.
+ * The bag it is given is never mutated.
  */
 export function bagWithoutLines<T extends object>(bag: T, ids: readonly string[]): T {
-  const lines = (bag as { readonly lines?: unknown }).lines;
-  if (ids.length === 0 || typeof lines !== "object" || lines === null) return bag;
-  const kept: Record<string, unknown> = { ...(lines as Record<string, unknown>) };
-  for (const id of ids) delete kept[id];
-  return { ...bag, lines: kept };
+  if (ids.length === 0) return bag;
+  const paths = new Set<string>();
+  for (const id of ids) {
+    paths.add(`lines.${id}`);
+    for (const key of LINE_BOUND_KEYS[id as ActiveLineId] ?? []) paths.add(key);
+  }
+  let out = bag as Record<string, unknown>;
+  for (const path of paths) out = withoutPath(out, path.split("."));
+  return out as T;
 }

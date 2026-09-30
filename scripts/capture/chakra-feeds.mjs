@@ -18,6 +18,11 @@
  *   loss2    the feed blanked 2 s once a line is held (the relay, phone-camera.mjs): the ring, the ✓ and the
  *            usable time before, during and after — kept.
  *   loss8    the feed blanked 8 s once three majors are held: the scan completes by itself (2c), and when.
+ *   e2e      scan-complete G5, the whole chain: the ring filling, the completion, both views of the result, then
+ *            "पाठ खोलें" — the reading built (on an OFFLINE server: capture.mjs OFFLINE_ENV — no database write, no
+ *            model call), the reveal, and /read/pothi: every leaf content or sealed, the plate, the hand-off; the four
+ *            line chapters photographed. `--press shutter` presses the shutter the moment it wakes (G5's fold-in:
+ *            every line still gathering must reach the pothi sealed as unclear).
  *
  * Writes captures/ui/<stamp>-<label>/ (git-ignored: the feeds are the reader's palm): the photographs and
  * chakra.json.
@@ -38,7 +43,9 @@ const seconds = Number(arg("--seconds", "150"));
 const feedDir = resolve(arg("--feeds", join(REPO, "captures", "ui", "feeds", "tight")));
 const only = argv.includes("--only") ? arg("--only").split(",") : null;
 const [viewportWidth, viewportHeight] = arg("--viewport", "412x915").split("x").map(Number);
-if (!["ring", "shutter", "loss2", "loss8"].includes(scenario)) throw new Error(`Unknown scenario ${scenario}`);
+if (!["ring", "shutter", "loss2", "loss8", "e2e"].includes(scenario)) throw new Error(`Unknown scenario ${scenario}`);
+/** e2e: "shutter" presses the shutter the moment it wakes, instead of letting detection complete. */
+const press = arg("--press", null);
 
 if (!existsSync(feedDir)) throw new Error(`No feeds at ${feedDir}`);
 const feeds = readdirSync(feedDir)
@@ -194,7 +201,7 @@ function costOf(readout) {
 }
 
 if (argv.includes("--build")) await buildProduction();
-const server = await startServer();
+const server = await startServer({ offline: scenario === "e2e" });
 const stamp = new Date().toISOString().replaceAll(":", "-").slice(0, 19);
 const dir = join(REPO, "captures", "ui", `${stamp}-${label}`);
 mkdirSync(dir, { recursive: true });
@@ -268,11 +275,11 @@ try {
       entry.handAt = handAt?.t ?? null;
       if (handAt === null) throw new Error("no hand");
 
-      if (scenario === "ring") {
+      if (scenario === "ring" || scenario === "e2e") {
         await shot("ring-00");
         entry.ring = { "00": (await state()).overall };
         /* ~40% and ~80%: triggered a little early, since a photograph from outside lands most of a second later. */
-        for (const [key, level] of [["40", 0.38], ["80", 0.72]]) {
+        for (const [key, level] of press === "shutter" ? [["40", 0.38]] : [["40", 0.38], ["80", 0.72]]) {
           const s = await waitFor((x) => x.overall >= level || x.phase !== "scanning", 60);
           if (s === null || s.phase !== "scanning") break;
           await shot(`ring-${key}`);
@@ -280,7 +287,7 @@ try {
         }
       }
 
-      if (scenario === "shutter") {
+      if (scenario === "shutter" || (scenario === "e2e" && press === "shutter")) {
         const woke = await waitFor((s) => s.shutter === "ready" || s.phase !== "scanning", 50);
         if (woke !== null && woke.shutter === "ready") {
           await shot("shutter-ready");
@@ -323,8 +330,13 @@ try {
         /* The jank at completion: the longest gap between animation frames in the two seconds after the commit. */
         const after = timing.frames.filter((t) => timing.commit !== null && t >= timing.commit - 50 && t <= timing.commit + 2000);
         let longest = 0;
-        for (let i = 1; i < after.length; i += 1) longest = Math.max(longest, after[i] - after[i - 1]);
-        entry.sealTiming = { commitToFirstSealFrame: timing.firstFrame === undefined || timing.commit === null ? null : timing.firstFrame - timing.commit, longestFrameGap: longest };
+        const gaps = [];
+        for (let i = 1; i < after.length; i += 1) {
+          const gap = after[i] - after[i - 1];
+          longest = Math.max(longest, gap);
+          if (gap > 80) gaps.push(`${gap} ms at +${after[i - 1] - timing.commit}`);
+        }
+        entry.sealTiming = { commitToFirstSealFrame: timing.firstFrame === undefined || timing.commit === null ? null : timing.firstFrame - timing.commit, longestFrameGap: longest, gaps };
         if (grabs !== null) {
           for (const grab of grabs) writeFileSync(join(dir, `${name}-seal-${grab.delay}ms.png`), Buffer.from(grab.png.split(",")[1], "base64"));
           entry.sweep = { grabs: grabs.map((grab) => ({ delay: grab.delay, sinceFirstSealFrame: grab.sinceFirstSealFrame, ring: grab.ring })) };
@@ -333,6 +345,79 @@ try {
         await page.waitForTimeout(1300);
         entry.completion = await page.evaluate(COMPLETION);
         await shot("result-lined");
+        if (scenario === "e2e") {
+          /* Both views of the photograph (G4's two snaps, G4b's toggle), then the reading. */
+          await page.tap('[data-snc-view-mode="plain"]');
+          await page.waitForTimeout(350);
+          await shot("result-plain");
+          await page.tap('[data-snc-view-mode="lined"]');
+          await page.waitForTimeout(350);
+          /* The page is replaced on the way to the pothi: its series and its vibrations are read now. */
+          entry.samples = await page.evaluate(() => window.__chakraSamples);
+          entry.vibrations = await page.evaluate(() => window.__vibrations ?? []);
+          const replied = page.waitForResponse((r) => r.url().includes("/api/reading") && r.request().method() === "POST", { timeout: 60_000 }).catch(() => null);
+          const tappedAt = Date.now();
+          await page.tap('[data-snc-action="open"]');
+          await page.waitForTimeout(200);
+          await shot("opening");
+          const response = await replied;
+          if (response !== null) {
+            const json = await response.json().catch(() => null);
+            entry.reading = {
+              status: response.status(),
+              ms: Date.now() - tappedAt,
+              readingId: json?.readingId ?? null,
+              engine: json?.narration?.engine ?? null,
+              rules: json?.rules?.length ?? 0,
+              locked: json?.lockedRuleCount ?? 0,
+              lineRules: (json?.rules ?? []).filter((rule) => /^(heart|head|life|fate)/i.test(rule.rule_id ?? "") || /lines\./.test(JSON.stringify(rule.conditions ?? ""))).length,
+            };
+            const request = response.request().postDataJSON?.() ?? null;
+            entry.reading.bagLines = request?.features?.lines === undefined ? [] : Object.keys(request.features.lines);
+          } else entry.notes.push("no /api/reading response");
+          await page.waitForFunction(() => document.querySelector("[data-snc-phase]")?.getAttribute("data-snc-phase") === "revealing", null, { timeout: 30_000 }).catch(() => undefined);
+          await page.waitForTimeout(900);
+          await shot("reveal");
+          const arrived = await page.waitForURL(/\/read\/pothi/, { timeout: 30_000 }).then(() => true).catch(() => false);
+          if (arrived) {
+            entry.pothiAfterMs = Date.now() - tappedAt;
+            await page.waitForSelector('[data-snc-book="open"]', { timeout: 30_000 }).catch(() => undefined);
+            await page.waitForTimeout(1500);
+            await shot("pothi-open");
+            entry.pothi = await page.evaluate(() => {
+              const leaves = [...document.querySelectorAll("[data-snc-leaf]")].map((leaf) => ({
+                numeral: leaf.getAttribute("data-snc-leaf"),
+                state: leaf.querySelector('[data-snc-face-content="leaf"]') ? "content" : leaf.querySelector('[data-snc-face-content="sealed"]') ? "sealed" : "?",
+                unclear: /spasht nahi/.test(leaf.textContent ?? ""),
+                /* A sealed leaf's own reason, its first line after the seal's heading. */
+                reason: leaf.querySelector('[data-snc-face-content="sealed"]') === null ? null : [...leaf.querySelectorAll('[data-snc-face-content="sealed"] p')].map((p) => p.textContent.trim()).filter(Boolean).slice(0, 2).join(" | "),
+                plate: leaf.querySelector("[data-snc-plate]")?.getAttribute("data-snc-plate") ?? null,
+                crop: leaf.querySelector('[data-snc-layer="crop"]') !== null,
+                lines: [...new Set([...leaf.querySelectorAll("[data-snc-line]")].map((line) => line.getAttribute("data-snc-line")))],
+              }));
+              const read = (key) => {
+                try {
+                  return JSON.parse(sessionStorage.getItem(key) ?? "null");
+                } catch {
+                  return null;
+                }
+              };
+              const geometry = read("hastrekha:pothi-geometry:v1");
+              return {
+                book: document.querySelector("[data-snc-book]")?.getAttribute("data-snc-book") ?? null,
+                leaves,
+                storageChars: Object.fromEntries(Object.keys(sessionStorage).map((key) => [key, (sessionStorage.getItem(key) ?? "").length])),
+                geometry: geometry === null ? null : { lines: Object.keys(geometry.lines ?? {}), unclear: geometry.unclear ?? null, cropChars: (geometry.cropDataUrl ?? "").length, space: geometry.space ?? null },
+              };
+            });
+            for (const numeral of ["II", "III", "IV", "V"]) {
+              await page.goto(`${server.base}/read/pothi?chapter=${numeral}`, { waitUntil: "load", timeout: 60_000 });
+              await page.waitForSelector('[data-snc-book="open"]', { timeout: 30_000 }).catch(() => undefined);
+              await page.waitForTimeout(1300);
+              await shot(`pothi-${numeral}`);
+            }
+          } else entry.notes.push("never reached /read/pothi");
+        }
         if (scenario === "ring") {
           await page.tap('[data-snc-view-mode="plain"]');
           await page.waitForTimeout(350);
@@ -361,8 +446,8 @@ try {
         }
       } else entry.notes.push(`not complete in ${seconds} s`);
 
-      entry.samples = await page.evaluate(() => window.__chakraSamples);
-      entry.vibrations = await page.evaluate(() => window.__vibrations ?? []);
+      if (entry.samples === undefined) entry.samples = await page.evaluate(() => window.__chakraSamples ?? []);
+      if (entry.vibrations === undefined) entry.vibrations = await page.evaluate(() => window.__vibrations ?? []);
       entry.errors = errors;
       await context.close();
     } catch (error) {
@@ -426,13 +511,17 @@ function summariseEntry(entry) {
     entry.completedAt === undefined ? null : `complete@${(entry.completedAt / 1000).toFixed(1)}s`,
     c === null ? null : `reason ${c.reason} pose ${c.pose} best ${c.best} shift ${c.shift} lines-vs-live [${c.deviation}] as-drawn ${c.fromLive} held-vs-live [${c.heldDeviation}] held-then-vs-live [${c.heldThenDeviation}] freeze ${c.freezeMs} ms legend "${c.legend}" title "${c.title}" camera ${c.videoLive ? "LIVE" : "stopped"}`,
     entry.sweep === undefined ? null : `seal grabbed at ${entry.sweep.grabs.map((grab) => `+${grab.sinceFirstSealFrame} ms (ring ${grab.ring ? "drawn" : "MISSING"})`).join(", ")} of its first frame`,
-    entry.sealTiming === undefined ? null : `commit → first sealing frame ${entry.sealTiming.commitToFirstSealFrame} ms, longest frame gap ${entry.sealTiming.longestFrameGap} ms`,
+    entry.sealTiming === undefined ? null : `commit → first sealing frame ${entry.sealTiming.commitToFirstSealFrame} ms, longest frame gap ${entry.sealTiming.longestFrameGap} ms [${entry.sealTiming.gaps.join("; ")}]`,
     cost === null ? null : `draw p50 ${cost.p50} p95 ${cost.p95} worst ${cost.worst} ms · best p95 ${cost.bestP95} ms`,
+    entry.reading === undefined ? null : `reading ${entry.reading.status} in ${entry.reading.ms} ms: ${entry.reading.rules} rules shown (+${entry.reading.locked} locked), narration ${entry.reading.engine}, readingId ${entry.reading.readingId ?? "none (not persisted)"}, bag lines [${entry.reading.bagLines.join(",")}]`,
+    entry.pothi === undefined
+      ? null
+      : `pothi after ${entry.pothiAfterMs} ms: book ${entry.pothi.book}; content ${entry.pothi.leaves.filter((leaf) => leaf.state === "content").length}/${entry.pothi.leaves.length} [${entry.pothi.leaves.map((leaf) => `${leaf.numeral}:${leaf.state === "content" ? "C" : leaf.unclear ? "U" : "S"}`).join(" ")}]; hand-off lines [${entry.pothi.geometry?.lines.join(",")}] unclear [${entry.pothi.geometry?.unclear?.lines?.join(",") ?? ""}] after ${entry.pothi.geometry?.unclear?.afterUsableMs ?? "–"} ms, crop ${entry.pothi.geometry?.cropChars ?? 0} chars, space ${entry.pothi.geometry?.space}; plates [${entry.pothi.leaves.filter((leaf) => leaf.plate !== null).map((leaf) => `${leaf.numeral}:${leaf.plate}${leaf.crop ? "+crop" : ""}(${leaf.lines.join("/")})`).join(" ")}]`,
     entry.saved === undefined ? null : `saved ${entry.saved.suggested} ${entry.saved.size?.width}x${entry.saved.size?.height} ${(entry.saved.bytes / 1024).toFixed(0)} KB (${entry.savedState})`,
     `double-tick ${doubleTicks}`,
     `shutter-vs-held mismatches ${shutterWrong}/${scanning.length}`,
     `dips ${dips} resets ${resets}`,
-    entry.errors?.length ? `ERRORS ${entry.errors.length}: ${entry.errors.slice(0, 2).join(" | ")}` : null,
+    entry.errors?.length ? `ERRORS ${entry.errors.length}: ${[...new Set(entry.errors)].join(" | ")}` : null,
     entry.notes.length ? `NOTES ${entry.notes.join("; ")}` : null,
   ];
   console.log(parts.filter(Boolean).join("  ·  "));

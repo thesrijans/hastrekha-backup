@@ -30,6 +30,7 @@ import {
   blurStalled,
   USABLE_FRAME_GAP_CAP_MS,
   bagWithoutLines,
+  concludeDetection,
   newlyConfirmed,
   nextDetection,
   unclearLines,
@@ -214,6 +215,28 @@ function feed(state: DetectionState, startFrames: number, count: number, startMs
   ok(s.lines.fate.status === "confirmed", "…and a confirmed line does not fall back to unclear");
 }
 
+/* --------- 6d. G5: the reader ends the scan early (the shutter, the palm gone) — exactly like the budget --------- */
+
+{
+  const spec: LineSpec = { heart: { state: "confirmed", progress: 1 }, head: { state: "confirmed", progress: 1 }, life: { state: "tracking", progress: 0.71 } };
+  const mid = feed(DETECTION_IDLE, 0, 20, 0, 250, spec).state;
+  ok(!mid.complete && mid.spentBy === null && unclearLines(mid).length === 0, "mid-scan: two held, two still gathering, nothing spent");
+  for (const by of ["shutter", "palm-left"] as const) {
+    const done = concludeDetection(mid, by);
+    ok(unclearLines(done).join() === "life,fate", `${by}: every line still gathering is marked unclear — life (at 71%) and fate (never seen)`);
+    ok(done.lines.heart === mid.lines.heart && done.lines.head === mid.lines.head, `${by}: the held lines are untouched`);
+    ok(done.lines.life.progress === 0.71 && done.spentBy === by, `${by}: the progress it reached is kept, and what ended the scan is recorded`);
+    ok(done.complete && done.overall === 1 && done.usableMs === mid.usableMs, `${by}: every line a result — the same state a budget timeout leaves (and its usable time is what the sealed leaf reports)`);
+  }
+  const spentAlready = feed(DETECTION_IDLE, 0, 61, 0, 250, spec).state;
+  ok(concludeDetection(spentAlready, "shutter") === spentAlready, "already complete (the budget ran out first): nothing to conclude, and the budget keeps its own name");
+  const bag = { lines: { heart: { origin: "jupiter" }, head: { quality: 0.8 }, life: { length_norm: 0.4 }, fate: { origin: "wrist" } } };
+  ok(
+    JSON.stringify(bagWithoutLines(bag, unclearLines(concludeDetection(mid, "shutter")))) === JSON.stringify({ lines: { heart: { origin: "jupiter" }, head: { quality: 0.8 } } }),
+    "…so the reading is the HELD lines': an unfinished line's features never reach the rules",
+  );
+}
+
 /* ------------------------ 8. the bag leaves an unclear line out ------------------------ */
 
 {
@@ -222,6 +245,19 @@ function feed(state: DetectionState, startFrames: number, count: number, startMs
   ok(JSON.stringify(without) === JSON.stringify({ hand: { shape: "square" }, lines: { heart: { origin: "jupiter" } }, quadrangle: { width: 0.3 } }), "the unclear line's own features (lines.fate) leave the bag; everything else stays");
   ok(bag.lines.fate !== undefined, "the bag it was given is not mutated");
   ok(bagWithoutLines(bag, []) === bag && bagWithoutLines({ hand: {} }, ["fate"]).hand !== undefined, "no unclear line, or no lines at all: the bag as it was");
+
+  /* G5: the reading is the HELD lines' — a key that describes an unclear line leaves with it. */
+  const full = {
+    lines: { heart: { present: true }, head: { quality: 0.7 }, head_heart_blended_single: true, quality: { head_end_fork: true, wavy: true, forked_lines_general: true } },
+    geometry: { quadrangle_shape: "wide", palm_ratio: 1.1 },
+  };
+  const noHead = bagWithoutLines(full, ["head"]);
+  ok(
+    JSON.stringify(noHead) === JSON.stringify({ lines: { heart: { present: true }, quality: { wavy: true, forked_lines_general: true } }, geometry: { palm_ratio: 1.1 } }),
+    "head unclear: its own features, the fork at its end, head-and-heart fused, and the head-heart gap all leave; the palm-wide wavy and forked stay",
+  );
+  ok(full.lines.quality.head_end_fork === true && full.geometry.quadrangle_shape === "wide", "…and the bag it was given is untouched");
+  ok(JSON.stringify(bagWithoutLines(full, ["life", "fate"]).lines) === JSON.stringify(full.lines), "life or fate unclear: no cross-line key names them, so only their own features would go");
 }
 
 /* ------------------ 10. the chamber wires it (source, as rekha-persist.test does) ------------------ */
