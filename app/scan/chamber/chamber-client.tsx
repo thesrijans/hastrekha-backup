@@ -55,7 +55,7 @@ import Link from "next/link";
 import type { LandmarkFeatureResult } from "@/lib/scan/features";
 import { extractLines } from "@/lib/scan/lines";
 import { emptySession, observe, observeLines, sessionBag, type ReadingSession } from "@/lib/scan/reading-session";
-import { mergedMask, type CaptureState } from "@/lib/scan/capture";
+import { currentPose, mergedMask, type CaptureState } from "@/lib/scan/capture";
 import { MASK_SIZE, type ActiveLineId, type TracedLine } from "@/lib/scan/types";
 import { useHandScan, readTouchSignals } from "@/components/scan/use-hand-scan";
 import { useCapabilityTier } from "@/components/sanctuary/use-capability-tier";
@@ -87,14 +87,34 @@ import {
   unclearLines,
   type DetectionState,
 } from "@/lib/scan/detection-progress";
-import { cropLuma, estimateFreezeShift, FREEZE_WAIT_MS, freezeReady, heldLinesOn, prelabelOf, type FreezeCandidate, type FreezeShift } from "@/lib/scan/freeze-frame";
+import {
+  estimateFreezeShift,
+  freezeDeviation,
+  freezeFrom,
+  heldLinesOn,
+  linesAsDrawn,
+  prelabelOf,
+  type FreezeCandidate,
+  type FreezeLine,
+  type FreezeShift,
+  type LineDeviation,
+} from "@/lib/scan/freeze-frame";
+import {
+  CHAKRA_MAJOR_NAMES,
+  CHAKRA_RESULT_LATEST_MS,
+  CHAKRA_WORDS,
+  chakraState,
+  completionReason,
+  shutterReady,
+  type CompletionReason,
+} from "@/lib/scan/chakra";
 import { growthStillOf, handOf, openSnapStore, type SnapPair, type SnapStore } from "@/lib/scan/snap-store";
 import type { RekhaLine, RekhaSnapshot } from "@/lib/scan/rekha-persist";
-import { CompletionLeaf } from "@/components/sanctuary/chamber/completion-leaf";
+import { ChakraResult, type LegendEntry } from "@/components/sanctuary/chamber/chakra-result";
 import { fallbackFreeze, makeSnaps, readSnapPalette, revokeSnaps, type CompletionSnaps } from "@/components/sanctuary/chamber/completion-snaps";
 import { CHAMBER_SCAN_FLAGS, withScanFlags } from "@/lib/scan/flags";
 import { ScanLitany, type LitanyHint } from "@/components/sanctuary/chamber/scan-litany";
-import { haptic } from "@/components/sanctuary/sound-provider";
+import { haptic, useOptionalSound } from "@/components/sanctuary/sound-provider";
 import { bandTickDue, DISTANCE_WORDS, type DistanceState } from "@/lib/scan/distance";
 import { REASON_WORDS, type ReasonKey } from "@/lib/scan/scan-reason";
 import { RevealBeat } from "@/components/sanctuary/chamber/reveal-beat";
@@ -113,8 +133,11 @@ import styles from "./chamber.module.css";
  */
 const NAMED_MINOR_CLASSES = new Set(["sun", "health", "marriage", "girdle_of_venus", "bracelets"]);
 
-/** The route's own phases. `scanning` is the long one; the other three are seconds. */
-type ChamberPhase = "scanning" | "freezing" | "complete" | "building" | "revealing" | "failed";
+/**
+ * The route's own phases. `scanning` is the long one. G4b: `sealing` is the ring closing over the frozen photograph
+ * (CHAKRA_RESULT_AT_MS), `complete` the result screen, and the rest are seconds.
+ */
+type ChamberPhase = "scanning" | "sealing" | "complete" | "building" | "revealing" | "failed";
 
 /**
  * The reasons that are about WHERE the palm is: while one of these is the top rejection, placing the hand is the
@@ -134,16 +157,41 @@ const PLACEMENT_REASONS: ReadonlySet<ReasonKey> = new Set<ReasonKey>([
 /** A palm unseen this long has left — the blur clock's "present" allows a dropped frame or two. */
 const PALM_GRACE_MS = 500;
 
-/** Everything the completion leaf shows and the snap store keeps (G4). */
+/** Everything the result shows (G4b §4), and how it was reached. */
 interface Completion {
+  /** The whole scan's best frame, with its 512 crop (lib/scan/freeze-frame.ts). */
   readonly frozen: FreezeCandidate;
+  /** How the held lines were carried onto it: its gray registered against the accumulator's. */
   readonly shift: FreezeShift | null;
-  readonly snaps: CompletionSnaps;
-  readonly pair: SnapPair;
-  /** The preview was mirrored when the frame froze: the frozen frame is shown as the reader saw it. */
+  /** The held lines on its crop (MASK_SIZE space) — every line the ledger shows ✓. */
+  readonly lines: readonly FreezeLine[];
+  /** §6: how far each lands from where the live overlay drew it on that frame, in the frame's pixels. */
+  readonly deviation: readonly LineDeviation[];
+  /** Which lines went on as the overlay drew them there (the rest came in from the accumulator, held + shift). */
+  readonly fromLive: readonly ActiveLineId[];
+  /**
+   * For the record, not for drawing: the accumulator's final geometry carried back (held + shift), and its hold as it
+   * stood at the frame, each against the overlay's drawing of that frame — how far the traces moved on after it.
+   */
+  readonly heldDeviation: readonly LineDeviation[];
+  readonly heldThenDeviation: readonly LineDeviation[];
+  /** The live view's cover scale for that frame: its pixels → the screen's. */
+  readonly coverScale: number;
+  readonly reason: CompletionReason;
+  readonly legend: readonly LegendEntry[];
+  /** The choreography's pose when the scan completed — it never waits on one (§2). */
+  readonly pose: string;
+  /** The preview was mirrored when the frame froze: the photograph is shown as the reader saw it. */
   readonly mirrored: boolean;
-  /** Milliseconds between detection completing and the freeze (the wait for a frame at VoL ≥ 100). */
-  readonly waitMs: number;
+  /** performance.now() at completion: the ring's seal runs from it. */
+  readonly sealedAt: number;
+  /** Milliseconds the freeze took on the main thread: take, rectify the crop, carry and measure the lines. */
+  readonly freezeMs: number;
+}
+
+/** A line-by-line deviation for the element: "id:p50/p95/max(screen px)/points …", or "none". */
+function deviationText(lines: readonly LineDeviation[], coverScale: number): string {
+  return lines.map((line) => `${line.id}:${(line.p50 * coverScale).toFixed(2)}/${(line.p95 * coverScale).toFixed(2)}/${(line.max * coverScale).toFixed(2)}/${line.compared}`).join(" ") || "none";
 }
 
 /** A store that never changes — used only for its null server snapshot. See the rescan note below. */
@@ -346,7 +394,6 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     traces,
     projection,
     liveProjectionRef,
-    totalProgress,
     mirrored,
     videoSize,
     setVideoElement,
@@ -366,11 +413,12 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     capture,
     stop,
     restartCapture,
-    peekFreeze,
-    takeFreeze,
+    peekBestFrame,
+    takeBestFrame,
+    bestFrameCosts,
     accumulatorGray,
     firstRekhaOfferAt,
-  } = useHandScan({ onFeatures, onLineFeatures, cameraSelection: "auto", profile, funnel: showCost });
+  } = useHandScan({ onFeatures, onLineFeatures, cameraSelection: "auto", profile, funnel: showCost, holdThroughLoss: true, bestFrame: true });
 
   /*
    * scan-complete G2: the leaf's one instruction. The SPECIFIC top reason of the last second when something
@@ -465,7 +513,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     return () => window.clearInterval(timer);
   }, [status, phase, foldDetection, firstRekhaOfferAt]);
 
-  /* ------------------------ G4: पहचान पूरी — the freeze ------------------------ */
+  /* ------------------ G4 / G4b: पहचान पूरी — the scan completes ------------------ */
 
   /* The snap store, opened once — which also clears what another browsing session left (session-only). */
   const [snapStore, setSnapStore] = useState<SnapStore | null>(null);
@@ -481,6 +529,9 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
 
   const [completion, setCompletion] = useState<Completion | null>(null);
   const completionRef = useRef<Completion | null>(null);
+  /* The two snaps and their pair, made after the freeze, off its path (G4.2): what the store keeps. */
+  const [kept, setKept] = useState<{ readonly snaps: CompletionSnaps; readonly pair: SnapPair } | null>(null);
+  const keptRef = useRef<{ readonly snaps: CompletionSnaps; readonly pair: SnapPair } | null>(null);
   const mirroredRef = useRef(mirrored);
   const snapStoreRef = useRef<SnapStore | null>(null);
   useEffect(() => {
@@ -496,64 +547,149 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     },
     [setVideoElement],
   );
+  /* The sound, where the sanctuary's provider is mounted; the chamber is silent without one. */
+  const sound = useOptionalSound();
+  const soundRef = useRef(sound);
+  useEffect(() => {
+    soundRef.current = sound;
+  }, [sound]);
+  const captureRef = useRef(capture);
+  useEffect(() => {
+    captureRef.current = capture;
+  }, [capture]);
 
   /*
-   * Detection is complete — every major line confirmed or marked unclear — and the freeze begins: the sharpest
-   * recent frame, once one clears VoL ≥ 100, or after FREEZE_WAIT_MS the best there is. The camera stops on it
-   * (the frozen frame stays on screen), the double tick, the two snaps.
+   * G4b §2 — THE SCAN COMPLETES, for any of three reasons: every major a result (a), the shutter (b), the palm gone
+   * five seconds with three majors held (c). At once — no wait for a sharper frame: the photograph is the WHOLE
+   * scan's best frame (§3), taken from the hook now, its 512 crop rectified once. The camera stops; the double
+   * tick, the soft shutter sound (if sound is on); the held lines are carried onto the best frame (its gray against
+   * the accumulator's) and measured against what the overlay drew on it (§6: ±3 px); the ring pulses and its gold
+   * sweep closes over the frozen photograph (CHAKRA_SEAL_MS), and the result screen comes in (CHAKRA_RESULT_AT_MS).
+   * The snaps are made after, and kept for this session only unless the reader opts in.
    */
-  const freezeStartedAtRef = useRef(0);
-  const detectionDone = phase === "scanning" && status === "running" && detection.complete;
-  useEffect(() => {
-    if (!detectionDone) return;
-    freezeStartedAtRef.current = performance.now();
-    let started = false;
-    const freeze = async (): Promise<void> => {
-      /* "freezing" first, so nothing between the camera stopping and the leaf appearing reads as idle. */
-      setPhase("freezing");
-      const waitMs = performance.now() - freezeStartedAtRef.current;
-      const frozen = takeFreeze() ?? fallbackFreeze(videoElementRef.current, cropRef.current, observationRef.current);
+  const completingRef = useRef(false);
+  const completeScan = useCallback(
+    (reason: CompletionReason) => {
+      if (completingRef.current) return;
+      completingRef.current = true;
+      const started = performance.now();
+      const best = takeBestFrame();
       const gray = accumulatorGray();
       const snapshot = rekhaLatestRef.current;
       const wasMirrored = mirroredRef.current;
+      const projectionNow = liveProjectionRef.current;
+      const detectionNow = detectionRef.current;
+      const pose = currentPose(captureRef.current)?.pose ?? "done";
       stop();
       haptic("detectionComplete");
-      if (frozen === null) throw new Error("no frame to freeze on");
-      /* The held lines live in the accumulator's newest frame; carry them onto the frozen one. */
-      const shift = frozen.anchors.length === 0 || gray === null ? null : estimateFreezeShift(cropLuma(frozen.crop.data, frozen.crop.width), frozen.crop.width, gray);
-      const confirmedIds = DETECTION_LINE_IDS.filter((id) => detectionRef.current.lines[id].status === "confirmed");
-      const lines = heldLinesOn(snapshot, shift, confirmedLinesRef.current, confirmedIds);
-      const snaps = await makeSnaps(frozen, lines, readSnapPalette(rootRef.current ?? document.documentElement));
-      const pair: SnapPair = {
-        palm: snaps.palm,
-        raw: snaps.raw,
-        lines: snaps.lines,
-        prelabel: prelabelOf(lines),
-        vol: frozen.vol,
-        hand: handOf(frozen.handedness),
-        capturedAt: new Date(Date.now() - (performance.now() - frozen.atMs)).toISOString(),
-      };
-      const next: Completion = { frozen, shift, snaps, pair, mirrored: wasMirrored, waitMs };
-      completionRef.current = next;
-      setCompletion(next);
-      setPhase("complete");
-      /* Session-only by default: kept for this browsing session, never uploaded. */
-      void snapStoreRef.current?.keepForSession(pair).catch(() => undefined);
-    };
-    const timer = window.setInterval(() => {
-      if (started) return;
-      if (!freezeReady(peekFreeze()) && performance.now() - freezeStartedAtRef.current < FREEZE_WAIT_MS) return;
-      started = true;
-      window.clearInterval(timer);
-      void freeze().catch((freezeError: unknown) => {
+      soundRef.current?.play("shutter");
+      try {
+        const frozen = (best === null ? null : freezeFrom(best)) ?? fallbackFreeze(videoElementRef.current, cropRef.current, observationRef.current, projectionNow);
+        if (frozen === null) throw new Error("no frame to freeze on");
+        /* The held lines live in the accumulator's newest frame; carry them onto the best one. */
+        const shift = gray === null || frozen.gray.length !== MASK_SIZE * MASK_SIZE ? null : estimateFreezeShift(frozen.gray, MASK_SIZE, gray);
+        const confirmedIds = DETECTION_LINE_IDS.filter((id) => detectionNow.lines[id].status === "confirmed");
+        const held = heldLinesOn(snapshot, shift, confirmedLinesRef.current, confirmedIds);
+        /* The photograph shows each held line as the overlay drew it on that frame; one confirmed after it comes in held + shift. */
+        const { lines, fromLive } = linesAsDrawn(held, frozen);
+        const deviation = freezeDeviation(lines, frozen);
+        const heldDeviation = freezeDeviation(held, frozen);
+        const heldThenDeviation = freezeDeviation(heldLinesOn(frozen.heldAtCapture, null).filter((line) => confirmedIds.includes(line.id)), frozen);
+        const coverScale = frozen.raw.width > 0 ? Math.max(window.innerWidth / frozen.raw.width, window.innerHeight / frozen.raw.height) : 1;
+        const legend: LegendEntry[] = DETECTION_LINE_IDS.map((id) => ({ id, name: CHAKRA_MAJOR_NAMES[id], found: confirmedIds.includes(id) }));
+        const next: Completion = {
+          frozen,
+          shift,
+          lines,
+          deviation,
+          fromLive,
+          heldDeviation,
+          heldThenDeviation,
+          coverScale,
+          reason,
+          legend,
+          pose,
+          mirrored: wasMirrored,
+          /* The seal runs from when the photograph can first be shown, not from the tap: the freeze's own work comes first. */
+          sealedAt: performance.now(),
+          freezeMs: performance.now() - started,
+        };
+        completionRef.current = next;
+        setCompletion(next);
+        setPhase("sealing");
+        /* The ring reports when it has been seen closed (onSealed); this is only the latest the result may wait. */
+        window.setTimeout(() => {
+          if (mountedRef.current && completionRef.current === next) setPhase((phaseNow) => (phaseNow === "sealing" ? "complete" : phaseNow));
+        }, CHAKRA_RESULT_LATEST_MS);
+        /*
+         * The two snaps, made once the ring has closed and the result has settled (CHAKRA_RESULT_LATEST_MS): three PNG
+         * encodes and a store write do not belong in the seconds the reader is watching the seal. Kept for this
+         * browsing session only, never uploaded; the opt-in waits for them.
+         */
+        const makeKept = (): Promise<void> => makeSnaps(frozen, lines, readSnapPalette(rootRef.current ?? document.documentElement)).then((snaps) => {
+          const pair: SnapPair = {
+            palm: snaps.palm,
+            raw: snaps.raw,
+            lines: snaps.lines,
+            prelabel: prelabelOf(lines),
+            vol: frozen.cropVol,
+            hand: handOf(frozen.handedness),
+            capturedAt: new Date(Date.now() - (performance.now() - frozen.atMs)).toISOString(),
+          };
+          if (!mountedRef.current || completionRef.current !== next) {
+            revokeSnaps(snaps);
+            return;
+          }
+          keptRef.current = { snaps, pair };
+          setKept(keptRef.current);
+          void snapStoreRef.current?.keepForSession(pair).catch(() => undefined);
+        });
+        window.setTimeout(() => {
+          if (mountedRef.current && completionRef.current === next) void makeKept().catch((snapError: unknown) => console.error("[chamber] snaps:", snapError));
+        }, CHAKRA_RESULT_LATEST_MS);
+      } catch (freezeError) {
         console.error("[chamber] freeze failed:", freezeError);
         if (!mountedRef.current) return;
         setFailure("Tasveer nahi ban payi. Dobara scan karo.");
         setPhase("failed");
-      });
-    }, 120);
+      }
+    },
+    [takeBestFrame, accumulatorGray, liveProjectionRef, stop],
+  );
+
+  /* The ring has been seen closed: the result comes in. */
+  const onSealed = useCallback(() => setPhase((phaseNow) => (phaseNow === "sealing" ? "complete" : phaseNow)), []);
+
+  /* (a) every major a result — confirmed, or marked unclear by the budget (G3's `complete`). */
+  const detectionDone = phase === "scanning" && status === "running" && detection.complete;
+  useEffect(() => {
+    if (!detectionDone) return;
+    const timer = window.setTimeout(() => completeScan("detected"), 0);
+    return () => window.clearTimeout(timer);
+  }, [detectionDone, completeScan]);
+
+  /* (c) the palm gone longer than PALM_LEFT_COMPLETE_MS with PALM_LEFT_MIN_HELD majors held — on the same quarter-second clock. */
+  useEffect(() => {
+    if (status !== "running" || phase !== "scanning") return;
+    const timer = window.setInterval(() => {
+      const last = lastPalmAtRef.current;
+      const palmGoneMs = last === null ? null : performance.now() - last;
+      /* `?cost=1`: the best frame as it stands, on the element, so a capture can check the shutter snaps exactly it. */
+      if (showCost && rootRef.current !== null) {
+        const best = peekBestFrame();
+        rootRef.current.dataset.sncBestNow = best === null ? "" : `${best.score.toFixed(1)},${best.vol.toFixed(1)},${best.held},${best.inBand ? 1 : 0}`;
+        rootRef.current.dataset.sncPalmGone = palmGoneMs === null ? "" : String(Math.round(palmGoneMs));
+      }
+      if (completionReason(detectionRef.current, { shutter: false, palmGoneMs }) === "palm-left") completeScan("palm-left");
+    }, 250);
     return () => window.clearInterval(timer);
-  }, [detectionDone, peekFreeze, takeFreeze, accumulatorGray, stop]);
+  }, [status, phase, completeScan, showCost, peekBestFrame]);
+
+  /* (b) the shutter: live once SHUTTER_MIN_HELD majors are held; it completes with the best frame so far. */
+  const shutterLive = shutterReady(detection);
+  const onShutter = useCallback(() => {
+    if (shutterReady(detectionRef.current)) completeScan("shutter");
+  }, [completeScan]);
 
   /* The opt-in growth save: on saves the pair as a growth session, off deletes it (G4.3). */
   const [growthId, setGrowthId] = useState<string | null>(null);
@@ -561,13 +697,14 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
   const [growthBusy, setGrowthBusy] = useState(false);
   const onGrowthChange = useCallback((on: boolean) => {
     const current = completionRef.current;
+    const pair = keptRef.current?.pair ?? null;
     const store = snapStoreRef.current;
-    if (current === null || store === null) return;
+    if (current === null || pair === null || store === null) return;
     setGrowthBusy(true);
     void (async () => {
       try {
         if (on) {
-          const id = await store.saveGrowth(current.pair, growthStillOf(current.frozen));
+          const id = await store.saveGrowth(pair, growthStillOf(current.frozen));
           growthIdRef.current = id;
           setGrowthId(id);
         } else if (growthIdRef.current !== null) {
@@ -584,9 +721,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
   }, []);
 
   /* The snaps' object URLs go with the chamber. */
-  useEffect(() => () => revokeSnaps(completionRef.current?.snaps ?? null), []);
-
-  /* G2.2: a light tick on entering the band
+  useEffect(() => () => revokeSnaps(keptRef.current?.snaps ?? null), []);
 
   /* G2.2: a light tick on entering the band — at most once in BAND_TICK_MIN_INTERVAL_MS (lib/scan/distance.ts). */
   const previousDistanceRef = useRef<DistanceState | null>(null);
@@ -697,7 +832,10 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
    * camera is back.
    */
   const resetForNewScan = useCallback(() => {
-    revokeSnaps(completionRef.current?.snaps ?? null);
+    revokeSnaps(keptRef.current?.snaps ?? null);
+    keptRef.current = null;
+    setKept(null);
+    completingRef.current = false;
     completionRef.current = null;
     setCompletion(null);
     growthIdRef.current = null;
@@ -728,11 +866,40 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     void buildReading(capture, cropRef.current);
   }, [buildReading, capture]);
 
-  /* The frozen frame stays on screen from the freeze until the reveal beat takes it. */
-  const frozenShown = completion !== null && (phase === "complete" || phase === "building" || phase === "revealing");
+  /* The frozen photograph is the screen from the freeze until the reveal beat takes it; the ring seals over it first. */
+  const sealing = completion !== null && phase === "sealing";
+  const resultShown = completion !== null && (phase === "sealing" || phase === "complete" || phase === "building");
+
+  /* G4b §1: the chakra the ring shows — the four arcs, the minors, the centre's words; sealing, "पहचान पूरी". */
+  const chakraNow = useMemo(() => chakraState(detection), [detection]);
+  const chakra = useMemo(
+    () => (sealing ? { majors: chakraNow.majors, minors: chakraNow.minors, centre: CHAKRA_WORDS.complete, centreSub: CHAKRA_WORDS.completeEn } : { majors: chakraNow.majors, minors: chakraNow.minors, centre: chakraNow.centre }),
+    [chakraNow, sealing],
+  );
+  const worstDeviation = completion === null ? null : completion.deviation.reduce<number | null>((worst, line) => (worst === null ? line.p95 : Math.max(worst, line.p95)), null);
+  const bestCosts = showCost ? bestFrameCosts() : [];
+  const bestP95 = bestCosts.length === 0 ? null : [...bestCosts].sort((a, b) => a - b)[Math.min(bestCosts.length - 1, Math.floor(bestCosts.length * 0.95))]!;
 
   return (
-    <div ref={rootRef} className={styles.chamber} data-snc-controls={canFlip || canTorch ? "" : undefined} data-snc-phase={phase}>
+    <div
+      ref={rootRef}
+      className={styles.chamber}
+      data-snc-controls={canFlip || canTorch ? "" : undefined}
+      data-snc-shutter-row={scanning ? "" : undefined}
+      data-snc-phase={phase}
+      data-snc-chakra-held={chakraNow.held}
+      data-snc-chakra-overall={detection.overall.toFixed(3)}
+      data-snc-completion-reason={completion?.reason}
+      data-snc-completion-pose={completion?.pose}
+      data-snc-best={completion === null ? undefined : `${completion.frozen.score.toFixed(1)},${completion.frozen.vol.toFixed(1)},${completion.frozen.held},${completion.frozen.inBand ? 1 : 0},${Math.round(completion.sealedAt - completion.frozen.atMs)}`}
+      data-snc-freeze-shift={completion === null ? undefined : completion.shift === null ? "none" : `${completion.shift.dx.toFixed(2)},${completion.shift.dy.toFixed(2)}`}
+      data-snc-deviation={completion === null ? undefined : deviationText(completion.deviation, completion.coverScale)}
+      data-snc-deviation-screen={worstDeviation === null || completion === null ? undefined : (worstDeviation * completion.coverScale).toFixed(2)}
+      data-snc-from-live={completion === null ? undefined : completion.fromLive.join(",") || "none"}
+      data-snc-held-deviation={completion === null ? undefined : deviationText(completion.heldDeviation, completion.coverScale)}
+      data-snc-held-then-deviation={completion === null ? undefined : deviationText(completion.heldThenDeviation, completion.coverScale)}
+      data-snc-freeze-ms={completion?.freezeMs.toFixed(1)}
+    >
       <video
         ref={setVideo}
         playsInline
@@ -742,35 +909,40 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         style={mirrored ? { transform: "scaleX(-1)" } : undefined}
       />
 
-      {/* G4: THE FROZEN FRAME — the camera stopped on the sharpest recent frame, shown as the reader saw it. */}
-      {frozenShown ? (
-        // eslint-disable-next-line @next/next/no-img-element -- an object URL of the frozen frame, never a remote image
-        <img
-          src={completion.snaps.rawUrl}
-          alt=""
-          className={styles.frozen}
-          style={completion.mirrored ? { transform: "scaleX(-1)" } : undefined}
-          data-snc-frozen=""
-          data-snc-freeze-vol={completion.frozen.vol.toFixed(1)}
-          data-snc-freeze-wait={Math.round(completion.waitMs)}
-          data-snc-freeze-shift={completion.shift === null ? "none" : `${completion.shift.dx.toFixed(2)},${completion.shift.dy.toFixed(2)}`}
+      {/* G4b §4: YOUR HAND, YOUR LINES — the frozen best frame, full screen; the ring closes over it first. */}
+      {resultShown ? (
+        <ChakraResult
+          frozen={completion.frozen}
+          lines={completion.lines}
+          mirrored={completion.mirrored}
+          legend={completion.legend}
+          stage={phase === "sealing" ? "sealing" : "result"}
+          growth={growthId !== null}
+          growthBusy={growthBusy || kept === null}
+          growthAvailable={snapStore !== null && completion.frozen.anchors.length > 0}
+          onGrowthChange={onGrowthChange}
+          onRetake={onRetake}
+          onOpenReading={onOpenReading}
+          opening={phase === "building"}
         />
       ) : null}
 
-      {frozenShown ? null : (
-      <ChamberCanvas
-        className={styles.canvas}
-        landmarks={observation?.landmarks ?? null}
-        videoSize={videoSize}
-        lines={extraction?.lines ?? {}}
-        projection={projection}
-        liveProjection={liveProjectionRef}
-        poseProgress={totalProgress}
-        mirrored={mirrored}
-        gatePassing={quality.ok}
-        onCost={setCost}
-        distance={distanceRef}
-      />
+      {resultShown && !sealing ? null : (
+        <ChamberCanvas
+          className={sealing ? `${styles.canvas} ${styles.canvasSealing}` : styles.canvas}
+          landmarks={observation?.landmarks ?? null}
+          videoSize={videoSize}
+          lines={extraction?.lines ?? {}}
+          projection={projection}
+          liveProjection={liveProjectionRef}
+          chakra={chakra}
+          sealing={sealing}
+          onSealed={onSealed}
+          mirrored={mirrored}
+          gatePassing={quality.ok}
+          onCost={setCost}
+          distance={distanceRef}
+        />
       )}
 
       {/* THE BACK MARK. A mark and not a button: no fill, no border, no radius —
@@ -885,32 +1057,39 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         </button>
       ) : null}
 
-      {/* S1.4 — the lines found so far, by state, and nothing below CANDIDATE. Detection only. */}
-      <RekhaMonitor snapshot={rekha} detection={detection} visible={scanning} />
+      {/* G4b §3 — THE SHUTTER, "अभी खींचें": a gold disc at the bottom centre, between the flip and the torch, asleep
+          until two majors are held; it completes the scan with the best frame so far. */}
+      {scanning ? (
+        <button
+          type="button"
+          className={styles.shutter}
+          data-snc-control="shutter"
+          data-snc-shutter={shutterLive ? "ready" : "waiting"}
+          aria-label={`${CHAKRA_WORDS.shutter} · ${CHAKRA_WORDS.shutterEn}`}
+          disabled={!shutterLive}
+          onClick={onShutter}
+        >
+          <svg className={styles.shutterDisc} viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+            <circle className={styles.shutterRing} cx="24" cy="24" r="22.5" />
+            <circle className={styles.shutterFace} cx="24" cy="24" r="17.5" />
+          </svg>
+          <span className={styles.controlLabel} lang="hi" aria-hidden="true">
+            {CHAKRA_WORDS.shutter}
+          </span>
+        </button>
+      ) : null}
+
+      {/* S1.4 — the lines found so far, by state, and nothing below CANDIDATE. Detection only. G4b: its ledger is the
+          ring's accessible text version, visually minimised (rekha-monitor.module.css). */}
+      <RekhaMonitor snapshot={rekha} detection={detection} visible={scanning} minimised />
 
       <ScanLitany
         line={line}
         hint={hint}
         distance={distanceState === null ? null : distanceRef}
         action={hintAction}
-        visible={blocked === null && !idle && phase !== "revealing"}
+        visible={blocked === null && !idle && phase === "scanning"}
       />
-
-      {/* G4: पहचान पूरी — the two snaps, the one opt-in, the two ways on. */}
-      {frozenShown && phase !== "revealing" ? (
-        <CompletionLeaf
-          palmSrc={completion.snaps.palmUrl}
-          rawSrc={completion.snaps.rawUrl}
-          linesSrc={completion.snaps.linesUrl}
-          growth={growthId !== null}
-          growthBusy={growthBusy}
-          growthAvailable={snapStore !== null && completion.frozen.anchors.length > 0}
-          onGrowthChange={onGrowthChange}
-          onRetake={onRetake}
-          onOpenReading={onOpenReading}
-          opening={phase === "building"}
-        />
-      ) : null}
 
       {phase === "revealing" ? <RevealBeat onArrived={() => router.push(readHref)} /> : null}
 
@@ -930,10 +1109,11 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
           {/* G3: the rings as numbers, and the usable time the budget is counting. */}
           {` · ${detectionLedger(detection)} · usable ${(detection.usableMs / 1000).toFixed(1)} s`}
           {traceMs === null ? null : ` · trace ${traceMs.toFixed(1)} ms/extraction`}
-          {/* G4: the frozen frame's grade, the lines' shift onto it, and the wait for it. */}
+          {/* G4b: the best frame's bookkeeping per tick, and — once frozen — why, on what, how far the lines moved. */}
+          {bestP95 === null ? null : ` · best p95 ${bestP95.toFixed(2)} ms`}
           {completion === null
             ? null
-            : ` · frozen VoL ${completion.frozen.vol.toFixed(0)} shift ${completion.shift === null ? "none" : `${completion.shift.dx.toFixed(1)},${completion.shift.dy.toFixed(1)}`} wait ${Math.round(completion.waitMs)} ms`}
+            : ` · ${completion.reason} · best VoL ${completion.frozen.vol.toFixed(0)} held ${completion.frozen.held} age ${((completion.sealedAt - completion.frozen.atMs) / 1000).toFixed(1)} s · crop VoL ${completion.frozen.cropVol.toFixed(0)} · shift ${completion.shift === null ? "none" : `${completion.shift.dx.toFixed(1)},${completion.shift.dy.toFixed(1)}`} · lines vs live p95 ${worstDeviation === null ? "–" : `${(worstDeviation * completion.coverScale).toFixed(1)} px`} (as drawn: ${completion.fromLive.join(",") || "none"}; held vs live ${deviationText(completion.heldDeviation, completion.coverScale)}) · freeze ${completion.freezeMs.toFixed(0)} ms`}
           {activeProfile === null
             ? null
             : ` · profile ${activeProfile.name} (${capabilityTier}) ${videoSize === null ? "–" : `${videoSize.width}×${videoSize.height}`} · extract ${activeProfile.extractIntervalMs} ms`}

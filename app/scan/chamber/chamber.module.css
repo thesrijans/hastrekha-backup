@@ -42,6 +42,19 @@
     .chamber[data-snc-controls] {
       --snc-litany-gutter: 4.25rem;
     }
+    /* G4b: with the shutter's row below it, the leaf has the width back — the marks are under it, not beside it. */
+    .chamber[data-snc-controls][data-snc-shutter-row],
+    .chamber[data-snc-shutter-row] {
+      --snc-litany-gutter: 0px;
+    }
+  }
+  /*
+   * G4b: THE CONTROLS ROW. While scanning, the shutter joins the flip and the torch at the bottom — the camera's
+   * own arrangement, flip · shutter · light — and the litany's leaf rises by the row's height to sit above it
+   * (scan-litany.module.css reads --snc-shutter-row) rather than between the two marks.
+   */
+  .chamber[data-snc-shutter-row] {
+    --snc-shutter-row: 4.5rem;
   }
 
   /*
@@ -55,20 +68,6 @@
     inline-size: 100%;
     block-size: 100%;
     object-fit: cover;
-  }
-
-  /*
-   * scan-complete G4: THE FROZEN FRAME. The camera has stopped on the sharpest recent frame; it stays on screen,
-   * laid exactly where the live feed was (the same cover fit, the same mirror), dimmed under the completion leaf.
-   */
-  .frozen {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: cover;
-    filter: brightness(0.55);
   }
 
   /*
@@ -176,6 +175,67 @@
   }
 
   /*
+   * G4b §3 — THE SHUTTER, "अभी खींचें": a gold disc of 48px at the bottom centre, the flip's and the torch's kin — a
+   * glyph (an SVG: the ring and its face) with its name under it, no fill behind, no border round it. Asleep until
+   * two majors are held: the ring alone, dimmed. Awake: its face lit, with the active rung's glow. Above the leaf
+   * and the sheet (z 7), like the other two.
+   */
+  .shutter {
+    position: absolute;
+    inset-block-end: calc(max(1.25rem, env(safe-area-inset-bottom)) + var(--snc-monitor-handle, 0px));
+    inset-inline-start: 50%;
+    translate: -50% 0;
+    z-index: 7;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-snc-gold-400);
+    cursor: pointer;
+    transition:
+      color 180ms ease,
+      opacity 180ms ease;
+  }
+  .shutterDisc {
+    display: block;
+    inline-size: 3rem;
+    block-size: 3rem;
+    overflow: visible;
+  }
+  .shutterRing {
+    fill: none;
+    stroke: var(--color-snc-gold-500);
+    stroke-width: 1.5;
+  }
+  .shutterFace {
+    fill: var(--color-snc-gold-500);
+    transition: fill-opacity 220ms ease;
+  }
+  .shutter:not(:disabled) .shutterFace {
+    filter: var(--snc-stroke-active-glow);
+  }
+  .shutter:not(:disabled):hover .shutterFace,
+  .shutter:not(:disabled):focus-visible .shutterFace {
+    fill: var(--color-snc-gold-400);
+  }
+  .shutter:disabled {
+    cursor: default;
+    color: color-mix(in oklab, var(--color-snc-gold-500) 55%, transparent);
+  }
+  .shutter:disabled .shutterRing {
+    stroke-opacity: 0.55;
+  }
+  .shutter:disabled .shutterFace {
+    fill-opacity: 0.14;
+  }
+  /* G4b §2: while the ring seals, the overlay lies over the frozen photograph (chakra-result.module.css, z 1). */
+  .canvasSealing {
+    z-index: 2;
+  }
+  /*
    * THE GATE AND THE FAILURES share one dock, because they are the same thing
    * at different moments: the chamber, saying it is not open yet. Centred
    * rather than docked at the bottom like the litany — nothing is happening
@@ -266,6 +326,8 @@
     z-index: 6;
     text-align: end;
     margin: 0;
+    /* Read, never touched: it lies over the result's title and toggle when it is asked for (G4b). */
+    pointer-events: none;
     font-family: ui-monospace, monospace;
     font-size: 0.7rem;
     letter-spacing: 0.02em;

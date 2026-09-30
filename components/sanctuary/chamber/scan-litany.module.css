@@ -26,8 +26,9 @@
   .dock {
     position: fixed;
     inset-inline: 0;
-    /* --snc-monitor-handle: the Rekha Monitor's collapsed sheet on a phone (S1.4) sits under the leaf. */
-    inset-block-end: calc(max(1.25rem, env(safe-area-inset-bottom)) + var(--snc-monitor-handle, 0px));
+    /* --snc-monitor-handle: the Rekha Monitor's collapsed sheet on a phone (S1.4) sits under the leaf; G4b's
+       --snc-shutter-row: the flip · shutter · light row, under it too. */
+    inset-block-end: calc(max(1.25rem, env(safe-area-inset-bottom)) + var(--snc-monitor-handle, 0px) + var(--snc-shutter-row, 0px));
     z-index: 2;
     display: flex;
     justify-content: center;

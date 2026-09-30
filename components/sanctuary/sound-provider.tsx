@@ -31,11 +31,14 @@ import type { JSX, ReactNode } from "react";
 /* ------------------------------ the cue table ----------------------------- */
 
 /**
- * The six cues the sound spec names. Ids, not filenames - the sanctuary asks
- * for a *moment* ("bell", the reveal) and the engine decides what that costs in
- * bytes, so the asset layout can change without touching a single call site.
+ * The six cues the sound spec names, and the one the chakra spec adds
+ * (docs/specs/chakra-scan-g4.txt section 2: "a soft shutter sound if sound is
+ * on" when the scan completes and the camera freezes). Ids, not filenames - the
+ * sanctuary asks for a *moment* ("bell", the reveal) and the engine decides what
+ * that costs in bytes, so the asset layout can change without touching a single
+ * call site.
  */
-export type SoundCue = "drone" | "fire" | "scanner" | "bell" | "leafTurn" | "sealChime";
+export type SoundCue = "drone" | "fire" | "scanner" | "bell" | "leafTurn" | "sealChime" | "shutter";
 
 interface SoundCueBase {
   readonly cue: SoundCue;
@@ -120,6 +123,12 @@ export const SOUND_CUES: readonly SoundCueRow[] = [
   },
   { cue: "leafTurn", label: "Leaf turn", when: "Each page", levelDb: -22, loop: false },
   { cue: "sealChime", label: "Soft chime", when: "Sealed leaf appears", levelDb: -26, loop: false },
+  /*
+   * Not spec 5's: the chakra spec's (G4b section 2), which names the moment and
+   * calls it soft without a level. Mixed at the soft chime's -26 so it sits
+   * under the bell like every other one-shot, and flagged for the mix to confirm.
+   */
+  { cue: "shutter", label: "Soft shutter", when: "Scan complete, the camera freezes", levelDb: -26, loop: false },
 ];
 
 /**
@@ -503,6 +512,15 @@ export function SoundProvider({
  * dummy, because a silently-dead toggle is the exact bug this file exists to
  * prevent.
  */
+/**
+ * The sound context where there is one, and null where there is not - for a
+ * screen that may be mounted outside the provider (the chamber, G4b) and must
+ * then simply stay silent rather than throw.
+ */
+export function useOptionalSound(): SoundContextValue | null {
+  return useContext(SoundContext);
+}
+
 export function useSound(): SoundContextValue {
   const value = useContext(SoundContext);
   if (value === null) {

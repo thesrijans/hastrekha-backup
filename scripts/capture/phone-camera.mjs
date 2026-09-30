@@ -15,6 +15,10 @@ export const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537
  * on window.__camera — opens (with the constraints as asked), enumerations (labelled or not, and
  * whether any open had happened yet), prompts, torch constraints — so the checklist can prove the
  * ORDER of things, not just the outcome.
+ *
+ * G4b: with window.__hrRelay set (an init script before this one), each opened stream is relayed through a
+ * canvas at the camera's own size, and window.__hrBlackout(ms) blanks it — the hand leaves the frame for that
+ * long — so a capture can time a hand loss exactly (chakra spec §6: 2 s kept, 8 s after three majors completes).
  */
 export const ANDROID_CAMERA_STUB = () => {
   const media = navigator.mediaDevices;
@@ -32,6 +36,46 @@ export const ANDROID_CAMERA_STUB = () => {
     if (facing === undefined) return { value: null, exact: false };
     if (typeof facing === "string") return { value: facing, exact: false };
     return { value: facing.exact ?? facing.ideal ?? null, exact: facing.exact !== undefined };
+  };
+  /* G4b: the relay — the camera's frames through a canvas, blanked on request (a hand gone for so long). */
+  const relayOf = async (source) => {
+    const settings = source.getVideoTracks()[0]?.getSettings() ?? {};
+    const width = settings.width ?? 720;
+    const height = settings.height ?? 1280;
+    const feed = document.createElement("video");
+    feed.muted = true;
+    feed.playsInline = true;
+    feed.srcObject = source;
+    await feed.play().catch(() => undefined);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    let blankUntil = 0;
+    const log = [];
+    window.__hrBlackout = (ms) => {
+      blankUntil = performance.now() + ms;
+      log.push({ at: Math.round(performance.now()), ms });
+    };
+    window.__hrBlackouts = log;
+    const timer = setInterval(() => {
+      if (performance.now() < blankUntil) {
+        context.fillStyle = "#3b3631";
+        context.fillRect(0, 0, width, height);
+      } else if (feed.readyState >= 2) {
+        context.drawImage(feed, 0, 0, width, height);
+      }
+    }, 1000 / 30);
+    const relayed = canvas.captureStream(30);
+    for (const track of relayed.getVideoTracks()) {
+      const stop = track.stop.bind(track);
+      track.stop = () => {
+        clearInterval(timer);
+        for (const inner of source.getTracks()) inner.stop();
+        stop();
+      };
+    }
+    return relayed;
   };
   const deviceIdOf = (video) => {
     const id = video && typeof video === "object" ? video.deviceId : undefined;
@@ -68,7 +112,8 @@ export const ANDROID_CAMERA_STUB = () => {
         [video.width, video.height] = [video.height, video.width];
       }
     }
-    const stream = await realOpen({ ...constraints, video });
+    const opened = await realOpen({ ...constraints, video });
+    const stream = window.__hrRelay ? await relayOf(opened) : opened;
     for (const track of stream.getVideoTracks()) {
       const settings = track.getSettings.bind(track);
       track.getSettings = () => ({ ...settings(), facingMode: device.facing, deviceId: device.deviceId });

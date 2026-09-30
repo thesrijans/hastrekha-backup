@@ -70,6 +70,9 @@ export function rekhaLedger(snapshot: RekhaSnapshot | null): string {
 /** The mark for a line the scan budget has passed by: the spec's words, exactly. */
 export const DETECTION_UNCLEAR_HI = "इस हाथ पर स्पष्ट नहीं";
 
+/** G4b: the ring's outer arcs as the ledger says them — the minors, not yet (lib/scan/chakra.ts CHAKRA_WORDS). */
+export const MINORS_NOT_YET = "सूर्य, बुध, विवाह, मणिबंध, शुक्र मेखला — अभी नहीं";
+
 /** The overall percentage's word: पहचान, the detection — the word G4's "पहचान पूरी" completes. */
 export const DETECTION_OVERALL_HI = "पहचान";
 
@@ -221,10 +224,15 @@ export interface RekhaMonitorProps {
   readonly detection?: DetectionState | null;
   /** Hidden without unmounting, so the sheet can slide away rather than vanish. */
   readonly visible?: boolean;
+  /**
+   * G4b §1: the chakra is the primary display now — the ring's arcs, names, ✓ and "पहचान N%" — and this ledger is its
+   * accessible text version (aria-live), visually minimised on a phone: one small, quiet line on the sheet's handle.
+   */
+  readonly minimised?: boolean;
   readonly className?: string;
 }
 
-export function RekhaMonitor({ snapshot, detection = null, visible = true, className }: RekhaMonitorProps): ReactElement {
+export function RekhaMonitor({ snapshot, detection = null, visible = true, minimised = false, className }: RekhaMonitorProps): ReactElement {
   const [open, setOpen] = useState(false);
   const lines = ACTIVE_LINE_IDS.map((id) => snapshot?.lines[id]).filter((line): line is RekhaLine => line !== undefined);
   const leaders = leadersFor(lines);
@@ -235,6 +243,7 @@ export function RekhaMonitor({ snapshot, detection = null, visible = true, class
       className={[styles.monitor, className].filter(Boolean).join(" ")}
       data-snc-monitor={visible ? "in" : "out"}
       data-snc-sheet={open ? "open" : "closed"}
+      data-snc-minimised={minimised ? "" : undefined}
       aria-label="Rekha monitor — the lines found so far"
     >
       <button
@@ -286,6 +295,8 @@ export function RekhaMonitor({ snapshot, detection = null, visible = true, class
           >
             {`${DETECTION_OVERALL_HI} ${detectionPercent(detection.overall)}%`}
             {anyUnclear ? <span className={styles.unclearNote}>{` · — ${DETECTION_UNCLEAR_HI}`}</span> : null}
+            {/* G4b: the ring's outer arcs, in words — the minors, not yet (until S3). */}
+            {minimised ? <span className={styles.minors}>{` · ${MINORS_NOT_YET}`}</span> : null}
           </span>
         )}
       </button>

@@ -1,15 +1,18 @@
 /* ============================================================================
- * scan-complete G4 — "पहचान पूरी" + BOTH SNAPS (the chamber's side)
+ * scan-complete G4 / G4b — "पहचान पूरी · Scan complete" (the chamber's side)
  *
- *  1. the completion leaf: the spec's words exactly, both snaps side by side,
- *     the opt-in OFF by default and saying what it does, the two ways on;
+ *  1. the result (chakra §4): the frozen photograph full screen, the spec's
+ *     words exactly, "साधारण · रेखाएँ", the legend (✓ / —), the opt-in OFF by
+ *     default and saying what it does, and the three ways on — save, again,
+ *     the reading;
  *  2. the snap of the lines: gold, solid (faint is an alpha, never a dash),
  *     observed over bridged, each named in Devanagari over a halo;
  *  3. the blur (G4's folded-in decision): its words, and the torch one tap
  *     away in the gauge's slot, the leaf no taller;
- *  4. the chamber's flow: detection complete → wait for VoL ≥ 100 → freeze
- *     (camera stopped, double tick, snaps, session-only keep) → retake or the
- *     reading; the choreography no longer opens the reading on its own.
+ *  4. the chamber's flow: any of the three completions → the best frame, at
+ *     once (camera stopped, double tick, the soft shutter, the ring sealed over
+ *     the photograph) → the result; snaps kept for the session only; retake or
+ *     the reading; the choreography opens nothing and blocks nothing.
  * ========================================================================== */
 import assert from "node:assert/strict";
 import Module from "node:module";
@@ -32,7 +35,8 @@ interface CjsExtensionHost {
 };
 
 /* eslint-disable @typescript-eslint/no-require-imports -- loaded after the CSS hook above, which a static import would precede */
-const { CompletionLeaf, COMPLETION_WORDS, GROWTH_NOTE } = require("../components/sanctuary/chamber/completion-leaf") as typeof import("../components/sanctuary/chamber/completion-leaf");
+const { ChakraResult, RESULT_WORDS, GROWTH_NOTE, compositeFileName } = require("../components/sanctuary/chamber/chakra-result") as typeof import("../components/sanctuary/chamber/chakra-result");
+const resultRender = require("../components/sanctuary/chamber/result-render") as typeof import("../components/sanctuary/chamber/result-render");
 const { ScanLitany } = require("../components/sanctuary/chamber/scan-litany") as typeof import("../components/sanctuary/chamber/scan-litany");
 const snapRender = require("../components/sanctuary/chamber/snap-render") as typeof import("../components/sanctuary/chamber/snap-render");
 const { BLUR_WORDS, TORCH_OFFER } = require("../lib/scan/detection-progress") as typeof import("../lib/scan/detection-progress");
@@ -44,13 +48,20 @@ const render = (component: unknown, props: Record<string, unknown>): string =>
 const noop = (): void => undefined;
 const withoutComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
 
-/* ---------------------------- 1. the completion leaf ---------------------------- */
+/* ---------------------------- 1. the result screen ---------------------------- */
 
 {
   const props = {
-    palmSrc: "blob:palm",
-    rawSrc: "blob:raw",
-    linesSrc: "blob:lines",
+    frozen: { raw: { width: 720, height: 1280, data: new Uint8ClampedArray(4) }, anchors: [], convention: 4, landmarks: [] },
+    lines: [],
+    mirrored: false,
+    legend: [
+      { id: "heart", name: "हृदय", found: true },
+      { id: "head", name: "मस्तिष्क", found: true },
+      { id: "life", name: "जीवन", found: true },
+      { id: "fate", name: "शनि", found: false },
+    ],
+    stage: "result",
     growth: false,
     growthBusy: false,
     growthAvailable: true,
@@ -59,27 +70,48 @@ const withoutComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\/
     onOpenReading: noop,
     opening: false,
   };
-  const html = render(CompletionLeaf, props);
-  ok(html.includes("पहचान पूरी") && html.includes("Detection complete") && COMPLETION_WORDS.title === "पहचान पूरी", "\"पहचान पूरी · Detection complete\", in the spec's words");
-  ok(/data-snc-snap="palm"[\s\S]*src="blob:palm"[\s\S]*src="blob:raw"[\s\S]*आपकी हथेली/.test(html), "snap (a) \"आपकी हथेली\": the plain palm — the rectified crop, the raw frame in its corner");
-  ok(/data-snc-snap="lines"[\s\S]*src="blob:lines"[\s\S]*आपकी रेखाएँ/.test(html), "snap (b) \"आपकी रेखाएँ\": the same frame with the held lines");
-  ok(html.indexOf('data-snc-snap="palm"') < html.indexOf('data-snc-snap="lines"'), "…side by side, the palm first");
-  ok(
-    html.includes('data-snc-completion=""') && !html.includes('data-snc-complete=""'),
-    "the leaf is marked data-snc-completion — never the ledger's data-snc-complete (G3), which a capture waiting for the leaf once mistook for it",
-  );
-  ok(html.includes(COMPLETION_WORDS.growth) && COMPLETION_WORDS.growth === "मेरी हथेली से HastRekha को बेहतर बनाने में मदद करें", "the one opt-in, in the spec's words");
+  const html = render(ChakraResult, props);
+  ok(html.includes("पहचान पूरी") && html.includes("Scan complete") && RESULT_WORDS.title === "पहचान पूरी", "\"पहचान पूरी · Scan complete\", in the spec's words");
+  ok(/<canvas[^>]*role="img"/.test(html), "full screen: the frozen photograph itself, drawn — not a thumbnail on a card");
+  ok(/data-snc-view-mode="plain"[^>]*>साधारण</.test(html) && /data-snc-view-mode="lined"[^>]*>रेखाएँ</.test(html), "\"साधारण · रेखाएँ\": the plain photograph, or the lined one");
+  ok(/aria-pressed="true"[^>]*data-snc-view-mode="lined"/.test(html) && html.includes('data-snc-lined=""'), "…opening on the lines — the reader's own lines are the point");
+  ok(/data-snc-legend="3\/4"/.test(html) && /हृदय <span aria-label="found">✓/.test(html) && /शनि <span aria-label="not found">—/.test(html), "a small legend: found ✓, not found —");
+  ok(html.includes("अभी नहीं"), "…and the minors, not yet");
+  ok(html.includes(RESULT_WORDS.growth) && RESULT_WORDS.growth === "मेरी हथेली से HastRekha को बेहतर बनाने में मदद करें", "the one opt-in, in the spec's words");
   ok(/<input[^>]*type="checkbox"[^>]*data-snc-growth=""/.test(html) && !/<input[^>]*checked[^>]*data-snc-growth/.test(html), "…OFF by default");
   ok(html.includes(GROWTH_NOTE.off) && GROWTH_NOTE.off.includes("कभी अपलोड नहीं"), "…and it says, before it is touched, that the pictures stay on the device and are never uploaded");
-  ok(render(CompletionLeaf, { ...props, growth: true }).includes(GROWTH_NOTE.on) && GROWTH_NOTE.on.includes("बंद करते ही हट जाएगा"), "on, it says it is saved — and that switching it off deletes it");
-  ok(!render(CompletionLeaf, { ...props, growthAvailable: false }).includes("data-snc-growth"), "no store on this device (or no anchors to replay): the opt-in is not offered at all");
+  ok(render(ChakraResult, { ...props, growth: true }).includes(GROWTH_NOTE.on) && GROWTH_NOTE.on.includes("बंद करते ही हट जाएगा"), "on, it says it is saved — and that switching it off deletes it");
+  ok(!render(ChakraResult, { ...props, growthAvailable: false }).includes("data-snc-growth"), "no store on this device (or no anchors to replay): the opt-in is not offered at all");
+  ok(/data-snc-action="save"[^>]*>चित्र सहेजें</.test(html), "\"चित्र सहेजें\" — save the lined picture");
   ok(/data-snc-action="retake"[^>]*>दोबारा स्कैन</.test(html), "\"दोबारा स्कैन\" — retake");
   ok(/data-snc-action="open"[\s\S]*पाठ खोलें[\s\S]*Open reading/.test(html), "\"पाठ खोलें · Open reading\"");
-  const opening = render(CompletionLeaf, { ...props, opening: true });
-  ok((opening.match(/disabled=""/g) ?? []).length >= 3, "once the reading is asked for, both ways on and the opt-in wait");
-  const css = readFileSync("components/sanctuary/chamber/completion-leaf.module.css", "utf8");
-  ok(!/\b(dashed|dotted)\b|stroke-dasharray/.test(css), "the leaf's styles draw no dashed or dotted line");
+  const opening = render(ChakraResult, { ...props, opening: true });
+  ok((opening.match(/disabled=""/g) ?? []).length >= 4, "once the reading is asked for, every way on and the opt-in wait");
+  const sealing = render(ChakraResult, { ...props, stage: "sealing" });
+  ok(!sealing.includes("data-snc-action") && sealing.includes('data-snc-result="sealing"') && sealing.includes("<canvas"), "sealing: the photograph alone while the ring closes over it — no chrome yet");
+  ok(!html.includes('data-snc-complete=""'), "never the ledger's data-snc-complete (G3), which a capture waiting for the result once mistook for it");
+  ok(/^hastrekha-hatheli-2026-09-30-0704\.png$/.test(compositeFileName(new Date(2026, 8, 30, 7, 4))), "the saved picture is named by its day and minute, never by anything about the reader");
+
+  const component = readFileSync("components/sanctuary/chamber/chakra-result.tsx", "utf8");
+  ok(/navigator\.canShare\?\.\(\{ files: \[file\] \}\) === true/.test(component) && /navigator\.share\(\{ files: \[file\]/.test(component), "saved through the Web Share API with the file where the device can share files (Android)");
+  ok(/anchor\.download = name;/.test(component), "…else downloaded");
+  const css = readFileSync("components/sanctuary/chamber/chakra-result.module.css", "utf8");
+  ok(!/\b(dashed|dotted)\b|stroke-dasharray/.test(css), "the result's styles draw no dashed or dotted line");
   ok(!/border-radius|box-shadow/.test(css), "…and no pill, no card: struck rules under words, the chamber's control language");
+
+  /* The framing: where the live feed was, then the hand, fitted between the title and the leaf. */
+  const photo = { width: 720, height: 1280 };
+  const box = { width: 412, height: 915 };
+  const cover = resultRender.coverView(photo, box, false);
+  ok(Math.abs(cover.scale - 915 / 1280) < 1e-9 && cover.dy === 0 && cover.dx < 0, "first, exactly where the live feed lay (object-fit: cover)");
+  const focus = { x0: 200, y0: 400, x1: 500, y1: 900 };
+  const palm = resultRender.palmView(photo, box, focus, { top: 110, bottom: 640 }, false);
+  const mid = resultRender.viewPoint(palm, { x: 350, y: 650 });
+  ok(palm.scale >= cover.scale && palm.scale <= cover.scale * resultRender.RESULT_MAX_ZOOM, "then the hand's framing: never smaller than the cover, never past the zoom cap");
+  ok(Math.abs(mid.y - (110 + 640) / 2) < 1 && Math.abs(mid.x - box.width / 2) < 1, "…the hand centred in the band between the title and the leaf");
+  ok(palm.dx <= 0 && palm.dy <= 0 && palm.dx + photo.width * palm.scale >= box.width - 1e-9 && palm.dy + photo.height * palm.scale >= box.height - 1e-9, "…and no edge of the photograph ever comes into view");
+  const mirroredView = resultRender.coverView(photo, box, true);
+  ok(Math.abs(resultRender.viewPoint(mirroredView, { x: 0, y: 0 }).x - (photo.width * mirroredView.scale + mirroredView.dx)) < 1e-9, "a mirrored preview's photograph is shown mirrored — as the reader saw it");
 }
 
 /* ---------------------------- 2. the snap of the lines ---------------------------- */
@@ -177,18 +209,20 @@ const withoutComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\/
 {
   const client = withoutComments(readFileSync("app/scan/chamber/chamber-client.tsx", "utf8"));
   ok(!/onCaptureComplete/.test(client), "the pose choreography no longer opens the reading on its own — detection completes the scan");
-  ok(/const detectionDone = phase === "scanning" && status === "running" && detection\.complete;/.test(client), "detection is complete when every major line is confirmed or marked unclear (G3's `complete`)");
-  ok(/!freezeReady\(peekFreeze\(\)\) && performance\.now\(\) - freezeStartedAtRef\.current < FREEZE_WAIT_MS/.test(client), "the freeze waits for a frame at VoL ≥ 100 — for FREEZE_WAIT_MS at most, then the best there is");
-  const freeze = client.slice(client.indexOf("const freeze = async"), client.indexOf("const timer = window.setInterval", client.indexOf("const freeze = async")));
-  ok(/setPhase\("freezing"\)[\s\S]*takeFreeze\(\)[\s\S]*stop\(\);[\s\S]*haptic\("detectionComplete"\)/.test(freeze), "then: the camera stops on the frozen frame, and the double tick");
+  ok(/const detectionDone = phase === "scanning" && status === "running" && detection\.complete;/.test(client), "(a) detection is complete when every major line is confirmed or marked unclear (G3's `complete`)");
+  const freeze = client.slice(client.indexOf("const completeScan = useCallback("), client.indexOf("const detectionDone ="));
+  ok(/const best = takeBestFrame\(\);[\s\S]*stop\(\);\s*haptic\("detectionComplete"\);\s*soundRef\.current\?\.play\("shutter"\);/.test(freeze), "at once: the whole scan's best frame taken, the camera stopped, the double tick, the soft shutter sound if sound is on");
+  ok(!/FREEZE_WAIT_MS|freezeReady|peekFreeze/.test(client), "…and no wait for a sharper frame: the best frame already is");
   ok(
-    /estimateFreezeShift\(cropLuma\(frozen\.crop\.data, frozen\.crop\.width\), frozen\.crop\.width, gray\)[\s\S]*heldLinesOn\(snapshot, shift, confirmedLinesRef\.current, confirmedIds\)[\s\S]*makeSnaps\(frozen, lines/.test(freeze),
-    "the held lines — every one the ledger shows ✓ — are carried onto THAT frame before both snaps are made from it",
+    /freezeFrom\(best\)[\s\S]*estimateFreezeShift\(frozen\.gray, MASK_SIZE, gray\)[\s\S]*heldLinesOn\(snapshot, shift, confirmedLinesRef\.current, confirmedIds\)[\s\S]*freezeDeviation\(lines, frozen\)/.test(freeze),
+    "the held lines — every one the ledger shows ✓ — are carried onto THAT frame, and measured against the overlay's drawing of it",
   );
-  ok(/snapStoreRef\.current\?\.keepForSession\(pair\)/.test(freeze), "the pair is kept for this session only — by default");
-  ok(/store\.saveGrowth\(current\.pair, growthStillOf\(current\.frozen\)\)/.test(client) && /store\.deleteGrowth\(growthIdRef\.current\)/.test(client), "the opt-in saves the growth session; off again deletes it");
+  ok(/setPhase\("sealing"\)[\s\S]*CHAKRA_RESULT_LATEST_MS/.test(freeze) && /sealing=\{sealing\}\s*onSealed=\{onSealed\}/.test(client), "the ring seals over the photograph; the result comes in once the ring reports it has been seen closed (at the latest CHAKRA_RESULT_LATEST_MS)");
+  ok(/makeSnaps\(frozen, lines[\s\S]*snapStoreRef\.current\?\.keepForSession\(pair\)/.test(freeze), "the two snaps are made from THAT frame, and kept for this session only — by default");
+  ok(/store\.saveGrowth\(pair, growthStillOf\(current\.frozen\)\)/.test(client) && /store\.deleteGrowth\(growthIdRef\.current\)/.test(client), "the opt-in saves the growth session; off again deletes it");
   ok(/const onRetake = useCallback\(\(\) => \{\s*resetForNewScan\(\);\s*setPhase\("scanning"\);\s*void start\(\);/.test(client), "\"दोबारा स्कैन\": everything starts again, and the camera with it");
   ok(/onClick=\{\(\) => \{\s*resetForNewScan\(\);/.test(client), "…a failure's retry starts again the same way, so a finished detection cannot freeze the next scan at once");
+  ok(/completingRef\.current = false;/.test(client), "…and a new scan can complete again");
   ok(/const onOpenReading = useCallback\(\(\) => \{\s*void buildReading\(capture, cropRef\.current\);/.test(client), "\"पाठ खोलें\": the reading, built now");
   ok(/growthAvailable=\{snapStore !== null && completion\.frozen\.anchors\.length > 0\}/.test(client), "the opt-in is offered only where the pair can be kept and replayed");
   ok(/blurShown\s*\?\s*BLUR_WORDS/.test(client) && /PLACEMENT_REASONS\.has\(reason\)/.test(client), "the blur's words lead — unless the palm itself is misplaced");
@@ -198,10 +232,8 @@ const withoutComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\/
     /blurStalled\(palmSinceRef\.current, firstRekhaOfferAt\(\), detectionRef\.current\.lastUsableAtMs, now\)/.test(client),
     "the blur clock waits for the first frame offered to the evidence — a pipeline warming up is not a blurred picture",
   );
-
-  const hook = readFileSync("components/scan/use-hand-scan.ts", "utf8");
-  ok(/freezeReplaces\(kept, \{ vol: offered\.vol, atMs: now \}\)/.test(hook), "the hook keeps the sharpest recent crop offered to the keep-ring, graded by the ring's own VoL");
-  ok((hook.match(/freezeRef\.current = null;/g) ?? []).length >= 4, "…and drops it with the evidence: a new palm, a restart, a stop, a take");
+  ok(/visible=\{blocked === null && !idle && phase === "scanning"\}/.test(client), "the litany speaks while scanning, and is gone once the scan is complete");
+  ok(/<RekhaMonitor snapshot=\{rekha\} detection=\{detection\} visible=\{scanning\} minimised \/>/.test(client), "G3's ledger stays as the ring's accessible text version, visually minimised");
 }
 
 console.log(`CHAMBER COMPLETE ASSERTIONS PASSED (${assertions})`);

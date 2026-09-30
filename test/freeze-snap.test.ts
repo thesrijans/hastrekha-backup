@@ -1,8 +1,10 @@
 /* ============================================================================
- * scan-complete G4 — THE FREEZE FRAME AND THE SNAP STORE (pure)
+ * scan-complete G4 / G4b — THE FREEZE FRAME AND THE SNAP STORE (pure)
  *
- *  1. which frame: the sharpest recent crop, VoL ≥ 100 — the keep-ring's floor,
- *     the still regrade's floor;
+ *  1. which frame (G4b §3): the whole scan's best frame, frozen at once — its
+ *     512 crop rectified then, graded by the keep-ring's own measure; drawn on
+ *     through its own homography, the live overlay's projection exactly, and
+ *     measured against what the overlay drew on it (§6, ±3 px);
  *  2. the held lines carried onto it: the shift's sign, measured on a pattern
  *     moved by a known amount; only CONFIRMED lines; observed/bridged kept;
  *  3. the prelabel: 0–1 fractions, valid by the DEV validator;
@@ -16,16 +18,21 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  FREEZE_RECENT_MS,
-  FREEZE_VOL_FLOOR,
+  FREEZE_CROP_SIZE,
   cropLuma,
   estimateFreezeShift,
-  freezeReady,
-  freezeReplaces,
+  freezeDeviation,
+  freezeFrom,
+  freezeProjector,
   heldLinesOn,
+  linesAsDrawn,
   prelabelOf,
+  projectPolyline,
+  type BestFrame,
   type FreezeCandidate,
+  type FreezeLine,
 } from "../lib/scan/freeze-frame";
+import { applyHomography, canonicalAnchors, solveHomography } from "../lib/scan/rectify";
 import {
   GROWTH_CANONICAL_SIZE,
   GROWTH_CROP_PATH,
@@ -47,11 +54,10 @@ import {
   isSessionMetadata,
   rawFileName,
 } from "../lib/scan/dev/session-types";
-import { STILL_VOL_FLOOR } from "../lib/scan/dev/still-capture";
 import { revealSetFromPrelabel } from "../lib/scan/dev/reveal";
-import { SUPERRES_CROP_SIZE, SUPERRES_VOL_FLOOR } from "../lib/scan/superres";
+import { SUPERRES_CROP_SIZE } from "../lib/scan/superres";
 import type { RekhaLine, RekhaSnapshot } from "../lib/scan/rekha-persist";
-import { MASK_SIZE, type ActiveLineId, type Landmark3 } from "../lib/scan/types";
+import { MASK_SIZE, type ActiveLineId, type Landmark3, type TracedLine } from "../lib/scan/types";
 
 let assertions = 0;
 const ok = (condition: boolean, message: string): void => {
@@ -61,13 +67,98 @@ const ok = (condition: boolean, message: string): void => {
 
 /* ------------------------------- 1. which frame ------------------------------- */
 
+/** An ImageData the rectifier can write into, outside a browser. */
+const imageData = (width: number, height: number): ImageData => ({ width, height, data: new Uint8ClampedArray(width * height * 4), colorSpace: "srgb" }) as unknown as ImageData;
+const RAW_ANCHORS = [
+  { x: 360, y: 900 },
+  { x: 520, y: 760 },
+  { x: 430, y: 520 },
+  { x: 250, y: 560 },
+] as const;
+
 {
-  ok(FREEZE_VOL_FLOOR === 100 && FREEZE_VOL_FLOOR === SUPERRES_VOL_FLOOR && FREEZE_VOL_FLOOR === STILL_VOL_FLOOR, "VoL ≥ 100: the keep-ring's floor, which is the still regrade's (G4.1)");
-  ok(freezeReplaces(null, { vol: 20, atMs: 0 }), "nothing kept: the first crop is kept, however soft");
-  ok(freezeReplaces({ vol: 120, atMs: 0 }, { vol: 140, atMs: 100 }) && !freezeReplaces({ vol: 120, atMs: 0 }, { vol: 110, atMs: 100 }), "a sharper crop replaces the kept one; a softer one does not");
-  ok(freezeReplaces({ vol: 300, atMs: 0 }, { vol: 50, atMs: FREEZE_RECENT_MS + 1 }), `"recent": a kept frame older than ${FREEZE_RECENT_MS} ms gives way to any newer one`);
-  ok(!freezeReady(null) && !freezeReady({ vol: 99.9, atMs: 0 }) && freezeReady({ vol: 100, atMs: 0 }), "ready to freeze only at the floor");
-  ok(SUPERRES_CROP_SIZE === CANONICAL_LABEL_SIZE, "the frozen crop is the keep-ring's 512 — the labeler's canonical size, so a growth still needs no resampling");
+  ok(SUPERRES_CROP_SIZE === CANONICAL_LABEL_SIZE && FREEZE_CROP_SIZE === SUPERRES_CROP_SIZE, "the frozen crop is the keep-ring's 512 — the labeler's canonical size, so a growth still needs no resampling");
+
+  /* A raw frame with a gradient in it, and the best frame the hook kept of it. */
+  const raw = imageData(720, 1280);
+  for (let i = 0; i < 720 * 1280; i += 1) {
+    const v = ((i % 720) + Math.floor(i / 720)) % 256;
+    raw.data[i * 4] = v;
+    raw.data[i * 4 + 1] = 255 - v;
+    raw.data[i * 4 + 2] = (v * 3) % 256;
+    raw.data[i * 4 + 3] = 255;
+  }
+  const best: BestFrame = {
+    score: 240,
+    vol: 120,
+    held: 2,
+    inBand: true,
+    atMs: 5000,
+    raw,
+    anchors: RAW_ANCHORS,
+    convention: 4,
+    gray: new Float32Array(MASK_SIZE * MASK_SIZE),
+    landmarks: [],
+    handedness: "Right",
+    quality: { score: 0.8, ok: false, issues: ["tilt_direction"], luma: 0.5, clipped: 0, jitter: 0.001, sharpness: 120 },
+    windingStrength: 0.3,
+    trackSettings: {},
+    live: null,
+    heldAtCapture: null,
+  };
+  const frozen = freezeFrom(best, imageData);
+  ok(frozen !== null && frozen.crop.width === FREEZE_CROP_SIZE && frozen.crop.height === FREEZE_CROP_SIZE, "the freeze rectifies the best frame's 512 crop once, at the freeze — the hook never kept one per frame");
+  ok(frozen!.raw === raw && frozen!.anchors === best.anchors && frozen!.score === best.score, "…and is the best frame itself: its raw pixels, its anchors, its grade");
+  ok(Number.isFinite(frozen!.cropVol) && frozen!.cropVol >= 0, "…graded again by the keep-ring's own measure on the crop, which a still records");
+  ok(freezeFrom({ ...best, anchors: RAW_ANCHORS.slice(0, 3) }, imageData) === null, "anchors that do not solve give no crop — the chamber falls back to the video's own frame");
+
+  /* The lines go through the frame's own homography — the live overlay's projection, exactly. */
+  const project = freezeProjector(RAW_ANCHORS, 4)!;
+  const canonical = canonicalAnchors(4, MASK_SIZE)!;
+  ok(
+    canonical.every((c, i) => {
+      const p = project(c);
+      return p !== null && Math.abs(p.x - RAW_ANCHORS[i]!.x) < 1e-6 && Math.abs(p.y - RAW_ANCHORS[i]!.y) < 1e-6;
+    }),
+    "the canonical anchors land on the frame's anchors: the photograph's palm homography",
+  );
+  const overlay = solveHomography(canonical, RAW_ANCHORS)!;
+  const probe = { x: 40, y: 70 };
+  const viaOverlay = applyHomography(overlay, probe)!;
+  const viaFreeze = project(probe)!;
+  ok(Math.hypot(viaOverlay.x - viaFreeze.x, viaOverlay.y - viaFreeze.y) < 1e-9, "…the same matrix the overlay solves (chamber-canvas traceProjector), so the gold lands where it was drawn live");
+  ok(freezeProjector(RAW_ANCHORS, 5) === null && freezeProjector([], 0) === null, "anchors of another convention, or none, project nothing rather than something wrong");
+
+  /* §6: the photograph's lines against the overlay's on that frame. */
+  const trace = (points: readonly (readonly [number, number])[]): TracedLine => ({ id: "heart", points, confidence: 1 });
+  const livePoints: (readonly [number, number])[] = Array.from({ length: 30 }, (_, i) => [20 + i * 3, 50 + Math.sin(i / 5) * 4] as const);
+  const frozenLine = (dy: number, extra = 0): FreezeLine => ({
+    id: "heart",
+    points: [...livePoints, ...Array.from({ length: extra }, (_, i) => [20 + (30 + i) * 3, 50] as const)].map(([x, y]) => [x, y + dy] as const),
+    segments: [{ from: 0, to: livePoints.length - 1 + extra, observed: true }],
+  });
+  const frame = { anchors: RAW_ANCHORS, convention: 4, live: { lines: { heart: trace(livePoints) }, convention: 4 } } as const;
+  const same = freezeDeviation([frozenLine(0)], frame);
+  ok(same.length === 1 && same[0]!.max < 1e-6, "the same geometry lands exactly where the overlay drew it — 0 px");
+  const moved = freezeDeviation([frozenLine(0.5)], frame);
+  const scale = Math.hypot(project({ x: 60, y: 51 })!.x - project({ x: 60, y: 50 })!.x, project({ x: 60, y: 51 })!.y - project({ x: 60, y: 50 })!.y);
+  ok(moved[0]!.p50 > 0.3 * scale && moved[0]!.p50 < 0.7 * scale, `half a mask pixel off reads as about half of one in the frame's pixels (${moved[0]!.p50.toFixed(2)} of ${scale.toFixed(2)})`);
+  const longer = freezeDeviation([frozenLine(0, 8)], frame);
+  ok(longer[0]!.max < 1e-6 && longer[0]!.compared === livePoints.length - 2, "a trace grown longer since measures its common stretch — its extension is not an offset");
+  ok(freezeDeviation([frozenLine(0)], { ...frame, live: null }).length === 0 && freezeDeviation([frozenLine(0)], { ...frame, live: { lines: {}, convention: 4 } }).length === 0, "a line the overlay had not drawn on that frame has nothing to be measured against");
+  ok(freezeDeviation([frozenLine(0)], { ...frame, live: { ...frame.live, convention: 5 } }).length === 0, "…nor lines traced under another convention");
+  ok(projectPolyline([[1, 2], [3, 4]], () => null).length === 0, "a point that will not project is dropped, never clamped into place");
+
+  /* The photograph shows each held line as the overlay drew it on that frame; a later one comes in held + shift. */
+  const later: FreezeLine = { id: "life", points: [[70, 40], [60, 90]], segments: [{ from: 0, to: 1, observed: true }] };
+  const drawnHeart: TracedLine = { id: "heart", points: livePoints, confidence: 1, segments: [{ from: 0, to: 9, observed: true }, { from: 9, to: 29, observed: false }], traced: true };
+  const asDrawn = linesAsDrawn([frozenLine(0.8), later], { convention: 4, live: { lines: { heart: drawnHeart }, convention: 4 } });
+  ok(asDrawn.fromLive.join() === "heart" && asDrawn.lines[0]!.points === livePoints, "a held line the overlay drew on that frame goes on with the geometry it was drawn with there");
+  ok(asDrawn.lines[0]!.segments[1]!.observed === false && asDrawn.lines[0]!.traced === true, "…its observed and bridged stretches, and its tracer's mark, as drawn");
+  ok(asDrawn.lines[1] === later, "a line confirmed after that frame — never drawn on it — comes in from the accumulator");
+  ok(freezeDeviation(asDrawn.lines, { ...frame, live: { lines: { heart: drawnHeart }, convention: 4 } })[0]!.max < 1e-6, "so the photograph's lines land where the overlay drew them on that frame: 0 px (§6: within ±3)");
+  ok(linesAsDrawn([frozenLine(0.8)], { convention: 4, live: { lines: { heart: drawnHeart }, convention: 5 } }).fromLive.length === 0, "a drawing traced under another convention is not borrowed");
+  ok(linesAsDrawn([], { convention: 4, live: { lines: { heart: drawnHeart }, convention: 4 } }).lines.length === 0, "only HELD lines go on the photograph — a line drawn live but never confirmed does not");
 }
 
 /* ---------------------------- 2. the lines carried ---------------------------- */
@@ -151,7 +242,14 @@ function accumulatorMovedBy(mx: number, my: number): Float32Array {
 const landmarks: Landmark3[] = Array.from({ length: 21 }, (_, i) => ({ x: 0.3 + i * 0.01, y: 0.4 + (i % 5) * 0.02, z: 0 }));
 function candidate(overrides: Partial<FreezeCandidate> = {}): FreezeCandidate {
   return {
+    score: 284.74,
     vol: 142.37,
+    held: 2,
+    inBand: true,
+    gray: new Float32Array(MASK_SIZE * MASK_SIZE),
+    live: null,
+    heldAtCapture: null,
+    cropVol: 142.37,
     atMs: 1000,
     crop: { width: 512, height: 512, data: new Uint8ClampedArray(4), colorSpace: "srgb" } as unknown as ImageData,
     raw: { width: 720, height: 1280, data: new Uint8ClampedArray(4), colorSpace: "srgb" } as unknown as ImageData,
@@ -253,7 +351,15 @@ async function storeChecks(): Promise<void> {
 /* ------------------------ 6. never uploaded; the boundary ------------------------ */
 
 {
-  for (const file of ["lib/scan/snap-store.ts", "lib/scan/freeze-frame.ts", "components/sanctuary/chamber/completion-snaps.ts", "components/sanctuary/privacy/saved-palms.tsx"]) {
+  for (const file of [
+    "lib/scan/snap-store.ts",
+    "lib/scan/freeze-frame.ts",
+    "lib/scan/chakra.ts",
+    "components/sanctuary/chamber/completion-snaps.ts",
+    "components/sanctuary/chamber/result-render.ts",
+    "components/sanctuary/chamber/chakra-result.tsx",
+    "components/sanctuary/privacy/saved-palms.tsx",
+  ]) {
     const code = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
     ok(!/\bfetch\(|XMLHttpRequest|sendBeacon|WebSocket|EventSource/.test(code), `${file}: nothing here reaches the network — never uploaded`);
     ok(!/lib\/scan\/dev|app\/dev/.test(code), `${file}: imports nothing from the dev harness`);

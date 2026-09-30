@@ -9,10 +9,11 @@
  * or filling rings would stop being that wheel while still looking like *a*
  * wheel in a screenshot.
  *
- * The A2 assertion here is `ringLitSectors` flooring rather than rounding. A
- * ring that lights a sector at 4% of its own arc is telling the reader a pose
- * is under way that they have barely begun.
- * ========================================================================== */
+ * G4b: the sectors no longer fill with the tilt choreography — the chakra's arcs
+ * fill with each major line's evidence instead (docs/specs/chakra-scan-g4.txt §1),
+ * and this test pins where they are, what they say, and that the engraving still
+ * turns under them while they do not.
+ */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -30,9 +31,14 @@ import {
   RING_TICKS,
   drawScanRing,
   ringGeometry,
-  ringLitSectors,
   ringRotation,
+  chakraMarkPlace,
+  chakraNamePlace,
+  chakraRadians,
+  CHAKRA_NAME_RADIUS,
+  type ChakraDraw,
 } from "../components/sanctuary/chamber/scan-ring";
+import { CHAKRA_GAP_DEG, CHAKRA_MAJOR_ARCS, CHAKRA_MINORS, CHAKRA_WORDS } from "../lib/scan/chakra";
 
 let assertions = 0;
 const ok = (condition: boolean, message: string): void => {
@@ -63,14 +69,35 @@ function recorder(): { context: CanvasRenderingContext2D; calls: string[]; depth
     stroke: () => calls.push("stroke"),
     fill: () => calls.push("fill"),
     fillRect: () => calls.push("fillRect"),
+    fillText: (text: string) => calls.push(`fillText:${text}`),
+    strokeText: (text: string) => calls.push(`strokeText:${text}`),
+    setLineDash: () => calls.push("setLineDash"),
     lineWidth: 0,
+    lineCap: "",
+    lineJoin: "",
+    font: "",
+    textAlign: "",
+    textBaseline: "",
+    globalAlpha: 1,
     strokeStyle: "",
     fillStyle: "",
   };
   return { context: target as unknown as CanvasRenderingContext2D, calls, depth: () => depth };
 }
 
-const PALETTE = { line: "var(--color-snc-gold-500)", fill: "var(--color-snc-flame-warm)" };
+const PALETTE = { line: "var(--color-snc-gold-500)", arc: "var(--color-snc-gold-500)", text: "var(--color-snc-gold-400)", halo: "var(--color-snc-stone-900)", font: "serif" };
+
+/** A chakra mid-scan: the heart confirmed, the head at 40%, the life line unclear, the fate line not yet seen. */
+const CHAKRA: ChakraDraw = {
+  majors: [
+    { id: "heart", name: "हृदय", status: "confirmed", fill: 1 },
+    { id: "head", name: "मस्तिष्क", status: "gathering", fill: 0.4 },
+    { id: "life", name: "जीवन", status: "unclear", fill: 0 },
+    { id: "fate", name: "शनि", status: "gathering", fill: 0 },
+  ],
+  minors: CHAKRA_MINORS.map((minor) => ({ id: minor.id })),
+  centre: "पहचान 60%",
+};
 
 /* -------------------------- 1. The spec's numbers ------------------------- */
 
@@ -84,22 +111,27 @@ const PALETTE = { line: "var(--color-snc-gold-500)", fill: "var(--color-snc-flam
   );
   ok(ringRotation(0) === 0, "it starts where it starts");
   ok(ringRotation(Number.NaN) === 0, "and a broken clock leaves it still rather than spinning it to NaN");
-  ok(RING_BEADS % RING_SECTORS === 0, "the beads divide evenly by sector, so a bead lands on every spoke");
+  ok(RING_BEADS % RING_SECTORS === 0, "the beads divide evenly by sector, so a bead lands on every twelfth of the wheel");
   ok(RING_TICKS % RING_SECTORS === 0, "and so do the ticks");
 }
 
 /* --------------- 2. A sector lights only once it is earned --------------- */
 
 {
-  ok(ringLitSectors(0) === 0, "nothing done, nothing lit");
+  /* G4b §1: four arcs of ~84° with small gaps, one per major, in the ledger's order clockwise from twelve o'clock. */
+  const order = ["heart", "head", "life", "fate"] as const;
+  ok(order.every((id, i) => CHAKRA_MAJOR_ARCS[id].startDeg === i * 90 + CHAKRA_GAP_DEG / 2 && CHAKRA_MAJOR_ARCS[id].sweepDeg === 84), "the inner ring: four arcs of 84°, हृदय मस्तिष्क जीवन शनि clockwise from twelve o'clock, a 6° gap at each finial");
+  ok(Math.abs(chakraRadians(0) + Math.PI / 2) < 1e-12 && Math.abs(chakraRadians(90)) < 1e-12, "twelve o'clock is up and clockwise is clockwise on the canvas");
+  const r = 200;
+  const names = order.map((id) => chakraNamePlace(CHAKRA_MAJOR_ARCS[id], r));
+  ok(names.every((p) => Math.abs(Math.hypot(p.x, p.y) - r * CHAKRA_NAME_RADIUS) < 1e-9), "each name sits beside its arc, just outside the beads, at the arc's middle");
   ok(
-    ringLitSectors(1 / RING_SECTORS - 0.001) === 0,
-    "a sector one thousandth short of its own share is NOT lit: rounding here would light a sector at 4% of its arc and report a pose the reader has barely started",
+    names[0]!.x > 0 && names[0]!.y < 0 && names[1]!.x > 0 && names[1]!.y > 0 && names[2]!.x < 0 && names[2]!.y > 0 && names[3]!.x < 0 && names[3]!.y < 0,
+    "…the four diagonals: हृदय upper right, मस्तिष्क lower right, जीवन lower left, शनि upper left",
   );
-  ok(ringLitSectors(1 / RING_SECTORS) === 1, "and lights the moment its share is genuinely done");
-  ok(ringLitSectors(1) === RING_SECTORS, "a finished choreography lights the whole wheel");
-  ok(ringLitSectors(4) === RING_SECTORS, "and cannot light more than the wheel has");
-  ok(ringLitSectors(-1) === 0 && ringLitSectors(Number.NaN) === 0, "nonsense lights nothing rather than throwing mid-frame");
+  ok(names.every((p) => p.align === (p.x >= 0 ? "left" : "right") && p.baseline === (p.y < 0 ? "bottom" : "top")), "…each set AWAY from the wheel, so a name never lies across the ring whatever its length");
+  const heartMark = chakraMarkPlace(CHAKRA_MAJOR_ARCS.heart, r, CHAKRA_GAP_DEG);
+  ok(Math.abs(heartMark.x - r * RING_RADII.majorArc) < 1e-9 && Math.abs(heartMark.y) < 1e-9, "a ✓ stands at its arc's END, in the gap after it — the heart's at three o'clock");
 }
 
 /* ------------------------ 3. Where the wheel sits ------------------------ */
@@ -160,8 +192,8 @@ const PALETTE = { line: "var(--color-snc-gold-500)", fill: "var(--color-snc-flam
     RING_RADII.innerCircle,
     RING_RADII.tickInner,
     RING_RADII.tickOuter,
-    RING_RADII.sectorInner,
-    RING_RADII.sectorOuter,
+    RING_RADII.majorArc,
+    RING_RADII.minorRing,
     RING_RADII.bead,
   ];
   let ascending = true;
@@ -169,35 +201,43 @@ const PALETTE = { line: "var(--color-snc-gold-500)", fill: "var(--color-snc-flam
   ok(ascending, "read outward, every band sits outside the one before it: a tick band inside the inner circle is a wheel drawn inside out");
   ok(RING_RADII.bead === 1, "the beads are the outer edge, which is what the outer radius means");
   ok(RING_RADII.innerCircle < 0.75, "and the middle is left open, because the reader's hand is what goes there");
+  ok(RING_RADII.majorArc < RING_RADII.minorRing, "the majors are the INNER ring and the minors the outer (chakra §1)");
 }
 
 /* -------------------- 5. What the draw actually draws ------------------- */
 
 {
   const { context, calls, depth } = recorder();
-  drawScanRing(context, { width: 390, height: 844, dpr: 2, elapsedMs: 5_000, progress: 0, palette: PALETTE });
+  drawScanRing(context, { width: 390, height: 844, dpr: 2, elapsedMs: 5_000, palette: PALETTE });
   ok(depth() === 0, "the context is left exactly as it was found — a leaked transform makes the NEXT pass wrong, which is the hardest kind of frame bug to attribute");
   ok(calls.includes("translate") && calls.includes("rotate"), "the wheel is placed and turned rather than drawn at an angle point by point");
-  ok(calls.filter((c) => c === "stroke").length >= 4, "the circles, spokes, ticks and finials are each stroked");
-  ok(calls.filter((c) => c === "fill").length === 1, "and exactly ONE fill: the beads, which are punched dots in the reference and the only filled marks in the wheel");
+  ok(calls.filter((c) => c === "stroke").length >= 3, "the circles, ticks and finials are each stroked");
+  ok(calls.filter((c) => c === "fill").length === 1, "and exactly ONE fill: the beads, which are punched dots in the reference and the only filled marks in the engraving");
+  ok(!calls.some((c) => c.startsWith("fillText")), "without a chakra the bare wheel says nothing");
 
-  const unlit = recorder();
-  drawScanRing(unlit.context, { width: 390, height: 844, dpr: 2, elapsedMs: 0, progress: 0, palette: PALETTE });
-  const lit = recorder();
-  drawScanRing(lit.context, { width: 390, height: 844, dpr: 2, elapsedMs: 0, progress: 1, palette: PALETTE });
-  ok(
-    lit.calls.filter((c) => c === "fill").length === unlit.calls.filter((c) => c === "fill").length + 1,
-    "a completed choreography adds exactly one more fill — the sector wash — rather than redrawing the wheel in a second style",
-  );
-  ok(
-    lit.calls.filter((c) => c === "closePath").length -
-      unlit.calls.filter((c) => c === "closePath").length ===
-      RING_SECTORS,
-    "and the wash it adds is twelve closed sectors, one per sector, not one arc swept across them",
-  );
+  const chakra = recorder();
+  drawScanRing(chakra.context, { width: 390, height: 844, dpr: 2, elapsedMs: 5_000, palette: PALETTE, chakra: CHAKRA });
+  const texts = chakra.calls.filter((c) => c.startsWith("fillText:")).map((c) => c.slice("fillText:".length));
+  ok(chakra.depth() === 0, "with the chakra, still left as found");
+  ok(["हृदय", "मस्तिष्क", "जीवन", "शनि"].every((name) => texts.includes(name)), "every major's name is on the ring");
+  ok(texts.includes("पहचान 60%"), "the centre: \"पहचान N%\"");
+  ok(texts.filter((t) => t === "✓").length === 1 && texts.filter((t) => t === "—").length === 1, "one ✓ for the confirmed line and one — for the unclear one; nothing for lines still gathering");
+  ok(texts.includes(CHAKRA_WORDS.minors), "the outer ring's quiet \"अभी नहीं\" — the minors, honest, not hidden");
+  ok(chakra.calls.filter((c) => c.startsWith("strokeText:")).length === texts.length, "every word over its dark halo");
+  ok(!chakra.calls.includes("setLineDash"), "solid: no dash pattern — faint is an alpha, never a dash");
+  const rotateAt = chakra.calls.indexOf("rotate");
+  const firstText = chakra.calls.findIndex((c) => c.startsWith("fillText"));
+  const restoreAfterRotate = chakra.calls.indexOf("restore", rotateAt);
+  ok(restoreAfterRotate > rotateAt && firstText > restoreAfterRotate, "the engraving turns; the chakra does not — its names are drawn after the turn is undone");
+
+  const sealed = recorder();
+  drawScanRing(sealed.context, { width: 390, height: 844, dpr: 2, elapsedMs: 5_000, palette: PALETTE, chakra: { ...CHAKRA, centre: CHAKRA_WORDS.complete, centreSub: CHAKRA_WORDS.completeEn, seal: { pulse: 1, sweep: 0.5 } } });
+  const sealedTexts = sealed.calls.filter((c) => c.startsWith("fillText:")).map((c) => c.slice("fillText:".length));
+  ok(sealedTexts.includes("पहचान पूरी") && sealedTexts.includes("Scan complete"), "sealing: \"पहचान पूरी · Scan complete\" at the centre");
+  ok(sealed.calls.filter((c) => c === "arc").length > chakra.calls.filter((c) => c === "arc").length, "…and the gold sweep is one more arc, closing the ring");
 
   const tiny = recorder();
-  drawScanRing(tiny.context, { width: 0, height: 0, dpr: 1, elapsedMs: 0, progress: 1, palette: PALETTE });
+  drawScanRing(tiny.context, { width: 0, height: 0, dpr: 1, elapsedMs: 0, palette: PALETTE, chakra: CHAKRA });
   ok(tiny.calls.length === 0, "a zero viewport draws nothing at all rather than a degenerate ring at the origin");
 }
 

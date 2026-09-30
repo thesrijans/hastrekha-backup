@@ -1,8 +1,9 @@
 /**
- * The completion screen's pictures, made in the browser (scan-complete G4.2): from the frozen frame, the plain
- * palm (its 512 canonical crop), the raw frame it came from, and the crop with the held lines drawn in gold
- * (snap-render.ts). PNG blobs for the snap store, object URLs for the leaf — revoked by {@link revokeSnaps}.
- * Nothing here leaves the device.
+ * The snaps, made in the browser (scan-complete G4.2): from the frozen frame, the plain palm (its 512 canonical
+ * crop), the raw frame it came from, and the crop with the held lines drawn in gold (snap-render.ts). PNG blobs
+ * for the snap store — this session's, or the opt-in's growth session — and object URLs, revoked by
+ * {@link revokeSnaps}. (G4b: the result screen shows the photograph itself, result-render.ts; these are what is
+ * kept.) Nothing here leaves the device.
  */
 import type { FreezeCandidate, FreezeLine } from "@/lib/scan/freeze-frame";
 import { drawSnapLines, type SnapPalette } from "./snap-render";
@@ -65,15 +66,16 @@ export async function makeSnaps(frozen: FreezeCandidate, lines: readonly FreezeL
 }
 
 /**
- * When no crop was ever offered to the keep-ring (super-resolution off, or never an anchored frame): the latest
- * rectified crop and the video's current frame. Its grade is unknown (VoL 0) and it has no anchors, so its
- * lines are drawn unshifted (that crop IS the accumulator's newest frame) and it is not offered as a growth
- * still — a still without its anchors cannot be replayed. Null with no crop at all.
+ * When the scan kept no best frame (G4b: every frame failed the palm-facing or in-frame checks, or the
+ * accumulator never measured one): the latest rectified crop and the video's current frame, with the anchors of
+ * the latest rectify tick — so the lines can still be drawn through the frame they were last projected on. Its
+ * grade is unknown (score 0) and it carries no gray, so its lines are drawn unshifted. Null with no crop at all.
  */
 export function fallbackFreeze(
   video: HTMLVideoElement | null,
   crop: ImageData | null,
   observation: { readonly landmarks: FreezeCandidate["landmarks"]; readonly handedness: FreezeCandidate["handedness"] } | null,
+  projection: { readonly anchors: FreezeCandidate["anchors"]; readonly convention: number } | null,
 ): FreezeCandidate | null {
   if (crop === null) return null;
   let raw = crop;
@@ -87,18 +89,26 @@ export function fallbackFreeze(
       raw = context.getImageData(0, 0, canvas.width, canvas.height);
     }
   }
+  const anchored = raw !== crop && projection !== null && projection.anchors.length === projection.convention;
   return {
+    score: 0,
     vol: 0,
+    held: 0,
+    inBand: false,
     atMs: performance.now(),
-    crop,
     raw,
-    anchors: [],
-    convention: 0,
+    anchors: anchored ? projection.anchors : [],
+    convention: anchored ? projection.convention : 0,
+    gray: new Float32Array(0),
     landmarks: observation?.landmarks ?? [],
     handedness: observation?.handedness ?? "Right",
     quality: { score: 0, ok: false, issues: [], luma: 0, clipped: 0, jitter: 0, sharpness: 0 },
     windingStrength: null,
     trackSettings: {},
+    live: null,
+    heldAtCapture: null,
+    crop,
+    cropVol: 0,
   };
 }
 

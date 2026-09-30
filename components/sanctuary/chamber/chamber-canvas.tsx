@@ -36,11 +36,12 @@ import { LM } from "@/lib/scan/landmark-index";
 import type { DistanceReading } from "@/lib/scan/distance";
 import { placeLeaders } from "@/lib/sanctuary/chamber-leaders";
 import { createFrameCost, type FrameCostSummary } from "@/lib/sanctuary/frame-cost";
-import { drawScanRing, ringGeometry, RING_HAND_MARGIN } from "./scan-ring";
+import { drawScanRing, ringGeometry, RING_HAND_MARGIN, type ChakraDraw } from "./scan-ring";
+import { CHAKRA_RESULT_AT_MS, sealPulse, sealSweep } from "@/lib/scan/chakra";
 import { drawPalmGuide, GUIDE_ALPHA, nextGuideAlpha, palmGuideGeometry } from "./palm-guide";
 
 /** How long a newly found line takes to come up to full brightness. Slow enough to be a reveal. */
-const REVEAL_MS = 900;
+export const REVEAL_MS = 900;
 
 /** A bridged stretch of a completed line is drawn at this share of an observed one's alpha. */
 const INFERRED_ALPHA = 0.4;
@@ -112,8 +113,21 @@ export interface ChamberCanvasProps {
   readonly lines: Partial<Record<ActiveLineId, TracedLine>>;
   readonly projection: { readonly anchors: readonly Point2[]; readonly convention: number } | null;
   readonly liveProjection?: { readonly current: { readonly anchors: readonly Point2[]; readonly convention: number } | null };
-  /** 0–1 of the tilt choreography, which is what fills the ring's sectors. */
-  readonly poseProgress: number;
+  /**
+   * G4b: the chakra — the four majors' arcs, the minors, the centre's words — which is what the ring now shows.
+   * (The tilt choreography used to fill its sectors; it blocks nothing any more, chakra spec §2.)
+   */
+  readonly chakra?: ChakraDraw | null;
+  /**
+   * G4b §2: the scan is complete — the arcs pulse once and a gold sweep closes the ring over the frozen photograph
+   * drawn under this canvas, and nothing else is drawn, so the photograph is not dimmed twice. The seal's clock
+   * starts at the first frame it is DRAWN in, not at the completion: the freeze's own work and the result's first
+   * paint can hold the main thread for a few hundred milliseconds (the G4b captures), and a clock started before
+   * them showed the sweep already half round.
+   */
+  readonly sealing?: boolean;
+  /** Called once the ring has been seen closed — CHAKRA_RESULT_AT_MS after its first sealing frame. */
+  readonly onSealed?: () => void;
   readonly mirrored: boolean;
   /** The gate's verdict. Dims the constellation; never hides a crease that was found. */
   readonly gatePassing: boolean;
@@ -127,7 +141,7 @@ export interface ChamberCanvasProps {
   readonly className?: string;
 }
 
-interface Palette {
+export interface Palette {
   readonly gold: string;
   readonly foil: string;
   readonly warm: string;
@@ -138,7 +152,7 @@ interface Palette {
 }
 
 /** Read the sanctuary tokens off the element, so this file owns no colour of its own. */
-function readPalette(element: HTMLElement): Palette {
+export function readPalette(element: HTMLElement): Palette {
   const style = getComputedStyle(element);
   const token = (name: string): string => style.getPropertyValue(name).trim();
   return {
@@ -159,7 +173,9 @@ export function ChamberCanvas({
   lines,
   projection,
   liveProjection,
-  poseProgress,
+  chakra = null,
+  sealing = false,
+  onSealed,
   mirrored,
   gatePassing,
   onCost,
@@ -171,20 +187,24 @@ export function ChamberCanvas({
      rAF chain is started once per mount instead of being torn down and rebuilt
      on every landmark update — which at frame rate is a cancel and a schedule
      per frame, and shows up in exactly the measurement this component reports. */
-  const propsRef = useRef({ landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing, distance });
+  const propsRef = useRef({ landmarks, videoSize, lines, projection, liveProjection, chakra, sealing, mirrored, gatePassing, distance });
   /* Written in an effect rather than during render. Writing a ref while
      rendering is what `react-hooks/refs` forbids, and the rule is right: React
      may render this component and throw the result away, and a ref written on a
      discarded render is state the loop would then draw from. */
   useEffect(() => {
-    propsRef.current = { landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing, distance };
-  }, [landmarks, videoSize, lines, projection, liveProjection, poseProgress, mirrored, gatePassing, distance]);
+    propsRef.current = { landmarks, videoSize, lines, projection, liveProjection, chakra, sealing, mirrored, gatePassing, distance };
+  }, [landmarks, videoSize, lines, projection, liveProjection, chakra, sealing, mirrored, gatePassing, distance]);
 
   const costRef = useRef(createFrameCost(nowMs));
   const onCostRef = useRef(onCost);
   useEffect(() => {
     onCostRef.current = onCost;
   }, [onCost]);
+  const onSealedRef = useRef(onSealed);
+  useEffect(() => {
+    onSealedRef.current = onSealed;
+  }, [onSealed]);
 
   /** When each line was first seen, so a reveal is a ramp rather than a pop. */
   const firstSeenRef = useRef(new Map<string, number>());
@@ -235,22 +255,41 @@ export function ChamberCanvas({
        thumb in the RAW frame — read off its landmarks, thumb root against little knuckle; null before any. */
     let guideAlpha = GUIDE_ALPHA;
     let rawThumbRight: boolean | null = null;
+    /* G4b: the seal's own clock — its first drawn frame — and whether the ring has been reported closed. */
+    let sealFrom: number | null = null;
+    let sealReported = false;
 
     const frame = (timestamp: number): void => {
       if (started === 0) started = timestamp;
       costRef.current.measure(() => {
         const state = propsRef.current;
-        const target = handRingExtent(state.landmarks, state.videoSize, box.width, box.height, state.mirrored);
-        const rest = ringGeometry(box.width, box.height).radius;
-        const aim = target ?? rest;
-        ringExtent = ringExtent === null ? aim : ringExtent + (aim - ringExtent) * RING_EASE;
+        /* G4b: sealing, the ring holds its size — the hand it was sized to is now a photograph. */
+        if (!state.sealing) {
+          sealFrom = null;
+          sealReported = false;
+        } else if (sealFrom === null) {
+          sealFrom = timestamp;
+          canvas.dataset.sncSealStart = String(Math.round(timestamp));
+        }
+        const sealing = state.sealing ? sealFrom : null;
+        if (sealing === null || ringExtent === null) {
+          const target = handRingExtent(state.landmarks, state.videoSize, box.width, box.height, state.mirrored);
+          const rest = ringGeometry(box.width, box.height).radius;
+          const aim = target ?? rest;
+          ringExtent = ringExtent === null ? aim : ringExtent + (aim - ringExtent) * RING_EASE;
+        }
         const marks = state.landmarks;
         if (marks !== null && marks.length >= 21) rawThumbRight = marks[LM.THUMB_CMC].x > marks[LM.PINKY_MCP].x;
         guideAlpha = state.distance === undefined ? 0 : nextGuideAlpha(guideAlpha, state.distance.current?.state === "ok");
         /* Before any palm, a right one: on the back camera its thumb is on the display's right (the raw frame's). */
         const thumbRight = (rawThumbRight ?? true) !== state.mirrored;
         context.setTransform(dpr, 0, 0, dpr, 0, 0);
-        drawChamber(context, box, palette, { ...state, ringExtent, guide: { alpha: guideAlpha, thumbRight } }, firstSeenRef.current, timestamp, timestamp - started);
+        const seal = sealing === null ? null : { pulse: sealPulse(timestamp - sealing), sweep: sealSweep(timestamp - sealing) };
+        drawChamber(context, box, palette, { ...state, ringExtent, seal, guide: { alpha: guideAlpha, thumbRight } }, firstSeenRef.current, timestamp, timestamp - started);
+        if (sealing !== null && !sealReported && timestamp - sealing >= CHAKRA_RESULT_AT_MS) {
+          sealReported = true;
+          onSealedRef.current?.();
+        }
       });
       /* Reported four times a second rather than every frame: a readout that
          re-renders React sixty times a second is itself a frame cost, and would
@@ -288,7 +327,10 @@ interface DrawState {
   readonly lines: Partial<Record<ActiveLineId, TracedLine>>;
   readonly projection: { readonly anchors: readonly Point2[]; readonly convention: number } | null;
   readonly liveProjection?: { readonly current: { readonly anchors: readonly Point2[]; readonly convention: number } | null };
-  readonly poseProgress: number;
+  /** G4b: the chakra the ring shows; absent or null, the bare wheel. */
+  readonly chakra?: ChakraDraw | null;
+  /** G4b: sealing — the pulse and the sweep this frame; while set, only the ring is drawn. */
+  readonly seal?: { readonly pulse: number; readonly sweep: number } | null;
   readonly mirrored: boolean;
   readonly gatePassing: boolean;
   /** M1.3: the ring's smoothed extent (see handRingExtent); absent or null rests the ring at its largest. */
@@ -318,14 +360,17 @@ export function drawChamber(
   const height = canvas.height;
 
   context.clearRect(0, 0, width, height);
+  const seal = state.seal ?? null;
 
   /* ── 1. the room ───────────────────────────────────────────────────────────
      A vignette to near-black, and one warm source. Both are the SCENE and are
      drawn whether or not a hand has been seen: a chamber that only becomes a
-     chamber once it recognises you is a loading state wearing an atmosphere. */
-  drawRoom(context, width, height, palette, state.landmarks, state.ringExtent ?? null);
+     chamber once it recognises you is a loading state wearing an atmosphere.
+     (Sealing, the frozen photograph under this canvas carries the room itself.) */
+  if (seal === null) drawRoom(context, width, height, palette, state.landmarks, state.ringExtent ?? null);
 
-  /* ── 2. the wheel ──────────────────────────────────────────────────────── */
+  /* ── 2. the wheel, and on it the chakra (G4b) ──────────────────────────── */
+  const chakra = state.chakra ?? null;
   drawScanRing(context, {
     width,
     height,
@@ -334,10 +379,12 @@ export function drawChamber(
        the sub-pixel blur the scaling exists to avoid. */
     dpr: 1,
     elapsedMs,
-    progress: state.poseProgress,
-    palette: { line: palette.gold, fill: palette.warm },
+    palette: { line: palette.gold, arc: palette.gold, text: palette.foil, halo: palette.stone, font: palette.font },
     extent: state.ringExtent ?? null,
+    chakra: chakra === null ? null : seal === null ? chakra : { ...chakra, seal },
   });
+  /* G4b §2: sealing — the ring closes over the photograph; the hand and its lines are the photograph's now. */
+  if (seal !== null) return;
 
   /* ── 2b. the guide (G2.2) ──────────────────────────────────────────────────
      At the ring's REST centre and the meter's target size, under everything the hand brings: the reader's
@@ -503,8 +550,11 @@ function drawConstellation(
   context.restore();
 }
 
-/** The creases, revealed as they are found, each with its name on a thin leader. */
-function drawFoundLines(
+/**
+ * The creases, revealed as they are found, each with its name on a thin leader. Exported for the result
+ * screen (G4b §4), which draws the frozen photograph's lines with this very code, so they look as they did live.
+ */
+export function drawFoundLines(
   context: CanvasRenderingContext2D,
   lines: Partial<Record<ActiveLineId, TracedLine>>,
   project: (p: Point2) => Point2 | null,

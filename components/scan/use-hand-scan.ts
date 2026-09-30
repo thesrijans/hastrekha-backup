@@ -97,7 +97,8 @@ import { extractAllTraces, extractLines, type ClassifiedTrace, type LineExtracti
 import { fateDoubleOverride, minorLineFeatures } from "@/lib/scan/minor-lines";
 import { corridorFateFeatures, corridorTraces, type CorridorAttempt } from "@/lib/scan/corridor-traces";
 import { FrameRing, SUPERRES_CROP_SIZE, SUPERRES_MIN_FRAMES, SUPERRES_RING_SIZE } from "@/lib/scan/superres";
-import { freezeReplaces, type FreezeCandidate, type FreezeGrade } from "@/lib/scan/freeze-frame";
+import type { BestFrame } from "@/lib/scan/freeze-frame";
+import { bestFrameReplaces, bestFrameScore, chamberHoldResets, CHAMBER_REANCHOR_GAP_MS } from "@/lib/scan/chakra";
 import { createSuperResFuser, type SuperResFuser } from "@/lib/scan/superres-client";
 import {
   commitCapture,
@@ -259,6 +260,18 @@ export interface UseHandScanOptions {
    * only cost is an optional chain on a null ref.
    */
   readonly funnel?: boolean;
+  /**
+   * The chamber (G4b §5): hold the evidence through a hand gone for up to five seconds, and reset for the other
+   * hand only once it is CLEARLY the other hand (lib/scan/chakra.ts chamberHoldResets) — a returning hand is
+   * re-anchored from its own landmarks. Absent, fusion.ts shouldReset decides exactly as it always has (/scan).
+   */
+  readonly holdThroughLoss?: boolean;
+  /**
+   * The chamber (G4b §3): keep the whole scan's best frame — sharpness × in the band × lines held — with its raw
+   * pixels, anchors, landmarks and gray, for the photograph (`peekBestFrame` / `takeBestFrame`). Needs the
+   * rekhaPersist flag (its accumulator measures the sharpness and holds the lines). Absent, nothing is kept.
+   */
+  readonly bestFrame?: boolean;
 }
 
 /** What `window.__hrObservation` hands the phone rig (options.funnel only): the raw frame's landmarks and the gates' two measurements of them. */
@@ -320,11 +333,20 @@ export function useHandScan(options: UseHandScanOptions = {}) {
    */
   const superResRingRef = useRef<FrameRing | null>(null);
   /*
-   * scan-complete G4: the freeze candidate — of the 512 crops offered to the keep-ring, the sharpest recent
-   * one, in colour, with the raw frame it came from (lib/scan/freeze-frame.ts). Kept across pose commits (the
-   * ring is not), dropped whenever the evidence is: a new palm, a restart, a stop.
+   * G4b §3: THE BEST FRAME of the whole scan (options.bestFrame) — scored sharpness × in the band × lines held,
+   * replaced only by a better one, with its raw pixels, the anchors it was rectified through, its landmarks and
+   * its gray (lib/scan/freeze-frame.ts BestFrame). Kept across pose commits and through a hand held away; dropped
+   * whenever the evidence is: a new palm, a restart, a stop.
    */
-  const freezeRef = useRef<FreezeCandidate | null>(null);
+  const bestRef = useRef<BestFrame | null>(null);
+  /* …and the milliseconds its last update cost (the raw copy), for `?cost=1`. */
+  const bestCostRef = useRef<number[]>([]);
+  /* G4b: what the live overlay draws right now — the published extraction's lines and their convention. */
+  const liveLinesRef = useRef<BestFrame["live"]>(null);
+  /* G4b §5: frames running with the other handedness — a clearly different hand is several, not one. */
+  const otherHandFramesRef = useRef(0);
+  const holdThroughLossRef = useRef(options.holdThroughLoss === true);
+  const bestFrameOnRef = useRef(options.bestFrame === true);
   /* G4: the numbers a still records about its moment, kept from the frame that measured them. */
   const lastJitterRef = useRef(0);
   const lastPalmVolRef = useRef(0);
@@ -575,6 +597,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   useEffect(() => {
     requestedProfileRef.current = requestedProfile;
   }, [requestedProfile]);
+  useEffect(() => {
+    holdThroughLossRef.current = options.holdThroughLoss === true;
+    bestFrameOnRef.current = options.bestFrame === true;
+  }, [options.holdThroughLoss, options.bestFrame]);
 
   const setVideoElement = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node;
@@ -595,7 +621,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     superResFuserRef.current = null;
     superResRingRef.current?.reset();
     rekhaRef.current?.reset();
-    freezeRef.current = null;
+    bestRef.current = null;
+    liveLinesRef.current = null;
+    otherHandFramesRef.current = 0;
     firstRekhaOfferAtRef.current = null;
     previousLandmarksRef.current = null;
     spanHistoryRef.current = [];
@@ -727,12 +755,25 @@ export function useHandScan(options: UseHandScanOptions = {}) {
        */
       lastPoseRef.current = pose?.pose ?? "done";
 
+      /* G4b §5: when a hand was last seen, before this frame — a hand back after a gap is re-anchored below. */
+      const handLastSeenMs = fusionRef.current.lastHandMs;
       if (next !== null) fusionRef.current = markHandSeen(fusionRef.current, now, next.handedness);
       if (next !== null) fusionContractRef.current = markHandSeen(fusionContractRef.current, now, next.handedness);
 
-      if (shouldReset(fusionRef.current, { handPresent: next !== null, handedness: next?.handedness ?? null, nowMs: now })) {
+      /*
+       * G4b §5 (options.holdThroughLoss, the chamber): a hand gone is held for five seconds, and the other hand
+       * resets only once it is CLEARLY the other hand — its handedness several frames running
+       * (lib/scan/chakra.ts chamberHoldResets). Without the option, shouldReset decides as it always has.
+       */
+      const heldHandedness = fusionRef.current.handedness;
+      if (next !== null) otherHandFramesRef.current = heldHandedness !== null && next.handedness !== heldHandedness ? otherHandFramesRef.current + 1 : 0;
+      const resetNow = holdThroughLossRef.current
+        ? chamberHoldResets(fusionRef.current, { handPresent: next !== null, nowMs: now, otherHandFrames: otherHandFramesRef.current })
+        : shouldReset(fusionRef.current, { handPresent: next !== null, handedness: next?.handedness ?? null, nowMs: now });
+      if (resetNow) {
         // The other hand is a different palm; its traces are wrong immediately, not merely stale.
         const otherHand = next !== null && fusionRef.current.handedness !== null && next.handedness !== fusionRef.current.handedness;
+        otherHandFramesRef.current = 0;
         fusionRef.current = { ...resetFusion(fusionRef.current), handedness: next?.handedness ?? null };
         fusionContractRef.current = { ...resetFusion(fusionContractRef.current), handedness: next?.handedness ?? null };
         fusionSuperResRef.current = { ...resetFusion(fusionSuperResRef.current), handedness: next?.handedness ?? null };
@@ -745,7 +786,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           setRekha(null);
         }
         firstRekhaOfferAtRef.current = null;
-        freezeRef.current = null;
+        bestRef.current = null;
         resetStabiliser(stabiliserRef.current);
         if (otherHand) {
           resetPhotometric(photometricRef.current);
@@ -759,8 +800,14 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           setPolys([]);
           setPolySegments([]);
           setExtraction(null);
+          liveLinesRef.current = null;
           traceEvidenceAtRef.current = 0;
         }
+      } else if (holdThroughLossRef.current && next !== null && handLastSeenMs > 0 && now - handLastSeenMs > CHAMBER_REANCHOR_GAP_MS) {
+        /* G4b §5: the hand is back within the hold. Its crop is its own palm's homography, so the evidence and the
+           held lines are already in its space; only the anchor filter's history is stale — dropped, so the first
+           crops are not lerped from where the palm was before it left. */
+        resetStabiliser(stabiliserRef.current);
       }
 
       let verdict: QualityVerdict;
@@ -990,7 +1037,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           const held = rekha === null ? {} : rekha.hold.heldMissingFrom(drawn);
           /* R1: the funnel's "drawn" stage — how many lines the overlay has to draw from here on. */
           drawnLinesRef.current = Object.keys(drawn.lines).length + Object.keys(held).length;
-          setExtraction(rekha === null ? drawn : { ...drawn, lines: { ...drawn.lines, ...held } });
+          const published = rekha === null ? drawn : { ...drawn, lines: { ...drawn.lines, ...held } };
+          setExtraction(published);
+          /* G4b: what the overlay draws from now on, and the convention it projects them under — the best frame
+             records it, so the photograph's lines can be measured against the overlay's on that frame (§6). */
+          liveLinesRef.current = { lines: published.lines, convention: conventionAtFire };
           setPolys(drawable);
           setPolySegments(
             named
@@ -1262,6 +1313,57 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               const frameWeight = rekhaModule.rekhaFrameWeight(source, next.landmarks);
               rekhaWeight = frameWeight.weight;
               lastPalmVolRef.current = frameWeight.vol;
+
+              /*
+               * G4b §3 (options.bestFrame): THE BEST FRAME of the whole scan — sharpness (this frame's palm-box VoL,
+               * the accumulator's own weight measure) × in the distance band × majors held, for a palm facing the
+               * camera, inside the frame, found with confidence (lib/scan/chakra.ts bestFrameScore). Replaced only
+               * by a better score, or by a frame of the other anchor convention (another canonical space). Kept
+               * with its raw pixels, the anchors this crop was rectified through — its palm homography — its gray
+               * (the accumulator's alignment input) and what the live overlay is drawing over it right now.
+               */
+              if (bestFrameOnRef.current) {
+                const t0 = performance.now();
+                const held = ACTIVE_LINE_IDS.filter((id) => rekha.hold.isHeld(id)).length;
+                const inBand = distanceRef.current?.state === "ok";
+                const eligible = verdict.checks.not_palm_up && verdict.checks.out_of_frame && verdict.checks.low_confidence;
+                const score = bestFrameScore({ vol: frameWeight.vol, inBand, held, eligible });
+                const kept = bestRef.current;
+                if (bestFrameReplaces(kept, { score, convention })) {
+                  const track = streamRef.current?.getVideoTracks()[0];
+                  const live = liveLinesRef.current;
+                  bestRef.current = {
+                    score,
+                    vol: frameWeight.vol,
+                    held,
+                    inBand,
+                    atMs: now,
+                    raw: copyImage(kept?.raw ?? null, source),
+                    anchors: anchors.points.map((p) => ({ x: p.x, y: p.y })),
+                    convention,
+                    gray: rekhaGray,
+                    landmarks: next.landmarks,
+                    handedness: next.handedness,
+                    quality: {
+                      score: verdict.score,
+                      ok: verdict.ok,
+                      issues: verdict.issues,
+                      luma: frameStats.luma,
+                      clipped: frameStats.clipped,
+                      jitter: lastJitterRef.current,
+                      sharpness: frameWeight.vol,
+                    },
+                    windingStrength: verdict.facingReadout?.windingStrength ?? null,
+                    trackSettings: jsonSafeSettings(track?.getSettings?.() ?? {}),
+                    live: live !== null && live.convention === convention ? live : null,
+                    heldAtCapture: rekha.hold.snapshot,
+                  };
+                }
+                /* Every tick's cost, kept or not: the copy is what a kept frame adds, and `?cost=1` prints the p95. */
+                const costs = bestCostRef.current;
+                costs.push(performance.now() - t0);
+                if (costs.length > 120) costs.shift();
+              }
             }
 
             recordStage(telemetryRef.current, "cropsSentToWorker", now);
@@ -1463,37 +1565,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   const at = i * 4;
                   luma[i] = (0.2126 * rgba[at] + 0.7152 * rgba[at + 1] + 0.0722 * rgba[at + 2]) / 255;
                 }
-                const offered = ring.offer(luma, crop.inside, anchorsAtFire, crop.toCrop, convention, now, source.width);
-                /*
-                 * G4: the freeze candidate — the sharpest recent crop, graded by the ring's own measure whether or
-                 * not the ring took it, kept in colour with its raw frame. A crop of the other anchor convention is
-                 * another canonical space: it always replaces.
-                 */
-                const kept = freezeRef.current;
-                if ((kept !== null && kept.convention !== convention) || freezeReplaces(kept, { vol: offered.vol, atMs: now })) {
-                  const track = streamRef.current?.getVideoTracks()[0];
-                  freezeRef.current = {
-                    vol: offered.vol,
-                    atMs: now,
-                    crop: copyImage(kept?.crop ?? null, crop.image),
-                    raw: copyImage(kept?.raw ?? null, source),
-                    anchors: anchorsAtFire,
-                    convention,
-                    landmarks: next.landmarks,
-                    handedness: next.handedness,
-                    quality: {
-                      score: verdict.score,
-                      ok: verdict.ok,
-                      issues: verdict.issues,
-                      luma: frameStats.luma,
-                      clipped: frameStats.clipped,
-                      jitter: lastJitterRef.current,
-                      sharpness: lastPalmVolRef.current,
-                    },
-                    windingStrength: verdict.facingReadout?.windingStrength ?? null,
-                    trackSettings: jsonSafeSettings(track?.getSettings?.() ?? {}),
-                  };
-                }
+                ring.offer(luma, crop.inside, anchorsAtFire, crop.toCrop, convention, now, source.width);
               }
               if (
                 ring.count >= SUPERRES_MIN_FRAMES &&
@@ -1925,18 +1997,21 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     return stageEvalCase({ frame, observation: obs, quality: verdict });
   }, []);
 
-  /** G4: the freeze candidate's grade (VoL, when), without taking it — what a completed detection waits on. */
-  const peekFreeze = useCallback((): FreezeGrade | null => {
-    const kept = freezeRef.current;
-    return kept === null ? null : { vol: kept.vol, atMs: kept.atMs };
+  /** G4b: the best frame's grade (score, sharpness, lines held, when), without taking it. */
+  const peekBestFrame = useCallback((): Pick<BestFrame, "score" | "vol" | "held" | "inBand" | "atMs"> | null => {
+    const kept = bestRef.current;
+    return kept === null ? null : { score: kept.score, vol: kept.vol, held: kept.held, inBand: kept.inBand, atMs: kept.atMs };
   }, []);
 
-  /** G4: take the freeze candidate. The hook lets go of it, so nothing writes into its pixels again. */
-  const takeFreeze = useCallback((): FreezeCandidate | null => {
-    const kept = freezeRef.current;
-    freezeRef.current = null;
+  /** G4b: take the best frame. The hook lets go of it, so nothing writes into its pixels again. */
+  const takeBestFrame = useCallback((): BestFrame | null => {
+    const kept = bestRef.current;
+    bestRef.current = null;
     return kept;
   }, []);
+
+  /** G4b: the best-frame bookkeeping's per-tick cost, ms, over the last 120 rectify ticks (for `?cost=1`). */
+  const bestFrameCosts = useCallback((): readonly number[] => bestCostRef.current, []);
 
   /** G4: the accumulator's latest gray, the frame the held lines are in (rekha-persist.ts rekhaGray). */
   const accumulatorGray = useCallback((): Float32Array | null => rekhaGrayRef.current, []);
@@ -1954,7 +2029,9 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     superResResultAtRef.current = 0;
     rekhaRef.current?.reset();
     setRekha(null);
-    freezeRef.current = null;
+    bestRef.current = null;
+    liveLinesRef.current = null;
+    otherHandFramesRef.current = 0;
     firstRekhaOfferAtRef.current = null;
     fusionEpochRef.current += 1;
     setFusedConfidence(0);
@@ -2109,9 +2186,10 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     stop,
     restartCapture,
     exportFrame,
-    /** G4: the freeze candidate's grade, to wait on; and the candidate itself, taken (the hook lets go of it). */
-    peekFreeze,
-    takeFreeze,
+    /** G4b: the whole scan's best frame — its grade, and the frame itself, taken (the hook lets go of it). */
+    peekBestFrame,
+    takeBestFrame,
+    bestFrameCosts,
     /** G4: the evidence accumulator's latest gray (MASK_SIZE²), the frame its held lines are in; null without it. */
     accumulatorGray,
     /** G4: when the evidence was first offered a frame for this palm — the blur clock starts no earlier. */

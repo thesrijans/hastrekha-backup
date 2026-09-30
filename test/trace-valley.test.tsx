@@ -176,7 +176,10 @@ const inside = new Uint8Array(N * N).fill(1);
     "extraction decides which lines exist; the drawn geometry is the trace, on the frame's own crop",
   );
   ok(/rekha\.extracted\(drawn, at\)/.test(hook), "persistence holds the TRACED path");
-  ok(/setExtraction\(rekha === null \? drawn : \{ \.\.\.drawn,/.test(hook), "the chamber draws it");
+  ok(
+    /const published = rekha === null \? drawn : \{ \.\.\.drawn,/.test(hook) && /setExtraction\(published\);/.test(hook),
+    "the chamber draws it (G4b: the very record the best frame keeps as the overlay's drawing of it)",
+  );
   ok(/onLineFeatures\?\.\(forFeatures, at\)/.test(hook) && /let forFeatures = found;/.test(hook), "the fitted curve is kept for features only");
   ok(/\{ rgba: warped\.image\.data, inside: warped\.inside, size: warped\.image\.width \}/.test(hook), "the per-frame extraction hands the tracer the crop its mask came from");
 

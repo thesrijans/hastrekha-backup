@@ -63,9 +63,15 @@ const SOURCE = readFileSync(SOURCE_PATH, "utf8");
     ["bell", -18, "Reveal moment, title leaf"],
     ["leafTurn", -22, "Each page"],
     ["sealChime", -26, "Sealed leaf appears"],
+    /* The chakra spec's (docs/specs/chakra-scan-g4.txt section 2), not spec 5's: named there, level set here. */
+    ["shutter", -26, "Scan complete, the camera freezes"],
   ];
 
-  ok(SOUND_CUES.length === 6, "the cue table has exactly six rows - the spec names six and no screen may invent a seventh");
+  ok(
+    SOUND_CUES.length === 7,
+    "the cue table has exactly seven rows - spec 5 names six, the chakra spec names the seventh (the soft shutter), and no screen may invent an eighth",
+  );
+  ok(soundCueRow("shutter").loop === false && soundCueRow("shutter").levelDb <= soundCueRow("sealChime").levelDb, "the shutter is a single soft hit, no louder than the soft chime");
   ok(SPEC_TABLE.length === SOUND_CUES.length, "the transcription and the table agree on row count");
 
   for (const [cue, levelDb, when] of SPEC_TABLE) {

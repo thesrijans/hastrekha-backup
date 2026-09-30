@@ -1,0 +1,208 @@
+@layer components {
+  /*
+   * "पहचान पूरी · Scan complete" (chakra spec §4): the reader's own hand, full screen, and over it only what the
+   * screen must say — the title and the toggle at the top, one torn leaf at the bottom. A stacking context at the
+   * frozen frame's rung (z 1): the chamber's back mark (3) stays over it, and the ring (2) closes over it while it
+   * seals.
+   */
+  .result {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  /* The photograph. Canvas, drawn to the viewport (result-render.ts): the framing is the hand's, not a fit. */
+  .photo {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    display: block;
+    /* The Devanagari face, so the canvas can resolve a family name for the lines' names (readPalette). */
+    font-family: var(--font-snc-devanagari);
+  }
+  /*
+   * THE TOP: the title and the toggle, on the photograph's own dark edge — gold ink over a halo, never a bar.
+   * Clear of the back mark's 44px target on the left and the build stamp on the right.
+   */
+  .top {
+    position: absolute;
+    inset-block-start: max(0.75rem, env(safe-area-inset-top));
+    inset-inline: 3.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    text-align: center;
+    animation: sncResultIn 480ms var(--snc-ease, ease) both;
+  }
+  .title {
+    margin: 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 1.1rem;
+    line-height: 1.5;
+    letter-spacing: normal;
+    color: var(--color-snc-gold-400);
+    text-shadow:
+      0 0 6px var(--color-snc-stone-900),
+      0 0 2px var(--color-snc-stone-900);
+  }
+  .titleEn {
+    font-family: var(--font-snc-serif);
+    font-size: 0.84rem;
+    color: color-mix(in oklab, var(--color-snc-gold-400) 78%, transparent);
+  }
+  /* "साधारण · रेखाएँ": two words, the chosen one struck with the gold rule — the chamber's control language. */
+  .toggle {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+  .toggleWord {
+    min-block-size: 2.75rem;
+    padding: 0.3rem 0.5rem 0.45rem;
+    border: 0;
+    background: none;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.95rem;
+    letter-spacing: normal;
+    color: color-mix(in oklab, var(--color-snc-gold-400) 58%, transparent);
+    text-shadow: 0 0 5px var(--color-snc-stone-900);
+    cursor: pointer;
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-gold-500) 34%, var(--color-snc-gold-500) 66%, transparent);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0 1px;
+    transition:
+      color 180ms ease,
+      background-size 220ms ease;
+  }
+  .toggleWord[aria-pressed="true"] {
+    color: var(--color-snc-gold-400);
+    background-size: 100% 1px;
+  }
+  .toggleWord:focus-visible {
+    color: var(--color-snc-gold-400);
+  }
+  .toggleDot {
+    color: color-mix(in oklab, var(--color-snc-gold-500) 60%, transparent);
+  }
+  /* THE LEAF, docked at the bottom where a thumb reaches the ways on. */
+  .dock {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: max(0.75rem, env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: center;
+    padding-inline: 0.75rem;
+    animation: sncResultIn 560ms var(--snc-ease, ease) 80ms both;
+  }
+  /* A light leaf in a dark room: its native control (the opt-in's box) is drawn for parchment, not for the
+     room — in the dark scheme Chromium filled the unchecked box near-black on the leaf (the G4 capture). */
+  .leaf {
+    inline-size: min(100%, 26rem);
+    color-scheme: light;
+  }
+  .legend {
+    margin: 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: normal;
+    color: var(--color-snc-ink);
+    text-align: center;
+  }
+  .found {
+    color: var(--color-snc-ink);
+  }
+  /* Not found: named, set back — present, and not claimed. */
+  .missing {
+    color: color-mix(in oklab, var(--color-snc-ink) 52%, transparent);
+  }
+  .minors {
+    margin: 0.1rem 0 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.74rem;
+    line-height: 1.5;
+    letter-spacing: normal;
+    color: color-mix(in oklab, var(--color-snc-ink) 58%, transparent);
+    text-align: center;
+  }
+  .growth {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 0.7rem 0 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.84rem;
+    line-height: 1.5;
+    letter-spacing: normal;
+    color: var(--color-snc-ink);
+    cursor: pointer;
+  }
+  .check {
+    flex: none;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    margin: 0.2rem 0 0;
+    accent-color: var(--color-snc-ink-red);
+  }
+  .note {
+    margin: 0.15rem 0 0 1.6rem;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.72rem;
+    line-height: 1.45;
+    letter-spacing: normal;
+    color: color-mix(in oklab, var(--color-snc-ink) 66%, transparent);
+  }
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 0.7rem 0 0;
+  }
+  /* The chamber's one-control language: a struck rule under the words, faded at both ends — never a pill. */
+  .action {
+    min-block-size: 2.75rem;
+    padding: 0.35rem 0.2rem 0.5rem;
+    border: 0;
+    background: none;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.95rem;
+    letter-spacing: normal;
+    color: var(--color-snc-ink);
+    cursor: pointer;
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-gold-600) 34%, var(--color-snc-gold-600) 66%, transparent);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 100% 1px;
+  }
+  /* The way on is the one in red ink, alone on its row where the thumb rests. */
+  .primary {
+    display: block;
+    margin: 0.35rem auto 0;
+    color: var(--color-snc-ink-red);
+  }
+  .action:hover,
+  .action:focus-visible {
+    color: var(--color-snc-ink-red);
+  }
+  .action:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+  @keyframes sncResultIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .top,
+    .dock {
+      animation: none;
+    }
+  }
+}

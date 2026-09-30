@@ -133,6 +133,8 @@ const HINT_CANDIDATES = [
 
 /** G2.2's target fill and the guide's quad aspect, read from their source so this check can never drift from them. */
 const constantOf = (file, name) => Number(readFileSync(join(REPO, file), "utf8").match(new RegExp(`export const ${name} = ([0-9.]+);`))?.[1]);
+/** The ring's bottom reserve on a phone (scan-ring.ts), read from its source likewise — G4b raised it for the shutter's row. */
+const RESERVE_BOTTOM = constantOf("components/sanctuary/chamber/scan-ring.ts", "RING_PHONE_RESERVE_BOTTOM");
 const GUIDE_TARGET_FILL = constantOf("lib/scan/distance.ts", "PALM_QUAD_TARGET_FILL");
 const GUIDE_ASPECT = constantOf("components/sanctuary/chamber/palm-guide.ts", "GUIDE_QUAD_ASPECT");
 
@@ -241,6 +243,10 @@ async function measure(page) {
       back: box(document.querySelector('a[aria-label="Wapas"]')),
       flip: box(document.querySelector('[data-snc-control="flip"]')),
       torch: box(document.querySelector('[data-snc-control="torch"]')),
+      /* G4b: the shutter, its disc, and whether it is awake. */
+      shutter: box(document.querySelector('[data-snc-control="shutter"]')),
+      shutterDisc: box(document.querySelector('[data-snc-control="shutter"] svg')),
+      shutterState: document.querySelector('[data-snc-control="shutter"]')?.getAttribute("data-snc-shutter") ?? null,
       torchPressed: document.querySelector('[data-snc-control="torch"]')?.getAttribute("aria-pressed") ?? null,
       flipFacing: document.querySelector('[data-snc-control="flip"]')?.getAttribute("data-snc-facing") ?? null,
       flipLabel: document.querySelector('[data-snc-control="flip"]')?.getAttribute("aria-label") ?? null,
@@ -318,7 +324,7 @@ function score(m, sheetOpen = null) {
 
   /* The ring's contract (scan-ring.ts): the hand's extent, clamped to [0.45, 1] of the free band's cap. */
   const ring = m.ring;
-  const band = Math.min(Math.min(W, H) * 0.42, W <= 899 && H > W ? (H - 268 - 64) / 2 : Infinity);
+  const band = Math.min(Math.min(W, H) * 0.42, W <= 899 && H > W ? (H - RESERVE_BOTTOM - 64) / 2 : Infinity);
   const expected = m.hand === null ? null : Math.min(band, Math.max(band * 0.45, m.hand));
   add(
     "ring sized to the hand",
@@ -351,8 +357,25 @@ function score(m, sheetOpen = null) {
   /* The torch is offered only where the track has one (F1); its absence is not a failure. */
   add("flip (+ torch, where the camera has one) reachable one-handed", reach(m.flip) && (m.torch === null || reach(m.torch)), `flip ${m.flip ? `${((m.flip.top + m.flip.bottom) / 2 / H).toFixed(2)}·H ${m.flip.width}px` : "absent"}, torch ${m.torch ? `${((m.torch.top + m.torch.bottom) / 2 / H).toFixed(2)}·H ${m.torch.width}px` : "absent"}`);
 
+  /* G4b §3: the shutter at the bottom centre, a 48px disc, in the row with the flip and the torch, reachable. */
+  const shutter = m.shutter;
+  const disc = m.shutterDisc;
+  add(
+    "G4b shutter: a 48px disc at the bottom centre, in the flip · shutter · light row",
+    shutter !== null &&
+      disc !== null &&
+      Math.abs((shutter.left + shutter.right) / 2 - W / 2) <= 1 &&
+      Math.abs(disc.width - 48) <= 1 &&
+      Math.abs(disc.height - 48) <= 1 &&
+      (m.flip === null || Math.abs(shutter.bottom - m.flip.bottom) <= 2) &&
+      reach(shutter),
+    shutter === null
+      ? "no shutter"
+      : `centre x ${((shutter.left + shutter.right) / 2).toFixed(1)} of ${W / 2}; disc ${disc?.width.toFixed(0)}×${disc?.height.toFixed(0)}; bottom ${shutter.bottom.toFixed(0)} vs flip ${m.flip?.bottom.toFixed(0) ?? "–"}; ${m.shutterState}`,
+  );
+
   const ringBox = { left: ring.cx - ring.r, right: ring.cx + ring.r, top: ring.cy - ring.r, bottom: ring.cy + ring.r };
-  const ui = { back: m.back, flip: m.flip, torch: m.torch, leaf: m.leaf, monitor: m.monitor, stamp: m.stamp };
+  const ui = { back: m.back, flip: m.flip, torch: m.torch, shutter: m.shutter, leaf: m.leaf, monitor: m.monitor, stamp: m.stamp };
   const hits = [];
   for (const [name, rect] of Object.entries(ui)) if (intersects(rect, ringBox)) hits.push(`${name}×ring`);
   const names = Object.keys(ui);
@@ -366,7 +389,7 @@ function score(m, sheetOpen = null) {
     const phone = portrait && W <= 899;
     const largest = Math.min(W, H) * 0.42;
     const top = phone ? 64 : 0;
-    const bottom = phone ? H - 268 : H;
+    const bottom = phone ? H - RESERVE_BOTTOM : H;
     const cap = phone ? Math.max(0, Math.min(largest, (bottom - top) / 2)) : largest;
     const thumb = H * (portrait ? 0.58 : 0.5);
     const restCy = phone ? Math.min(Math.max(thumb, top + cap), Math.max(top + cap, bottom - cap)) : thumb;
@@ -387,8 +410,9 @@ function score(m, sheetOpen = null) {
     ledger === null ? "no ledger" : `${ledger.marks.join(" ")} · "${ledger.summary}"`,
   );
   add(
-    "G3 ledger fits its handle: one row of lines, one of the summary",
-    ledger !== null && ledger.rows === 1 && ledger.summaryRows === 1 && ledger.content <= ledger.handle,
+    /* G4b §1: minimised, the summary is for a screen reader only (the ring's centre says it): no row of its own. */
+    "G3 ledger fits its handle: one row of lines, and the summary at most one",
+    ledger !== null && ledger.rows === 1 && ledger.summaryRows <= 1 && ledger.content <= ledger.handle,
     ledger === null ? "no ledger" : `rows ${ledger.rows} + ${ledger.summaryRows}; content ${ledger.content}px in a ${ledger.handle}px handle`,
   );
   add(

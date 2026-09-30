@@ -33,7 +33,7 @@ const only = argv.includes("--only") ? arg("--only").split(",") : null;
 const shots = argv.includes("--shots");
 /** G4: the phone's viewport (DPR stays 2.625), e.g. 390x664 for the short screen. */
 const [viewportWidth, viewportHeight] = arg("--viewport", "412x915").split("x").map(Number);
-/** G4: run until the completion leaf appears ("पहचान पूरी") or `--seconds` runs out, and photograph it. */
+/** G4 (G4b): run until the result appears ("पहचान पूरी · Scan complete") or `--seconds` runs out, and photograph it. */
 const untilComplete = argv.includes("--until-complete");
 /** G4: tap the leaf's one-tap action ("रोशनी चालू करें") the first time it appears. */
 const tapAction = argv.includes("--tap-action");
@@ -187,7 +187,7 @@ function summariseG3(samples, vibrations) {
  * torch after the tap — with the completion leaf as measured at the end.
  */
 function summariseG4(samples, vibrations, leaf) {
-  const completeAt = samples.find((s) => s.phase === "complete")?.t ?? null;
+  const completeAt = samples.find((s) => s.phase === "sealing" || s.phase === "complete")?.t ?? null;
   const blurAt = samples.find((s) => typeof s.hint === "string" && s.hint.includes("तस्वीर धुंधली है"))?.t ?? null;
   const actionAt = samples.find((s) => s.action !== null && s.action !== undefined)?.t ?? null;
   const torchAfter = samples.at(-1)?.torch ?? null;
@@ -307,10 +307,9 @@ try {
             await page.tap("[data-snc-hint-action]").catch(() => undefined);
             await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-action.png`) });
           }
-          if (untilComplete && (await page.locator("[data-snc-completion]").count()) > 0) {
-            /* Let the snaps decode, then photograph the leaf as the reader first sees it. */
-            await page.waitForFunction(() => [...document.querySelectorAll("[data-snc-snap] img")].every((img) => img.complete && img.naturalWidth > 0), null, { timeout: 10_000 }).catch(() => undefined);
-            await page.waitForTimeout(700);
+          if (untilComplete && (await page.locator('[data-snc-result="result"]').count()) > 0) {
+            /* Let the photograph ease to the hand's framing and the leaf come in, then photograph it. */
+            await page.waitForTimeout(1300);
             await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-complete.png`) });
             break;
           }
@@ -319,25 +318,20 @@ try {
       } else {
         await page.waitForTimeout(seconds * 1000);
       }
-      /* G4: the completion leaf, as it stands — or null when detection did not complete in time. */
+      /* G4 (G4b): the result, as it stands — or null when the scan did not complete in time. */
       const g4leaf = await page.evaluate(() => {
-        const dock = document.querySelector("[data-snc-completion]");
-        if (dock === null) return null;
-        const frozen = document.querySelector("[data-snc-frozen]");
-        const leaf = dock.firstElementChild?.getBoundingClientRect() ?? null;
-        const snaps = [...document.querySelectorAll("[data-snc-snap]")].map((figure) => {
-          const img = figure.querySelector("img");
-          const box = img?.getBoundingClientRect();
-          return { snap: figure.getAttribute("data-snc-snap"), loaded: img !== null && img !== undefined && img.complete && img.naturalWidth > 0, natural: img?.naturalWidth ?? 0, shown: box === undefined ? 0 : Math.round(box.width), caption: figure.querySelector("figcaption")?.textContent?.trim() ?? null };
-        });
+        const result = document.querySelector('[data-snc-result="result"]');
+        if (result === null) return null;
+        const root = document.querySelector("[data-snc-phase]");
+        const leaf = document.querySelector("[data-snc-legend]")?.parentElement?.getBoundingClientRect() ?? null;
         const growth = document.querySelector("[data-snc-growth]");
         const buttons = [...document.querySelectorAll("[data-snc-action]")].map((b) => ({ action: b.getAttribute("data-snc-action"), text: b.textContent.trim(), bottom: Math.round(b.getBoundingClientRect().bottom) }));
         return {
-          title: dock.querySelector("p")?.textContent?.trim() ?? null,
-          vol: frozen?.getAttribute("data-snc-freeze-vol") ?? null,
-          waitMs: frozen?.getAttribute("data-snc-freeze-wait") ?? null,
-          shift: frozen?.getAttribute("data-snc-freeze-shift") ?? null,
-          snaps,
+          title: result.querySelector("p")?.textContent?.trim() ?? null,
+          reason: root?.getAttribute("data-snc-completion-reason") ?? null,
+          best: root?.getAttribute("data-snc-best") ?? null,
+          shift: root?.getAttribute("data-snc-freeze-shift") ?? null,
+          legend: document.querySelector("[data-snc-legend]")?.textContent?.trim() ?? null,
           growth: growth === null ? "absent" : growth.checked ? "on" : "off",
           buttons,
           leafTop: leaf === null ? null : Math.round(leaf.top),
@@ -381,7 +375,7 @@ try {
         `${name.padEnd(10)} G4  ${g4.completeAt === null ? "not complete" : `complete@${(g4.completeAt / 1000).toFixed(1)}s`}` +
           (g4.leaf === null
             ? ""
-            : `  frozen VoL ${g4.leaf.vol} wait ${g4.leaf.waitMs} ms shift ${g4.leaf.shift}  snaps [${g4.leaf.snaps.map((s) => `${s.snap} ${s.loaded ? `${s.natural}px shown ${s.shown}px` : "NOT LOADED"} "${s.caption}"`).join(" | ")}]  opt-in ${g4.leaf.growth}  buttons [${g4.leaf.buttons.map((b) => b.text).join(" | ")}]  leaf ${g4.leaf.leafTop}–${g4.leaf.leafBottom} of ${g4.leaf.viewport.height}  camera ${g4.leaf.videoLive ? "LIVE" : "stopped"}  title "${g4.leaf.title}"`) +
+            : `  ${g4.leaf.reason} best ${g4.leaf.best} shift ${g4.leaf.shift}  legend "${g4.leaf.legend}"  opt-in ${g4.leaf.growth}  buttons [${g4.leaf.buttons.map((b) => b.text).join(" | ")}]  leaf ${g4.leaf.leafTop}–${g4.leaf.leafBottom} of ${g4.leaf.viewport.height}  camera ${g4.leaf.videoLive ? "LIVE" : "stopped"}  title "${g4.leaf.title}"`) +
           `  double-tick ${g4.doubleTicks}  blur ${g4.blurAt === null ? "never" : `@${(g4.blurAt / 1000).toFixed(1)}s`}  action ${g4.actionAt === null ? "never" : `@${(g4.actionAt / 1000).toFixed(1)}s`}  torch ${g4.torchAfter ?? "–"}` +
           (g4.growthCheck === null ? "" : `  snap store before ${JSON.stringify(g4.growthCheck.before)} opt-in on ${JSON.stringify(g4.growthCheck.on)} off ${JSON.stringify(g4.growthCheck.off)}`),
       );

@@ -239,6 +239,28 @@
       max-inline-size: 22rem;
       margin-inline: auto;
     }
+    /*
+     * G4b §1 — MINIMISED: the ring is the primary display, and this ledger its accessible text version. On the
+     * handle it is one small, quiet line; the overall percentage and the minors' "not yet" (the ring's centre and
+     * outer arcs) stay for a screen reader and leave the eye alone. Opening the sheet still works, and reads
+     * in full.
+     */
+    .monitor[data-snc-minimised][data-snc-sheet="closed"] .ledgerLine {
+      font-size: 0.72rem;
+      opacity: 0.62;
+    }
+    .monitor[data-snc-minimised][data-snc-sheet="closed"] .summary {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+  /* The minors' words exist for the ledger's readers only; the ring draws them. */
+  .minors {
+    color: color-mix(in oklab, var(--color-snc-gold-400) 50%, transparent);
   }
 
   @media (prefers-reduced-motion: reduce) {
