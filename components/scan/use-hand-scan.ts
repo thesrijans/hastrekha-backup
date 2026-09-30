@@ -97,6 +97,7 @@ import { extractAllTraces, extractLines, type ClassifiedTrace, type LineExtracti
 import { fateDoubleOverride, minorLineFeatures } from "@/lib/scan/minor-lines";
 import { corridorFateFeatures, corridorTraces, type CorridorAttempt } from "@/lib/scan/corridor-traces";
 import { FrameRing, SUPERRES_CROP_SIZE, SUPERRES_MIN_FRAMES, SUPERRES_RING_SIZE } from "@/lib/scan/superres";
+import { freezeReplaces, type FreezeCandidate, type FreezeGrade } from "@/lib/scan/freeze-frame";
 import { createSuperResFuser, type SuperResFuser } from "@/lib/scan/superres-client";
 import {
   commitCapture,
@@ -197,6 +198,24 @@ export interface SuperResReadout {
   readonly ringFrames: number;
   readonly fuseMs: number;
   readonly totalMs: number;
+}
+
+/** G4: an owned copy of `source`, reusing `target`'s buffer when it is the same size. */
+function copyImage(target: ImageData | null, source: ImageData): ImageData {
+  if (target !== null && target.width === source.width && target.height === source.height) {
+    target.data.set(source.data);
+    return target;
+  }
+  return new ImageData(new Uint8ClampedArray(source.data), source.width, source.height);
+}
+
+/** G4: `MediaTrackSettings` as the capture still records them — JSON-safe fields only. */
+function jsonSafeSettings(settings: MediaTrackSettings): Readonly<Record<string, string | number | boolean>> {
+  const out: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(settings)) {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") out[key] = value;
+  }
+  return out;
 }
 
 export interface UseHandScanOptions {
@@ -300,6 +319,17 @@ export function useHandScan(options: UseHandScanOptions = {}) {
    * convention change, because the ring itself restarts then.
    */
   const superResRingRef = useRef<FrameRing | null>(null);
+  /*
+   * scan-complete G4: the freeze candidate — of the 512 crops offered to the keep-ring, the sharpest recent
+   * one, in colour, with the raw frame it came from (lib/scan/freeze-frame.ts). Kept across pose commits (the
+   * ring is not), dropped whenever the evidence is: a new palm, a restart, a stop.
+   */
+  const freezeRef = useRef<FreezeCandidate | null>(null);
+  /* G4: the numbers a still records about its moment, kept from the frame that measured them. */
+  const lastJitterRef = useRef(0);
+  const lastPalmVolRef = useRef(0);
+  /* G4: when the evidence was first OFFERED a frame since it last reset — the blur clock waits for it. */
+  const firstRekhaOfferAtRef = useRef<number | null>(null);
   const superResFuserRef = useRef<SuperResFuser | null>(null);
   const superResLumaRef = useRef<Float32Array | null>(null);
   const fusionSuperResRef = useRef<FusionState>(emptyFusion(MASK_SIZE));
@@ -565,6 +595,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     superResFuserRef.current = null;
     superResRingRef.current?.reset();
     rekhaRef.current?.reset();
+    freezeRef.current = null;
+    firstRekhaOfferAtRef.current = null;
     previousLandmarksRef.current = null;
     spanHistoryRef.current = [];
   }, []);
@@ -712,6 +744,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           rekhaRef.current.reset();
           setRekha(null);
         }
+        firstRekhaOfferAtRef.current = null;
+        freezeRef.current = null;
         resetStabiliser(stabiliserRef.current);
         if (otherHand) {
           resetPhotometric(photometricRef.current);
@@ -739,6 +773,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
 
         // G1: the palm's motion and size — extrapolated fingertips wobble on a hand that is perfectly still.
         const jitter = palmJitter(previousLandmarksRef.current, next.landmarks);
+        lastJitterRef.current = jitter;
         previousLandmarksRef.current = next.landmarks;
 
         const history = spanHistoryRef.current;
@@ -1215,13 +1250,18 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               const rekha = rekhaRef.current ?? (rekhaRef.current = new rekhaModule.RekhaPersistence(MASK_SIZE));
               if (aligned.outcome === "remapped" && underPrevious !== null) {
                 const pull = conventionRemap(underPrevious, warped.toCrop);
-                if (pull === null) rekha.reset();
-                else rekha.remap(pull);
+                if (pull === null) {
+                  rekha.reset();
+                  firstRekhaOfferAtRef.current = null;
+                } else rekha.remap(pull);
               } else if (aligned.outcome === "dropped") {
                 rekha.reset();
+                firstRekhaOfferAtRef.current = null;
               }
               rekhaGray = rekhaModule.rekhaGray(warped.image, MASK_SIZE);
-              rekhaWeight = rekhaModule.rekhaFrameWeight(source, next.landmarks).weight;
+              const frameWeight = rekhaModule.rekhaFrameWeight(source, next.landmarks);
+              rekhaWeight = frameWeight.weight;
+              lastPalmVolRef.current = frameWeight.vol;
             }
 
             recordStage(telemetryRef.current, "cropsSentToWorker", now);
@@ -1344,6 +1384,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
               if (rekhaGray !== null && rekha !== null) {
                 const plane = scanFlags.snapshot().fieldContract && mask.contract !== undefined ? mask.contract : mask.all;
                 if (plane.length === rekha.field.length) {
+                  firstRekhaOfferAtRef.current ??= performance.now();
                   setRekha(rekha.observe(plane, rekhaGray, rekhaWeight, performance.now()));
                   rekhaGrayRef.current = rekhaGray;
                 }
@@ -1422,7 +1463,37 @@ export function useHandScan(options: UseHandScanOptions = {}) {
                   const at = i * 4;
                   luma[i] = (0.2126 * rgba[at] + 0.7152 * rgba[at + 1] + 0.0722 * rgba[at + 2]) / 255;
                 }
-                ring.offer(luma, crop.inside, anchorsAtFire, crop.toCrop, convention, now, source.width);
+                const offered = ring.offer(luma, crop.inside, anchorsAtFire, crop.toCrop, convention, now, source.width);
+                /*
+                 * G4: the freeze candidate — the sharpest recent crop, graded by the ring's own measure whether or
+                 * not the ring took it, kept in colour with its raw frame. A crop of the other anchor convention is
+                 * another canonical space: it always replaces.
+                 */
+                const kept = freezeRef.current;
+                if ((kept !== null && kept.convention !== convention) || freezeReplaces(kept, { vol: offered.vol, atMs: now })) {
+                  const track = streamRef.current?.getVideoTracks()[0];
+                  freezeRef.current = {
+                    vol: offered.vol,
+                    atMs: now,
+                    crop: copyImage(kept?.crop ?? null, crop.image),
+                    raw: copyImage(kept?.raw ?? null, source),
+                    anchors: anchorsAtFire,
+                    convention,
+                    landmarks: next.landmarks,
+                    handedness: next.handedness,
+                    quality: {
+                      score: verdict.score,
+                      ok: verdict.ok,
+                      issues: verdict.issues,
+                      luma: frameStats.luma,
+                      clipped: frameStats.clipped,
+                      jitter: lastJitterRef.current,
+                      sharpness: lastPalmVolRef.current,
+                    },
+                    windingStrength: verdict.facingReadout?.windingStrength ?? null,
+                    trackSettings: jsonSafeSettings(track?.getSettings?.() ?? {}),
+                  };
+                }
               }
               if (
                 ring.count >= SUPERRES_MIN_FRAMES &&
@@ -1854,6 +1925,25 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     return stageEvalCase({ frame, observation: obs, quality: verdict });
   }, []);
 
+  /** G4: the freeze candidate's grade (VoL, when), without taking it — what a completed detection waits on. */
+  const peekFreeze = useCallback((): FreezeGrade | null => {
+    const kept = freezeRef.current;
+    return kept === null ? null : { vol: kept.vol, atMs: kept.atMs };
+  }, []);
+
+  /** G4: take the freeze candidate. The hook lets go of it, so nothing writes into its pixels again. */
+  const takeFreeze = useCallback((): FreezeCandidate | null => {
+    const kept = freezeRef.current;
+    freezeRef.current = null;
+    return kept;
+  }, []);
+
+  /** G4: the accumulator's latest gray, the frame the held lines are in (rekha-persist.ts rekhaGray). */
+  const accumulatorGray = useCallback((): Float32Array | null => rekhaGrayRef.current, []);
+
+  /** G4: when the evidence was first offered a frame since its last reset; null while none has been. */
+  const firstRekhaOfferAt = useCallback((): number | null => firstRekhaOfferAtRef.current, []);
+
   const restartCapture = useCallback(() => {
     captureRef.current = emptyCapture();
     setCapture(captureRef.current);
@@ -1864,6 +1954,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     superResResultAtRef.current = 0;
     rekhaRef.current?.reset();
     setRekha(null);
+    freezeRef.current = null;
+    firstRekhaOfferAtRef.current = null;
     fusionEpochRef.current += 1;
     setFusedConfidence(0);
     setPolys([]);
@@ -2017,6 +2109,13 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     stop,
     restartCapture,
     exportFrame,
+    /** G4: the freeze candidate's grade, to wait on; and the candidate itself, taken (the hook lets go of it). */
+    peekFreeze,
+    takeFreeze,
+    /** G4: the evidence accumulator's latest gray (MASK_SIZE²), the frame its held lines are in; null without it. */
+    accumulatorGray,
+    /** G4: when the evidence was first offered a frame for this palm — the blur clock starts no earlier. */
+    firstRekhaOfferAt,
     exportEvalCase,
   };
 }

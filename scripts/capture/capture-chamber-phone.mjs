@@ -125,7 +125,7 @@ const SCENARIOS = [
  */
 const HINT_CANDIDATES = [
   ...new Set(
-    ["scan-reason.ts", "distance.ts"].flatMap((file) =>
+    ["scan-reason.ts", "distance.ts", "detection-progress.ts"].flatMap((file) =>
       [...readFileSync(join(REPO, "lib", "scan", file), "utf8").matchAll(/hi: "([^"]+)"/g)].map((match) => match[1]),
     ),
   ),

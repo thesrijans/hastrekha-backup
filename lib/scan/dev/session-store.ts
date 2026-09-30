@@ -255,6 +255,19 @@ export class SessionStore {
     return isRekhaLabelFile(value) ? value : null;
   }
 
+  /**
+   * Stage a session written elsewhere — the chamber's opt-in growth save (lib/scan/snap-store.ts, scan-complete
+   * G4.3) — under its own id, blobs and all, so the labeler opens it like one captured here. The document is
+   * validated with the same check export and tests use; an id already staged is left as it is.
+   */
+  async importSession(metadata: SessionMetadata, blobs: readonly { readonly path: string; readonly blob: Blob }[]): Promise<boolean> {
+    if (!isSessionMetadata(metadata)) throw new Error("refusing to stage an invalid session document");
+    if ((await this.getSession(metadata.sessionId)) !== null) return false;
+    for (const { path, blob } of blobs) await idbPut(this.db, STORE_BLOBS, blob, blobKey(metadata.sessionId, path));
+    await idbPut(this.db, STORE_SESSIONS, metadata);
+    return true;
+  }
+
   /** Remove a session and its staged blobs (after a confirmed export, or on user request). */
   async deleteSession(sessionId: string): Promise<void> {
     const keys = await idbAllKeys(this.db, STORE_BLOBS);

@@ -1,0 +1,21 @@
+@layer components {
+  /* The leaf's one control: a struck rule under a word in red ink, the chamber's control language. */
+  .remove {
+    margin-inline-start: 0.6rem;
+    padding: 0 0.15rem 0.1rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--color-snc-ink-red);
+    cursor: pointer;
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-ink-red) 25%, var(--color-snc-ink-red) 75%, transparent);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 100% 1px;
+  }
+
+  .remove:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+}

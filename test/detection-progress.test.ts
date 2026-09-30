@@ -19,10 +19,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
+  BLUR_STALL_MS,
+  BLUR_WORDS,
   DETECTION_IDLE,
   DETECTION_LINE_IDS,
   LINE_PROGRESS_CEILING,
   SCAN_BUDGET_USABLE_MS,
+  SCAN_BUDGET_WALL_MS,
+  TORCH_OFFER,
+  blurStalled,
   USABLE_FRAME_GAP_CAP_MS,
   bagWithoutLines,
   newlyConfirmed,
@@ -75,7 +80,8 @@ function feed(state: DetectionState, startFrames: number, count: number, startMs
   ok(DETECTION_LINE_IDS.every((id) => DETECTION_IDLE.lines[id].status === "gathering" && DETECTION_IDLE.lines[id].progress === 0), "idle: four empty rings");
   ok(DETECTION_IDLE.overall === 0 && !DETECTION_IDLE.complete && DETECTION_IDLE.usableMs === 0, "…0%, nothing spent, not complete");
   ok(nextDetection(DETECTION_IDLE, null, 1000) === DETECTION_IDLE, "no evidence at all changes nothing — the same object back");
-  ok(SCAN_BUDGET_USABLE_MS === 20_000, "the scan budget is a named constant: 20 s of usable frames (the spec's ~20 s)");
+  ok(SCAN_BUDGET_USABLE_MS === 15_000, "the scan budget is a named constant: 15 s of usable frames (G4's decision, down from G3's 20)");
+  ok(SCAN_BUDGET_WALL_MS === 40_000, "…with a hard wall-clock cap, also named: 40 s from the first usable frame");
 }
 
 /* ------------------- 2. a ring IS the accumulator's measure ------------------- */
@@ -140,20 +146,56 @@ function feed(state: DetectionState, startFrames: number, count: number, startMs
 
 {
   const spec: LineSpec = { heart: { state: "confirmed", progress: 1 }, head: { state: "tracking", progress: 0.62 }, life: { state: "candidate", progress: 0.15 } };
-  /* 79 frames 250 ms apart: 19.75 s usable — one frame short. */
-  const almost = feed(DETECTION_IDLE, 0, 80, 0, 250, spec);
-  ok(almost.state.usableMs === 19_750 && unclearLines(almost.state).length === 0, `19.75 s of usable frames: nothing is marked yet (${almost.state.usableMs} ms)`);
+  /* 60 frames 250 ms apart: 14.75 s usable — one frame short. */
+  const almost = feed(DETECTION_IDLE, 0, 60, 0, 250, spec);
+  ok(almost.state.usableMs === 14_750 && unclearLines(almost.state).length === 0, `14.75 s of usable frames: nothing is marked yet (${almost.state.usableMs} ms)`);
   const spent = nextDetection(almost.state, snap(almost.frames + 1, spec), almost.nowMs + 250);
-  ok(spent.usableMs === SCAN_BUDGET_USABLE_MS, "the budget reached");
+  ok(spent.usableMs === SCAN_BUDGET_USABLE_MS && spent.spentBy === "usable", "the usable budget reached — and recorded as the one that ran out");
   ok(unclearLines(spent).join() === "head,life,fate", `every line not yet confirmed is marked "इस हाथ पर स्पष्ट नहीं" (${unclearLines(spent).join(", ")})`);
   ok(spent.lines.heart.status === "confirmed", "a confirmed line is untouched");
   ok(spent.lines.head.progress === 0.62, "an unclear line keeps the progress it reached (the readout reports it)");
   ok(spent.complete && spent.overall === 1, "every line a result — confirmed or unclear — is complete, and the overall is 100%: absence is a result");
 
-  /* The same 20 s of WALL time with frames the accumulator refused (weight 0: frames never rise) marks nothing. */
-  let idle = nextDetection(DETECTION_IDLE, snap(1, spec), 0);
-  for (let t = 250; t <= 60_000; t += 250) idle = nextDetection(idle, snap(1, spec), t);
-  ok(idle.usableMs === 0 && unclearLines(idle).length === 0, "60 s of wall time with no usable frame marks nothing unclear — the budget is scanning time, not a timer");
+  /* Wall time with frames the accumulator refused (weight 0: frames never rise above 0) marks nothing. */
+  let idle = nextDetection(DETECTION_IDLE, snap(0, spec), 0);
+  for (let t = 250; t <= 60_000; t += 250) idle = nextDetection(idle, snap(0, spec), t);
+  ok(
+    idle.usableMs === 0 && idle.firstUsableAtMs === null && unclearLines(idle).length === 0,
+    "60 s of wall time without ONE usable frame marks nothing unclear — the wall clock starts at the first usable frame; before it, it is the blur hint's case",
+  );
+}
+
+/* ------------------ 6b. the wall-clock cap (G4): whichever runs out first ------------------ */
+
+{
+  const spec: LineSpec = { heart: { state: "confirmed", progress: 1 }, fate: { state: "tracking", progress: 0.5 } };
+  /* A usable frame every 3 s: each counts 1 s (the gap cap), so usable time crawls — 13 s by 39 s of wall. */
+  let s = nextDetection(DETECTION_IDLE, snap(1, spec), 10_000);
+  let frames = 1;
+  for (let t = 13_000; t <= 49_000; t += 3000) s = nextDetection(s, snap((frames += 1), spec), t);
+  ok(s.firstUsableAtMs === 10_000 && s.usableMs === 13_000 && unclearLines(s).length === 0, `39 s after the first usable frame, 13 s usable: nothing marked yet (${s.usableMs} ms)`);
+  s = nextDetection(s, snap(frames, spec), 49_999);
+  ok(unclearLines(s).length === 0, "…still nothing at 39.999 s");
+  s = nextDetection(s, snap(frames, spec), 50_000);
+  ok(
+    s.spentBy === "wall" && unclearLines(s).join() === "head,life,fate" && s.lines.heart.status === "confirmed" && s.complete,
+    "40 s of wall clock from the first usable frame marks the unconfirmed lines — with no new frame needed (a look at the same evidence later)",
+  );
+  ok(s.usableMs < SCAN_BUDGET_USABLE_MS, `…before the usable budget could (${s.usableMs} of ${SCAN_BUDGET_USABLE_MS} ms): whichever comes first`);
+  const reset = nextDetection(s, snap(1, spec), 51_000);
+  ok(reset.firstUsableAtMs === 51_000 && reset.spentBy === null && unclearLines(reset).length === 0, "a new palm (the evidence reset) starts both clocks again");
+}
+
+/* ---------------------------------- 6c. blur (G4) ---------------------------------- */
+
+{
+  ok(BLUR_STALL_MS === 3000, "the blur stall is a named constant: 3 s");
+  ok(!blurStalled(null, 500, null, 99_000), "no palm, no blur hint — that is \"bring your palm\", not \"the picture is blurred\"");
+  ok(!blurStalled(1000, null, null, 99_000), "a palm in view but no frame yet OFFERED to the evidence — the pipeline warming up — is not a blurred picture (the first G4 capture's false alarm)");
+  ok(!blurStalled(1000, 1500, null, 4499) && blurStalled(1000, 1500, null, 4500), "frames offered for 3 s and none sharp enough: blurred — from the first offered frame, not the palm's arrival");
+  ok(!blurStalled(1000, 1500, 5000, 7999) && blurStalled(1000, 1500, 5000, 8000), "3 s since the last usable frame: blurred again");
+  ok(!blurStalled(10_000, 1500, 2000, 12_999), "a palm that has just arrived gets its 3 s, whatever the last usable frame of an earlier one");
+  ok(BLUR_WORDS.hi === "तस्वीर धुंधली है · हाथ स्थिर रखें, रोशनी बढ़ाएँ" && TORCH_OFFER.hi === "रोशनी चालू करें", "the words, exactly as asked");
 }
 
 /* ------------------------- 7. evidence wins over the clock ------------------------- */
@@ -186,7 +228,10 @@ function feed(state: DetectionState, startFrames: number, count: number, startMs
 
 {
   const client = readFileSync("app/scan/chamber/chamber-client.tsx", "utf8");
-  ok(/nextDetection\(previous, rekha, performance\.now\(\)\)/.test(client), "the chamber folds every accumulator snapshot into the detection");
+  ok(
+    /const next = nextDetection\(previous, snapshot, nowMs\);/.test(client) && /foldDetection\(rekha, performance\.now\(\)\)/.test(client),
+    "the chamber folds every accumulator snapshot into the detection (and, since G4, a quarter-second clock folds the same snapshot for the wall cap)",
+  );
   ok(
     /newlyConfirmed\(previous, next\)\.forEach\(\(_, index\) => \{[\s\S]*?haptic\("lineConfirmed"\)[\s\S]*?index \* LINE_TICK_SPACING_MS/.test(client),
     "…and EACH line newly confirmed earns its own haptic tick — two confirmed together are two ticks, spaced so neither cancels the other",

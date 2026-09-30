@@ -18,9 +18,10 @@
    * aspect ratio turns out to be — a leaf tucked under a system gesture bar is
    * a line of copy nobody can read on the device this is built for.
    *
-   * `pointer-events: none` on the dock and nothing re-enabling it below: this
-   * leaf is read, never touched, and a transparent box across the bottom third
-   * of a camera view would swallow a tap meant for the shutter.
+   * `pointer-events: none` on the dock, and only the one action (G4's
+   * "रोशनी चालू करें", .hintAction) re-enables them for itself: this leaf is
+   * read, not touched, and a transparent box across the bottom third of a
+   * camera view would swallow a tap meant for the shutter.
    */
   .dock {
     position: fixed;
@@ -124,6 +125,30 @@
      alone on the second line at 412px). A half wider than the leaf still wraps inside itself. */
   .hintPart {
     display: inline-block;
+  }
+
+  /*
+   * G4: the one-tap action in the gauge's place — "रोशनी चालू करें" when the picture is blurred. The chamber's
+   * one-control language, a struck rule under the word in red ink, never a pill; no taller than the text row
+   * it sits in, so the leaf gains no height (its height is the ring's reserve).
+   */
+  .hintAction {
+    /* The dock takes no taps; its one action does (the first G4 capture tapped it, and nothing happened). */
+    pointer-events: auto;
+    display: inline-block;
+    margin: 0 0.5rem 0 0;
+    padding: 0 0.15rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    line-height: inherit;
+    letter-spacing: normal;
+    color: var(--color-snc-ink-red);
+    cursor: pointer;
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-ink-red) 25%, var(--color-snc-ink-red) 75%, transparent);
+    background-repeat: no-repeat;
+    background-position: 0 92%;
+    background-size: 100% 1px;
   }
 
   /*

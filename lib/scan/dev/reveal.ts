@@ -24,7 +24,7 @@ import type { TraceClass } from "../classify";
 import { contractFrameInto, CONTRACT_DEPTH_DEFAULTS } from "../contract";
 import { corridorTraces } from "../corridor-traces";
 import { MINOR_EMIT_MIN_DEPTH, MINOR_EMIT_MIN_SCORE, MINOR_EMIT_REQUIRE_STRONG } from "../minor-lines";
-import { LABEL_LINE_IDS, type LabelableLineId } from "./session-types";
+import { LABEL_LINE_IDS, type LabelableLineId, type StillPrelabel } from "./session-types";
 
 /** Same convergence count the eval harness replays — the EMA settles, parity with 0d. */
 const REVEAL_TICKS = 6;
@@ -40,6 +40,17 @@ const CLASS_TO_MINOR: Partial<Record<TraceClass, LabelableLineId>> = {
 
 /** Detected polylines per labelable id, 0–1 crop fractions. Minor classes can have several. */
 export type RevealSet = Partial<Record<LabelableLineId, readonly (readonly (readonly number[])[])[]>>;
+
+/**
+ * scan-complete G4.3: a still's STORED prelabel — the chamber's held lines, 0–1 crop fractions — as the set
+ * CORRECTION mode pre-fills from, in place of computing one: the lines the reader was shown are the ones a
+ * human corrects. One polyline per line, the only candidate.
+ */
+export function revealSetFromPrelabel(prelabel: StillPrelabel): RevealSet {
+  const out: Partial<Record<LabelableLineId, readonly (readonly (readonly number[])[])[]>> = {};
+  for (const line of prelabel.lines) out[line.id] = [line.points];
+  return out;
+}
 
 function downsample2(src: Float32Array, size: number, dst: Float32Array): void {
   const half = size >> 1;

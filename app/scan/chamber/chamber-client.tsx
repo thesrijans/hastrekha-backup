@@ -74,12 +74,29 @@ import { formatFrameCost, withinFrameBudget, type FrameCostSummary } from "@/lib
 import { formatFunnel } from "@/lib/scan/funnel";
 import { ChamberCanvas } from "@/components/sanctuary/chamber/chamber-canvas";
 import { RekhaMonitor, detectionLedger, rekhaLedger } from "@/components/sanctuary/chamber/rekha-monitor";
-import { bagWithoutLines, DETECTION_IDLE, LINE_TICK_SPACING_MS, newlyConfirmed, nextDetection, unclearLines, type DetectionState } from "@/lib/scan/detection-progress";
+import {
+  bagWithoutLines,
+  BLUR_WORDS,
+  blurStalled,
+  DETECTION_IDLE,
+  DETECTION_LINE_IDS,
+  LINE_TICK_SPACING_MS,
+  newlyConfirmed,
+  nextDetection,
+  TORCH_OFFER,
+  unclearLines,
+  type DetectionState,
+} from "@/lib/scan/detection-progress";
+import { cropLuma, estimateFreezeShift, FREEZE_WAIT_MS, freezeReady, heldLinesOn, prelabelOf, type FreezeCandidate, type FreezeShift } from "@/lib/scan/freeze-frame";
+import { growthStillOf, handOf, openSnapStore, type SnapPair, type SnapStore } from "@/lib/scan/snap-store";
+import type { RekhaLine, RekhaSnapshot } from "@/lib/scan/rekha-persist";
+import { CompletionLeaf } from "@/components/sanctuary/chamber/completion-leaf";
+import { fallbackFreeze, makeSnaps, readSnapPalette, revokeSnaps, type CompletionSnaps } from "@/components/sanctuary/chamber/completion-snaps";
 import { CHAMBER_SCAN_FLAGS, withScanFlags } from "@/lib/scan/flags";
 import { ScanLitany, type LitanyHint } from "@/components/sanctuary/chamber/scan-litany";
 import { haptic } from "@/components/sanctuary/sound-provider";
 import { bandTickDue, DISTANCE_WORDS, type DistanceState } from "@/lib/scan/distance";
-import { REASON_WORDS } from "@/lib/scan/scan-reason";
+import { REASON_WORDS, type ReasonKey } from "@/lib/scan/scan-reason";
 import { RevealBeat } from "@/components/sanctuary/chamber/reveal-beat";
 import { Parchment } from "@/components/sanctuary/material";
 import { BuildStamp } from "@/components/sanctuary/shell/build-stamp";
@@ -97,7 +114,37 @@ import styles from "./chamber.module.css";
 const NAMED_MINOR_CLASSES = new Set(["sun", "health", "marriage", "girdle_of_venus", "bracelets"]);
 
 /** The route's own phases. `scanning` is the long one; the other three are seconds. */
-type ChamberPhase = "scanning" | "building" | "revealing" | "failed";
+type ChamberPhase = "scanning" | "freezing" | "complete" | "building" | "revealing" | "failed";
+
+/**
+ * The reasons that are about WHERE the palm is: while one of these is the top rejection, placing the hand is the
+ * instruction, not the blur (G4) — a palm out of frame is not steadied by being told the picture is soft.
+ */
+const PLACEMENT_REASONS: ReadonlySet<ReasonKey> = new Set<ReasonKey>([
+  "no_hand",
+  "low_confidence",
+  "too_close",
+  "out_of_frame_top",
+  "out_of_frame_bottom",
+  "out_of_frame_left",
+  "out_of_frame_right",
+  "not_palm_up",
+]);
+
+/** A palm unseen this long has left — the blur clock's "present" allows a dropped frame or two. */
+const PALM_GRACE_MS = 500;
+
+/** Everything the completion leaf shows and the snap store keeps (G4). */
+interface Completion {
+  readonly frozen: FreezeCandidate;
+  readonly shift: FreezeShift | null;
+  readonly snaps: CompletionSnaps;
+  readonly pair: SnapPair;
+  /** The preview was mirrored when the frame froze: the frozen frame is shown as the reader saw it. */
+  readonly mirrored: boolean;
+  /** Milliseconds between detection completing and the freeze (the wait for a frame at VoL ≥ 100). */
+  readonly waitMs: number;
+}
 
 /** A store that never changes — used only for its null server snapshot. See the rescan note below. */
 const subscribeToNothing = (): (() => void) => (): void => undefined;
@@ -274,12 +321,11 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
      own object inside the callback would make the callback depend on a value
      that changes every frame. */
   const cropRef = useRef<ImageData | null>(null);
-  const onCaptureComplete = useCallback(
-    (capture: CaptureState) => {
-      void buildReading(capture, cropRef.current);
-    },
-    [buildReading],
-  );
+  /*
+   * scan-complete G4: the pose choreography completing no longer opens the reading. Detection does — every
+   * major line confirmed or marked unclear — and the reader opens it from the completion leaf; the capture's
+   * merged masks still go into the reading then, however much of the choreography was done.
+   */
 
   /*
    * DESTRUCTURED, not held as one object, and that is a lint rule with a real
@@ -317,15 +363,38 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     distanceState,
     distanceRef,
     reason,
-  } = useHandScan({ onFeatures, onLineFeatures, onCaptureComplete, cameraSelection: "auto", profile, funnel: showCost });
+    capture,
+    stop,
+    restartCapture,
+    peekFreeze,
+    takeFreeze,
+    accumulatorGray,
+    firstRekhaOfferAt,
+  } = useHandScan({ onFeatures, onLineFeatures, cameraSelection: "auto", profile, funnel: showCost });
 
   /*
    * scan-complete G2: the leaf's one instruction. The SPECIFIC top reason of the last second when something
    * is stopping the scan (G2.3); when nothing is, the distance meter's own words (G2.1) — so the reader is
    * always told either what to fix or that the distance is right, and never a generic "poora haath".
    */
+  /*
+   * G4: no usable frame for BLUR_STALL_MS with a palm in view is a blurred picture — said so, ahead of the
+   * tilt, steadiness and distance words (unless the palm itself is misplaced), with the torch one tap away on
+   * a back camera that has one. The rings never sit at 0% in silence.
+   */
+  const [blur, setBlur] = useState(false);
+  const blurShown = status === "running" && phase === "scanning" && blur && (reason === null || !PLACEMENT_REASONS.has(reason));
   const hint: LitanyHint | null =
-    status !== "running" ? null : reason !== null ? REASON_WORDS[reason] : distanceState !== null ? DISTANCE_WORDS[distanceState] : null;
+    status !== "running"
+      ? null
+      : blurShown
+        ? BLUR_WORDS
+        : reason !== null
+          ? REASON_WORDS[reason]
+          : distanceState !== null
+            ? DISTANCE_WORDS[distanceState]
+            : null;
+  const hintAction = blurShown && torch === "off" && cameraFacing === "environment" ? { ...TORCH_OFFER, onPress: () => void toggleTorch() } : null;
 
   /*
    * scan-complete G3: the detection progress — a ring per line driven by its evidence toward CONFIRMED, the
@@ -334,9 +403,10 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
    * earns its ✓ and one haptic tick.
    */
   const [detection, setDetection] = useState<DetectionState>(DETECTION_IDLE);
-  useEffect(() => {
+  const rekhaLatestRef = useRef<RekhaSnapshot | null>(null);
+  const foldDetection = useCallback((snapshot: RekhaSnapshot | null, nowMs: number) => {
     const previous = detectionRef.current;
-    const next = nextDetection(previous, rekha, performance.now());
+    const next = nextDetection(previous, snapshot, nowMs);
     if (next === previous) return;
     detectionRef.current = next;
     setDetection(next);
@@ -345,7 +415,178 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
       if (index === 0) haptic("lineConfirmed");
       else window.setTimeout(() => haptic("lineConfirmed"), index * LINE_TICK_SPACING_MS);
     });
-  }, [rekha]);
+  }, []);
+  /*
+   * G4: each line's last CONFIRMED geometry on this palm — the snap draws every line the ledger shows ✓, and the
+   * hold may have let one go since (lib/scan/freeze-frame.ts heldLinesOn). Cleared with the evidence.
+   */
+  const confirmedLinesRef = useRef<Partial<Record<ActiveLineId, RekhaLine>>>({});
+  useEffect(() => {
+    const before = rekhaLatestRef.current;
+    if (rekha === null || (before !== null && rekha.frames < before.frames)) confirmedLinesRef.current = {};
+    if (rekha !== null) {
+      for (const id of DETECTION_LINE_IDS) {
+        const line = rekha.lines[id];
+        if (line?.state === "confirmed") confirmedLinesRef.current[id] = line;
+      }
+    }
+    rekhaLatestRef.current = rekha;
+    foldDetection(rekha, performance.now());
+  }, [rekha, foldDetection]);
+
+  /* G4: whether a palm is in view, and since when — the blur clock's "present". */
+  const palmSinceRef = useRef<number | null>(null);
+  const lastPalmAtRef = useRef<number | null>(null);
+  const observationRef = useRef(observation);
+  useEffect(() => {
+    if (observation === null) return;
+    observationRef.current = observation;
+    const now = performance.now();
+    lastPalmAtRef.current = now;
+    palmSinceRef.current ??= now;
+  }, [observation]);
+
+  /*
+   * G4: a quarter-second clock while scanning, for what no new frame announces: the wall-clock budget
+   * (40 s from the first usable frame marks the unconfirmed lines with no frame needed) and the blur stall.
+   */
+  useEffect(() => {
+    if (status !== "running" || phase !== "scanning") {
+      palmSinceRef.current = null;
+      return;
+    }
+    const timer = window.setInterval(() => {
+      const now = performance.now();
+      if (lastPalmAtRef.current === null || now - lastPalmAtRef.current > PALM_GRACE_MS) palmSinceRef.current = null;
+      foldDetection(rekhaLatestRef.current, now);
+      const stalled = blurStalled(palmSinceRef.current, firstRekhaOfferAt(), detectionRef.current.lastUsableAtMs, now);
+      setBlur((was) => (was === stalled ? was : stalled));
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [status, phase, foldDetection, firstRekhaOfferAt]);
+
+  /* ------------------------ G4: पहचान पूरी — the freeze ------------------------ */
+
+  /* The snap store, opened once — which also clears what another browsing session left (session-only). */
+  const [snapStore, setSnapStore] = useState<SnapStore | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void openSnapStore().then((store) => {
+      if (alive) setSnapStore(store);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const [completion, setCompletion] = useState<Completion | null>(null);
+  const completionRef = useRef<Completion | null>(null);
+  const mirroredRef = useRef(mirrored);
+  const snapStoreRef = useRef<SnapStore | null>(null);
+  useEffect(() => {
+    mirroredRef.current = mirrored;
+    snapStoreRef.current = snapStore;
+  }, [mirrored, snapStore]);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const videoElementRef = useRef<HTMLVideoElement | null>(null);
+  const setVideo = useCallback(
+    (element: HTMLVideoElement | null) => {
+      videoElementRef.current = element;
+      setVideoElement(element);
+    },
+    [setVideoElement],
+  );
+
+  /*
+   * Detection is complete — every major line confirmed or marked unclear — and the freeze begins: the sharpest
+   * recent frame, once one clears VoL ≥ 100, or after FREEZE_WAIT_MS the best there is. The camera stops on it
+   * (the frozen frame stays on screen), the double tick, the two snaps.
+   */
+  const freezeStartedAtRef = useRef(0);
+  const detectionDone = phase === "scanning" && status === "running" && detection.complete;
+  useEffect(() => {
+    if (!detectionDone) return;
+    freezeStartedAtRef.current = performance.now();
+    let started = false;
+    const freeze = async (): Promise<void> => {
+      /* "freezing" first, so nothing between the camera stopping and the leaf appearing reads as idle. */
+      setPhase("freezing");
+      const waitMs = performance.now() - freezeStartedAtRef.current;
+      const frozen = takeFreeze() ?? fallbackFreeze(videoElementRef.current, cropRef.current, observationRef.current);
+      const gray = accumulatorGray();
+      const snapshot = rekhaLatestRef.current;
+      const wasMirrored = mirroredRef.current;
+      stop();
+      haptic("detectionComplete");
+      if (frozen === null) throw new Error("no frame to freeze on");
+      /* The held lines live in the accumulator's newest frame; carry them onto the frozen one. */
+      const shift = frozen.anchors.length === 0 || gray === null ? null : estimateFreezeShift(cropLuma(frozen.crop.data, frozen.crop.width), frozen.crop.width, gray);
+      const confirmedIds = DETECTION_LINE_IDS.filter((id) => detectionRef.current.lines[id].status === "confirmed");
+      const lines = heldLinesOn(snapshot, shift, confirmedLinesRef.current, confirmedIds);
+      const snaps = await makeSnaps(frozen, lines, readSnapPalette(rootRef.current ?? document.documentElement));
+      const pair: SnapPair = {
+        palm: snaps.palm,
+        raw: snaps.raw,
+        lines: snaps.lines,
+        prelabel: prelabelOf(lines),
+        vol: frozen.vol,
+        hand: handOf(frozen.handedness),
+        capturedAt: new Date(Date.now() - (performance.now() - frozen.atMs)).toISOString(),
+      };
+      const next: Completion = { frozen, shift, snaps, pair, mirrored: wasMirrored, waitMs };
+      completionRef.current = next;
+      setCompletion(next);
+      setPhase("complete");
+      /* Session-only by default: kept for this browsing session, never uploaded. */
+      void snapStoreRef.current?.keepForSession(pair).catch(() => undefined);
+    };
+    const timer = window.setInterval(() => {
+      if (started) return;
+      if (!freezeReady(peekFreeze()) && performance.now() - freezeStartedAtRef.current < FREEZE_WAIT_MS) return;
+      started = true;
+      window.clearInterval(timer);
+      void freeze().catch((freezeError: unknown) => {
+        console.error("[chamber] freeze failed:", freezeError);
+        if (!mountedRef.current) return;
+        setFailure("Tasveer nahi ban payi. Dobara scan karo.");
+        setPhase("failed");
+      });
+    }, 120);
+    return () => window.clearInterval(timer);
+  }, [detectionDone, peekFreeze, takeFreeze, accumulatorGray, stop]);
+
+  /* The opt-in growth save: on saves the pair as a growth session, off deletes it (G4.3). */
+  const [growthId, setGrowthId] = useState<string | null>(null);
+  const growthIdRef = useRef<string | null>(null);
+  const [growthBusy, setGrowthBusy] = useState(false);
+  const onGrowthChange = useCallback((on: boolean) => {
+    const current = completionRef.current;
+    const store = snapStoreRef.current;
+    if (current === null || store === null) return;
+    setGrowthBusy(true);
+    void (async () => {
+      try {
+        if (on) {
+          const id = await store.saveGrowth(current.pair, growthStillOf(current.frozen));
+          growthIdRef.current = id;
+          setGrowthId(id);
+        } else if (growthIdRef.current !== null) {
+          await store.deleteGrowth(growthIdRef.current);
+          growthIdRef.current = null;
+          setGrowthId(null);
+        }
+      } catch (growthError) {
+        console.error("[chamber] growth save:", growthError);
+      } finally {
+        if (mountedRef.current) setGrowthBusy(false);
+      }
+    })();
+  }, []);
+
+  /* The snaps' object URLs go with the chamber. */
+  useEffect(() => () => revokeSnaps(completionRef.current?.snaps ?? null), []);
+
+  /* G2.2: a light tick on entering the band
 
   /* G2.2: a light tick on entering the band — at most once in BAND_TICK_MIN_INTERVAL_MS (lib/scan/distance.ts). */
   const previousDistanceRef = useRef<DistanceState | null>(null);
@@ -450,10 +691,50 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
   const canTorch = scanning && torch !== "unsupported";
   const directions = denied ? cameraDeniedDirections(browser ?? "other") : null;
 
+  /*
+   * G4: a new scan from nothing — after "दोबारा स्कैन", or a failure's retry. The evidence, the detection, the litany's
+   * mark and the session all start again, so a finished detection cannot freeze the next scan the moment the
+   * camera is back.
+   */
+  const resetForNewScan = useCallback(() => {
+    revokeSnaps(completionRef.current?.snaps ?? null);
+    completionRef.current = null;
+    setCompletion(null);
+    growthIdRef.current = null;
+    setGrowthId(null);
+    sessionRef.current = emptySession();
+    drawnRef.current = null;
+    cropRef.current = null;
+    rekhaLatestRef.current = null;
+    confirmedLinesRef.current = {};
+    detectionRef.current = DETECTION_IDLE;
+    setDetection(DETECTION_IDLE);
+    setMark(CHAMBER_SIGNALS_IDLE);
+    setLeafReady(false);
+    setRulesFired(0);
+    setFailure(null);
+    setBlur(false);
+    restartCapture();
+  }, [restartCapture]);
+
+  const onRetake = useCallback(() => {
+    resetForNewScan();
+    setPhase("scanning");
+    void start();
+  }, [resetForNewScan, start]);
+
+  /* "पाठ खोलें": the reading, built now from the session and whatever of the choreography's masks there are. */
+  const onOpenReading = useCallback(() => {
+    void buildReading(capture, cropRef.current);
+  }, [buildReading, capture]);
+
+  /* The frozen frame stays on screen from the freeze until the reveal beat takes it. */
+  const frozenShown = completion !== null && (phase === "complete" || phase === "building" || phase === "revealing");
+
   return (
-    <div className={styles.chamber} data-snc-controls={canFlip || canTorch ? "" : undefined}>
+    <div ref={rootRef} className={styles.chamber} data-snc-controls={canFlip || canTorch ? "" : undefined} data-snc-phase={phase}>
       <video
-        ref={setVideoElement}
+        ref={setVideo}
         playsInline
         muted
         aria-label="Hatheli ka camera"
@@ -461,6 +742,22 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         style={mirrored ? { transform: "scaleX(-1)" } : undefined}
       />
 
+      {/* G4: THE FROZEN FRAME — the camera stopped on the sharpest recent frame, shown as the reader saw it. */}
+      {frozenShown ? (
+        // eslint-disable-next-line @next/next/no-img-element -- an object URL of the frozen frame, never a remote image
+        <img
+          src={completion.snaps.rawUrl}
+          alt=""
+          className={styles.frozen}
+          style={completion.mirrored ? { transform: "scaleX(-1)" } : undefined}
+          data-snc-frozen=""
+          data-snc-freeze-vol={completion.frozen.vol.toFixed(1)}
+          data-snc-freeze-wait={Math.round(completion.waitMs)}
+          data-snc-freeze-shift={completion.shift === null ? "none" : `${completion.shift.dx.toFixed(2)},${completion.shift.dy.toFixed(2)}`}
+        />
+      ) : null}
+
+      {frozenShown ? null : (
       <ChamberCanvas
         className={styles.canvas}
         landmarks={observation?.landmarks ?? null}
@@ -474,6 +771,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         onCost={setCost}
         distance={distanceRef}
       />
+      )}
 
       {/* THE BACK MARK. A mark and not a button: no fill, no border, no radius —
           the same argument the book's controls make about room being the
@@ -539,7 +837,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
               type="button"
               className={styles.gateButton}
               onClick={() => {
-                setFailure(null);
+                resetForNewScan();
                 setPhase("scanning");
                 start();
               }}
@@ -594,8 +892,25 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         line={line}
         hint={hint}
         distance={distanceState === null ? null : distanceRef}
+        action={hintAction}
         visible={blocked === null && !idle && phase !== "revealing"}
       />
+
+      {/* G4: पहचान पूरी — the two snaps, the one opt-in, the two ways on. */}
+      {frozenShown && phase !== "revealing" ? (
+        <CompletionLeaf
+          palmSrc={completion.snaps.palmUrl}
+          rawSrc={completion.snaps.rawUrl}
+          linesSrc={completion.snaps.linesUrl}
+          growth={growthId !== null}
+          growthBusy={growthBusy}
+          growthAvailable={snapStore !== null && completion.frozen.anchors.length > 0}
+          onGrowthChange={onGrowthChange}
+          onRetake={onRetake}
+          onOpenReading={onOpenReading}
+          opening={phase === "building"}
+        />
+      ) : null}
 
       {phase === "revealing" ? <RevealBeat onArrived={() => router.push(readHref)} /> : null}
 
@@ -615,6 +930,10 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
           {/* G3: the rings as numbers, and the usable time the budget is counting. */}
           {` · ${detectionLedger(detection)} · usable ${(detection.usableMs / 1000).toFixed(1)} s`}
           {traceMs === null ? null : ` · trace ${traceMs.toFixed(1)} ms/extraction`}
+          {/* G4: the frozen frame's grade, the lines' shift onto it, and the wait for it. */}
+          {completion === null
+            ? null
+            : ` · frozen VoL ${completion.frozen.vol.toFixed(0)} shift ${completion.shift === null ? "none" : `${completion.shift.dx.toFixed(1)},${completion.shift.dy.toFixed(1)}`} wait ${Math.round(completion.waitMs)} ms`}
           {activeProfile === null
             ? null
             : ` · profile ${activeProfile.name} (${capabilityTier}) ${videoSize === null ? "–" : `${videoSize.width}×${videoSize.height}`} · extract ${activeProfile.extractIntervalMs} ms`}

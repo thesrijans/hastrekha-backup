@@ -65,11 +65,17 @@ export interface ScanLitanyProps {
    * instruction's line — inside it, never as a line of its own (the leaf's height is the ring's reserve).
    */
   readonly distance?: { readonly current: DistanceReading | null } | null;
+  /**
+   * G4: a one-tap action at the head of the instruction's line, in the gauge's place — "रोशनी चालू करें" when the
+   * picture is blurred and the back camera has a torch. The line keeps its two rows either way: the leaf's
+   * height is the ring's reserve.
+   */
+  readonly action?: { readonly hi: string; readonly en: string; readonly onPress: () => void } | null;
   /** Hidden once the reveal beat begins: the beat owns the screen from that point. */
   readonly visible: boolean;
 }
 
-export function ScanLitany({ line, hint, visible, distance = null }: ScanLitanyProps): ReactElement {
+export function ScanLitany({ line, hint, visible, distance = null, action = null }: ScanLitanyProps): ReactElement {
   const empty = line.status === "empty";
 
   return (
@@ -96,7 +102,13 @@ export function ScanLitany({ line, hint, visible, distance = null }: ScanLitanyP
             scan, and each change is something the reader can act on. */}
         {hint === null ? null : (
           <p className={styles.hint} lang="hi" aria-live="polite" aria-label={hint.en} data-snc-hint="">
-            {distance === null ? null : <DistanceGauge reading={distance} />}
+            {action !== null ? (
+              <button type="button" className={styles.hintAction} lang="hi" aria-label={action.en} onClick={action.onPress} data-snc-hint-action="">
+                {action.hi}
+              </button>
+            ) : distance === null ? null : (
+              <DistanceGauge reading={distance} />
+            )}
             <span>{hintParts(hint.hi)}</span>
           </p>
         )}

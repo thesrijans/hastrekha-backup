@@ -23,7 +23,7 @@
  * heart/head/life/fate; drag a vertex to adjust; Backspace deletes the selected vertex.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { computePrelabel, computeReveal, type RevealSet } from "@/lib/scan/dev/reveal";
+import { computePrelabel, computeReveal, revealSetFromPrelabel, type RevealSet } from "@/lib/scan/dev/reveal";
 import {
   CANONICAL_LABEL_SIZE,
   GRAY_CHANNELS,
@@ -43,6 +43,7 @@ import {
   type ViewMode,
 } from "@/lib/scan/dev/session-types";
 import { openSessionStore, type SessionStore, type SessionSummary } from "@/lib/scan/dev/session-store";
+import { GROWTH_CROP_PATH, GROWTH_RAW_PATH, openSnapStore } from "@/lib/scan/snap-store";
 import {
   buildLabelFile,
   emptyLabelerState,
@@ -100,6 +101,8 @@ export function LabelClient() {
   const isMountedRef = useRef(false);
 
   const [sessions, setSessions] = useState<readonly SessionSummary[]>([]);
+  /* scan-complete G4.3: the chamber's opt-in growth sessions live in the snap store until imported here. */
+  const [importNote, setImportNote] = useState<string | null>(null);
   const [session, setSession] = useState<SessionMetadata | null>(null);
   const [labeled, setLabeled] = useState<ReadonlySet<number>>(new Set());
   const [stillIndex, setStillIndex] = useState<number | null>(null);
@@ -204,6 +207,31 @@ export function LabelClient() {
     };
   }, []);
 
+  /**
+   * Import the chamber's growth sessions (lib/scan/snap-store.ts — production's own IndexedDB, read here, never
+   * written from there to here) into the staging store, so they open like any captured session. The snap store
+   * is opened without its session purge: another tab's chamber may still be showing its pair.
+   */
+  const importChamberSnaps = useCallback(async (): Promise<void> => {
+    const store = storeRef.current;
+    if (store === null) return;
+    const snaps = await openSnapStore({ purge: false });
+    if (snaps === null) {
+      setImportNote("snap store nahi khula");
+      return;
+    }
+    let imported = 0;
+    for (const metadata of await snaps.listGrowth()) {
+      const raw = await snaps.getBlob(metadata.sessionId, GROWTH_RAW_PATH);
+      const crop = await snaps.getBlob(metadata.sessionId, GROWTH_CROP_PATH);
+      if (raw === null || crop === null) continue;
+      if (await store.importSession(metadata, [{ path: GROWTH_RAW_PATH, blob: raw }, { path: GROWTH_CROP_PATH, blob: crop }])) imported += 1;
+    }
+    if (!isMountedRef.current) return;
+    setImportNote(`${imported} chamber growth session${imported === 1 ? "" : "s"} imported`);
+    setSessions(await store.listSessions());
+  }, []);
+
   const persistLabelerId = useCallback((value: string): void => {
     setLabelerId(value);
     try {
@@ -279,7 +307,9 @@ export function LabelClient() {
       const prelabelKey = `${meta.sessionId}/${index}`;
       let prelabel = prelabelCacheRef.current.get(prelabelKey);
       if (prelabel === undefined) {
-        prelabel = computePrelabel(rgba, CANONICAL_LABEL_SIZE);
+        /* G4.3: a chamber growth still carries the lines the reader was shown — correct THOSE, not a fresh run. */
+        const stored = meta.stills.find((still) => still.index === index)?.prelabel;
+        prelabel = stored !== undefined ? revealSetFromPrelabel(stored) : computePrelabel(rgba, CANONICAL_LABEL_SIZE);
         prelabelCacheRef.current.set(prelabelKey, prelabel);
       }
       const prefilled: Record<LabelLineId, LabelerLineState> = {
@@ -952,6 +982,14 @@ export function LabelClient() {
               className="rounded-lg border border-hairline bg-transparent px-2 py-1 text-sm text-ink"
             />
           </label>
+          <button
+            type="button"
+            onClick={() => void importChamberSnaps()}
+            className="rounded-lg border border-hairline px-2 py-1 text-left text-xs text-ink transition-colors hover:border-mount-glow"
+          >
+            Chamber growth snaps import karo
+            {importNote === null ? null : <span className="block text-muted">{importNote}</span>}
+          </button>
           <ul className="flex flex-col gap-1 text-xs" aria-label="Staged sessions">
             {sessions.map((summary) => (
               <li key={summary.sessionId}>

@@ -31,6 +31,32 @@ const feedDir = resolve(arg("--feeds", join(REPO, "captures", "ui", "feeds", "ti
 const only = argv.includes("--only") ? arg("--only").split(",") : null;
 /** G2: a screenshot each time the leaf's instruction changes (at most eight a feed), for the visual review. */
 const shots = argv.includes("--shots");
+/** G4: the phone's viewport (DPR stays 2.625), e.g. 390x664 for the short screen. */
+const [viewportWidth, viewportHeight] = arg("--viewport", "412x915").split("x").map(Number);
+/** G4: run until the completion leaf appears ("पहचान पूरी") or `--seconds` runs out, and photograph it. */
+const untilComplete = argv.includes("--until-complete");
+/** G4: tap the leaf's one-tap action ("रोशनी चालू करें") the first time it appears. */
+const tapAction = argv.includes("--tap-action");
+/** G4: once complete, switch the opt-in on and off, counting the growth sessions in IndexedDB after each. */
+const toggleGrowth = argv.includes("--toggle-growth");
+
+/** In the page: the snap store's records by kind — IndexedDB `hastrekha-snaps`, read directly. */
+const SNAP_RECORD_KINDS = () =>
+  new Promise((resolve) => {
+    const open = indexedDB.open("hastrekha-snaps");
+    open.onerror = () => resolve(null);
+    open.onsuccess = () => {
+      const db = open.result;
+      if (!db.objectStoreNames.contains("records")) return resolve({ growth: 0, session: 0 });
+      const all = db.transaction("records", "readonly").objectStore("records").getAll();
+      all.onsuccess = () => {
+        const kinds = { growth: 0, session: 0 };
+        for (const record of all.result) kinds[record.kind] = (kinds[record.kind] ?? 0) + 1;
+        resolve(kinds);
+      };
+      all.onerror = () => resolve(null);
+    };
+  });
 
 if (!existsSync(feedDir)) throw new Error(`No feeds at ${feedDir} — run scripts/capture/make-tight-feeds.py first.`);
 const feeds = readdirSync(feedDir)
@@ -155,6 +181,20 @@ function summariseG3(samples, vibrations) {
   return { confirmedAt, unclearAt, backwards, resets, confirmations, lineTicks, final: last.g3, completeAt };
 }
 
+/**
+ * G4 from the same samples: when the chamber completed (its phase), whether the double tick fired
+ * (navigator.vibrate([14, 90, 14])), when the blur's words and the torch's one-tap action appeared, and the
+ * torch after the tap — with the completion leaf as measured at the end.
+ */
+function summariseG4(samples, vibrations, leaf) {
+  const completeAt = samples.find((s) => s.phase === "complete")?.t ?? null;
+  const blurAt = samples.find((s) => typeof s.hint === "string" && s.hint.includes("तस्वीर धुंधली है"))?.t ?? null;
+  const actionAt = samples.find((s) => s.action !== null && s.action !== undefined)?.t ?? null;
+  const torchAfter = samples.at(-1)?.torch ?? null;
+  const doubleTicks = vibrations.filter((v) => JSON.stringify(v.pattern) === "[14,90,14]").length;
+  return { completeAt, blurAt, actionAt, torchAfter, doubleTicks, leaf };
+}
+
 const range = (s) => (s === null ? "–" : `${s.median} (${s.min}–${s.max})`);
 const pct = (part, whole) => (whole === 0 ? "–" : `${((100 * part) / whole).toFixed(1)}%`);
 
@@ -187,7 +227,7 @@ try {
         console.log(`GPU: ${gpu.renderer}\n`);
       }
       const context = await browser.newContext({
-        viewport: { width: 412, height: 915 },
+        viewport: { width: viewportWidth, height: viewportHeight },
         deviceScaleFactor: 2.625,
         isMobile: true,
         hasTouch: true,
@@ -219,6 +259,10 @@ try {
             distance: gauge?.getAttribute("data-snc-distance") ?? null,
             dot: gauge?.querySelector("circle")?.getAttribute("cx") ?? null,
             guide: document.querySelector("canvas")?.dataset.sncGuide ?? null,
+            /* G4: the phase, the one-tap action, the torch. */
+            phase: document.querySelector("[data-snc-phase]")?.getAttribute("data-snc-phase") ?? null,
+            action: document.querySelector("[data-snc-hint-action]")?.textContent?.trim() ?? null,
+            torch: document.querySelector('[data-snc-control="torch"]')?.getAttribute("aria-pressed") ?? null,
             /* G3: the ledger's rings, status initial + progress per line, and its summary. */
             g3: (() => {
               const entries = [...document.querySelectorAll("[data-snc-detect]")];
@@ -252,16 +296,79 @@ try {
           }
           await page.waitForTimeout(250);
         }
+      } else if (untilComplete || tapAction) {
+        /* G4: poll for the completion leaf (and the one-tap action, tapped once), up to `--seconds`. */
+        const until = Date.now() + seconds * 1000;
+        let tapped = false;
+        while (Date.now() < until) {
+          if (tapAction && !tapped && (await page.locator("[data-snc-hint-action]").count()) > 0) {
+            tapped = true;
+            await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-action-before.png`) });
+            await page.tap("[data-snc-hint-action]").catch(() => undefined);
+            await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-action.png`) });
+          }
+          if (untilComplete && (await page.locator("[data-snc-completion]").count()) > 0) {
+            /* Let the snaps decode, then photograph the leaf as the reader first sees it. */
+            await page.waitForFunction(() => [...document.querySelectorAll("[data-snc-snap] img")].every((img) => img.complete && img.naturalWidth > 0), null, { timeout: 10_000 }).catch(() => undefined);
+            await page.waitForTimeout(700);
+            await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-complete.png`) });
+            break;
+          }
+          await page.waitForTimeout(250);
+        }
       } else {
         await page.waitForTimeout(seconds * 1000);
       }
+      /* G4: the completion leaf, as it stands — or null when detection did not complete in time. */
+      const g4leaf = await page.evaluate(() => {
+        const dock = document.querySelector("[data-snc-completion]");
+        if (dock === null) return null;
+        const frozen = document.querySelector("[data-snc-frozen]");
+        const leaf = dock.firstElementChild?.getBoundingClientRect() ?? null;
+        const snaps = [...document.querySelectorAll("[data-snc-snap]")].map((figure) => {
+          const img = figure.querySelector("img");
+          const box = img?.getBoundingClientRect();
+          return { snap: figure.getAttribute("data-snc-snap"), loaded: img !== null && img !== undefined && img.complete && img.naturalWidth > 0, natural: img?.naturalWidth ?? 0, shown: box === undefined ? 0 : Math.round(box.width), caption: figure.querySelector("figcaption")?.textContent?.trim() ?? null };
+        });
+        const growth = document.querySelector("[data-snc-growth]");
+        const buttons = [...document.querySelectorAll("[data-snc-action]")].map((b) => ({ action: b.getAttribute("data-snc-action"), text: b.textContent.trim(), bottom: Math.round(b.getBoundingClientRect().bottom) }));
+        return {
+          title: dock.querySelector("p")?.textContent?.trim() ?? null,
+          vol: frozen?.getAttribute("data-snc-freeze-vol") ?? null,
+          waitMs: frozen?.getAttribute("data-snc-freeze-wait") ?? null,
+          shift: frozen?.getAttribute("data-snc-freeze-shift") ?? null,
+          snaps,
+          growth: growth === null ? "absent" : growth.checked ? "on" : "off",
+          buttons,
+          leafTop: leaf === null ? null : Math.round(leaf.top),
+          leafBottom: leaf === null ? null : Math.round(leaf.bottom),
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          videoLive: [...document.querySelectorAll("video")].some((v) => v.srcObject !== null && v.srcObject.getVideoTracks().some((t) => t.readyState === "live")),
+        };
+      });
       const snapshot = await page.evaluate(() => (typeof window.__hrFunnel === "function" ? window.__hrFunnel() : null));
       const g2raw = await page.evaluate(() => ({ samples: window.__g2samples ?? [], vibrations: window.__vibrations ?? [] }));
       const readout = await page.evaluate(() => document.querySelector("[data-snc-budget]")?.textContent ?? null);
       const litany = await page.evaluate(() => [...document.querySelectorAll('[data-snc-litany="in"] p')].map((p) => p.textContent.trim()));
       const name = basename(feed, ".y4m");
       await page.screenshot({ path: join(dir, `${name}.png`) });
-      const entry = { feed: name, expected: expected.get(feed) ?? null, handSeen, errors, failedRequests, litany, readout, funnel: summarise(snapshot), g2: summariseG2(g2raw.samples, g2raw.vibrations), g3: summariseG3(g2raw.samples, g2raw.vibrations), g2samples: g2raw.samples };
+      /* G4.3 in a real browser: the pair kept for the session, the opt-in saving and then deleting its session. */
+      let growthCheck = null;
+      if (toggleGrowth && g4leaf !== null) {
+        const before = await page.evaluate(SNAP_RECORD_KINDS);
+        await page.click("[data-snc-growth]");
+        await page.waitForFunction(() => document.querySelector("[data-snc-growth]")?.checked === true && !document.querySelector("[data-snc-growth]")?.disabled, null, { timeout: 10_000 }).catch(() => undefined);
+        await page.waitForTimeout(500);
+        const on = await page.evaluate(SNAP_RECORD_KINDS);
+        await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-growth-on.png`) });
+        await page.click("[data-snc-growth]");
+        await page.waitForFunction(() => document.querySelector("[data-snc-growth]")?.checked === false && !document.querySelector("[data-snc-growth]")?.disabled, null, { timeout: 10_000 }).catch(() => undefined);
+        await page.waitForTimeout(500);
+        const off = await page.evaluate(SNAP_RECORD_KINDS);
+        growthCheck = { before, on, off };
+      }
+      const g4 = { ...summariseG4(g2raw.samples, g2raw.vibrations, g4leaf), growthCheck };
+      const entry = { feed: name, expected: expected.get(feed) ?? null, handSeen, errors, failedRequests, litany, readout, funnel: summarise(snapshot), g2: summariseG2(g2raw.samples, g2raw.vibrations), g3: summariseG3(g2raw.samples, g2raw.vibrations), g4, g2samples: g2raw.samples };
       report.feeds.push(entry);
       const f = entry.funnel;
       const g = entry.g2;
@@ -269,6 +376,14 @@ try {
         `${name.padEnd(10)} G2  hints [${g.hints.map((h) => `${(h.t / 1000).toFixed(1)}s ${h.hint}`).join(" | ")}]  states ${JSON.stringify(g.states)}  ` +
           `guide ${g.guide === null ? "none" : `α ${g.guide.alphaMin.toFixed(3)}–${g.guide.alphaMax.toFixed(3)} at ${g.guide.first.slice(1).join(",")} fade ${g.guide.fadeMs ?? "–"} ms`}  ` +
           `vibrate ${g.vibrations}× ${g.vibrationPatterns.join(",")} for ${g.okEntries} band entr${g.okEntries === 1 ? "y" : "ies"}`,
+      );
+      console.log(
+        `${name.padEnd(10)} G4  ${g4.completeAt === null ? "not complete" : `complete@${(g4.completeAt / 1000).toFixed(1)}s`}` +
+          (g4.leaf === null
+            ? ""
+            : `  frozen VoL ${g4.leaf.vol} wait ${g4.leaf.waitMs} ms shift ${g4.leaf.shift}  snaps [${g4.leaf.snaps.map((s) => `${s.snap} ${s.loaded ? `${s.natural}px shown ${s.shown}px` : "NOT LOADED"} "${s.caption}"`).join(" | ")}]  opt-in ${g4.leaf.growth}  buttons [${g4.leaf.buttons.map((b) => b.text).join(" | ")}]  leaf ${g4.leaf.leafTop}–${g4.leaf.leafBottom} of ${g4.leaf.viewport.height}  camera ${g4.leaf.videoLive ? "LIVE" : "stopped"}  title "${g4.leaf.title}"`) +
+          `  double-tick ${g4.doubleTicks}  blur ${g4.blurAt === null ? "never" : `@${(g4.blurAt / 1000).toFixed(1)}s`}  action ${g4.actionAt === null ? "never" : `@${(g4.actionAt / 1000).toFixed(1)}s`}  torch ${g4.torchAfter ?? "–"}` +
+          (g4.growthCheck === null ? "" : `  snap store before ${JSON.stringify(g4.growthCheck.before)} opt-in on ${JSON.stringify(g4.growthCheck.on)} off ${JSON.stringify(g4.growthCheck.off)}`),
       );
       const g3 = entry.g3;
       console.log(

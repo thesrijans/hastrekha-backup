@@ -58,6 +58,20 @@
   }
 
   /*
+   * scan-complete G4: THE FROZEN FRAME. The camera has stopped on the sharpest recent frame; it stays on screen,
+   * laid exactly where the live feed was (the same cover fit, the same mirror), dimmed under the completion leaf.
+   */
+  .frozen {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    filter: brightness(0.55);
+  }
+
+  /*
    * THE OVERLAY. One canvas over the feed, at the size of the room.
    * `pointer-events: none` because everything drawn on it is watched rather
    * than touched, and a canvas across the viewport would swallow the one

@@ -16,12 +16,16 @@
  * — the hand gone for HAND_LOSS_RESET_MS, the other hand, an alignment the accumulator had to drop — the rings,
  * the ✓ and the budget all start again: they reported evidence about a palm that is no longer being read.
  *
- * THE BUDGET (G3.2). {@link SCAN_BUDGET_USABLE_MS} of USABLE frames — frames the accumulator actually took
- * evidence from (sharp enough; `RekhaSnapshot.frames` counts them) — not of wall time: a reader finding the
- * distance, or a gate failing, is not time spent reading the palm. After it, a line not yet confirmed is
- * marked "इस हाथ पर स्पष्ट नहीं" — absence is a result, not a failure, and the reading seals that chapter
- * saying so (lib/sanctuary/pothi-chapters.ts). The mark stands unless the line is confirmed after all:
- * evidence wins over the clock that gave up on it.
+ * THE BUDGET (G3.2; its numbers set in G4). {@link SCAN_BUDGET_USABLE_MS} of USABLE frames — frames the
+ * accumulator actually took evidence from (sharp enough; `RekhaSnapshot.frames` counts them) — not of wall
+ * time: a reader finding the distance, or a gate failing, is not time spent reading the palm. But no longer
+ * than {@link SCAN_BUDGET_WALL_MS} of wall time from the first usable frame either: whichever runs out first.
+ * After it, a line not yet confirmed is marked "इस हाथ पर स्पष्ट नहीं" — absence is a result, not a failure,
+ * and the reading seals that chapter saying so (lib/sanctuary/pothi-chapters.ts). The mark stands unless the
+ * line is confirmed after all: evidence wins over the clock that gave up on it.
+ *
+ * BLUR (G4). A palm in view with no usable frame for {@link BLUR_STALL_MS} is told the picture is blurred —
+ * {@link blurStalled} — so the rings never sit at 0% in silence.
  *
  * Pure, and outside the frozen core. Only a type comes from the persistence module, which loads lazily.
  */
@@ -31,8 +35,18 @@ import { ACTIVE_LINE_IDS, type ActiveLineId } from "./types";
 /** The lines the rings are for: the four majors. The minors (सूर्य, बुध, विवाह) join once S3 covers them. */
 export const DETECTION_LINE_IDS: readonly ActiveLineId[] = ACTIVE_LINE_IDS;
 
-/** The scan budget (G3.2): this much time of usable frames, then a line not yet confirmed is marked unclear. */
-export const SCAN_BUDGET_USABLE_MS = 20_000;
+/**
+ * The scan budget (G3.2, set in G4): this much time of usable frames, then a line not yet confirmed is marked
+ * unclear — 15 s. G3's 20 s took 57–60 s of wall time on the feeds, where about half the frames are sharp enough.
+ */
+export const SCAN_BUDGET_USABLE_MS = 15_000;
+
+/**
+ * …or this much WALL time from the first usable frame, whichever comes first (G4): a reader whose frames are
+ * only now and then sharp is not kept scanning for minutes. It starts at the first usable frame, not at the
+ * tap: a hand not yet found, or never sharp, is the blur hint's case, not the budget's.
+ */
+export const SCAN_BUDGET_WALL_MS = 40_000;
 
 /**
  * A usable frame counts the time since the previous one, up to this. The accumulator takes a frame every
@@ -63,6 +77,10 @@ export interface DetectionState {
   readonly lines: Readonly<Record<ActiveLineId, LineDetection>>;
   /** Milliseconds of usable frames on this palm (see {@link SCAN_BUDGET_USABLE_MS}). */
   readonly usableMs: number;
+  /** When this palm's first usable frame arrived — the wall-clock budget runs from it. */
+  readonly firstUsableAtMs: number | null;
+  /** Which budget ran out, once one has: the usable time or the wall clock. */
+  readonly spentBy: "usable" | "wall" | null;
   /** The overall percentage, 0–1: the mean of the rings, a confirmed or an unclear line counting whole — both are results. */
   readonly overall: number;
   /** Every line is a result, confirmed or unclear — the condition G4's "पहचान पूरी" waits for. */
@@ -78,6 +96,8 @@ const GATHERING: LineDetection = { status: "gathering", progress: 0 };
 export const DETECTION_IDLE: DetectionState = {
   lines: Object.fromEntries(DETECTION_LINE_IDS.map((id) => [id, GATHERING])) as Record<ActiveLineId, LineDetection>,
   usableMs: 0,
+  firstUsableAtMs: null,
+  spentBy: null,
   overall: 0,
   complete: false,
   frames: 0,
@@ -95,13 +115,24 @@ export function nextDetection(state: DetectionState, snapshot: RekhaSnapshot | n
 
   let usableMs = base.usableMs;
   let lastUsableAtMs = base.lastUsableAtMs;
+  let firstUsableAtMs = base.firstUsableAtMs;
   if (snapshot.frames > base.frames) {
     if (lastUsableAtMs !== null) usableMs += Math.min(USABLE_FRAME_GAP_CAP_MS, Math.max(0, nowMs - lastUsableAtMs));
     lastUsableAtMs = nowMs;
+    firstUsableAtMs ??= nowMs;
   }
-  const spent = usableMs >= SCAN_BUDGET_USABLE_MS;
+  /* Whichever budget runs out first (G4): the usable time, or the wall clock since the first usable frame. */
+  const spentBy: DetectionState["spentBy"] =
+    base.spentBy ?? (usableMs >= SCAN_BUDGET_USABLE_MS ? "usable" : firstUsableAtMs !== null && nowMs - firstUsableAtMs >= SCAN_BUDGET_WALL_MS ? "wall" : null);
+  const spent = spentBy !== null;
 
-  let changed = base !== state || usableMs !== base.usableMs || lastUsableAtMs !== base.lastUsableAtMs || snapshot.frames !== base.frames;
+  let changed =
+    base !== state ||
+    usableMs !== base.usableMs ||
+    lastUsableAtMs !== base.lastUsableAtMs ||
+    firstUsableAtMs !== base.firstUsableAtMs ||
+    spentBy !== base.spentBy ||
+    snapshot.frames !== base.frames;
   const lines = {} as Record<ActiveLineId, LineDetection>;
   for (const id of DETECTION_LINE_IDS) {
     const previous = base.lines[id];
@@ -135,6 +166,8 @@ export function nextDetection(state: DetectionState, snapshot: RekhaSnapshot | n
   return {
     lines,
     usableMs,
+    firstUsableAtMs,
+    spentBy,
     overall: sum / DETECTION_LINE_IDS.length,
     complete: resolved === DETECTION_LINE_IDS.length,
     frames: snapshot.frames,
@@ -145,6 +178,30 @@ export function nextDetection(state: DetectionState, snapshot: RekhaSnapshot | n
 /** The lines confirmed between two states — each earns its ✓ and one haptic tick. */
 export function newlyConfirmed(previous: DetectionState, next: DetectionState): readonly ActiveLineId[] {
   return DETECTION_LINE_IDS.filter((id) => next.lines[id].status === "confirmed" && previous.lines[id].status !== "confirmed");
+}
+
+/* ----------------------------------- Blur (G4) ----------------------------------- */
+
+/**
+ * A palm in view this long with no usable frame is a blurred picture, and the reader is told so (G4): a scan
+ * that took no evidence for 3 s is not "working", and a ring at 0% that says nothing is the silence G4 ends.
+ */
+export const BLUR_STALL_MS = 3000;
+
+/** The litany's words for it, exactly, and the one-tap offer on a camera with a torch. */
+export const BLUR_WORDS = { hi: "तस्वीर धुंधली है · हाथ स्थिर रखें, रोशनी बढ़ाएँ", en: "The picture is blurred — hold still, and add light" } as const;
+export const TORCH_OFFER = { hi: "रोशनी चालू करें", en: "Turn on the light" } as const;
+
+/**
+ * Whether the usable frames have stalled: a palm present (continuously, since `palmSinceMs`), frames being
+ * OFFERED to the evidence (the first since `firstOfferAtMs`) and none of them sharp enough for
+ * {@link BLUR_STALL_MS} — counted from the latest of the palm's arrival, the first offered frame and the last
+ * usable one. A pipeline still warming up offers nothing, and is not a blurred picture (the first G4 capture
+ * said "blurred" 3 s into every feed, sharp ones too, before a single frame had been graded).
+ */
+export function blurStalled(palmSinceMs: number | null, firstOfferAtMs: number | null, lastUsableAtMs: number | null, nowMs: number): boolean {
+  if (palmSinceMs === null || firstOfferAtMs === null) return false;
+  return nowMs - Math.max(palmSinceMs, firstOfferAtMs, lastUsableAtMs ?? -Infinity) >= BLUR_STALL_MS;
 }
 
 /** The lines marked "इस हाथ पर स्पष्ट नहीं". */

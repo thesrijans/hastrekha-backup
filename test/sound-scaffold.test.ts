@@ -269,22 +269,32 @@ const SOURCE = readFileSync(SOURCE_PATH, "utf8");
 /* ------------------------- haptics are a separate sense ------------------- */
 
 {
-  const cues: readonly HapticCue[] = ["pageTurn", "reveal", "bandEnter", "lineConfirmed"];
+  const cues: readonly HapticCue[] = ["pageTurn", "reveal", "bandEnter", "lineConfirmed", "detectionComplete"];
   ok(
-    Object.keys(HAPTIC_PATTERNS).length === 4,
-    'spec 5 allowed two haptics and "none elsewhere"; scan-complete G2.2 names a third (the distance band tick) and G3.1 a fourth (a line\'s tick at 100%) - the vocabulary is still closed',
+    Object.keys(HAPTIC_PATTERNS).length === 5,
+    'spec 5 allowed two haptics and "none elsewhere"; scan-complete names three more by name - the band tick (G2.2), a line\'s tick at 100% (G3.1), the double-tick at "pahchaan poori" (G4) - and the vocabulary is still closed',
   );
-  ok(cues.every((cue) => typeof HAPTIC_PATTERNS[cue] === "number"), "every named cue carries a duration");
-  ok(HAPTIC_PATTERNS.bandEnter < HAPTIC_PATTERNS.reveal, "the band's tick is a LIGHT one, as G2.2 says - lighter than the reveal");
+  const pulse = (cue: HapticCue): number => {
+    const pattern = HAPTIC_PATTERNS[cue];
+    return typeof pattern === "number" ? pattern : Number.NaN;
+  };
+  ok(cues.filter((cue) => cue !== "detectionComplete").every((cue) => Number.isFinite(pulse(cue))), "every single cue carries a duration");
+  ok(pulse("bandEnter") < pulse("reveal"), "the band's tick is a LIGHT one, as G2.2 says - lighter than the reveal");
   ok(
-    HAPTIC_PATTERNS.lineConfirmed > HAPTIC_PATTERNS.bandEnter && HAPTIC_PATTERNS.lineConfirmed < HAPTIC_PATTERNS.reveal,
+    pulse("lineConfirmed") > pulse("bandEnter") && pulse("lineConfirmed") < pulse("reveal"),
     "a line's tick (G3.1) is a tick: firmer than the band's - something found, not somewhere reached - and lighter than the reveal",
   );
+  const double = HAPTIC_PATTERNS.detectionComplete;
   ok(
-    HAPTIC_PATTERNS.pageTurn < HAPTIC_PATTERNS.reveal,
+    Array.isArray(double) && double.length === 3 && double[0] === pulse("lineConfirmed") && double[2] === pulse("lineConfirmed") && double[1] > 2 * pulse("lineConfirmed"),
+    "G4's double-tick is two line-ticks with a beat between them, long enough to feel as two",
+  );
+  ok(/typeof pattern === "number" \? pattern : \[\.\.\.pattern\]/.test(SOURCE), "haptic() hands a pattern to navigator.vibrate as a fresh array, a single pulse as a number");
+  ok(
+    pulse("pageTurn") < pulse("reveal"),
     "light tick on page turn, medium on reveal - the reveal must be the heavier of the two",
   );
-  ok(HAPTIC_PATTERNS.pageTurn > 0, "a tick with no duration is not a tick");
+  ok(pulse("pageTurn") > 0, "a tick with no duration is not a tick");
 
   const hapticStart = SOURCE.indexOf("export function haptic(");
   const hapticBody = SOURCE.slice(hapticStart, SOURCE.indexOf("\n}", hapticStart));

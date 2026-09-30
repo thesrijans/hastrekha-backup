@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
 import { SANCTUARY_FONT_CLASS } from "@/lib/sanctuary/fonts";
+import { SavedPalms } from "@/components/sanctuary/privacy/saved-palms";
 import styles from "./privacy.module.css";
 
 export const metadata: Metadata = {
@@ -69,6 +70,12 @@ export default function PrivacyPage(): ReactElement {
             <li>Palm images tumhare device par hi process hote hain — sirf feature scores server par aate hain.</li>
             <li>Hum email, naam aur reading history rakhte hain taaki tum apni readings dobara dekh sako.</li>
             <li>Consent ka record rakha jaata hai, aur tum use kabhi bhi wapas le sakte ho.</li>
+            <li>
+              Scan ke baad ki tasveerein isi browser session tak isi device par rehti hain. &ldquo;HastRekha ko behtar banane
+              mein madad&rdquo; chuno to jodi isi device par sahej li jaati hai &mdash; kabhi upload nahi hoti, aur yahin se hat
+              sakti hai.
+            </li>
+            <SavedPalms />
           </ul>
         </div>
       </div>

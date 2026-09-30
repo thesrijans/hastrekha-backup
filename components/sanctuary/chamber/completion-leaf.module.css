@@ -1,0 +1,176 @@
+@layer components {
+  /*
+   * "पहचान पूरी" (scan-complete G4): one leaf, centred over the frozen frame like the gate — nothing is
+   * happening behind it any more, so there is nothing for it to stay out of the way of. Sized for a phone
+   * first: the two snaps side by side at a little over a third of the screen's width each.
+   */
+  .dock {
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    animation: sncCompleteIn 600ms var(--snc-ease, ease) both;
+  }
+
+  /* A light leaf in a dark room: its native control (the opt-in's box) is drawn for parchment, not for the
+     room — in the dark scheme Chromium filled the unchecked box near-black on the leaf (the G4 capture). */
+  .leaf {
+    inline-size: min(100%, 26rem);
+    color-scheme: light;
+  }
+
+  .title {
+    margin: 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 1.15rem;
+    line-height: 1.6;
+    letter-spacing: normal;
+    color: var(--color-snc-ink);
+    text-align: center;
+  }
+
+  .titleEn {
+    font-family: var(--font-snc-serif);
+    font-size: 0.86rem;
+    color: color-mix(in oklab, var(--color-snc-ink) 70%, transparent);
+  }
+
+  .snaps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 0.85rem 0 0;
+  }
+
+  .snap {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    min-inline-size: 0;
+  }
+
+  /* A hairline gold frame, the linework ladder's secondary rung, round a picture that is itself square. */
+  .frame {
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in oklab, var(--color-snc-gold-600) 55%, transparent);
+    background: var(--color-snc-stone-900);
+  }
+
+  .picture {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  /* The raw frame, small, in the palm snap's lower corner: where the crop came from. */
+  .raw {
+    position: absolute;
+    inset-inline-end: 0.3rem;
+    inset-block-end: 0.3rem;
+    inline-size: 28%;
+    aspect-ratio: 9 / 16;
+    object-fit: cover;
+    border: 1px solid color-mix(in oklab, var(--color-snc-gold-500) 60%, transparent);
+  }
+
+  .caption {
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    letter-spacing: normal;
+    color: var(--color-snc-ink);
+  }
+
+  .growth {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 0.9rem 0 0;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.86rem;
+    line-height: 1.55;
+    letter-spacing: normal;
+    color: var(--color-snc-ink);
+    cursor: pointer;
+  }
+
+  .check {
+    flex: none;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    margin: 0.2rem 0 0;
+    accent-color: var(--color-snc-ink-red);
+  }
+
+  .note {
+    margin: 0.2rem 0 0 1.6rem;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.74rem;
+    line-height: 1.5;
+    letter-spacing: normal;
+    color: color-mix(in oklab, var(--color-snc-ink) 66%, transparent);
+  }
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 1rem 0 0;
+  }
+
+  /* The chamber's one-control language: a struck rule under the words, faded at both ends — never a pill. */
+  .action {
+    padding: 0.35rem 0.2rem 0.5rem;
+    border: 0;
+    background: none;
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.95rem;
+    letter-spacing: normal;
+    color: var(--color-snc-ink);
+    cursor: pointer;
+    background-image: linear-gradient(90deg, transparent, var(--color-snc-gold-600) 34%, var(--color-snc-gold-600) 66%, transparent);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 100% 1px;
+  }
+
+  /* The way on is the one in red ink. */
+  .primary {
+    color: var(--color-snc-ink-red);
+  }
+
+  .action:hover,
+  .action:focus-visible {
+    color: var(--color-snc-ink-red);
+  }
+
+  .action:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+
+  @keyframes sncCompleteIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dock {
+      animation: none;
+    }
+  }
+}

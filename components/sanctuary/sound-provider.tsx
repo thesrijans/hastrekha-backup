@@ -525,18 +525,23 @@ export function useSound(): SoundContextValue {
  * scan-complete G3.1 adds ONE more, by name: "Lines at 100% get their ✓ and a
  * haptic tick" - once per line per palm (lib/scan/detection-progress.ts
  * newlyConfirmed), so at most four in a scan.
+ *
+ * scan-complete G4 adds the last, by name: "a haptic double-tick" when detection
+ * is complete - the one cue that is a pattern rather than a single pulse.
  */
-export type HapticCue = "pageTurn" | "reveal" | "bandEnter" | "lineConfirmed";
+export type HapticCue = "pageTurn" | "reveal" | "bandEnter" | "lineConfirmed" | "detectionComplete";
 
 /**
  * Milliseconds. Light and medium; far enough apart to feel different. The band's tick is the light one; a
  * line's is a little firmer - it marks something found, not somewhere reached - and still lighter than the reveal.
  */
-export const HAPTIC_PATTERNS: Readonly<Record<HapticCue, number>> = {
+export const HAPTIC_PATTERNS: Readonly<Record<HapticCue, number | readonly number[]>> = {
   pageTurn: 8,
   reveal: 24,
   bandEnter: 8,
   lineConfirmed: 14,
+  /* Two line-ticks with a beat between: "पहचान पूरी" is all four lines at once. */
+  detectionComplete: [14, 90, 14],
 };
 
 /**
@@ -554,5 +559,6 @@ export function haptic(cue: HapticCue): void {
   if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") {
     return;
   }
-  navigator.vibrate(HAPTIC_PATTERNS[cue]);
+  const pattern = HAPTIC_PATTERNS[cue];
+  navigator.vibrate(typeof pattern === "number" ? pattern : [...pattern]);
 }
