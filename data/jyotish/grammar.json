@@ -1,0 +1,355 @@
+{
+ "grammarVersion": "1.0",
+ "grahas": [
+  "Sun",
+  "Moon",
+  "Mars",
+  "Mercury",
+  "Jupiter",
+  "Venus",
+  "Saturn",
+  "Rahu",
+  "Ketu"
+ ],
+ "signs": [
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces"
+ ],
+ "origins": [
+  "lagna",
+  "moon",
+  "sun",
+  "venus",
+  "jupiter",
+  "upapada",
+  "arudha",
+  "karakamsha",
+  "horaLagna"
+ ],
+ "vargas": [
+  "D1",
+  "D2",
+  "D3",
+  "D4",
+  "D7",
+  "D9",
+  "D10",
+  "D12",
+  "D16",
+  "D20",
+  "D24",
+  "D30",
+  "D60"
+ ],
+ "karakas": [
+  "atma",
+  "amatya",
+  "bhratri",
+  "matri",
+  "putra",
+  "gnati",
+  "dara"
+ ],
+ "signTypes": [
+  "movable",
+  "fixed",
+  "dual",
+  "odd",
+  "even",
+  "fire",
+  "earth",
+  "air",
+  "water"
+ ],
+ "dignities": [
+  "exalted",
+  "debilitated",
+  "own",
+  "moolatrikona",
+  "friendly",
+  "inimical",
+  "combust",
+  "retrograde",
+  "vargottama",
+  "strong",
+  "weak"
+ ],
+ "dashaLevels": [
+  "maha",
+  "antar",
+  "any"
+ ],
+ "transitOrigins": [
+  "lagna",
+  "moon"
+ ],
+ "weekdays": [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday"
+ ],
+ "nakshatras": [
+  "Ashwini",
+  "Bharani",
+  "Krittika",
+  "Rohini",
+  "Mrigashira",
+  "Ardra",
+  "Punarvasu",
+  "Pushya",
+  "Ashlesha",
+  "Magha",
+  "PurvaPhalguni",
+  "UttaraPhalguni",
+  "Hasta",
+  "Chitra",
+  "Swati",
+  "Vishakha",
+  "Anuradha",
+  "Jyeshtha",
+  "Mula",
+  "PurvaAshadha",
+  "UttaraAshadha",
+  "Shravana",
+  "Dhanishtha",
+  "Shatabhisha",
+  "PurvaBhadrapada",
+  "UttaraBhadrapada",
+  "Revati"
+ ],
+ "nakshatraGroups": [
+  "dhruva",
+  "chara",
+  "ugra",
+  "mishra",
+  "kshipra",
+  "mridu",
+  "tikshna"
+ ],
+ "tithiGroups": [
+  "nanda",
+  "bhadra",
+  "jaya",
+  "rikta",
+  "purna"
+ ],
+ "pakshas": [
+  "shukla",
+  "krishna",
+  "any"
+ ],
+ "yogas": [
+  "Vishkambha",
+  "Priti",
+  "Ayushman",
+  "Saubhagya",
+  "Shobhana",
+  "Atiganda",
+  "Sukarma",
+  "Dhriti",
+  "Shula",
+  "Ganda",
+  "Vriddhi",
+  "Dhruva",
+  "Vyaghata",
+  "Harshana",
+  "Vajra",
+  "Siddhi",
+  "Vyatipata",
+  "Variyan",
+  "Parigha",
+  "Shiva",
+  "Siddha",
+  "Sadhya",
+  "Shubha",
+  "Shukla",
+  "Brahma",
+  "Indra",
+  "Vaidhriti"
+ ],
+ "karanas": [
+  "Bava",
+  "Balava",
+  "Kaulava",
+  "Taitila",
+  "Gara",
+  "Vanija",
+  "Vishti",
+  "Shakuni",
+  "Chatushpada",
+  "Naga",
+  "Kimstughna"
+ ],
+ "palmOps": [
+  "eq",
+  "neq",
+  "gt",
+  "gte",
+  "lt",
+  "lte",
+  "in",
+  "exists"
+ ],
+ "refKeys": [
+  "planet",
+  "lordOf",
+  "karaka",
+  "dispositorOf",
+  "navamsaDispositorOf"
+ ],
+ "refModifiers": [
+  "from",
+  "varga"
+ ],
+ "placementPredicates": [
+  "inHouse",
+  "houseFrom",
+  "inSign",
+  "inSignOf",
+  "inNavamsaOf",
+  "signType",
+  "dignity",
+  "conjunct",
+  "aspectedBy",
+  "exchangeWith"
+ ],
+ "housePredicates": [
+  "occupiedBy",
+  "aspectedBy",
+  "sign",
+  "signOf",
+  "signType"
+ ],
+ "panchangKeys": [
+  "tithi",
+  "tithiGroup",
+  "weekday",
+  "nakshatra",
+  "nakshatraGroup",
+  "yoga",
+  "karana",
+  "taraBala",
+  "chandraBala"
+ ],
+ "semantics": {
+  "zodiac": "Sidereal (nirayana) signs and nakshatras throughout, as the texts assume; the app states its ayanamsha.",
+  "varga": "A REF is identified in the birth chart (D1): `lordOf` counts houses in D1. `varga` then says in which divisional chart its PLACEMENT is read - its sign, dignity, conjunctions, and its house counted from that chart's own lagna. On a house leaf, `varga` makes the house itself a house of that divisional chart.",
+  "lists": "Wherever a predicate takes one value, a list means any of them: dignity [own, friendly], inHouse [6, 8, 12], inSign [...]. A REFSET list likewise means any of its members.",
+  "sameBody": "When two REFs resolve to the same planet (e.g. the lords of the 9th and 10th are one planet), `conjunct` and `exchangeWith` between them hold.",
+  "age": "A rule's `age` is [from, to] in years of life. `to` = 100 means 'from that age onward'. Ages under 18 never appear.",
+  "houses": "Whole-sign houses counted from the origin's sign (origin = lagna unless `from` / `houseFrom` / `overHouseFrom` says otherwise).",
+  "lordOf": "The ruler of the sign on that house (Mars: Aries, Scorpio; Venus: Taurus, Libra; Mercury: Gemini, Virgo; Moon: Cancer; Sun: Leo; Jupiter: Sagittarius, Pisces; Saturn: Capricorn, Aquarius).",
+  "benefic": "Jupiter, Venus, a waxing Moon, and Mercury not joined to a malefic.",
+  "malefic": "Sun, Mars, Saturn, Rahu, Ketu, a waning Moon, and Mercury joined to a malefic.",
+  "aspectedBy": "Graha drishti by sign: every planet aspects the 7th from itself; Mars also the 4th and 8th, Jupiter the 5th and 9th, Saturn the 3rd and 10th.",
+  "conjunct": "In the same sign (of the node's varga).",
+  "dignity.strong": "Exalted, in own or moolatrikona sign, or in a friend's sign and neither combust nor debilitated. `weak` is debilitated, combust, or in an enemy's sign.",
+  "dispositorOf": "The lord of the sign the referenced body occupies. `navamsaDispositorOf`: the lord of the navamsa sign it occupies.",
+  "karaka": "Jaimini chara karakas by degrees within the sign, seven-karaka scheme (Sun to Saturn).",
+  "dasha": "Vimshottari dasha from the Moon's nakshatra. level maha = the mahadasha lord is the REF; antar = the antardasha lord; any = either.",
+  "transit": "The transiting planet's sign on the day read, counted from the natal origin sign (`house` + `overHouseFrom`), or the natal sign of a REF (`overNatal`), or a sign 1st/5th/9th from that REF's natal sign (`trineTo`).",
+  "taraBala": "Count from the birth nakshatra to the day's nakshatra inclusive, reduced modulo 9 (1 janma ... 9 parama-mitra).",
+  "chandraBala": "The house of the day's Moon sign counted from the natal Moon sign.",
+  "tithi": "1-15 within a paksha; `paksha` selects shukla, krishna or any (default any). 15 with krishna is amavasya.",
+  "prashna": "The inner condition is evaluated on the chart cast for the moment and place the question is asked.",
+  "native": "The reader's stated gender; a rule carrying it is skipped when the gender is not given."
+ },
+ "nakshatraGroupMembers": {
+  "dhruva": [
+   "Rohini",
+   "UttaraPhalguni",
+   "UttaraAshadha",
+   "UttaraBhadrapada"
+  ],
+  "chara": [
+   "Punarvasu",
+   "Swati",
+   "Shravana",
+   "Dhanishtha",
+   "Shatabhisha"
+  ],
+  "ugra": [
+   "Bharani",
+   "Magha",
+   "PurvaPhalguni",
+   "PurvaAshadha",
+   "PurvaBhadrapada"
+  ],
+  "mishra": [
+   "Krittika",
+   "Vishakha"
+  ],
+  "kshipra": [
+   "Ashwini",
+   "Pushya",
+   "Hasta"
+  ],
+  "mridu": [
+   "Mrigashira",
+   "Chitra",
+   "Anuradha",
+   "Revati"
+  ],
+  "tikshna": [
+   "Ardra",
+   "Ashlesha",
+   "Jyeshtha",
+   "Mula"
+  ]
+ },
+ "tithiGroupMembers": {
+  "nanda": [
+   1,
+   6,
+   11
+  ],
+  "bhadra": [
+   2,
+   7,
+   12
+  ],
+  "jaya": [
+   3,
+   8,
+   13
+  ],
+  "rikta": [
+   4,
+   9,
+   14
+  ],
+  "purna": [
+   5,
+   10,
+   15
+  ]
+ },
+ "groupSources": {
+  "nakshatraGroups": {
+   "work": "muhurta-chintamani",
+   "chapter": 2,
+   "verse": "2-8",
+   "note": "One verse per class, checked against the text. The text also puts Abhijit in the kshipra class and one weekday in each class (Sunday dhruva, Monday chara, Tuesday ugra, Wednesday mishra, Thursday kshipra, Friday mridu, Saturday tikshna); this list has the 27 stars only."
+  },
+  "tithiGroups": {
+   "work": "muhurta-chintamani",
+   "chapter": 1,
+   "verse": "4",
+   "note": "The verse names the five groups in order; the tithi numbers follow from that cyclic order."
+  }
+ }
+}

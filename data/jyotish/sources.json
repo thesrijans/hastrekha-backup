@@ -1,0 +1,229 @@
+{
+ "generatedAt": "2026-09-30T07:23:51Z",
+ "sources": [
+  {
+   "key": "bphs",
+   "work": "Bṛhat Parāśara Horā Śāstra",
+   "author": "attributed to Parāśara",
+   "date": "compiled over centuries; the received text is medieval",
+   "workStatus": "Public domain worldwide (ancient work, no identifiable modern author).",
+   "record": "https://sa.wikisource.org/wiki/बृहत्पाराशरहोराशास्त्रम्",
+   "edition": "sa.wikisource transcription, 97-chapter arrangement (अध्यायः १-९७)",
+   "licence": "CC BY-SA 4.0 (sa.wikisource.org site licence, read from the API's rightsinfo on 2026-09-30). The Sanskrit work itself is ancient and public domain; the licence covers the volunteers' transcription.",
+   "use": "Reference only: read in the lab, cited by chapter and verse number. No transcribed text is exported.",
+   "files": 135,
+   "bytes": 1061421
+  },
+  {
+   "key": "brihat-jataka",
+   "work": "Bṛhajjātaka",
+   "author": "Varāhamihira (6th century)",
+   "date": "6th century CE",
+   "workStatus": "Public domain worldwide.",
+   "record": "https://sa.wikisource.org/wiki/बृहज्जातकम्",
+   "edition": "sa.wikisource transcription, 28 chapters",
+   "licence": "CC BY-SA 4.0 (sa.wikisource.org site licence, read from the API's rightsinfo on 2026-09-30). The Sanskrit work itself is ancient and public domain; the licence covers the volunteers' transcription.",
+   "use": "Reference only: read in the lab, cited by chapter and verse number. No transcribed text is exported.",
+   "files": 29,
+   "bytes": 181870
+  },
+  {
+   "key": "saravali",
+   "work": "Sārāvalī",
+   "author": "Kalyāṇavarman (c. 9th-10th century)",
+   "date": "c. 9th-10th century CE",
+   "workStatus": "Public domain worldwide.",
+   "record": "https://sa.wikisource.org/wiki/सारावली",
+   "edition": "sa.wikisource transcription (one page, all chapters)",
+   "licence": "CC BY-SA 4.0 (sa.wikisource.org site licence, read from the API's rightsinfo on 2026-09-30). The Sanskrit work itself is ancient and public domain; the licence covers the volunteers' transcription.",
+   "use": "Reference only: read in the lab, cited by chapter and verse number. No transcribed text is exported.",
+   "files": 1,
+   "bytes": 753842
+  },
+  {
+   "key": "phaladeepika",
+   "work": "Phaladīpikā",
+   "author": "Mantreśvara (c. 14th-16th century)",
+   "date": "c. 14th-16th century CE",
+   "workStatus": "Public domain worldwide.",
+   "record": "https://sa.wikisource.org/wiki/फलदीपिका",
+   "edition": "sa.wikisource transcription, 28 chapters",
+   "licence": "CC BY-SA 4.0 (sa.wikisource.org site licence, read from the API's rightsinfo on 2026-09-30). The Sanskrit work itself is ancient and public domain; the licence covers the volunteers' transcription.",
+   "use": "Reference only: read in the lab, cited by chapter and verse number. No transcribed text is exported.",
+   "files": 61,
+   "bytes": 409579
+  },
+  {
+   "key": "jataka-parijata",
+   "work": "Jātaka Pārijāta",
+   "author": "Vaidyanātha Dīkṣita (15th century)",
+   "date": "15th century CE",
+   "workStatus": "Public domain worldwide.",
+   "record": "https://sa.wikisource.org/wiki/जातकपारिजातः",
+   "edition": "sa.wikisource transcription, 18 chapters",
+   "licence": "CC BY-SA 4.0 (sa.wikisource.org site licence, read from the API's rightsinfo on 2026-09-30). The Sanskrit work itself is ancient and public domain; the licence covers the volunteers' transcription.",
+   "use": "Reference only: read in the lab, cited by chapter and verse number. No transcribed text is exported.",
+   "files": 20,
+   "bytes": 685500
+  },
+  {
+   "key": "muhurta-chintamani",
+   "work": "Muhūrta Cintāmaṇi",
+   "author": "Rāma Daivajña (composed 1600 CE)",
+   "date": "1600 CE",
+   "workStatus": "Public domain worldwide.",
+   "record": "https://sa.wikisource.org/wiki/मुहूर्त्तचिन्तामणिः",
+   "edition": "sa.wikisource transcription (prakaraṇa arrangement)",
+   "licence": "CC BY-SA 4.0 (sa.wikisource.org site licence, read from the API's rightsinfo on 2026-09-30). The Sanskrit work itself is ancient and public domain; the licence covers the volunteers' transcription.",
+   "use": "Reference only: read in the lab, cited by chapter and verse number. No transcribed text is exported.",
+   "files": 1,
+   "bytes": 182520
+  },
+  {
+   "key": "prashna-marga",
+   "work": "Praśna Mārga (pūrvārdha, chapters 1-16) with the Sanskrit notes of Punnasseri Nambi Neelakantha Sarma",
+   "author": "Nārāyaṇan Nampūtiri of Panakkāṭṭu (composed 1649 CE); edited by Punnasseri Nambi Neelakantha Sarma (1858-1934)",
+   "date": "1649 CE; this edition 1926",
+   "workStatus": "Public domain. The work is of 1649. The 1926 edition's editor died in 1934, so his notes have been public domain in India since 1 January 1995 (life + 60); US: published 1926, before 1931.",
+   "record": "https://archive.org/details/in.ernet.dli.2015.332036",
+   "edition": "Praśnamārga, ed. Punnasseri Nambi Neelakantha Sarma, 1926 (archive.org in.ernet.dli.2015.332036), pūrvārdha",
+   "licence": "Digital Library of India scan 2015.332036 of a 1926 printed edition. No rights statement on the item; the printed edition is public domain as above. The text layer is machine OCR (tesseract, Sanskrit) and is not proofread. The same scan as archive.org `prasnamarga035823mbp`, whose text layer was OCRed as Telugu and is unreadable (fetched first, 5,075,284 bytes, then discarded).",
+   "use": "Reference only: OCR read in the lab, cited by chapter and verse number. Nothing of the text is exported.",
+   "files": 2,
+   "bytes": 5770998
+  },
+  {
+   "key": "brihat-jataka-iyer-1885",
+   "work": "The Brihat Jataka of Varaha Mihira, translated into English by N. Chidambaram Iyer",
+   "author": "N. Chidambaram Iyer (translator; death year not recorded)",
+   "date": "Madras, Foster Press, 1885",
+   "workStatus": "Public domain, United States: verified (published 1885). India: inferred - the translator's death year is not recorded; the translation would still be protected there only if he died in 1966 or later, 81 years after publishing it. The Wellcome Library copy is released under the Public Domain Mark.",
+   "record": "https://archive.org/details/b2488442x",
+   "edition": "Madras: Foster Press, 1885 (Wellcome Library copy, 236 pages)",
+   "licence": "Creative Commons Public Domain Mark 1.0 (archive.org item metadata, Wellcome Library copy).",
+   "use": "English reading aid for the Bṛhajjātaka; quotable (public domain). Rules cite the Sanskrit verse number.",
+   "files": 2,
+   "bytes": 6822683
+  },
+  {
+   "key": "saint-germain-1897",
+   "work": "The Practice of Palmistry for Professional Purposes, vol. 2",
+   "author": "Comte C. de Saint-Germain (pseudonym of Edgar de Valcourt-Vermont, born 1846)",
+   "date": "Chicago: The French-American Publishing Company, 1897 (copyright 1897, The National School of Palmistry)",
+   "workStatus": "Public domain, United States: verified (US publication, 1897). India: established by the author's birth year - the Library of Congress authority is 'Valcourt-Vermont, E. de (Edgar), 1846-', with no death year; life + 60 would still run only if he had died in 1966 or later, at the age of 119 or more. The task's 'd. 1921' could not be confirmed in any authority record and is not relied on.",
+   "record": "https://archive.org/details/practicepalmist01saingoog",
+   "edition": "Chicago: The French-American Publishing Company, 1897, volume 2, printed pp. 194-413 (Google scan of the Harvard College Library copy, 245 images)",
+   "licence": "possible-copyright-status: NOT_IN_COPYRIGHT (archive.org item metadata; Google scan).",
+   "use": "Palmistry source for the life-question rules; quotable (public domain).",
+   "files": 2,
+   "bytes": 5870332
+  },
+  {
+   "key": "saint-germain-1897-v1",
+   "work": "The Practice of Palmistry for Professional Purposes, one-volume printing of 1900 (catalogued as vol. 1)",
+   "author": "Comte C. de Saint-Germain (pseudonym of Edgar de Valcourt-Vermont, born 1846)",
+   "date": "Chicago, Laird & Lee; the archive record dates this printing 1900 (first published 1897)",
+   "workStatus": "As volume 2: public domain in the United States (published 1897-1900); India established by birth year.",
+   "record": "https://archive.org/details/practicepalmist00saingoog",
+   "edition": "Chicago: Laird & Lee, 1900 (Google scan, 433 images)",
+   "licence": "possible-copyright-status: NOT_IN_COPYRIGHT (archive.org item metadata; Google scan).",
+   "use": "Fetched as volume 1; it is the complete 1900 Laird & Lee printing (copyright 1897 and 1900) with the same pagination. Not cited: the rules cite the 1897 volume 2, which holds every chapter on the lines.",
+   "files": 1,
+   "bytes": 6593253
+  },
+  {
+   "key": "bphs-sd",
+   "work": "Bṛhat Parāśara Horā Śāstra (second transcription)",
+   "author": "as the sa.wikisource entry for the same work",
+   "date": "as the sa.wikisource entry for the same work",
+   "workStatus": "Public domain worldwide (the work).",
+   "record": "https://sanskritdocuments.org/sanskrit/jyotisha/",
+   "edition": "sanskritdocuments.org ITRANS transcription (par0110, par1120, par2130, par3140, par4145, par4650, par5160, par6170, par7180, par8190, par9197)",
+   "licence": "Restrictive. sanskritdocuments.org file header: 'This text is prepared by volunteers and is to be used for personal study and research. The file is not to be copied or reposted for promotion of any website or individuals or for commercial purpose without permission.' The Sanskrit work itself is public domain.",
+   "use": "Reference only, as the task prescribes for restrictive terms: read in the lab, cited by chapter and verse number. Nothing of the file is copied, reposted or exported. Needed because the sa.wikisource pages for chapters 16, 18, 20, 22, 23 and 35 carry the text of the chapter before them (found by jyotish/corpus.py's duplicate check).",
+   "files": 11,
+   "bytes": 444987
+  },
+  {
+   "key": "jataka-parijata-sd",
+   "work": "Jātaka Pārijāta (second transcription)",
+   "author": "as the sa.wikisource entry for the same work",
+   "date": "as the sa.wikisource entry for the same work",
+   "workStatus": "Public domain worldwide (the work).",
+   "record": "https://sanskritdocuments.org/sanskrit/jyotisha/",
+   "edition": "sanskritdocuments.org ITRANS transcription (jAtakapArijAtaH)",
+   "licence": "Restrictive. sanskritdocuments.org file header: 'This text is prepared by volunteers and is to be used for personal study and research. The file is not to be copied or reposted for promotion of any website or individuals or for commercial purpose without permission.' The Sanskrit work itself is public domain.",
+   "use": "Reference only, as the task prescribes for restrictive terms: read in the lab, cited by chapter and verse number. Nothing of the file is copied, reposted or exported. Needed because the sa.wikisource स्त्रीजातकाध्यायः page carries the text of the कालचक्रदशाध्यायः.",
+   "files": 1,
+   "bytes": 299381
+  },
+  {
+   "key": "phaladeepika-sd",
+   "work": "Phaladīpikā (second transcription)",
+   "author": "as the sa.wikisource entry for the same work",
+   "date": "as the sa.wikisource entry for the same work",
+   "workStatus": "Public domain worldwide (the work).",
+   "record": "https://sanskritdocuments.org/sanskrit/jyotisha/",
+   "edition": "sanskritdocuments.org ITRANS transcription (phaladIpika)",
+   "licence": "Restrictive. sanskritdocuments.org file header: 'This text is prepared by volunteers and is to be used for personal study and research. The file is not to be copied or reposted for promotion of any website or individuals or for commercial purpose without permission.' The Sanskrit work itself is public domain.",
+   "use": "Reference only, as the task prescribes for restrictive terms: read in the lab, cited by chapter and verse number. Nothing of the file is copied, reposted or exported. Cross-check of verse numbering.",
+   "files": 1,
+   "bytes": 143833
+  },
+  {
+   "key": "brihat-jataka-sd",
+   "work": "Bṛhajjātaka (second transcription)",
+   "author": "as the sa.wikisource entry for the same work",
+   "date": "as the sa.wikisource entry for the same work",
+   "workStatus": "Public domain worldwide (the work).",
+   "record": "https://sanskritdocuments.org/sanskrit/jyotisha/",
+   "edition": "sanskritdocuments.org ITRANS transcription (brihajjAtakam)",
+   "licence": "Restrictive. sanskritdocuments.org file header: 'This text is prepared by volunteers and is to be used for personal study and research. The file is not to be copied or reposted for promotion of any website or individuals or for commercial purpose without permission.' The Sanskrit work itself is public domain.",
+   "use": "Reference only, as the task prescribes for restrictive terms: read in the lab, cited by chapter and verse number. Nothing of the file is copied, reposted or exported. Cross-check of verse numbering.",
+   "files": 1,
+   "bytes": 75120
+  }
+ ],
+ "consideredNotUsed": [
+  {
+   "item": "Uttara Kālāmṛta (Kālidāsa) - archive.org `uttara-kalamrita-kalidas`, `uttkalamrita-kalidas-ps-sastri`, `uttara-kalamritam`, `uttara-kalamritam.`, `p.-s.-sastri-uttarakaalaamruta-of-kaalidaasa-hindi`",
+   "what": "The only digital copies found: uploads of P. S. Sastri's 20th-century English and Hindi translations",
+   "why": "No transcription of the Sanskrit was found on GRETIL, sanskritdocuments.org, sa.wikisource or github.com/sanskrit/raw_etexts. The translations are modern and not public domain (one upload asserts a Public Domain Mark without basis). Not fetched; NO rules were extracted from this text. House and planet significations, its usual use, are cited from BPHS and the Phaladīpikā instead."
+  },
+  {
+   "item": "Praśna Mārga, uttarārdha (chapters 17-32)",
+   "what": "The half that holds the marriage, children and 'should I' question chapters",
+   "why": "The 1926 public-domain edition found covers chapters 1-16 only. The second half was found only in B. V. Raman's translation (archive.org `PrasnaMargaBVR`, `prasna-marga-part-2-by-bv-raman`; in copyright in India until 2059) and in a modern Chaukhamba edition with commentary. Not fetched."
+  },
+  {
+   "item": "GRETIL `sa_varAhamihira-bRhajjAtaka.xml` (input Mizue Sugita, 1994)",
+   "what": "Bṛhajjātaka in IAST, from the Oriental Books Reprint Corporation 2nd edition (1979)",
+   "why": "Licence CC BY-NC-SA 4.0 - non-commercial. Not fetched; two other transcriptions of the same input are already in hand."
+  },
+  {
+   "item": "github.com/sanskrit/raw_etexts `jyotiSham/parashara_hora_shastra.md`, `muhurta_chintamani.md`",
+   "what": "Unproofread raw e-texts of BPHS and the Muhūrta Cintāmaṇi",
+   "why": "The repository carries no licence file. Not fetched."
+  },
+  {
+   "item": "lab files under `books/jyotish/translations-not-pd/` and `books/brihat-samhita/`",
+   "what": "Santhanam, Sharma, Subrahmanya Sastri and Raman translations (BPHS, Sārāvalī, Phaladīpikā, Jātaka Pārijāta, Praśna Mārga, ...)",
+   "why": "Modern translations, not public domain (books/SOURCES.md: citation NO). No script in jyotish/ opens them and no rule text derives from them."
+  },
+  {
+   "item": "archive.org `saravali00kalyuoft` (Sārāvalī, ed. V. Subrahmanya Sastri, Bombay: Nirnaya Sagara, 1907)",
+   "what": "A printed Sanskrit edition, public domain by date",
+   "why": "Not needed: sa.wikisource has the text. Its text layer is OCR; kept here as the fallback if a Sārāvalī verse number needs checking against print."
+  },
+  {
+   "item": "archive.org `brihatjatakavar00iyergoog`, `wg1079`, `brihatjataka00varaiala`",
+   "what": "Other scans of Chidambaram Iyer's Brihat Jataka (1885; 1905 second edition)",
+   "why": "Duplicates. The Wellcome copy (`b2488442x`) carries an explicit Public Domain Mark and is the one used."
+  },
+  {
+   "item": "archive.org `practiceofpalmis00cstg` (1973), `the-practice-of-palmistry-for-professional-purposes.-vol-1/2-by-saint-germain`",
+   "what": "A 1973 reprint and two re-uploads of Saint-Germain's Practice of Palmistry",
+   "why": "The reprint may carry new matter (lending only); the re-uploads have no provenance. The Google scans are used."
+  }
+ ]
+}
