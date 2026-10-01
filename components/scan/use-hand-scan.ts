@@ -315,6 +315,11 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const landmarkerRef = useRef<HandLandmarker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  /**
+   * scan-perfect P1: the camera's stream exactly as opened (the same call, constraints and resolution every scan
+   * uses), for the chamber's raw recording mode (`?record=1`) to record. Null while the camera is off.
+   */
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const frameCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const lumaCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -637,6 +642,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     rafRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+    setCameraStream(null);
     torchOnRef.current = false;
     landmarkerRef.current?.close();
     landmarkerRef.current = null;
@@ -1893,6 +1899,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
         audio: false,
       });
       streamRef.current = stream;
+      setCameraStream(stream);
 
       const video = videoRef.current;
       if (video === null) throw new Error("video element not mounted");
@@ -2158,6 +2165,7 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     try {
       if (next === null) next = await open(cameraConstraints(from, profile));
       streamRef.current = next;
+      setCameraStream(next);
       video.srcObject = next;
       await video.play();
       await adoptStream(next);
@@ -2194,6 +2202,8 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     rekha,
     /** rekhaTrace (flag): ms the last trace took; null with the flag off. */
     traceMs,
+    /** scan-perfect P1: the live camera stream as opened, for `?record=1`. */
+    cameraStream,
     features,
     rectified,
     stats,

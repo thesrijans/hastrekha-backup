@@ -1,0 +1,89 @@
+@layer components {
+  /*
+   * The raw recording mode's mark (scan-perfect P1): small, at the top's centre — the back mark holds the left of
+   * that row and the build stamp its right — and over everything the room draws, the result included (z 8).
+   */
+  .mark {
+    position: absolute;
+    inset-block-start: calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem);
+    inset-inline: 0;
+    z-index: 8;
+    inline-size: fit-content;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--color-snc-ink) 70%, transparent);
+    pointer-events: none;
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--color-snc-gold-400);
+  }
+  .dot {
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--color-snc-ink-red);
+    animation: sncRecPulse 1s ease-in-out infinite;
+  }
+  @keyframes sncRecPulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dot {
+      animation: none;
+    }
+  }
+  /* The finished file: what it is, and the way off the phone — the reader's own download or share. */
+  .card {
+    position: absolute;
+    inset-block-start: calc(max(0.75rem, env(safe-area-inset-top)) + 3.2rem);
+    inset-inline: 1rem;
+    z-index: 8;
+    max-inline-size: 24rem;
+    margin: 0 auto;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid color-mix(in oklab, var(--color-snc-gold-500) 55%, transparent);
+    border-radius: 0.6rem;
+    background: color-mix(in oklab, var(--color-snc-ink) 88%, transparent);
+    color: var(--color-snc-gold-400);
+    text-align: center;
+  }
+  .title {
+    margin: 0 0 0.3rem;
+    font-family: var(--font-snc-devanagari);
+    font-size: 1rem;
+  }
+  .detail {
+    margin: 0.15rem 0;
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: color-mix(in oklab, var(--color-snc-gold-400) 80%, transparent);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-block-start: 0.6rem;
+  }
+  .action {
+    min-block-size: 44px;
+    padding: 0 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid color-mix(in oklab, var(--color-snc-gold-500) 60%, transparent);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-snc-gold-400);
+    font-family: var(--font-snc-devanagari);
+    font-size: 0.85rem;
+    text-decoration: none;
+    cursor: pointer;
+  }
+}

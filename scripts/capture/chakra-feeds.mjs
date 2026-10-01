@@ -35,6 +35,8 @@ import { GPU_ARGS, isSoftware, readRenderer } from "./gpu-probe.mjs";
 import { ANDROID, ANDROID_CAMERA_STUB } from "./phone-camera.mjs";
 
 const REPO = resolve(import.meta.dirname, "..", "..");
+/** A feed's name: its file without the .y4m or .mjpeg. */
+const feedName = (file) => basename(file).replace(/\.(y4m|mjpeg)$/, "");
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : fallback);
 const scenario = arg("--scenario", "ring");
@@ -49,8 +51,8 @@ const press = arg("--press", null);
 
 if (!existsSync(feedDir)) throw new Error(`No feeds at ${feedDir}`);
 const feeds = readdirSync(feedDir)
-  .filter((file) => file.endsWith(".y4m"))
-  .filter((file) => only === null || only.includes(basename(file, ".y4m")))
+  .filter((file) => /\.(y4m|mjpeg)$/.test(file)) // P1: a raw phone recording plays as .mjpeg (recording-to-feed.mjs)
+  .filter((file) => only === null || only.includes(feedName(file)))
   .sort();
 
 /** Every navigator.vibrate call, timed. */
@@ -209,7 +211,7 @@ const report = { scenario, viewport: `${viewportWidth}x${viewportHeight}`, feedD
 
 try {
   for (const feed of feeds) {
-    const name = basename(feed, ".y4m");
+    const name = feedName(feed);
     const browser = await chromium.launch({
       headless: true,
       args: [

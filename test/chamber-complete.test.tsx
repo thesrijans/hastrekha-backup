@@ -209,7 +209,10 @@ const withoutComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\/
 {
   const client = withoutComments(readFileSync("app/scan/chamber/chamber-client.tsx", "utf8"));
   ok(!/onCaptureComplete/.test(client), "the pose choreography no longer opens the reading on its own — detection completes the scan");
-  ok(/const detectionDone = phase === "scanning" && status === "running" && detection\.complete;/.test(client), "(a) detection is complete when every major line is confirmed or marked unclear (G3's `complete`)");
+  ok(
+    /const detectionDone = phase === "scanning" && status === "running" && detection\.complete && !recording;/.test(client),
+    "(a) detection is complete when every major line is confirmed or marked unclear (G3's `complete`) — held only while a raw recording runs (scan-perfect P1)",
+  );
   const freeze = client.slice(client.indexOf("const completeScan = useCallback("), client.indexOf("const detectionDone ="));
   ok(/const best = takeBestFrame\(\);[\s\S]*stop\(\);\s*haptic\("detectionComplete"\);\s*soundRef\.current\?\.play\("shutter"\);/.test(freeze), "at once: the whole scan's best frame taken, the camera stopped, the double tick, the soft shutter sound if sound is on");
   ok(!/FREEZE_WAIT_MS|freezeReady|peekFreeze/.test(client), "…and no wait for a sharper frame: the best frame already is");

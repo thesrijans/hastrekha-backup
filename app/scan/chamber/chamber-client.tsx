@@ -126,6 +126,9 @@ import { BUILD_SHA_SHORT } from "@/lib/build-stamp";
 import type { ReadingResponse } from "@/app/read/reading-types";
 import styles from "./chamber.module.css";
 
+/** scan-perfect P1: the raw recording mode's component, typed here so the chamber need not import it to name it. */
+type RawRecorderComponent = typeof import("@/components/sanctuary/chamber/raw-recorder").default;
+
 /**
  * The trace classes that count as a minor line having been READ.
  *
@@ -274,6 +277,16 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
   const showCost = useSyncExternalStore(
     subscribeToNothing,
     () => new URLSearchParams(window.location.search).get("cost") === "1",
+    () => false,
+  );
+  /**
+   * scan-perfect P1 — the raw recording mode (`?record=1`): the scan runs exactly as ever, and its camera stream is
+   * recorded raw for RAW_RECORDING_MS (components/sanctuary/chamber/raw-recorder.tsx). The reader's phone becomes
+   * the test rig.
+   */
+  const recordMode = useSyncExternalStore(
+    subscribeToNothing,
+    () => new URLSearchParams(window.location.search).get("record") === "1",
     () => false,
   );
 
@@ -425,6 +438,7 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
     bestFrameCosts,
     accumulatorGray,
     firstRekhaOfferAt,
+    cameraStream,
   } = useHandScan({ onFeatures, onLineFeatures, cameraSelection: "auto", profile, funnel: showCost, holdThroughLoss: true, bestFrame: true });
 
   /*
@@ -678,8 +692,30 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
   /* The ring has been seen closed: the result comes in. */
   const onSealed = useCallback(() => setPhase((phaseNow) => (phaseNow === "sealing" ? "complete" : phaseNow)), []);
 
+  /*
+   * P1: while the raw recording runs, nothing completes — a completion stops the camera, and the recording is the
+   * whole RAW_RECORDING_MS. Each trigger waits and fires as usual the moment the recording is done.
+   */
+  const [recording, setRecording] = useState(false);
+  const recordingRef = useRef(false);
+  /* Fetched only under `?record=1`, as the hook fetches its flag-gated modules: a test tool costs a reader's scan nothing. */
+  const [RawRecorder, setRawRecorder] = useState<RawRecorderComponent | null>(null);
+  useEffect(() => {
+    if (!recordMode) return;
+    let live = true;
+    void import("@/components/sanctuary/chamber/raw-recorder").then((loaded) => {
+      if (live) setRawRecorder(() => loaded.default);
+    });
+    return () => {
+      live = false;
+    };
+  }, [recordMode]);
+  useEffect(() => {
+    recordingRef.current = recording;
+  }, [recording]);
+
   /* (a) every major a result — confirmed, or marked unclear by the budget (G3's `complete`). */
-  const detectionDone = phase === "scanning" && status === "running" && detection.complete;
+  const detectionDone = phase === "scanning" && status === "running" && detection.complete && !recording;
   useEffect(() => {
     if (!detectionDone) return;
     const timer = window.setTimeout(() => completeScan("detected"), 0);
@@ -698,15 +734,15 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
         rootRef.current.dataset.sncBestNow = best === null ? "" : `${best.score.toFixed(1)},${best.vol.toFixed(1)},${best.held},${best.inBand ? 1 : 0}`;
         rootRef.current.dataset.sncPalmGone = palmGoneMs === null ? "" : String(Math.round(palmGoneMs));
       }
-      if (completionReason(detectionRef.current, { shutter: false, palmGoneMs }) === "palm-left") completeScan("palm-left");
+      if (!recordingRef.current && completionReason(detectionRef.current, { shutter: false, palmGoneMs }) === "palm-left") completeScan("palm-left");
     }, 250);
     return () => window.clearInterval(timer);
   }, [status, phase, completeScan, showCost, peekBestFrame]);
 
   /* (b) the shutter: live once SHUTTER_MIN_HELD majors are held; it completes with the best frame so far. */
-  const shutterLive = shutterReady(detection);
+  const shutterLive = shutterReady(detection) && !recording;
   const onShutter = useCallback(() => {
-    if (shutterReady(detectionRef.current)) completeScan("shutter");
+    if (!recordingRef.current && shutterReady(detectionRef.current)) completeScan("shutter");
   }, [completeScan]);
 
   /* The opt-in growth save: on saves the pair as a growth session, off deletes it (G4.3). */
@@ -1149,6 +1185,9 @@ export function ChamberClient({ readHref, backHref }: ChamberClientProps): React
           {` · build ${BUILD_SHA_SHORT}`}
         </p>
       ) : null}
+
+      {/* P1: the raw recording mode's one mark — "● REC", then the file to download or share. */}
+      {recordMode && RawRecorder !== null ? <RawRecorder stream={cameraStream} onRecordingChange={setRecording} /> : null}
 
       {/* THE BUILD STAMP (M0). The chamber has no footer — its foot is the litany,
           the marks and the Monitor's handle — so the line takes the back mark's

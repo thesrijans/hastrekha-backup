@@ -27,6 +27,8 @@ import { GPU_ARGS, isSoftware, readRenderer } from "./gpu-probe.mjs";
 import { ANDROID, ANDROID_CAMERA_STUB } from "./phone-camera.mjs";
 
 const REPO = resolve(import.meta.dirname, "..", "..");
+/** A feed's name: its file without the .y4m or .mjpeg. */
+const feedName = (file) => basename(file).replace(/\.(y4m|mjpeg)$/, "");
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : fallback);
 const label = arg("--label", "g1-funnel");
@@ -164,8 +166,8 @@ const SNAP_RECORD_KINDS = () =>
 
 if (!existsSync(feedDir)) throw new Error(`No feeds at ${feedDir} — run scripts/capture/make-tight-feeds.py first.`);
 const feeds = readdirSync(feedDir)
-  .filter((file) => file.endsWith(".y4m"))
-  .filter((file) => only === null || only.includes(basename(file, ".y4m")))
+  .filter((file) => /\.(y4m|mjpeg)$/.test(file)) // P1: a raw phone recording plays as .mjpeg (recording-to-feed.mjs)
+  .filter((file) => only === null || only.includes(feedName(file)))
   .sort();
 const manifestPath = join(feedDir, "manifest.json");
 const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : { feeds: [] };
@@ -397,7 +399,7 @@ try {
           if (hint !== "" && hint !== last && taken < 8) {
             last = hint;
             taken += 1;
-            await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-shot-${taken}.png`) });
+            await page.screenshot({ path: join(dir, `${feedName(feed)}-shot-${taken}.png`) });
           }
           await page.waitForTimeout(250);
         }
@@ -408,14 +410,14 @@ try {
         while (Date.now() < until) {
           if (tapAction && !tapped && (await page.locator("[data-snc-hint-action]").count()) > 0) {
             tapped = true;
-            await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-action-before.png`) });
+            await page.screenshot({ path: join(dir, `${feedName(feed)}-action-before.png`) });
             await page.tap("[data-snc-hint-action]").catch(() => undefined);
-            await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-action.png`) });
+            await page.screenshot({ path: join(dir, `${feedName(feed)}-action.png`) });
           }
           if (untilComplete && (await page.locator('[data-snc-result="result"]').count()) > 0) {
             /* Let the photograph ease to the hand's framing and the leaf come in, then photograph it. */
             await page.waitForTimeout(1300);
-            await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-complete.png`) });
+            await page.screenshot({ path: join(dir, `${feedName(feed)}-complete.png`) });
             break;
           }
           await page.waitForTimeout(250);
@@ -450,7 +452,7 @@ try {
       const g2raw = await page.evaluate(() => ({ samples: window.__g2samples ?? [], vibrations: window.__vibrations ?? [] }));
       const readout = await page.evaluate(() => document.querySelector("[data-snc-budget]")?.textContent ?? null);
       const litany = await page.evaluate(() => [...document.querySelectorAll('[data-snc-litany="in"] p')].map((p) => p.textContent.trim()));
-      const name = basename(feed, ".y4m");
+      const name = feedName(feed);
       await page.screenshot({ path: join(dir, `${name}.png`) });
       /* G4.3 in a real browser: the pair kept for the session, the opt-in saving and then deleting its session. */
       let growthCheck = null;
@@ -460,7 +462,7 @@ try {
         await page.waitForFunction(() => document.querySelector("[data-snc-growth]")?.checked === true && !document.querySelector("[data-snc-growth]")?.disabled, null, { timeout: 10_000 }).catch(() => undefined);
         await page.waitForTimeout(500);
         const on = await page.evaluate(SNAP_RECORD_KINDS);
-        await page.screenshot({ path: join(dir, `${basename(feed, ".y4m")}-growth-on.png`) });
+        await page.screenshot({ path: join(dir, `${feedName(feed)}-growth-on.png`) });
         await page.click("[data-snc-growth]");
         await page.waitForFunction(() => document.querySelector("[data-snc-growth]")?.checked === false && !document.querySelector("[data-snc-growth]")?.disabled, null, { timeout: 10_000 }).catch(() => undefined);
         await page.waitForTimeout(500);
