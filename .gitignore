@@ -38,3 +38,4 @@ next-env.d.ts
 
 docs/reference/scan-video-*
 docs/reference/phone-chamber-*
+__pycache__/
