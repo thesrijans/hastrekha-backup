@@ -9,7 +9,11 @@
  * hand frames, frames through EVERY gate, the first failing gate of the rest, each gate's own failures,
  * extractions, lines proposed and held, and the palm's size by both of the readout's measures.
  *
- *   node scripts/capture/funnel-feeds.mjs [--build] [--label name] [--seconds 20] [--feeds dir] [--only tight-00,normal] [--shots]
+ *   node scripts/capture/funnel-feeds.mjs [--build] [--label name] [--seconds 20] [--feeds dir] [--only tight-00,normal] [--shots] [--cpu 4]
+ *
+ * S3.7: the lines as each extraction DREW them (`window.__hrDrawn`, ?cost=1) are read back too — per line the held
+ * shape's jitter between consecutive extractions and every drawn line's worst turn per 10 px, both at 256, and what
+ * the discovery cost per extraction; `--cpu 4` runs the page under CDP's 4× CPU throttle.
  *
  * Writes captures/ui/<stamp>-<label>/ (git-ignored: the feeds are the reader's palm): one screenshot per
  * feed and funnel.json. Real GPU (gpu-probe's flags) and no WebGPU, for the same reason
@@ -39,6 +43,106 @@ const untilComplete = argv.includes("--until-complete");
 const tapAction = argv.includes("--tap-action");
 /** G4: once complete, switch the opt-in on and off, counting the growth sessions in IndexedDB after each. */
 const toggleGrowth = argv.includes("--toggle-growth");
+/** S3.7d: CDP CPU throttling for the page (1 = none). */
+const cpu = Number(arg("--cpu", "1"));
+
+/* ---------------- S3.7: the drawn lines' bars, from window.__hrDrawn (MASK_SIZE points → 256) ---------------- */
+
+const to256 = (points) => points.map(([x, y]) => ({ x: (x + 0.5) * 2 - 0.5, y: (y + 0.5) * 2 - 0.5 }));
+function resample1(points) {
+  if (points.length < 2) return points.slice();
+  const out = [points[0]];
+  let carried = 0;
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1];
+    const b = points[i];
+    const seg = Math.hypot(b.x - a.x, b.y - a.y);
+    if (seg < 1e-9) continue;
+    let at = 1 - carried;
+    while (at <= seg + 1e-9) {
+      out.push({ x: a.x + ((b.x - a.x) * at) / seg, y: a.y + ((b.y - a.y) * at) / seg });
+      at += 1;
+    }
+    carried = seg - (at - 1);
+  }
+  return out;
+}
+/** smooth-path.ts turningBar: the largest heading change across ±5 px of a 1 px resampling. */
+function turnPer10(points) {
+  const p = resample1(points);
+  let worst = 0;
+  for (let i = 5; i + 5 < p.length; i += 1) {
+    const ux = p[i].x - p[i - 5].x;
+    const uy = p[i].y - p[i - 5].y;
+    const vx = p[i + 5].x - p[i].x;
+    const vy = p[i + 5].y - p[i].y;
+    const nu = Math.hypot(ux, uy);
+    const nv = Math.hypot(vx, vy);
+    if (nu < 1e-9 || nv < 1e-9) continue;
+    worst = Math.max(worst, (Math.acos(Math.max(-1, Math.min(1, (ux * vx + uy * vy) / (nu * nv)))) * 180) / Math.PI);
+  }
+  return worst;
+}
+function distanceTo(p, line) {
+  let best = Infinity;
+  for (let i = 0; i + 1 < line.length; i += 1) {
+    const a = line[i];
+    const b = line[i + 1];
+    const vx = b.x - a.x;
+    const vy = b.y - a.y;
+    const l2 = vx * vx + vy * vy;
+    const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * vx + (p.y - a.y) * vy) / l2));
+    best = Math.min(best, Math.hypot(p.x - (a.x + t * vx), p.y - (a.y + t * vy)));
+  }
+  return best;
+}
+const quantile = (values, q) => {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
+};
+/**
+ * Per line: the HELD shape's jitter — for consecutive extractions with the line held in both, the median distance
+ * (px at 256) from the earlier drawn points to the later drawn line (a line that grew is not jitter; one that moved
+ * is) — and the worst turn per 10 px over every drawn line; the discovery's ms per extraction.
+ */
+function summariseDrawn(records) {
+  if (!Array.isArray(records) || records.length === 0) return null;
+  const out = { extractions: records.length, lines: {}, ms: null };
+  for (const id of ["heart", "head", "life", "fate"]) {
+    const jitter = [];
+    const turns = [];
+    let previous = null;
+    for (const record of records) {
+      const points = record.lines[id];
+      if (points === undefined || points.length < 2) {
+        previous = null;
+        continue;
+      }
+      const line = to256(points);
+      turns.push(turnPer10(line));
+      const held = record.held.includes(id);
+      if (previous !== null && previous.held && held) {
+        const d = resample1(previous.line).map((p) => distanceTo(p, line)).sort((a, b) => a - b);
+        jitter.push(d[d.length >> 1]);
+      }
+      previous = { line, held };
+    }
+    if (turns.length > 0)
+      out.lines[id] = {
+        drawn: turns.length,
+        turnMedian: quantile(turns, 0.5),
+        turnWorst: Math.max(...turns),
+        jitterMedian: quantile(jitter, 0.5),
+        jitterP95: quantile(jitter, 0.95),
+        jitterWorst: jitter.length === 0 ? null : Math.max(...jitter),
+        heldPairs: jitter.length,
+      };
+  }
+  const ms = records.map((r) => r.ms).filter((v) => typeof v === "number");
+  if (ms.length > 0) out.ms = { n: ms.length, median: quantile(ms, 0.5), p95: quantile(ms, 0.95), worst: Math.max(...ms) };
+  return out;
+}
 
 /** In the page: the snap store's records by kind — IndexedDB `hastrekha-snaps`, read directly. */
 const SNAP_RECORD_KINDS = () =>
@@ -199,7 +303,7 @@ const range = (s) => (s === null ? "–" : `${s.median} (${s.min}–${s.max})`);
 const pct = (part, whole) => (whole === 0 ? "–" : `${((100 * part) / whole).toFixed(1)}%`);
 
 if (argv.includes("--build")) await buildProduction();
-const server = await startServer();
+const server = await startServer({ offline: true }); // nothing a capture does may reach the database or OpenRouter
 const stamp = new Date().toISOString().replaceAll(":", "-").slice(0, 19);
 const dir = join(REPO, "captures", "ui", `${stamp}-${label}`);
 mkdirSync(dir, { recursive: true });
@@ -238,6 +342,7 @@ try {
       await context.addInitScript(ANDROID_CAMERA_STUB);
       await context.addInitScript(VIBRATE_RECORDER);
       const page = await context.newPage();
+      if (cpu > 1) await (await context.newCDPSession(page)).send("Emulation.setCPUThrottlingRate", { rate: cpu });
       const errors = [];
       const failedRequests = [];
       page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
@@ -341,6 +446,7 @@ try {
         };
       });
       const snapshot = await page.evaluate(() => (typeof window.__hrFunnel === "function" ? window.__hrFunnel() : null));
+      const drawnRecords = await page.evaluate(() => (typeof window.__hrDrawn === "function" ? window.__hrDrawn() : null));
       const g2raw = await page.evaluate(() => ({ samples: window.__g2samples ?? [], vibrations: window.__vibrations ?? [] }));
       const readout = await page.evaluate(() => document.querySelector("[data-snc-budget]")?.textContent ?? null);
       const litany = await page.evaluate(() => [...document.querySelectorAll('[data-snc-litany="in"] p')].map((p) => p.textContent.trim()));
@@ -362,7 +468,8 @@ try {
         growthCheck = { before, on, off };
       }
       const g4 = { ...summariseG4(g2raw.samples, g2raw.vibrations, g4leaf), growthCheck };
-      const entry = { feed: name, expected: expected.get(feed) ?? null, handSeen, errors, failedRequests, litany, readout, funnel: summarise(snapshot), g2: summariseG2(g2raw.samples, g2raw.vibrations), g3: summariseG3(g2raw.samples, g2raw.vibrations), g4, g2samples: g2raw.samples };
+      const s3 = summariseDrawn(drawnRecords);
+      const entry = { feed: name, expected: expected.get(feed) ?? null, handSeen, errors, failedRequests, litany, readout, funnel: summarise(snapshot), g2: summariseG2(g2raw.samples, g2raw.vibrations), g3: summariseG3(g2raw.samples, g2raw.vibrations), g4, s3, drawn: drawnRecords, g2samples: g2raw.samples };
       report.feeds.push(entry);
       const f = entry.funnel;
       const g = entry.g2;
@@ -378,6 +485,14 @@ try {
             : `  ${g4.leaf.reason} best ${g4.leaf.best} shift ${g4.leaf.shift}  legend "${g4.leaf.legend}"  opt-in ${g4.leaf.growth}  buttons [${g4.leaf.buttons.map((b) => b.text).join(" | ")}]  leaf ${g4.leaf.leafTop}–${g4.leaf.leafBottom} of ${g4.leaf.viewport.height}  camera ${g4.leaf.videoLive ? "LIVE" : "stopped"}  title "${g4.leaf.title}"`) +
           `  double-tick ${g4.doubleTicks}  blur ${g4.blurAt === null ? "never" : `@${(g4.blurAt / 1000).toFixed(1)}s`}  action ${g4.actionAt === null ? "never" : `@${(g4.actionAt / 1000).toFixed(1)}s`}  torch ${g4.torchAfter ?? "–"}` +
           (g4.growthCheck === null ? "" : `  snap store before ${JSON.stringify(g4.growthCheck.before)} opt-in on ${JSON.stringify(g4.growthCheck.on)} off ${JSON.stringify(g4.growthCheck.off)}`),
+      );
+      const n1 = (v) => (v === null || v === undefined ? "–" : v.toFixed(1));
+      console.log(
+        s3 === null
+          ? `${name.padEnd(10)} S3  no drawn history`
+          : `${name.padEnd(10)} S3  ${s3.extractions} extractions · ${Object.entries(s3.lines)
+              .map(([id, l]) => `${id} turn ${n1(l.turnMedian)}/${n1(l.turnWorst)}° jitter ${n1(l.jitterMedian)}/${n1(l.jitterP95)}/${n1(l.jitterWorst)} px (${l.heldPairs} held pairs)`)
+              .join(" · ")} · draw ${s3.ms === null ? "–" : `${n1(s3.ms.median)} ms median, p95 ${n1(s3.ms.p95)}, worst ${n1(s3.ms.worst)}`}${cpu > 1 ? ` at ${cpu}× CPU` : ""}`,
       );
       const g3 = entry.g3;
       console.log(

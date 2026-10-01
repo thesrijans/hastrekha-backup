@@ -84,6 +84,14 @@ export interface ScanFlags {
    * is kept only for features. See lib/scan/trace-valley.ts for the method and its measurements.
    */
   readonly rekhaTrace: boolean;
+  /**
+   * Tracer-led discovery (S3): extractLines leaves the geometry entirely. Each major is DISCOVERED in its band — the
+   * strongest continuous valley path, free endpoints, in reliability order with each accepted crease claimed from the
+   * rest — accepted over a palm-referenced floor, smoothed, and held: persistence refines a held line by EMA and never
+   * re-discovers it. extractLines still runs, for features. Supersedes rekhaTrace where both are on. See
+   * lib/scan/discover.ts for the method and its measurements.
+   */
+  readonly rekhaDiscover: boolean;
 }
 
 export const DEFAULT_SCAN_FLAGS: ScanFlags = {
@@ -99,11 +107,12 @@ export const DEFAULT_SCAN_FLAGS: ScanFlags = {
   superRes: false,
   rekhaPersist: false,
   rekhaTrace: false,
+  rekhaDiscover: false,
 };
 
 export type ScanFlagName = keyof ScanFlags;
 
-export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch", "superRes", "rekhaPersist", "rekhaTrace"];
+export const SCAN_FLAG_NAMES: readonly ScanFlagName[] = ["cameraControl", "photometric", "hdrBracket", "unetFullHand", "emitMinorLines", "featureVocabV2", "scanDiagnostics", "fieldContract", "corridorSearch", "superRes", "rekhaPersist", "rekhaTrace", "rekhaDiscover"];
 
 /** Human labels for the HUD toggles, in the app's register. */
 export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
@@ -119,6 +128,7 @@ export const SCAN_FLAG_LABELS: Readonly<Record<ScanFlagName, string>> = {
   superRes: "Super-resolution",
   rekhaPersist: "Rekha persistence",
   rekhaTrace: "Trace, don't fit",
+  rekhaDiscover: "Tracer-led discovery",
 };
 
 type Listener = (flags: ScanFlags) => void;
@@ -164,10 +174,10 @@ export const scanFlags = new FlagStore();
 
 /**
  * The flags the chamber runs with, and only the chamber: persistence, the corridor fill-in it
- * releases, and the super-resolution fusion that feeds it sharper evidence (S1.1), and the valley
- * tracer that draws what was found (S2). /scan keeps every default.
+ * releases, and the super-resolution fusion that feeds it sharper evidence (S1.1), the valley
+ * tracer that draws what was found (S2), and the discovery that finds it (S3). /scan keeps every default.
  */
-export const CHAMBER_SCAN_FLAGS: readonly ScanFlagName[] = ["rekhaPersist", "corridorSearch", "superRes", "rekhaTrace"];
+export const CHAMBER_SCAN_FLAGS: readonly ScanFlagName[] = ["rekhaPersist", "corridorSearch", "superRes", "rekhaTrace", "rekhaDiscover"];
 
 /**
  * Switch `names` on and return the undo, which puts each flag back to the value it had BEFORE — not

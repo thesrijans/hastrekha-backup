@@ -36,6 +36,7 @@ import { frameReason, palmNearEdge, ReasonWindow, type LastSeenPalm, type Reason
 import { canonicalAnchors, conventionRemap, palmAnchors, rectifyPalm, solveHomography, type RectifyResult } from "@/lib/scan/rectify";
 import type { RekhaPersistence, RekhaSnapshot } from "@/lib/scan/rekha-persist";
 import type { ValleyTracer } from "@/lib/scan/trace-valley";
+import type { Discoverer } from "@/lib/scan/discover";
 import { derivePalmEdge } from "@/lib/scan/landmarks";
 import { emptyStabiliser, resetStabiliser, stabiliseAnchors, type AnchorStabiliser } from "@/lib/scan/stabilise";
 import { scanFlags } from "@/lib/scan/flags";
@@ -113,6 +114,8 @@ import {
 import {
   ACTIVE_LINE_IDS,
   MASK_SIZE,
+  RECTIFIED_SIZE,
+  type ActiveLineId,
   type Point2,
   type FrameStats,
   type Handedness,
@@ -274,6 +277,19 @@ export interface UseHandScanOptions {
   readonly bestFrame?: boolean;
 }
 
+/** One extraction as drawn, for `window.__hrDrawn` (options.funnel only): the published lines, MASK_SIZE space. */
+interface DrawnRecord {
+  readonly at: number;
+  readonly lines: Partial<Record<ActiveLineId, readonly (readonly [number, number])[]>>;
+  /** Milliseconds the discovery (or the S2 trace) took on this extraction; null with both flags off. */
+  readonly ms: number | null;
+  /** The lines persistence held CONFIRMED after this extraction — the S3.5 jitter bar is on these. */
+  readonly held: readonly ActiveLineId[];
+}
+
+/** How many extractions `window.__hrDrawn` keeps. */
+const DRAWN_HISTORY = 240;
+
 /** What `window.__hrObservation` hands the phone rig (options.funnel only): the raw frame's landmarks and the gates' two measurements of them. */
 interface RigObservation {
   readonly handedness: HandObservation["handedness"];
@@ -381,6 +397,15 @@ export function useHandScan(options: UseHandScanOptions = {}) {
   const traceModuleRef = useRef<typeof import("@/lib/scan/trace-valley") | null>(null);
   const traceLoadingRef = useRef(false);
   const tracerRef = useRef<ValleyTracer | null>(null);
+  /**
+   * rekhaDiscover (flag, S3): tracer-led discovery, fetched the first time the flag is seen on and constructed once.
+   * Where it and rekhaTrace are both on, discovery draws and the S2 tracer is never run.
+   */
+  const discoverModuleRef = useRef<typeof import("@/lib/scan/discover") | null>(null);
+  const discoverLoadingRef = useRef(false);
+  const discovererRef = useRef<Discoverer | null>(null);
+  /** S3.7 measurement (options.funnel only): what each extraction drew, for the rig's jitter and jaggedness bars. */
+  const drawnHistoryRef = useRef<DrawnRecord[] | null>(null);
   const rekhaGrayRef = useRef<Float32Array | null>(null);
   /**
    * Landmark jitter slides the same skin a few crop pixels between frames — more than a crease is
@@ -914,11 +939,26 @@ export function useHandScan(options: UseHandScanOptions = {}) {
          * follow is not drawn — nothing is drawn where the tracer stopped.
          */
         const traceModule = flagsAtExtract.rekhaTrace ? traceModuleRef.current : null;
+        const discoverModule = flagsAtExtract.rekhaDiscover ? discoverModuleRef.current : null;
+        const rekha = flagsAtExtract.rekhaPersist ? rekhaRef.current : null;
         let drawn = found;
-        if (traceModule !== null && crop !== undefined) {
+        let drawMs: number | null = null;
+        if (discoverModule !== null && crop !== undefined) {
+          /*
+           * rekhaDiscover (flag, S3): the tracer FINDS the lines — extractLines' `found` keeps only the features. A line
+           * persistence holds is refined inside its own tube, never re-discovered (lib/scan/discover.ts).
+           */
+          const discoverer = discovererRef.current ?? (discovererRef.current = new discoverModule.Discoverer(crop.size));
+          const held = rekha === null ? {} : discoverModule.heldInGrid(rekha.hold.heldLines(), crop.size);
+          const discovered = discoverer.discover(discoverModule.lumaFromRgba(crop.rgba, crop.size), crop.inside, held);
+          drawn = { ...found, lines: discovered.lines };
+          drawMs = discovered.ms;
+          setTraceMs(discovered.ms);
+        } else if (traceModule !== null && crop !== undefined) {
           const tracer = tracerRef.current ?? (tracerRef.current = new traceModule.ValleyTracer(crop.size));
           const traced = tracer.trace(found, traceModule.lumaFromRgba(crop.rgba, crop.size), crop.inside);
           drawn = { ...found, lines: traced.lines };
+          drawMs = traced.ms;
           setTraceMs(traced.ms);
         }
         /*
@@ -926,7 +966,6 @@ export function useHandScan(options: UseHandScanOptions = {}) {
          * is held from here on, and rides along in what is published even when this extraction
          * missed it; the corridor fill-in below waits for the first confirmed line.
          */
-        const rekha = flagsAtExtract.rekhaPersist ? rekhaRef.current : null;
         const rekhaSnap = rekha === null ? null : rekha.extracted(drawn, at);
         if (rekhaSnap !== null) setRekha(rekhaSnap);
         /* R1: the funnel's extraction stage — what this run proposed, and what the accumulator holds now. */
@@ -1034,11 +1073,27 @@ export function useHandScan(options: UseHandScanOptions = {}) {
           // Refused while the hand is clipped: the crop was fitted to extrapolated
           // landmarks, so any line placed from it is a claim about guessed geometry.
           if (named && !degradedRef.current) onLineFeatures?.(forFeatures, at);
-          const held = rekha === null ? {} : rekha.hold.heldMissingFrom(drawn);
+          /*
+           * S3.6: under rekhaDiscover what is drawn is the HELD line wherever there is one — the smoothed, refined path
+           * persistence keeps — not this frame's discovery; elsewhere a held line only fills in for one this
+           * extraction missed.
+           */
+          const held = rekha === null ? {} : discoverModule !== null ? rekha.hold.heldLines() : rekha.hold.heldMissingFrom(drawn);
+          const publishedLines = { ...drawn.lines, ...held };
           /* R1: the funnel's "drawn" stage — how many lines the overlay has to draw from here on. */
-          drawnLinesRef.current = Object.keys(drawn.lines).length + Object.keys(held).length;
-          const published = rekha === null ? drawn : { ...drawn, lines: { ...drawn.lines, ...held } };
+          drawnLinesRef.current = Object.keys(publishedLines).length;
+          const published = rekha === null ? drawn : { ...drawn, lines: publishedLines };
           setExtraction(published);
+          const history = drawnHistoryRef.current;
+          if (history !== null) {
+            const lines: DrawnRecord["lines"] = {};
+            for (const id of ACTIVE_LINE_IDS) {
+              const line = published.lines[id];
+              if (line !== undefined) lines[id] = line.points;
+            }
+            history.push({ at, lines, ms: drawMs, held: rekha === null ? [] : ACTIVE_LINE_IDS.filter((id) => rekha.hold.isHeld(id)) });
+            if (history.length > DRAWN_HISTORY) history.splice(0, history.length - DRAWN_HISTORY);
+          }
           /* G4b: what the overlay draws from now on, and the convention it projects them under — the best frame
              records it, so the photograph's lines can be measured against the overlay's on that frame (§6). */
           liveLinesRef.current = { lines: published.lines, convention: conventionAtFire };
@@ -1284,10 +1339,28 @@ export function useHandScan(options: UseHandScanOptions = {}) {
              */
             let rekhaGray: Float32Array | null = null;
             let rekhaWeight = 0;
-            if (scanFlags.snapshot().rekhaTrace && traceModuleRef.current === null && !traceLoadingRef.current) {
+            if (scanFlags.snapshot().rekhaTrace && !scanFlags.snapshot().rekhaDiscover && traceModuleRef.current === null && !traceLoadingRef.current) {
               traceLoadingRef.current = true;
               void import("@/lib/scan/trace-valley").then((loaded) => {
                 traceModuleRef.current = loaded;
+              });
+            }
+            if (scanFlags.snapshot().rekhaDiscover && discoverModuleRef.current === null && !discoverLoadingRef.current) {
+              discoverLoadingRef.current = true;
+              void import("@/lib/scan/discover").then((loaded) => {
+                discoverModuleRef.current = loaded;
+                /* S3.7d: build the discoverer and run it twice on a blank crop while nothing waits on it — the first
+                   extractions otherwise paid the JIT's warm-up (35–92 ms against a steady 15–25). */
+                const warm = (): void => {
+                  const size = RECTIFIED_SIZE;
+                  const discoverer = discovererRef.current ?? (discovererRef.current = new loaded.Discoverer(size));
+                  const blank = new Float32Array(size * size).fill(0.6);
+                  for (let y = 60; y < 200; y += 1) blank[y * size + 120] = 0.45;
+                  discoverer.discover(blank);
+                  discoverer.discover(blank);
+                };
+                if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(warm, { timeout: 2000 });
+                else setTimeout(warm, 0);
               });
             }
             const rekhaModule = rekhaModuleRef.current;
@@ -1791,8 +1864,12 @@ export function useHandScan(options: UseHandScanOptions = {}) {
     if (funnelWantedRef.current) {
       const created = new StageFunnel();
       funnelRef.current = created;
-      const hooks = window as Window & { __hrFunnel?: () => FunnelSnapshot; __hrObservation?: () => RigObservation | null };
+      const hooks = window as Window & { __hrFunnel?: () => FunnelSnapshot; __hrObservation?: () => RigObservation | null; __hrDrawn?: () => readonly DrawnRecord[] };
       hooks.__hrFunnel = () => created.snapshot(performance.now());
+      /* S3.7: the last DRAWN_HISTORY extractions as drawn — the rig measures jitter and jaggedness on them. */
+      const history: DrawnRecord[] = [];
+      drawnHistoryRef.current = history;
+      hooks.__hrDrawn = () => history.slice();
       /* …and the last observation as the landmarker gave it, with the two measurements the gates take
          from it, so the rig can check a convention (which way the normal points, which side the thumb
          is on) against a real frame rather than a fixture. */

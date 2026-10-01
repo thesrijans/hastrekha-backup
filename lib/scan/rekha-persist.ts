@@ -38,6 +38,7 @@ import {
   type EvidenceOptions,
 } from "./enhance/evidence";
 import { frameWeightFromSharpness } from "./enhance/rekha-enhancer";
+import { refineHeldLine } from "./hold-refine";
 import { varianceOfLaplacian } from "./quality";
 import { applyHomography, invertHomography, type Matrix3 } from "./rectify";
 import { ACTIVE_LINE_IDS, type ActiveLineId, type TracedLine } from "./types";
@@ -384,7 +385,15 @@ export class RekhaLineHold {
 
       let out: RekhaLine | undefined;
       if (held !== undefined) {
-        if (fresh !== undefined && freshState === "confirmed") {
+        if (fresh !== undefined && freshState === "confirmed" && fresh.score !== undefined && held.line.score !== undefined) {
+          /*
+           * S3.5 (flag rekhaDiscover): a held discovered line is refined, never replaced — an EMA toward a fresh path
+           * that scores at least as well (discovery searched only the held line's own tube), growing past its ends.
+           * What is drawn is the held line.
+           */
+          if (fresh.score >= held.line.score) held.line = refineHeldLine(held.line, fresh);
+          out = { id, state: "confirmed", points: held.line.points, progress: freshMeasure?.progress ?? 1, held: false, segments: held.line.segments, traced: held.line.traced };
+        } else if (fresh !== undefined && freshState === "confirmed") {
           // Re-found and still confirmed: take the newer trace (it may reach further), keep the hold.
           held.line = fresh;
           out = { id, state: "confirmed", points: fresh.points, progress: freshMeasure?.progress ?? 1, held: false, segments: fresh.segments, traced: fresh.traced };
@@ -441,6 +450,16 @@ export class RekhaLineHold {
   /** Whether a line is currently held CONFIRMED. */
   isHeld(id: ActiveLineId): boolean {
     return this.held.has(id);
+  }
+
+  /**
+   * Every held line as it is held — the geometry the chamber, the Monitor and the hand-off draw under rekhaDiscover
+   * (S3.6), and the tubes the next discovery refines inside.
+   */
+  heldLines(): Partial<Record<ActiveLineId, TracedLine>> {
+    const out: Partial<Record<ActiveLineId, TracedLine>> = {};
+    for (const [id, entry] of this.held) out[id] = entry.line;
+    return out;
   }
 }
 

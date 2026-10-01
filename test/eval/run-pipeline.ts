@@ -36,6 +36,7 @@ import { MASK_SIZE, RECTIFIED_SIZE, type ActiveLineId, type Point2 } from "../..
 import { canonicalAnchors, solveHomography, type Matrix3 } from "../../lib/scan/rectify";
 import { RekhaEnhancer } from "../../lib/scan/enhance/rekha-enhancer";
 import { ValleyTracer, type TracedPath } from "../../lib/scan/trace-valley";
+import { Discoverer, type DiscoveryResult } from "../../lib/scan/discover";
 import type { LineExtraction } from "../../lib/scan/lines";
 import { CANONICAL_FULLHAND_21 } from "../../lib/scan/models/canonical-fullhand-21";
 import {
@@ -74,7 +75,7 @@ export type Framing = (typeof FRAMINGS)[number];
  * and the IDENTICAL chain runs on the fusion instead of the single labelled still. Classical
  * framing only — the fused texture is luma. Legacy cases and thin groups report n/a with the reason.
  */
-export const POSTS = ["fused", "enhancer", "enhancer-ridge", "corridor", "superres", "trace"] as const;
+export const POSTS = ["fused", "enhancer", "enhancer-ridge", "corridor", "superres", "trace", "discover"] as const;
 export type Post = (typeof POSTS)[number];
 export const FIELDS = ["legacy", "contract"] as const;
 export type FieldKind = (typeof FIELDS)[number];
@@ -641,6 +642,25 @@ export function traceAtThreshold(
     lines[id] = line === undefined ? null : line.points.map(([x, y]) => [x / WORK, y / WORK]);
   }
   return { lines, paths: traced.paths, ms: traced.ms };
+}
+
+/* ------------------------------ +discover post (S3) ------------------------------ */
+
+const evalDiscoverer = new Discoverer(RECTIFIED_SIZE);
+
+/**
+ * post "+discover": the tracer FINDS the lines (lib/scan/discover.ts) on the case's own luma — no extraction in the
+ * geometry at all, so the result does not depend on the sweep's threshold. The drawn (smoothed, accepted) paths are
+ * what gets scored, through the same MASK_SIZE → fraction conversion as every other post.
+ */
+export function discoverOn(crop: { luma: Float32Array; inside: Uint8Array }): DetectedLines & { readonly result: DiscoveryResult } {
+  const result = evalDiscoverer.discover(crop.luma, crop.inside);
+  const lines: Record<LabelLineId, readonly (readonly number[])[] | null> = { heart: null, head: null, life: null, fate: null };
+  for (const id of LABEL_LINE_IDS) {
+    const line = result.lines[id as ActiveLineId];
+    lines[id] = line === undefined ? null : line.points.map(([x, y]) => [x / WORK, y / WORK]);
+  }
+  return { lines, result };
 }
 
 /* ------------------------------ Diagnostics (item 3) ------------------------------ */

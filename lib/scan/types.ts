@@ -166,6 +166,11 @@ export interface TracedLine {
    * crease, just not seeded — and draw at 0.6, where a fit's bridged gaps draw fainter.
    */
   readonly traced?: boolean;
+  /**
+   * Discovery's score (flag rekhaDiscover, lib/scan/discover.ts): mean valley strength × covered length, px at 256.
+   * Persistence refines a held line only from a path scoring at least as well.
+   */
+  readonly score?: number;
 }
 
 /* -------------------------------- Quality --------------------------------- */

@@ -148,7 +148,9 @@ export function lumaFromRgba(rgba: Uint8ClampedArray, size: number): Float32Arra
 /**
  * Running max (or min) over a window of half-width `half` along rows or columns — van Herk /
  * Gil-Werman: a forward and a backward block scan, then one comparison per pixel, O(1) per pixel
- * whatever the window.
+ * whatever the window. Blocks of `2·half + 1` from the padded line's start; the max and min scans are
+ * separate loops so no pixel pays for the other's branch (S3: 5.8 → ~2 ms for the four passes at 256,
+ * the output unchanged to the bit).
  */
 function runningExtreme(src: Float32Array, dst: Float32Array, size: number, half: number, isMax: boolean, alongColumns: boolean): void {
   const w = 2 * half + 1;
@@ -157,23 +159,144 @@ function runningExtreme(src: Float32Array, dst: Float32Array, size: number, half
   const h = new Float32Array(n);
   const line = new Float32Array(n);
   const fill = isMax ? -Infinity : Infinity;
+  line.fill(fill, 0, half);
+  line.fill(fill, half + size, n);
+  const stride = alongColumns ? size : 1;
   for (let l = 0; l < size; l += 1) {
-    for (let i = 0; i < n; i += 1) {
-      const k = i - half;
-      line[i] = k < 0 || k >= size ? fill : src[alongColumns ? k * size + l : l * size + k]!;
+    const base = alongColumns ? l : l * size;
+    for (let k = 0; k < size; k += 1) line[half + k] = src[base + k * stride]!;
+    if (isMax) {
+      for (let b = 0; b < n; b += w) {
+        const end = b + w < n ? b + w : n;
+        let m = line[b]!;
+        g[b] = m;
+        for (let i = b + 1; i < end; i += 1) {
+          const v = line[i]!;
+          if (v > m) m = v;
+          g[i] = m;
+        }
+        m = line[end - 1]!;
+        h[end - 1] = m;
+        for (let i = end - 2; i >= b; i -= 1) {
+          const v = line[i]!;
+          if (v > m) m = v;
+          h[i] = m;
+        }
+      }
+      for (let k = 0; k < size; k += 1) {
+        const a = h[k]!;
+        const c = g[k + 2 * half]!;
+        dst[base + k * stride] = a > c ? a : c;
+      }
+    } else {
+      for (let b = 0; b < n; b += w) {
+        const end = b + w < n ? b + w : n;
+        let m = line[b]!;
+        g[b] = m;
+        for (let i = b + 1; i < end; i += 1) {
+          const v = line[i]!;
+          if (v < m) m = v;
+          g[i] = m;
+        }
+        m = line[end - 1]!;
+        h[end - 1] = m;
+        for (let i = end - 2; i >= b; i -= 1) {
+          const v = line[i]!;
+          if (v < m) m = v;
+          h[i] = m;
+        }
+      }
+      for (let k = 0; k < size; k += 1) {
+        const a = h[k]!;
+        const c = g[k + 2 * half]!;
+        dst[base + k * stride] = a < c ? a : c;
+      }
     }
-    for (let i = 0; i < n; i += 1) {
-      const v = line[i]!;
-      g[i] = i % w === 0 ? v : isMax ? Math.max(g[i - 1]!, v) : Math.min(g[i - 1]!, v);
+  }
+}
+
+/**
+ * {@link runningExtreme} down the COLUMNS, all columns at once: the same blocks and the same comparisons, but each step
+ * walks a whole row, so memory is read in order instead of 256 floats apart (the strided column pass was most of
+ * valleyDepth's time). Bit-identical to runningExtreme(…, alongColumns = true).
+ */
+function runningExtremeColumns(
+  src: Float32Array,
+  dst: Float32Array,
+  size: number,
+  half: number,
+  isMax: boolean,
+  g: Float32Array = new Float32Array((size + 2 * half) * size),
+  h: Float32Array = new Float32Array((size + 2 * half) * size),
+): void {
+  const w = 2 * half + 1;
+  const n = size + 2 * half;
+  const fill = isMax ? -Infinity : Infinity;
+  const valueAt = (i: number, x: number): number => (i < half || i >= half + size ? fill : src[(i - half) * size + x]!);
+  for (let b = 0; b < n; b += w) {
+    const end = b + w < n ? b + w : n;
+    for (let x = 0; x < size; x += 1) g[b * size + x] = valueAt(b, x);
+    for (let i = b + 1; i < end; i += 1) {
+      const row = i * size;
+      const prev = row - size;
+      if (i < half || i >= half + size) {
+        for (let x = 0; x < size; x += 1) g[row + x] = isMax ? (g[prev + x]! > fill ? g[prev + x]! : fill) : g[prev + x]! < fill ? g[prev + x]! : fill;
+      } else {
+        const srcRow = (i - half) * size;
+        if (isMax) {
+          for (let x = 0; x < size; x += 1) {
+            const v = src[srcRow + x]!;
+            const m = g[prev + x]!;
+            g[row + x] = v > m ? v : m;
+          }
+        } else {
+          for (let x = 0; x < size; x += 1) {
+            const v = src[srcRow + x]!;
+            const m = g[prev + x]!;
+            g[row + x] = v < m ? v : m;
+          }
+        }
+      }
     }
-    for (let i = n - 1; i >= 0; i -= 1) {
-      const v = line[i]!;
-      h[i] = i === n - 1 || (i + 1) % w === 0 ? v : isMax ? Math.max(h[i + 1]!, v) : Math.min(h[i + 1]!, v);
+    for (let x = 0; x < size; x += 1) h[(end - 1) * size + x] = valueAt(end - 1, x);
+    for (let i = end - 2; i >= b; i -= 1) {
+      const row = i * size;
+      const next = row + size;
+      if (i < half || i >= half + size) {
+        for (let x = 0; x < size; x += 1) h[row + x] = isMax ? (h[next + x]! > fill ? h[next + x]! : fill) : h[next + x]! < fill ? h[next + x]! : fill;
+      } else {
+        const srcRow = (i - half) * size;
+        if (isMax) {
+          for (let x = 0; x < size; x += 1) {
+            const v = src[srcRow + x]!;
+            const m = h[next + x]!;
+            h[row + x] = v > m ? v : m;
+          }
+        } else {
+          for (let x = 0; x < size; x += 1) {
+            const v = src[srcRow + x]!;
+            const m = h[next + x]!;
+            h[row + x] = v < m ? v : m;
+          }
+        }
+      }
     }
-    for (let k = 0; k < size; k += 1) {
-      const a = h[k]!;
-      const b = g[k + 2 * half]!;
-      dst[alongColumns ? k * size + l : l * size + k] = isMax ? (a > b ? a : b) : a < b ? a : b;
+  }
+  const shift = 2 * half * size;
+  for (let k = 0; k < size; k += 1) {
+    const row = k * size;
+    if (isMax) {
+      for (let x = 0; x < size; x += 1) {
+        const a = h[row + x]!;
+        const c = g[row + shift + x]!;
+        dst[row + x] = a > c ? a : c;
+      }
+    } else {
+      for (let x = 0; x < size; x += 1) {
+        const a = h[row + x]!;
+        const c = g[row + shift + x]!;
+        dst[row + x] = a < c ? a : c;
+      }
     }
   }
 }
@@ -185,17 +308,39 @@ function runningExtreme(src: Float32Array, dst: Float32Array, size: number, half
  * instead of ridge.ts's disc. The disc is O(r) per pixel and at 256 with radii 4/8/12 took 80 ms a
  * frame against the S2 cost bar of 15; the square is O(1) per pixel. What "depth" means is
  * unchanged (how far a crease sits below the skin around it), and the per-line ratio
- * normalisation below divides out the square's slightly larger fill.
+ * normalisation below divides out the square's slightly larger fill. `blackHatRadius` narrows the element for a caller
+ * that must prefer thin creases to broad shading troughs (discover.ts).
  */
-export function valleyDepth(luma: Float32Array, size: number = TRACE_SIZE): Float32Array {
-  const out = new Float32Array(size * size);
-  const a = new Float32Array(size * size);
-  const b = new Float32Array(size * size);
-  for (const radius of [TRACE_BLACKHAT_RADIUS]) {
+/**
+ * Buffers for {@link valleyDepth}, allocated once by a caller that runs it every extraction (discover.ts): a fresh
+ * megabyte and a half of zeroed typed arrays per call was a third of the valley's time in the browser.
+ */
+export interface ValleyScratch {
+  readonly size: number;
+  readonly radius: number;
+  readonly out: Float32Array;
+  readonly a: Float32Array;
+  readonly b: Float32Array;
+  readonly g: Float32Array;
+  readonly h: Float32Array;
+}
+
+export function valleyScratch(size: number, radius: number): ValleyScratch {
+  const n = size * size;
+  const padded = (size + 2 * radius) * size;
+  return { size, radius, out: new Float32Array(n), a: new Float32Array(n), b: new Float32Array(n), g: new Float32Array(padded), h: new Float32Array(padded) };
+}
+
+export function valleyDepth(luma: Float32Array, size: number = TRACE_SIZE, blackHatRadius: number = TRACE_BLACKHAT_RADIUS, scratch?: ValleyScratch): Float32Array {
+  const reuse = scratch !== undefined && scratch.size === size && scratch.radius === blackHatRadius;
+  const out = reuse ? scratch.out.fill(0) : new Float32Array(size * size);
+  const a = reuse ? scratch.a : new Float32Array(size * size);
+  const b = reuse ? scratch.b : new Float32Array(size * size);
+  for (const radius of [blackHatRadius]) {
     runningExtreme(luma, a, size, radius, true, false);
-    runningExtreme(a, b, size, radius, true, true);
+    runningExtremeColumns(a, b, size, radius, true, reuse ? scratch.g : undefined, reuse ? scratch.h : undefined);
     runningExtreme(b, a, size, radius, false, false);
-    runningExtreme(a, b, size, radius, false, true);
+    runningExtremeColumns(a, b, size, radius, false, reuse ? scratch.g : undefined, reuse ? scratch.h : undefined);
     for (let i = 0; i < out.length; i += 1) {
       const d = b[i]! - luma[i]!;
       if (d > out[i]!) out[i] = d;
@@ -214,7 +359,7 @@ export interface LineCost {
 }
 
 /** k-th smallest of `values`, in place (quickselect). */
-function select(values: Float32Array, k: number): number {
+export function select(values: Float32Array, k: number): number {
   let lo = 0;
   let hi = values.length - 1;
   while (lo < hi) {
@@ -612,11 +757,18 @@ export function rasterPolygon(poly: readonly Point2[], size: number): Uint8Array
   return out;
 }
 
+/** The canonical palm rasterised once per size — it never changes (S3: palmMask runs every extraction). */
+const palmRasters = new Map<number, Uint8Array>();
+
 /** Where tracing may go: the crop's `inside` AND the canonical palm, eroded by `margin` px (square). */
 export function palmMask(inside: Uint8Array, size: number, margin: number = PALM_MARGIN_PX): Uint8Array {
   const out = new Uint8Array(size * size);
   const rowOk = new Uint8Array(size * size);
-  const palm = rasterPolygon(CANONICAL_PALM, size);
+  let palm = palmRasters.get(size);
+  if (palm === undefined) {
+    palm = rasterPolygon(CANONICAL_PALM, size);
+    palmRasters.set(size, palm);
+  }
   for (let y = 0; y < size; y += 1) {
     let run = 0;
     for (let x = 0; x < size; x += 1) {

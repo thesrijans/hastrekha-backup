@@ -58,6 +58,21 @@ export interface EvalReport {
   readonly vocabDiffs?: Readonly<Record<string, { readonly added: readonly string[]; readonly changed: readonly string[] }>>;
   /** +superres: fused vs single still per case (classical framing, shipped threshold, headline tolerance). */
   readonly superres?: readonly SuperResReportRow[];
+  /** +discover (S3.7a): per case and line, with the GT-suspect flag (valley along the GT under 1.0× its band median). */
+  readonly discover?: readonly DiscoverReportSection[];
+}
+
+export interface DiscoverReportSection {
+  readonly rungId: string;
+  readonly rows: readonly {
+    readonly caseId: string;
+    readonly lineId: string;
+    readonly verdict: string;
+    readonly medianPx: number;
+    /** Discovery valley along the GT over its band's median; null when the GT marks the line absent. */
+    readonly valleyRatio: number | null;
+    readonly gtSuspect: boolean;
+  }[];
 }
 
 const fmt = (value: number, digits = 2): string => (Number.isFinite(value) ? value.toFixed(digits) : "—");
@@ -325,6 +340,30 @@ export function renderMarkdown(report: EvalReport): string {
     out.push(
       "> single = the labelled still through the shipped chain; fused = its pose-duplicate group registered to that still and fused by lib/scan/superres, then the SAME chain. Legacy GT is one frame — n/a by construction.",
     );
+  }
+
+  for (const section of report.discover ?? []) {
+    out.push("");
+    out.push(`## +discover — ${section.rungId} (S3.7a; @${report.headlineTol}px)`);
+    out.push("");
+    out.push("| line | detect | false-line | median px, valley-backed GT | GT suspect (valley < 1.0×, apart) |");
+    out.push("|---|--:|--:|---|---|");
+    const lineIds = [...new Set(section.rows.map((row) => row.lineId))];
+    for (const lineId of lineIds) {
+      const rows = section.rows.filter((row) => row.lineId === lineId);
+      const present = rows.filter((row) => row.verdict === "pair" || row.verdict === "missedLine");
+      const absent = rows.filter((row) => row.verdict === "falseLine" || row.verdict === "trueNegative");
+      const pairs = present.filter((row) => row.verdict === "pair");
+      const backed = pairs.filter((row) => !row.gtSuspect);
+      const suspect = pairs.filter((row) => row.gtSuspect);
+      const mean = backed.length === 0 ? NaN : backed.reduce((sum, row) => sum + row.medianPx, 0) / backed.length;
+      const each = (list: typeof rows): string => list.map((row) => `${fmt(row.medianPx, 1)} (${row.caseId}, ×${fmt(row.valleyRatio ?? NaN, 2)})`).join(", ");
+      out.push(
+        `| ${lineId} | ${present.length === 0 ? "—" : `${pairs.length}/${present.length}`} | ${absent.length === 0 ? "—" : `${absent.filter((row) => row.verdict === "falseLine").length}/${absent.length}`} | ${
+          backed.length === 0 ? "—" : `**${fmt(mean, 1)}** — ${each(backed)}`
+        } | ${suspect.length === 0 ? "—" : each(suspect)} |`,
+      );
+    }
   }
 
   const skipped = report.cases.filter((c) => c.skip !== undefined);

@@ -30,6 +30,7 @@ import {
   contractPlaneOf,
   diagnoseFields,
   extractAtThreshold,
+  discoverOn,
   lumaOf,
   traceAtThreshold,
   minorEmissionOn,
@@ -47,11 +48,12 @@ import {
 } from "./run-pipeline";
 import { measureFwhm, type FwhmResult } from "./fwhm";
 import { measureJitter } from "./jitter";
-import { renderMarkdown, writeJson, type EvalReport, type RungSweep, type SuperResReportRow } from "./report";
+import { renderMarkdown, writeJson, type DiscoverReportSection, type EvalReport, type RungSweep, type SuperResReportRow } from "./report";
 import { LABEL_LINE_IDS, LABELABLE_LINE_IDS } from "../../lib/scan/dev/session-types";
 import { contractStats } from "../../lib/scan/contract";
 import { CORRIDORS } from "../../lib/scan/completion";
 import { buildCorridorMask, searchCorridor } from "../../lib/scan/corridor-path";
+import { valleyRatioAlong } from "../../lib/scan/discover";
 import { writeFileSync, readFileSync } from "node:fs";
 
 interface CliArgs {
@@ -243,9 +245,12 @@ async function scoreSweep(
           })()
         : null;
     // post "trace" (S2): the valley tracer on the case's own luma replaces the fitted geometry.
-    const crop = rung.post === "trace" ? await lumaOf(evalCase, rung.framing, opts) : null;
+    // post "discover" (S3): the tracer finds the lines itself — once per case, the threshold plays no part.
+    const crop = rung.post === "trace" || rung.post === "discover" ? await lumaOf(evalCase, rung.framing, opts) : null;
+    const discovered = rung.post === "discover" && crop !== null ? discoverOn(crop) : null;
     for (const t of SWEEP_THRESHOLDS) {
-      const detectedRaw = crop !== null ? traceAtThreshold(caseField.field, t, crop) : extractAtThreshold(caseField.field, t);
+      const detectedRaw =
+        discovered !== null ? discovered : crop !== null ? traceAtThreshold(caseField.field, t, crop) : extractAtThreshold(caseField.field, t);
       const detected =
         corridorFate !== null && detectedRaw.lines.fate === null
           ? { lines: { ...detectedRaw.lines, fate: corridorFate } }
@@ -460,6 +465,31 @@ async function main(): Promise<void> {
     superres.push({ ...base, status: "fused", single: scoreField(single.field, evalCase), fused: scoreField(fusedField.field, evalCase) });
   }
 
+  /*
+   * +discover (S3.7a): per line, detection and false-line rates, and the median px at 512 on VALLEY-BACKED ground
+   * truth only. A GT line whose discovery valley is under 1.0× its band's median lies on no valley at all — it is
+   * listed apart as "GT suspect" and kept out of the median bar.
+   */
+  const discoverSections: DiscoverReportSection[] = [];
+  for (const run of runs) {
+    if (run.post !== "discover") continue;
+    const rows = run.rowsByThreshold[SHIPPED_THRESHOLD.toFixed(2)] ?? [];
+    const out: DiscoverReportSection["rows"][number][] = [];
+    for (const row of rows) {
+      const m = row.byTol[args.headlineTol];
+      const evalCase = active.find((c) => c.id === row.caseId);
+      const gtLine = evalCase?.lines[row.lineId];
+      if (m === undefined || evalCase === undefined || gtLine === undefined) continue;
+      let valleyRatio: number | null = null;
+      if (!gtLine.absent) {
+        const crop = await lumaOf(evalCase, run.framing, { modelPath: args.modelPath });
+        valleyRatio = crop === null ? null : valleyRatioAlong(crop.luma, row.lineId as "heart" | "head" | "life" | "fate", gtLine.points);
+      }
+      out.push({ caseId: row.caseId, lineId: row.lineId, verdict: m.verdict, medianPx: m.medianDistPx, valleyRatio, gtSuspect: valleyRatio !== null && valleyRatio < 1 });
+    }
+    discoverSections.push({ rungId: run.id, rows: out });
+  }
+
   const report: EvalReport = {
     generatedAt: new Date().toISOString(),
     tols,
@@ -472,6 +502,7 @@ async function main(): Promise<void> {
     vocabDiffs,
     falseFate,
     superres,
+    discover: discoverSections,
   };
   console.log(renderMarkdown(report));
   const jsonPath = writeJson(report);
